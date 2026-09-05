@@ -31,6 +31,11 @@ export type ToolCall = {
 export type ToolResult =
   | { status: "ok"; text: string }
   | { status: "error"; error: string };
+/** A tool the thread can run, client side. */
+export type Tool = {
+  spec: Anthropic.Tool;
+  execute(input: Record<string, unknown>): Promise<ToolResult>;
+};
 
 /** One entry of the derived transcript: a block, not a turn. A single agent
  * turn can produce prose, a tool call, and more prose, and the transcript shows
@@ -79,11 +84,24 @@ export class Thread {
   private cache:
     | { version: number; messages: ReadonlyArray<Message> }
     | undefined;
-  private settle: (() => void) | undefined;
+  private settle:
+    | ((content: Anthropic.ContentBlockParam[]) => void)
+    | undefined;
+  /** True for the whole agent turn, including while tools execute between
+   * requests - the UI and the send guard care about the turn, not the request. */
+  private running = false;
+  /** Set when a request ends in a done/error frame, which ends the turn even
+   * if tools were requested. */
+  private failed = false;
+  /** tool_use ids whose streamed json never parsed. The log has to carry an
+   * object the API would accept, so this is the only place that knowledge
+   * survives the commit. */
+  private readonly unparsed = new Set<string>();
   onChange: (() => void) | undefined;
 
   private readonly socket: Socket;
   private readonly system: string;
+  private readonly tools: Record<string, Tool>;
   /** Turn 0 when present: sent like any other turn, never rendered. */
   readonly seed: string | undefined;
 
@@ -93,10 +111,12 @@ export class Thread {
       system?: string;
       initialTurns?: Anthropic.MessageParam[];
       seed?: string;
+      tools?: Record<string, Tool>;
     } = {},
   ) {
     this.socket = socket;
     this.system = opts.system ?? SYSTEM;
+    this.tools = opts.tools ?? {};
     this.seed = opts.seed;
     this.turns = opts.seed
       ? [{ role: "user", content: opts.seed }]
@@ -120,24 +140,69 @@ export class Thread {
   }
 
   get inFlight(): boolean {
-    return this.pending !== undefined;
+    return this.running;
   }
 
   send(text: string): Promise<void> {
-    if (this.pending) return Promise.resolve();
+    if (this.running) return Promise.resolve();
     this.turns.push({ role: "user", content: text });
     this.version++;
-    return this.request();
+    return this.run();
   }
 
   /** Requests a reply to the turns already present - the seeded first turn of
    * a learning thread, which the user never typed. */
   start(): Promise<void> {
-    if (this.pending || this.turns.length === 0) return Promise.resolve();
-    return this.request();
+    if (this.running || this.turns.length === 0) return Promise.resolve();
+    return this.run();
   }
 
-  private request(): Promise<void> {
+  /** One agent turn: request, execute whatever tools the model asked for,
+   * request again, until it replies without calling any. */
+  private async run(): Promise<void> {
+    this.running = true;
+    this.failed = false;
+    try {
+      for (;;) {
+        const content = await this.request();
+        if (this.failed) return;
+        const calls = content.filter(
+          (block): block is Anthropic.ToolUseBlockParam =>
+            block.type === "tool_use",
+        );
+        if (calls.length === 0) return;
+        // Every tool_use must be answered by exactly one tool_result in the
+        // immediately following user turn, in request order, or the next
+        // request is rejected outright.
+        const results = await Promise.all(
+          calls.map((call) => this.execute(call)),
+        );
+        this.turns.push({ role: "user", content: results });
+        this.version++;
+        this.onChange?.();
+      }
+    } finally {
+      this.running = false;
+      this.onChange?.();
+    }
+  }
+
+  private async execute(
+    call: Anthropic.ToolUseBlockParam,
+  ): Promise<Anthropic.ToolResultBlockParam> {
+    const result = this.unparsed.has(call.id)
+      ? ({ status: "error", error: "could not parse tool input" } as const)
+      : await runTool(this.tools[call.name], call);
+    return {
+      type: "tool_result",
+      tool_use_id: call.id,
+      content: result.status === "ok" ? result.text : result.error,
+      is_error: result.status === "error",
+    };
+  }
+
+  /** Resolves with the assistant content the request committed. */
+  private request(): Promise<Anthropic.ContentBlockParam[]> {
     const requestId = crypto.randomUUID();
     this.pending = { requestId, blocks: [], stopReason: null };
     this.version++;
@@ -150,11 +215,14 @@ export class Thread {
         system: this.system,
         stream: true,
         messages: [...this.turns],
+        ...(Object.keys(this.tools).length > 0
+          ? { tools: Object.values(this.tools).map((tool) => tool.spec) }
+          : {}),
       },
     };
     this.socket.send(JSON.stringify(message));
     this.onChange?.();
-    return new Promise<void>((resolve) => {
+    return new Promise<Anthropic.ContentBlockParam[]>((resolve) => {
       this.settle = resolve;
     });
   }
@@ -168,6 +236,7 @@ export class Thread {
         break;
       case "done":
       case "error":
+        this.failed = true;
         // A turn that ends without a message_stop still commits whatever text
         // arrived, so the next turn's array stays valid.
         this.commit();
@@ -217,11 +286,31 @@ export class Thread {
     const pending = this.pending;
     if (!pending) return;
     this.pending = undefined;
+    for (const block of pending.blocks) {
+      if (block?.type === "tool_use" && block.input === undefined) {
+        this.unparsed.add(block.id);
+      }
+    }
     const content = commitBlocks(pending.blocks);
     // MessageParam content must be non-empty, so an empty response is dropped.
     if (content.length > 0) this.turns.push({ role: "assistant", content });
-    this.settle?.();
+    this.settle?.(content);
     this.settle = undefined;
+  }
+}
+
+async function runTool(
+  tool: Tool | undefined,
+  call: Anthropic.ToolUseBlockParam,
+): Promise<ToolResult> {
+  if (!tool) return { status: "error", error: `unknown tool: ${call.name}` };
+  // Validating input against input_schema is the API's job; the client only
+  // checks that the streamed json parsed at all, which it did by here.
+  const input = (call.input ?? {}) as Record<string, unknown>;
+  try {
+    return await tool.execute(input);
+  } catch (error) {
+    return { status: "error", error: String(error) };
   }
 }
 

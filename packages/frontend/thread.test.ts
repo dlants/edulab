@@ -2,7 +2,7 @@ import type Anthropic from "@anthropic-ai/sdk";
 import type { ClientMessage } from "@edulab/iso/protocol.ts";
 import { expect, it } from "vitest";
 import { anchorText, type ThreadId } from "./selection.ts";
-import { type Socket, Thread } from "./thread.ts";
+import { type Socket, Thread, type Tool, type ToolResult } from "./thread.ts";
 
 class FakeSocket implements Socket {
   readonly sent: ClientMessage[] = [];
@@ -82,6 +82,11 @@ function toolCall(
       delta: { type: "input_json_delta", partial_json },
     });
   }
+}
+
+/** Lets the thread's tool execution and follow-up request run. */
+function flush(): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, 0));
 }
 
 function setup() {
@@ -217,6 +222,10 @@ it("surfaces a streamed tool call with its json parsed", async () => {
   toolCall(socket, 0, "t1", "read", ['{"path"', ':"a.txt"}']);
   socket.deliver({ type: "content_block_stop", index: 0 });
   socket.deliver({ type: "message_stop" } as Anthropic.RawMessageStreamEvent);
+  // No tool is configured, so the loop answers with an unknown-tool error and
+  // asks again; the call still projects as it was streamed.
+  await flush();
+  socket.stream(["ok"]);
   await turn;
 
   expect(thread.messages[1]).toEqual({
@@ -227,7 +236,7 @@ it("surfaces a streamed tool call with its json parsed", async () => {
       name: "read",
       input: { path: "a.txt" },
       inputJson: '{"path":"a.txt"}',
-      result: undefined,
+      result: { status: "error", error: "unknown tool: read" },
     },
   });
 });
@@ -249,12 +258,15 @@ it("projects text and a tool call in one turn as two entries", async () => {
   toolCall(socket, 1, "t1", "read", ['{"path":"a.txt"}']);
   socket.deliver({ type: "content_block_stop", index: 1 });
   socket.deliver({ type: "message_stop" } as Anthropic.RawMessageStreamEvent);
+  await flush();
+  socket.stream(["ok"]);
   await turn;
 
   expect(thread.messages.map((m) => m.type)).toEqual([
     "text",
     "text",
     "tool_use",
+    "text",
   ]);
   // The tool entry that follows must not disturb the offsets an anchor into
   // the prose above it already holds.
@@ -325,6 +337,154 @@ it("leaves input undefined while the json is still streaming", async () => {
   const committed = thread.messages[1];
   if (committed?.type !== "tool_use") throw new Error("expected a tool call");
   expect(committed.call.input).toEqual({});
+});
+
+function tool(
+  name: string,
+  execute: (input: Record<string, unknown>) => Promise<ToolResult>,
+): Tool {
+  return {
+    spec: {
+      name,
+      description: name,
+      input_schema: { type: "object", properties: {} },
+    },
+    execute,
+  };
+}
+
+/** Streams a complete tool call and ends the request. */
+function toolTurn(
+  socket: FakeSocket,
+  calls: ReadonlyArray<{ id: string; name: string; json: string }>,
+) {
+  calls.forEach((call, index) => {
+    toolCall(socket, index, call.id, call.name, [call.json]);
+    socket.deliver({ type: "content_block_stop", index });
+  });
+  socket.deliver({ type: "message_stop" } as Anthropic.RawMessageStreamEvent);
+}
+
+it("answers a tool call and re-requests with the result", async () => {
+  const socket = new FakeSocket();
+  const thread = new Thread(socket, {
+    tools: {
+      read: tool("read", async () => ({ status: "ok", text: "contents" })),
+    },
+  });
+
+  const turn = thread.send("hi");
+  toolTurn(socket, [{ id: "t1", name: "read", json: '{"path":"a.txt"}' }]);
+  await flush();
+  socket.stream(["done"]);
+  await turn;
+
+  expect(socket.sent).toHaveLength(2);
+  expect(socket.sent[1]?.params.messages.at(-1)).toEqual({
+    role: "user",
+    content: [
+      {
+        type: "tool_result",
+        tool_use_id: "t1",
+        content: "contents",
+        is_error: false,
+      },
+    ],
+  });
+  expect(thread.inFlight).toBe(false);
+});
+
+it("turns a throwing tool and an unknown tool into error results", async () => {
+  const socket = new FakeSocket();
+  const thread = new Thread(socket, {
+    tools: {
+      boom: tool("boom", () => Promise.reject(new Error("nope"))),
+    },
+  });
+
+  const turn = thread.send("hi");
+  toolTurn(socket, [
+    { id: "t1", name: "boom", json: "{}" },
+    { id: "t2", name: "ghost", json: "{}" },
+  ]);
+  await flush();
+  socket.stream(["recovered"]);
+  await turn;
+
+  expect(socket.sent[1]?.params.messages.at(-1)).toEqual({
+    role: "user",
+    content: [
+      {
+        type: "tool_result",
+        tool_use_id: "t1",
+        content: "Error: nope",
+        is_error: true,
+      },
+      {
+        type: "tool_result",
+        tool_use_id: "t2",
+        content: "unknown tool: ghost",
+        is_error: true,
+      },
+    ],
+  });
+});
+
+it("reports a tool call whose input never parsed as an error", async () => {
+  const socket = new FakeSocket();
+  const thread = new Thread(socket, {
+    tools: { read: tool("read", async () => ({ status: "ok", text: "ok" })) },
+  });
+
+  const turn = thread.send("hi");
+  toolCall(socket, 0, "t1", "read", ['{"path"']);
+  socket.deliver({ type: "content_block_stop", index: 0 });
+  socket.deliver({ type: "message_stop" } as Anthropic.RawMessageStreamEvent);
+  await flush();
+  socket.stream(["recovered"]);
+  await turn;
+
+  expect(socket.sent[1]?.params.messages.at(-1)).toEqual({
+    role: "user",
+    content: [
+      {
+        type: "tool_result",
+        tool_use_id: "t1",
+        content: "could not parse tool input",
+        is_error: true,
+      },
+    ],
+  });
+});
+
+it("sends the configured tool specs, and none when there are none", async () => {
+  const socket = new FakeSocket();
+  const read = tool("read", async () => ({ status: "ok", text: "ok" }));
+  const thread = new Thread(socket, { tools: { read } });
+  void thread.send("hi");
+  expect(socket.sent[0]?.params.tools).toEqual([read.spec]);
+
+  const plain = setup();
+  void plain.thread.send("hi");
+  expect(plain.socket.sent[0]?.params.tools).toBeUndefined();
+});
+
+it("ends the turn when a request errors mid tool call", async () => {
+  const socket = new FakeSocket();
+  const thread = new Thread(socket, {
+    tools: { read: tool("read", async () => ({ status: "ok", text: "ok" })) },
+  });
+  const turn = thread.send("hi");
+  toolCall(socket, 0, "t1", "read", ['{"path":"a.txt"}']);
+  socket.deliver({ type: "content_block_stop", index: 0 });
+  thread.handleFrame({
+    type: "error",
+    requestId: socket.requestId,
+    message: "boom",
+  });
+  await turn;
+  expect(socket.sent).toHaveLength(1);
+  expect(thread.inFlight).toBe(false);
 });
 
 it("drops the assistant turn when no text arrived", async () => {

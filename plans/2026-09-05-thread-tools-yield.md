@@ -207,6 +207,27 @@ Deviations:
 
 ## the tool loop
 
+**Done.** `send()`/`start()` delegate to `run()`, which loops request → execute
+all requested tools in parallel → append one `tool_result` per `tool_use` in
+request order → request again, until an assistant turn contains no tool calls.
+`inFlight` now tracks the whole turn (a `running` flag) rather than the single
+request, so the composer stays disabled while tools execute. `request()`
+resolves with the committed `ContentBlockParam[]`, which is what the loop
+branches on.
+
+Deviations:
+
+- `send()` still resolves `void`; `TurnResult` arrives with yield in the next
+  stage, where it has something to carry.
+- A `done`/`error` frame sets a `failed` flag that ends the turn even when tool
+  calls were committed — otherwise a truncated stream would trigger a request
+  the model never asked for.
+- Because a committed `tool_use` must carry an object the API would accept,
+  unparseable json commits as `{}`; the ids whose json never parsed are kept in
+  a `unparsed` set so `execute` can still answer them with `is_error`.
+- Two stage-2 tests now drive a second request, since an unconfigured tool is
+  answered with an unknown-tool error and the loop asks again.
+
 - Goal: `send()` runs a turn to completion, executing tools and re-requesting until the model stops.
 - Tests (unit): the `FakeSocket` is scripted to answer the first request with a tool call and the second with text.
   - The second request's `params.messages` ends with a user turn whose content is a `tool_result` matching the `tool_use` id — this is the integration that actually matters, so assert on the sent params, not on internal state.
