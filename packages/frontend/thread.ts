@@ -17,7 +17,7 @@ const SYSTEM = [
 
 export type Message = { role: "user" | "assistant"; text: string };
 
-/** The subset of WebSocket the conversation uses, so tests can stand in for it. */
+/** The subset of WebSocket the thread uses, so tests can stand in for it. */
 export type Socket = {
   send(data: string): void;
   addEventListener(
@@ -26,7 +26,7 @@ export type Socket = {
   ): void;
 };
 
-export class Conversation {
+export class Thread {
   private readonly turns: Anthropic.MessageParam[];
   private pending: { requestId: string; blocks: string[] } | undefined;
   private settle: (() => void) | undefined;

@@ -1,7 +1,7 @@
-import { Conversation } from "../conversation.ts";
 import { actionLabel } from "../prompt.ts";
 import { selectedSample, selectSample } from "../samples/index.ts";
 import { anchorText, overlaps, type ThreadId } from "../selection.ts";
+import { Thread } from "../thread.ts";
 import { ThreadTree } from "../threads.ts";
 import { AppView, type Msg, type State } from "../view.ts";
 
@@ -13,13 +13,13 @@ function connect(): WebSocket {
 /** Prototype 1: the task transcript, with learning threads hanging off the
  * passages the user picks out of it. */
 export function mount(container: HTMLElement): void {
-  // One socket for the whole app: every thread's Conversation adds its own
+  // One socket for the whole app: every Thread adds its own
   // listener and drops frames whose requestId it does not own, so streams
   // interleave over the single connection.
   const socket = connect();
   const tree = new ThreadTree(
     socket,
-    new Conversation(socket, { initialTurns: selectedSample()?.turns }),
+    new Thread(socket, { initialTurns: selectedSample()?.turns }),
     () => {
       refresh();
       view.sync(state);
@@ -48,26 +48,26 @@ export function mount(container: HTMLElement): void {
   /** Re-projects the tree onto the view's state. Everything but the fields the
    * user is editing is derived, so this runs after every dispatch. */
   function refresh(): void {
-    const thread = tree.get(focus);
+    const node = tree.get(focus);
     state.thread = focus;
     state.depth = state.split ? tree.path(focus).length : 0;
-    state.canDescend = thread.activeChild !== null;
-    state.messages = thread.conversation.messages;
-    state.inFlight = thread.conversation.inFlight;
-    state.draft = thread.draft;
+    state.canDescend = node.activeChild !== null;
+    state.messages = node.thread.messages;
+    state.inFlight = node.thread.inFlight;
+    state.draft = node.draft;
     state.marks = tree.marks(focus);
-    const own = thread.origin;
+    const own = node.origin;
     state.origin = own
       ? {
           action: actionLabel(own.action),
           quote: anchorText(
             own.anchor,
-            tree.get(own.anchor.thread).conversation.messages,
+            tree.get(own.anchor.thread).thread.messages,
           ),
         }
       : null;
-    state.activeMark = thread.activeChild;
-    const activeChild = thread.activeChild;
+    state.activeMark = node.activeChild;
+    const activeChild = node.activeChild;
     if (!activeChild) {
       state.child = null;
       return;
@@ -76,27 +76,27 @@ export function mount(container: HTMLElement): void {
     const origin = child.origin;
     state.child = {
       action: origin ? actionLabel(origin.action) : "",
-      messages: child.conversation.messages,
-      inFlight: child.conversation.inFlight,
+      messages: child.thread.messages,
+      inFlight: child.thread.inFlight,
       draft: child.draft,
     };
   }
 
   function send(id: ThreadId): void {
-    const thread = tree.get(id);
-    const text = thread.draft.trim();
-    if (text === "" || thread.conversation.inFlight) return;
-    thread.draft = "";
-    thread.conversation.send(text).then(undefined, (e: unknown) => {
+    const node = tree.get(id);
+    const text = node.draft.trim();
+    if (text === "" || node.thread.inFlight) return;
+    node.draft = "";
+    node.thread.send(text).then(undefined, (e: unknown) => {
       console.error(e);
     });
   }
 
   function update(state: State, msg: Msg): void {
-    const thread = tree.get(focus);
+    const node = tree.get(focus);
     switch (msg.type) {
       case "DRAFT_CHANGED":
-        thread.draft = msg.draft;
+        node.draft = msg.draft;
         break;
       case "SAMPLE_CHANGED":
         selectSample(msg.id === "" ? undefined : msg.id);
@@ -109,7 +109,7 @@ export function mount(container: HTMLElement): void {
           state.split = true;
           break;
         }
-        const child = thread.activeChild;
+        const child = node.activeChild;
         if (!child) break;
         focus = child;
         state.anchor = null;
@@ -117,7 +117,7 @@ export function mount(container: HTMLElement): void {
         break;
       }
       case "GO_BACK": {
-        const parent = thread.origin?.anchor.thread;
+        const parent = node.origin?.anchor.thread;
         if (parent === undefined) state.split = false;
         else focus = parent;
         state.anchor = null;
@@ -126,11 +126,11 @@ export function mount(container: HTMLElement): void {
       }
       case "SELECTION_CHANGED":
         state.anchor = msg.anchor;
-        thread.activeChild = null;
+        node.activeChild = null;
         break;
       case "MARK_CLICKED":
         state.anchor = null;
-        thread.activeChild = msg.thread;
+        node.activeChild = msg.thread;
         break;
       case "LEARNING_MSG":
         switch (msg.msg.type) {
@@ -142,7 +142,7 @@ export function mount(container: HTMLElement): void {
             state.query = "";
             tree
               .get(id)
-              .conversation.start()
+              .thread.start()
               .then(undefined, (e: unknown) => {
                 console.error(e);
               });
@@ -154,7 +154,7 @@ export function mount(container: HTMLElement): void {
         }
         break;
       case "CHILD_MSG": {
-        const activeChild = thread.activeChild;
+        const activeChild = node.activeChild;
         if (!activeChild) break;
         switch (msg.msg.type) {
           case "DRAFT_CHANGED":

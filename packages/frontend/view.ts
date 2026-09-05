@@ -1,4 +1,3 @@
-import type { Message } from "./conversation.ts";
 import {
   type Msg as LearningMsg,
   LearningPane,
@@ -15,6 +14,7 @@ import {
   segments,
   type ThreadId,
 } from "./selection.ts";
+import type { Message } from "./thread.ts";
 import {
   Binder,
   cls,

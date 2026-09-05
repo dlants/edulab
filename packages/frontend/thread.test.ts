@@ -1,7 +1,7 @@
 import type Anthropic from "@anthropic-ai/sdk";
 import type { ClientMessage } from "@edulab/iso/protocol.ts";
 import { expect, it } from "vitest";
-import { Conversation, type Socket } from "./conversation.ts";
+import { type Socket, Thread } from "./thread.ts";
 
 class FakeSocket implements Socket {
   readonly sent: ClientMessage[] = [];
@@ -58,13 +58,13 @@ class FakeSocket implements Socket {
 
 function setup() {
   const socket = new FakeSocket();
-  return { socket, conversation: new Conversation(socket) };
+  return { socket, thread: new Thread(socket) };
 }
 
 it("accumulates deltas into the streaming assistant message", async () => {
-  const { socket, conversation } = setup();
-  const turn = conversation.send("hi");
-  expect(conversation.messages).toEqual([{ role: "user", text: "hi" }]);
+  const { socket, thread } = setup();
+  const turn = thread.send("hi");
+  expect(thread.messages).toEqual([{ role: "user", text: "hi" }]);
 
   socket.deliver({
     type: "content_block_start",
@@ -76,7 +76,7 @@ it("accumulates deltas into the streaming assistant message", async () => {
     index: 0,
     delta: { type: "text_delta", text: "he" },
   });
-  expect(conversation.messages[1]).toEqual({ role: "assistant", text: "he" });
+  expect(thread.messages[1]).toEqual({ role: "assistant", text: "he" });
 
   socket.deliver({
     type: "content_block_delta",
@@ -86,24 +86,24 @@ it("accumulates deltas into the streaming assistant message", async () => {
   socket.deliver({ type: "message_stop" } as Anthropic.RawMessageStreamEvent);
   await turn;
 
-  expect(conversation.inFlight).toBe(false);
-  expect(conversation.messages).toEqual([
+  expect(thread.inFlight).toBe(false);
+  expect(thread.messages).toEqual([
     { role: "user", text: "hi" },
     { role: "assistant", text: "hello" },
   ]);
 });
 
-it("sends the whole conversation with alternating roles on the second turn", async () => {
-  const { socket, conversation } = setup();
-  const first = conversation.send("one");
+it("sends the whole thread with alternating roles on the second turn", async () => {
+  const { socket, thread } = setup();
+  const first = thread.send("one");
   socket.stream(["1"]);
   await first;
 
-  const second = conversation.send("two");
+  const second = thread.send("two");
   socket.stream(["2"]);
   await second;
 
-  expect(conversation.messages).toEqual([
+  expect(thread.messages).toEqual([
     { role: "user", text: "one" },
     { role: "assistant", text: "1" },
     { role: "user", text: "two" },
@@ -117,16 +117,16 @@ it("sends the whole conversation with alternating roles on the second turn", asy
 });
 
 it("ignores send while a turn is in flight", () => {
-  const { socket, conversation } = setup();
-  void conversation.send("one");
-  void conversation.send("two");
+  const { socket, thread } = setup();
+  void thread.send("one");
+  void thread.send("two");
   expect(socket.sent).toHaveLength(1);
-  expect(conversation.messages).toEqual([{ role: "user", text: "one" }]);
+  expect(thread.messages).toEqual([{ role: "user", text: "one" }]);
 });
 
 it("commits partial text when a turn ends in error", async () => {
-  const { socket, conversation } = setup();
-  const turn = conversation.send("hi");
+  const { socket, thread } = setup();
+  const turn = thread.send("hi");
   socket.deliver({
     type: "content_block_start",
     index: 0,
@@ -137,14 +137,14 @@ it("commits partial text when a turn ends in error", async () => {
     index: 0,
     delta: { type: "text_delta", text: "partial" },
   });
-  conversation.handleFrame({
+  thread.handleFrame({
     type: "error",
     requestId: socket.requestId,
     message: "boom",
   });
   await turn;
 
-  expect(conversation.messages).toEqual([
+  expect(thread.messages).toEqual([
     { role: "user", text: "hi" },
     { role: "assistant", text: "partial" },
   ]);
@@ -152,18 +152,18 @@ it("commits partial text when a turn ends in error", async () => {
 
 it("sends the seed as turn 0 but never renders it", async () => {
   const socket = new FakeSocket();
-  const conversation = new Conversation(socket, {
+  const thread = new Thread(socket, {
     system: "learning",
     seed: "the framing",
   });
-  expect(conversation.messages).toEqual([]);
+  expect(thread.messages).toEqual([]);
 
-  const first = conversation.start();
+  const first = thread.start();
   socket.stream(["hello"]);
   await first;
-  expect(conversation.messages).toEqual([{ role: "assistant", text: "hello" }]);
+  expect(thread.messages).toEqual([{ role: "assistant", text: "hello" }]);
 
-  const second = conversation.send("more");
+  const second = thread.send("more");
   socket.stream(["ok"]);
   await second;
   for (const sent of socket.sent) {
@@ -176,9 +176,9 @@ it("sends the seed as turn 0 but never renders it", async () => {
 });
 
 it("drops the assistant turn when no text arrived", async () => {
-  const { socket, conversation } = setup();
-  const turn = conversation.send("hi");
-  conversation.handleFrame({ type: "done", requestId: socket.requestId });
+  const { socket, thread } = setup();
+  const turn = thread.send("hi");
+  thread.handleFrame({ type: "done", requestId: socket.requestId });
   await turn;
-  expect(conversation.messages).toEqual([{ role: "user", text: "hi" }]);
+  expect(thread.messages).toEqual([{ role: "user", text: "hi" }]);
 });

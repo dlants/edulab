@@ -137,7 +137,7 @@ test("the composer is disabled while a turn is in flight", async ({ page }) => {
   await expect(input).toHaveValue("");
 });
 
-test("a second turn sends the full conversation", async ({ page }) => {
+test("a second turn sends the full thread", async ({ page }) => {
   const backend = await fakeBackend(page, ["ok"]);
   backend.release();
   await page.goto("/");

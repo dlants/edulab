@@ -1,62 +1,62 @@
-import { Conversation, type Socket } from "./conversation.ts";
 import { type Action, LEARNING_SYSTEM, seedTurn } from "./prompt.ts";
 import type { Anchor, Mark, ThreadId } from "./selection.ts";
+import { type Socket, Thread } from "./thread.ts";
 
 export type { Action };
 
 /** `anchor.thread` is the parent, so the link upward is the highlight itself. */
 export type Origin = { anchor: Anchor; action: Action };
 
-export type Thread = {
+export type TreeNode = {
   id: ThreadId;
   /** null only for the root task thread. */
   origin: Origin | null;
-  conversation: Conversation;
+  thread: Thread;
   /** Creation order; each child's `origin.anchor` is its highlight. */
   children: ThreadId[];
   activeChild: ThreadId | null;
   draft: string;
 };
 
-/** The tree of conversations. Every thread but the root was opened from a
+/** The tree of threads. Every thread but the root was opened from a
  * passage of its parent, so a thread and the highlight over its parent are the
  * same edge seen from either end. Threads are never destroyed or reparented. */
 export class ThreadTree {
-  private readonly threads = new Map<ThreadId, Thread>();
+  private readonly threads = new Map<ThreadId, TreeNode>();
   private nextId = 0;
   readonly root: ThreadId;
   private readonly socket: Socket;
-  /** Attached to every conversation the tree owns, so a stream anywhere in the
+  /** Attached to every thread the tree owns, so a stream anywhere in the
    * tree re-syncs the app. */
   private readonly onChange: () => void;
 
-  constructor(socket: Socket, root: Conversation, onChange: () => void) {
+  constructor(socket: Socket, root: Thread, onChange: () => void) {
     this.socket = socket;
     this.onChange = onChange;
     this.root = this.add(null, root);
   }
 
-  get(id: ThreadId): Thread {
-    const thread = this.threads.get(id);
-    if (!thread) throw new Error(`unknown thread ${id}`);
-    return thread;
+  get(id: ThreadId): TreeNode {
+    const node = this.threads.get(id);
+    if (!node) throw new Error(`unknown thread ${id}`);
+    return node;
   }
 
-  /** Seeds a child conversation from the parent's own seed plus its transcript
+  /** Seeds a child thread from the parent's own seed plus its transcript
    * up to `anchor`, links it in, and makes it the parent's active child. The
    * caller starts it: the tree does not own the request lifecycle. */
   open(anchor: Anchor, action: Action): ThreadId {
     const parent = this.get(anchor.thread);
-    const conversation = new Conversation(this.socket, {
+    const thread = new Thread(this.socket, {
       system: LEARNING_SYSTEM,
       seed: seedTurn(
-        parent.conversation.seed,
-        parent.conversation.messages,
+        parent.thread.seed,
+        parent.thread.messages,
         anchor,
         action,
       ),
     });
-    const id = this.add({ anchor, action }, conversation);
+    const id = this.add({ anchor, action }, thread);
     parent.children.push(id);
     parent.activeChild = id;
     return id;
@@ -82,13 +82,13 @@ export class ThreadTree {
     return out;
   }
 
-  private add(origin: Origin | null, conversation: Conversation): ThreadId {
+  private add(origin: Origin | null, thread: Thread): ThreadId {
     const id = `t${this.nextId++}` as ThreadId;
-    conversation.onChange = this.onChange;
+    thread.onChange = this.onChange;
     this.threads.set(id, {
       id,
       origin,
-      conversation,
+      thread,
       children: [],
       activeChild: null,
       draft: "",

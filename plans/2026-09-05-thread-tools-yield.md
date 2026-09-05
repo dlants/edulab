@@ -28,6 +28,8 @@ Consumers:
 
 ## What we borrow from magenta
 
+**While implementing, open the magenta sources and rip them off liberally.** The files below are the reference implementation for every piece of this plan; they are on disk at `~/src/magenta.nvim` and are meant to be read and copied from, not paraphrased from memory. Do not reinvent the stream accumulator, the tool-result completion rule, or the yield handshake — they are subtle, already debugged, and the shapes below are lifted from them. Simplify aggressively (drop the `Result` type, the hooks, the providers abstraction), but start from magenta's code rather than from a blank file, and when something here is ambiguous the magenta implementation is the tiebreaker.
+
 - `node/core/src/agent.ts` — `runAgentLoop`: request → collect requested tools → execute → *always* append a complete set of tool results → loop. The invariant "every `tool_use` gets exactly one `tool_result`, even on abort or executor failure" (`completeToolResults`) is the part worth stealing.
 - `node/core/src/providers/anthropic-inference.ts` — `tool_use` streaming: `content_block_start` opens a block carrying `inputJson: string`, `input_json_delta` appends `partial_json`, `content_block_stop` parses it.
 - `node/core/src/tools/yield-to-parent.ts` — `getSpec(yieldSchema?)` swaps the tool's `input_schema` for a caller-supplied one; `execute` returns a fixed `"Yield acknowledged."` text result plus a `structuredResult` carrying the raw input. The thread, not the model, reads the structured value.
@@ -37,20 +39,27 @@ We do **not** borrow: `NativeInferenceManager`, hooks, `SuspendReason`, retries,
 
 # Design
 
-`Thread` grows from "one request" to "one turn": a loop of request → tools → request, ending when the model stops without tool calls, or yields, or errors.
+A thread is still a sequence of user turns. What changes is the **agent turn**: one `send()` no longer means one request, it means a loop of request → tool execution → request, which ends when the model responds without calling a tool, or yields, or errors.
 
 ## Naming
 
 - `conversation.ts` → `thread.ts`; `Conversation` → `Thread`; `conversation.test.ts` → `thread.test.ts`.
 - The tree node in `threads.ts` collides, so it becomes `TreeNode`, and its `conversation` field becomes `thread`. `ThreadTree` and `ThreadId` keep their names — they were always about this concept.
 
-## Messages and selection
+## The log and the derived transcript
 
-Selection anchors are character offsets into `message.text`, and the transcript is append-only. Rather than turn `Message` into a block list (which would break every anchor and all of `selection.ts`), `text` stays the prose of the turn and tool activity rides alongside:
+Following magenta's `NativeInferenceManager`: **the `Anthropic.MessageParam[]` is the log**, and everything the UI renders is derived from it one-directionally. The log is the wire format — nothing is written into it that the API would not accept, and nothing is converted back out of the display type. `messages` is a memoized projection recomputed whenever the log or the streaming block changes.
 
-`Message = { role; text; tools: ReadonlyArray<ToolCall> }`
+The projection flattens the log into a sequence of blocks, in log order:
 
-Tool calls are rendered under the message, are not anchorable, and `selection.ts` is untouched. This is a deliberate limitation: the user cannot highlight inside a tool call. Prototype 1 highlights prose.
+- `text` blocks from either role become a `text` entry.
+- `tool_use` blocks become a `tool_use` entry, paired with the `tool_result` carrying the same id — which lives in the *following* user turn in the log but belongs with the call in the transcript. This pairing is the whole reason for a derived view: the log's shape is dictated by the API, the transcript's by what the user should see.
+- The seed turn is dropped, as today.
+- The in-flight streaming block is appended last, so a partial response and a partial tool input both render.
+
+Selection anchors index `{ msg, offset }` into this derived sequence, so a `text` entry has stable offsets exactly as today. `tool_use` entries are not anchorable for now (`anchorText` skips them, `segments` is only asked about text entries); making them anchorable is a later question. What matters is that the derived sequence is *the* thing selection indexes, so widening it later is a change to the projection, not to the log.
+
+A consequence to hold on to: a single assistant turn in the log can produce several transcript entries (prose, a tool call, more prose). That is what an agent turn now looks like, and the transcript should show it that way rather than gluing the prose back together.
 
 ## The loop
 
@@ -64,8 +73,6 @@ Tool calls are rendered under the message, are not anchorable, and `selection.ts
 6. Otherwise execute every requested tool **in parallel**, then append **one** user turn holding a `tool_result` for **every** `tool_use` id, in request order. A tool that is unknown, whose input fails to parse, or that throws yields `is_error: true` with the reason. This is `completeToolResults`: the array must stay valid for the next request.
 7. If any executed tool was `yield`, stop here rather than issuing another request, and settle the thread with its input.
 8. A `done`/`error` frame with a half-written assistant turn commits what arrived and ends the turn, as today.
-
-A `MAX_TURNS` constant (say 20) bounds the loop, so a tool-calling cycle cannot spin the demo forever.
 
 ## Yield vs. ordinary tools
 
@@ -95,6 +102,8 @@ export type ToolCall = {
   input: Record<string, unknown> | undefined;
   /** Raw accumulated json, so a partial call is still renderable. */
   inputJson: string;
+  /** Derived from the paired tool_result block in the next user turn; absent
+   * while the tool is still running. */
   result: ToolResult | undefined;
 };
 
@@ -102,11 +111,11 @@ export type ToolResult =
   | { status: "ok"; text: string }
   | { status: "error"; error: string };
 
-export type Message = {
-  role: "user" | "assistant";
-  text: string;
-  tools: ReadonlyArray<ToolCall>;
-};
+/** One entry of the derived transcript. `Message` is kept as the name the view
+ * and selection already use, but it is now a block, not a turn. */
+export type Message =
+  | { type: "text"; role: "user" | "assistant"; text: string }
+  | { type: "tool_use"; role: "assistant"; call: ToolCall };
 
 /** A tool the thread can run, client side. */
 export type Tool = {
@@ -121,8 +130,7 @@ export type YieldValue =
 export type TurnResult =
   | { type: "completed" }
   | { type: "yielded"; value: YieldValue }
-  | { type: "error"; message: string }
-  | { type: "exhausted" }; // hit MAX_TURNS
+  | { type: "error"; message: string };
 
 export type ThreadOpts = {
   system?: string;
@@ -164,7 +172,8 @@ const DEFAULT_YIELD_SCHEMA = {
 
 - Every `tool_use` block in an assistant turn is answered by exactly one `tool_result` block in the immediately following user turn, in the same order — even when a tool throws, is unknown, has unparseable input, or the turn ends at a yield.
 - Frames whose `requestId` the thread does not own are ignored, so many threads still multiplex over one socket.
-- `messages` never exposes the seed turn, and offsets into `message.text` remain stable once written — appending tool calls to a message must not shift its text.
+- The log holds only what the API accepts; `Message` is derived from it and never converted back, so no wire-only field ever needs to appear on the display type.
+- `messages` never exposes the seed turn, and the index and offsets of an already-committed text entry never change as the log grows — anchors are only valid because of this.
 - A thread with an in-flight request rejects `send()`, as today.
 - `RawMessageStreamEvent` stays an open union: unrecognized events `console.warn`, and "ignored on purpose" stays a separate branch from "never heard of it".
 - Validation of tool input is the API's job via `input_schema`; the client re-checks only that the streamed json parsed at all.
@@ -173,15 +182,18 @@ const DEFAULT_YIELD_SCHEMA = {
 
 ## rename
 
-- Goal: `Conversation` is `Thread` in `thread.ts`; `threads.ts`'s node type is `TreeNode` with a `thread` field; `chat.ts`, `view.ts`, tests and specs compile and pass unchanged in behaviour. `Message` gains `tools: []`, always empty. No new behaviour.
+**Done.** `conversation.ts`/`conversation.test.ts` moved to `thread.ts`/`thread.test.ts`, `Conversation` is `Thread`, and the tree node is `TreeNode` with a `thread` field. `chat.ts` renames its `thread` locals to `node` so `node.thread` reads clearly. Behaviour and shapes unchanged; typecheck, vitest and biome are green.
+
+- Goal: `Conversation` is `Thread` in `thread.ts`; `threads.ts`'s node type is `TreeNode` with a `thread` field; `chat.ts`, `view.ts`, tests and specs compile and pass unchanged in behaviour. Pure rename, no shape change — `Message` is still `{ role, text }`.
 - Tests: the existing `thread.test.ts` (renamed) and `chat.spec.ts` pass untouched apart from identifiers. `npm run typecheck` and `npm run lint`.
 
 ## tool use in the stream accumulator
 
-- Goal: the accumulator understands `tool_use` blocks and `stop_reason`. `Message.tools` is populated. Still no execution: a turn that requests tools stops and reports the calls.
+- Goal: `messages` becomes a derived projection over the log rather than a per-turn map; the accumulator understands `tool_use` blocks and `stop_reason`. Still no execution: a turn that requests tools stops and reports the calls.
 - Tests (unit, `thread.test.ts` over `FakeSocket`):
   - A `tool_use` block streamed as `content_block_start` + two `input_json_delta`s surfaces on `messages` with the concatenated json parsed into `input`.
-  - Text and a tool call in the same assistant message both land, and `message.text` contains only the text — an anchor taken before the tool block is unmoved by it.
+  - Text and a tool call in the same assistant turn project to two entries in log order, and an anchor into the text entry is unaffected by the tool entry that follows it.
+  - A `tool_result` in the following user turn is paired onto its call rather than rendered as a user message of its own.
   - A stream that ends mid-`input_json_delta` leaves `input: undefined` and the partial `inputJson` intact rather than throwing.
 
 ## the tool loop
@@ -191,7 +203,6 @@ const DEFAULT_YIELD_SCHEMA = {
   - The second request's `params.messages` ends with a user turn whose content is a `tool_result` matching the `tool_use` id — this is the integration that actually matters, so assert on the sent params, not on internal state.
   - A tool that rejects, and a tool the thread has never heard of, both still produce an `is_error` `tool_result`, and the loop continues.
   - Two tool calls in one message produce two results in one user turn, in request order.
-  - `MAX_TURNS` is reached when the script always answers with a tool call: resolves `{ type: "exhausted" }` and stops sending.
   - `params.tools` carries the specs of the configured tools, and is absent when there are none.
 
 ## yield
