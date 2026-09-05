@@ -26,7 +26,7 @@ Everything here is a demo, and the scaffolding constraints are deliberate. No da
 
 # Conventions
 
-**Use the type system.** Disjoint unions over optional fields, exhaustive switches, branded ids.
+**Use the type system.** Disjoint unions over optional fields, exhaustive switches, branded ids. Prefer nominal/branded types over bare strings wherever a string is really an identifier — including map and record *keys* (`Record<ToolName, Tool>`, not `Record<string, Tool>`).
 
 **Simplicity over abstraction.** This is prototype code with a short life. Write the concrete thing; do not build a provider abstraction or a plugin system for a second case that may never arrive. `@anthropic-ai/sdk` types are used directly rather than wrapped.
 
