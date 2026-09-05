@@ -1,11 +1,19 @@
+import type Anthropic from "@anthropic-ai/sdk";
 import { type Action, LEARNING_SYSTEM, seedTurn } from "./prompt.ts";
 import type { Anchor, Mark, ThreadId } from "./selection.ts";
+import type { Tool, TurnResult } from "./thread.ts";
 import { type Socket, Thread } from "./thread.ts";
 
 export type { Action };
 
 /** `anchor.thread` is the parent, so the link upward is the highlight itself. */
 export type Origin = { anchor: Anchor; action: Action };
+
+/** What a child thread is given beyond its seed. */
+export type ChildOpts = {
+  tools?: Record<string, Tool>;
+  yieldSchema?: Anthropic.Tool.InputSchema | "text";
+};
 
 export type TreeNode = {
   id: ThreadId;
@@ -45,7 +53,7 @@ export class ThreadTree {
   /** Seeds a child thread from the parent's own seed plus its transcript
    * up to `anchor`, links it in, and makes it the parent's active child. The
    * caller starts it: the tree does not own the request lifecycle. */
-  open(anchor: Anchor, action: Action): ThreadId {
+  open(anchor: Anchor, action: Action, opts: ChildOpts = {}): ThreadId {
     const parent = this.get(anchor.thread);
     const thread = new Thread(this.socket, {
       system: LEARNING_SYSTEM,
@@ -55,11 +63,19 @@ export class ThreadTree {
         anchor,
         action,
       ),
+      tools: opts.tools,
+      yieldSchema: opts.yieldSchema,
     });
     const id = this.add({ anchor, action }, thread);
     parent.children.push(id);
     parent.activeChild = id;
     return id;
+  }
+
+  /** What a child thread settled with, once it has yielded. The parent renders
+   * threads it never awaited, so the settled value has to be readable here. */
+  result(id: ThreadId): TurnResult | undefined {
+    return this.get(id).thread.result;
   }
 
   /** The highlights to draw over `id`'s transcript: one per child. */

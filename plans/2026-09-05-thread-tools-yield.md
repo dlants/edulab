@@ -264,6 +264,25 @@ Deviations:
 
 ## rendering and the tree
 
+**Done.** `MessageView` renders a `tool_use` entry as a `[data-tool]` block —
+name, the raw `inputJson`, and the paired result — placed *outside* the
+`.text` span so `resolvePoint` still refuses to anchor into it. `ThreadTree.open()`
+takes a third `ChildOpts` argument (`tools`, `yieldSchema`) forwarded to the
+child `Thread`, and `ThreadTree.result(id)` exposes the child's settled yield to
+a parent that never awaited it.
+
+Deviations:
+
+- The yield half is covered by a new unit suite `packages/frontend/threads.test.ts`
+  over a `FakeSocket`, not by Playwright: nothing in the UI opens a child with a
+  yield schema yet, so there is no browser surface to drive. The tree, not
+  `Thread` alone, is what the test exercises, which is what the plan asked for.
+- The tool block is always in the DOM and hidden for text entries, so the e2e
+  assertions use `:visible`.
+- `selectRange` in `chat.spec.ts` now takes `li.children[1]` rather than
+  `lastElementChild`, since the tool block is the last child.
+- `chat.ts` is unchanged: it passes no tools today.
+
 - Goal: tool calls are visible in the transcript, and `ThreadTree.open()` can pass tools and a yield schema to a child.
 - Tests:
   - `chat.spec.ts`: the scripted backend emits a tool call; the transcript shows the tool name, and highlighting the prose above it still opens a learning thread at the right offsets.

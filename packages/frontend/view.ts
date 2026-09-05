@@ -74,6 +74,8 @@ const navClass = cls("nav");
 const depthClass = cls("depth");
 const markClass = cls("mark");
 const textClass = cls("text");
+const toolClass = cls("tool");
+const toolResultClass = cls("tool-result");
 const threadPaneClass = cls("thread-pane");
 const threadActionClass = cls("thread-action");
 const bodyClass = cls("body");
@@ -173,6 +175,25 @@ mountStyle(`
   background: rgba(0, 0, 0, 0.05);
   border-radius: 0.5rem;
   padding: 0.5rem 0.75rem;
+}
+.${toolClass} {
+  font-family: ui-monospace, monospace;
+  font-size: 0.8rem;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 0.4rem;
+  padding: 0.4rem 0.6rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  overflow-x: auto;
+}
+.${toolClass} pre {
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.${toolResultClass}[data-status="error"] {
+  color: #b00020;
 }
 .${roleClass} {
   display: block;
@@ -286,10 +307,21 @@ class MessageView implements View<MessageState, SegmentMsg> {
   ) {
     const roleRef = ref("role");
     const textRef = ref("text");
+    const toolRef = ref("tool");
+    const toolNameRef = ref("tool-name");
+    const toolInputRef = ref("tool-input");
+    const toolResultRef = ref("tool-result");
     container.className = messageClass;
+    // The tool block sits outside the .text span on purpose: resolvePoint only
+    // anchors inside it, so a tool call is rendered but not selectable.
     container.innerHTML = sanitize`
       <span class="${roleClass}" data-ref="${roleRef}"></span>
       <span class="${textClass}" data-ref="${textRef}"></span>
+      <div class="${toolClass}" data-tool data-ref="${toolRef}">
+        <strong data-tool-name data-ref="${toolNameRef}"></strong>
+        <pre data-tool-input data-ref="${toolInputRef}"></pre>
+        <pre class="${toolResultClass}" data-tool-result data-ref="${toolResultRef}"></pre>
+      </div>
     `;
     this.container = container;
     this.b = new Binder(container, initial);
@@ -312,6 +344,18 @@ class MessageView implements View<MessageState, SegmentMsg> {
         ),
       ),
     );
+    this.b.bindVisible(toolRef, (s) => s.message.type === "tool_use");
+    this.b.bindText(toolNameRef, (s) =>
+      s.message.type === "tool_use" ? s.message.call.name : "",
+    );
+    this.b.bindText(toolInputRef, (s) =>
+      s.message.type === "tool_use" ? s.message.call.inputJson : "",
+    );
+    this.b.bindText(toolResultRef, (s) => resultText(s.message));
+    this.b.bindVisible(toolResultRef, (s) => resultText(s.message) !== "");
+    this.b.bindAttr(toolResultRef, "data-status", (s) =>
+      s.message.type === "tool_use" ? s.message.call.result?.status : undefined,
+    );
     this.b.bindContainerAttr("data-role", (s) => s.message.role);
   }
 
@@ -323,6 +367,13 @@ class MessageView implements View<MessageState, SegmentMsg> {
     this.b.cleanup();
     this.container.innerHTML = "";
   }
+}
+
+function resultText(message: Message): string {
+  if (message.type !== "tool_use") return "";
+  const result = message.call.result;
+  if (!result) return "";
+  return result.status === "ok" ? result.text : result.error;
 }
 
 export type ThreadPaneState = {

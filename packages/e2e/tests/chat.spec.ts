@@ -46,6 +46,49 @@ async function fakeBackend(page: Page, chunks: string[]) {
   return { release, started };
 }
 
+/** Answers the first request with prose plus a tool call, and every later one
+ * with prose. The app configures no tools, so the call comes back as an error
+ * result - what matters here is that the call is rendered at all. */
+async function toolBackend(page: Page) {
+  await page.routeWebSocket("**/api/socket", (ws) => {
+    let requests = 0;
+    ws.onMessage((raw) => {
+      const message = JSON.parse(String(raw)) as ClientMessage;
+      const send = (frame: ServerFrame) => ws.send(JSON.stringify(frame));
+      const first = requests++ === 0;
+      const stream: Anthropic.RawMessageStreamEvent[] = first
+        ? [
+            ...events([REPLY]).slice(0, -1),
+            {
+              type: "content_block_start",
+              index: 1,
+              content_block: {
+                type: "tool_use",
+                id: "call-1",
+                name: "read_file",
+                input: {},
+                caller: { type: "direct" },
+              },
+            },
+            {
+              type: "content_block_delta",
+              index: 1,
+              delta: {
+                type: "input_json_delta",
+                partial_json: '{"path":"a.ts"}',
+              },
+            },
+            { type: "content_block_stop", index: 1 },
+            { type: "message_stop" } as Anthropic.RawMessageStreamEvent,
+          ]
+        : events(["and then"]);
+      for (const event of stream) {
+        send({ type: "event", requestId: message.requestId, event });
+      }
+    });
+  });
+}
+
 /** Selects characters [start, end) of message `msg` and lets the app capture
  * it, which it does on mouseup over the transcript. */
 async function selectRange(
@@ -57,7 +100,9 @@ async function selectRange(
   await page.evaluate(
     ({ msg, start, end }) => {
       const li = document.querySelectorAll("ul")[0].children[msg];
-      const root = li.lastElementChild as HTMLElement;
+      // role span, text span, tool block: the text span is where the offsets
+      // the app anchors into live.
+      const root = li.children[1] as HTMLElement;
       const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
       let at = 0;
       let from: [Node, number] | null = null;
@@ -402,6 +447,31 @@ test("nesting goes three deep", async ({ page }) => {
   expect(occurrences(seed, SENTENCE)).toBe(1);
   expect(occurrences(seed, REPLY)).toBe(2);
   expect(seed).toContain("beta");
+});
+
+test("a tool call is rendered and text above it stays selectable", async ({
+  page,
+}) => {
+  await toolBackend(page);
+  await page.goto("/");
+  await page.getByRole("textbox").fill(SENTENCE);
+  await page.getByRole("textbox").press("Enter");
+
+  await expect(taskTranscript(page).locator("li")).toHaveCount(4);
+  await expect(page.locator("[data-tool-name]:visible")).toHaveText(
+    "read_file",
+  );
+  await expect(page.locator("[data-tool-input]:visible")).toHaveText(
+    '{"path":"a.ts"}',
+  );
+  await expect(page.locator("[data-tool-result]:visible")).toHaveText(
+    /unknown tool: read_file/,
+  );
+
+  await page.getByRole("button", { name: "Reflect" }).click();
+  await selectRange(page, 1, 0, 5);
+  await page.getByRole("button", { name: "I don't understand this." }).click();
+  await expect(page.locator("[data-mark]")).toHaveText("alpha");
 });
 
 test("a new selection leaves committed marks rendered", async ({ page }) => {
