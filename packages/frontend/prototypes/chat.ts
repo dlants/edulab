@@ -15,6 +15,10 @@ export function mount(container: HTMLElement): void {
     messages: conversation.messages,
     inFlight: false,
     draft: "",
+    mode: "task",
+    anchor: null,
+    query: "",
+    pending: null,
   };
 
   function update(state: State, msg: Msg): void {
@@ -31,6 +35,23 @@ export function mount(container: HTMLElement): void {
         });
         break;
       }
+      case "MODE_TOGGLED":
+        state.mode = state.mode === "task" ? "learning" : "task";
+        break;
+      case "SELECTION_CHANGED":
+        state.anchor = msg.anchor;
+        state.pending = null;
+        break;
+      case "LEARNING_MSG":
+        switch (msg.msg.type) {
+          case "ACTION":
+            state.pending = msg.msg.action;
+            break;
+          case "QUERY_CHANGED":
+            state.query = msg.msg.query;
+            break;
+        }
+        break;
     }
     state.messages = conversation.messages;
     state.inFlight = conversation.inFlight;
