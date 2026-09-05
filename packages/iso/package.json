@@ -1,0 +1,9 @@
+{
+  "name": "@edulab/iso",
+  "version": "0.0.1",
+  "license": "UNLICENSED",
+  "type": "module",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.115.0"
+  }
+}

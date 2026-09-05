@@ -1,0 +1,9 @@
+{
+  "name": "@edulab/frontend",
+  "version": "0.0.1",
+  "license": "UNLICENSED",
+  "type": "module",
+  "dependencies": {
+    "@edulab/iso": "*"
+  }
+}

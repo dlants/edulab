@@ -96,7 +96,16 @@ Vitest at the root for the accumulator (`npm test`); Playwright in `packages/e2e
 
 # Stages
 
-## end to end pipe
+## end to end pipe — DONE
+
+Notes:
+
+- `@anthropic-ai/sdk` resolved to `0.115.5` under `^0.115.0`; typescript is `^5.9.3` rather than gatherus's `^7.0.2`.
+- `biome.json` was migrated to the installed biome (2.5.12) schema, so the linter block uses `"preset": "recommended"`.
+- `vite.config.ts` also sets `ws: true` on the `/api/` proxy, which the websocket needs.
+- The backend has no `env.ts`; `app.ts` reads `ANTHROPIC_API_KEY` directly and refuses to boot without it.
+- `main.ts` exposes a scratch `window.edulab.ask(text)` for the manual check. It is replaced in the next stage.
+- Verified by driving `ws://localhost:5173/api/socket` through the vite proxy against the real API: the full `message_start` -> deltas -> `message_stop` -> `done` sequence came back.
 
 - Goal: `npm run dev` serves a page at 5173 proxying `/api/` to fastify on 3000, and a scratch call from the browser console streams events from the real API into `console.log`.
 - Work: root `package.json` with `packages/*` workspaces; `vite.config.ts` from gatherus minus the MPA/`spaFallback` bits; `biome.json`; tsconfigs; `packages/iso/protocol.ts`; `packages/backend/{app,socket}.ts`; `packages/frontend/{index.html,main.ts}` plus `vamp.ts` copied verbatim.

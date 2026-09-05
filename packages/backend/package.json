@@ -1,0 +1,21 @@
+{
+  "name": "@edulab/backend",
+  "version": "0.0.1",
+  "license": "UNLICENSED",
+  "type": "module",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.115.0",
+    "@edulab/iso": "*",
+    "@fastify/websocket": "^11.3.0",
+    "dotenv": "^17.4.1",
+    "fastify": "^5.8.4"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/ws": "^8.18.1",
+    "typescript": "^5.9.3"
+  },
+  "scripts": {
+    "dev": "node --watch app.ts"
+  }
+}
