@@ -276,7 +276,20 @@ Deviations:
   - `prompt.test.ts`: the learning system prompt names `get` and the scale, and `seedTurn` includes the rendered graph.
   - `threads.test.ts`: a thread opened via `tree.open(anchor, action, { tools })` sends those specs on its first request (assert against `FakeSocket.sent`), and the root task thread sends none — the task agent must stay in task mode.
 
-## layout
+## layout — DONE
+
+Landed in `packages/frontend/layout.ts`, tested in `layout.test.ts`. All plan
+tests written and green.
+
+Deviations:
+- The simulation runs over an array of mutable `Body` records rather than maps
+  of positions and displacements: it keeps the inner loops free of the
+  non-null assertions biome warns about, and the sorted-id order is still what
+  fixes the initial circle, so determinism is unchanged.
+- Coordinates are normalized per axis at the end, so a chain that collapses
+  onto a line still fills `[0, 1]` on its long axis and sits at `0.5` on the
+  degenerate one. A single node is `(0.5, 0.5)` and short-circuits the
+  simulation.
 
 - Goal: `layout()` returns stable positions.
 - Tests (`layout.test.ts`):
