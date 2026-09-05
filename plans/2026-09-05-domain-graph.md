@@ -231,7 +231,19 @@ invariants require. Empty titles are rejected for edges too, not just nodes.
   - `get` of a node id returns its incident edges in both directions; of an edge id, its endpoints; of an unknown id, a marker rather than an error for the whole batch.
   - `render()` of an empty graph is something a model can act on rather than an empty string.
 
-## tools
+## tools — DONE
+
+Landed in `packages/frontend/graph-tools.ts`, tested in `graph-tools.test.ts`.
+All plan tests written and green, including the end-to-end `Thread` over a
+`FakeSocket` streaming a `put_nodes` call.
+
+Deviations:
+- `Record<ToolName, Tool>` is a mapped type over a branded string, so an object
+  literal cannot be written for it. `thread.ts` gains a `toolset(...tools)`
+  helper that keys tools by `spec.name`; `graph-tools.ts` and the existing
+  `thread.test.ts` cases build their tool records through it.
+- An empty batch (`ids`/`nodes`/`edges` of length 0) is a call-level error, not
+  a silent no-op, so a model that sends one gets told.
 
 - Goal: a thread configured with `writeTools` can read and mutate the graph.
 - Tests (`graph-tools.test.ts`):

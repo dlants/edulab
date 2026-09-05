@@ -67,12 +67,16 @@ export type ThreadOpts = {
   system?: string;
   initialTurns?: Anthropic.MessageParam[];
   seed?: string;
-  tools?: Record<string, Tool>;
+  tools?: Record<ToolName, Tool>;
   /** Present => the yield tool is offered. `"text"` uses the default
    * `{ result: string }` schema and settles with a text value; a schema
    * settles with the whole input object. */
   yieldSchema?: Anthropic.Tool.InputSchema | "text";
 };
+
+/** The key of a tool in the record handed to a thread; also what the model
+ * sends back as `tool_use.name`. */
+export type ToolName = string & { readonly __brand: "ToolName" };
 
 export type ToolResult =
   | { status: "ok"; text: string }
@@ -82,6 +86,12 @@ export type Tool = {
   spec: Anthropic.Tool;
   execute(input: Record<string, unknown>): Promise<ToolResult>;
 };
+
+/** Keys a set of tools by name. `Record<ToolName, Tool>` is a mapped type over
+ * a branded string, so an object literal cannot be written for it directly. */
+export function toolset(...tools: ReadonlyArray<Tool>): Record<ToolName, Tool> {
+  return Object.fromEntries(tools.map((t) => [t.spec.name, t]));
+}
 
 /** One entry of the derived transcript: a block, not a turn. A single agent
  * turn can produce prose, a tool call, and more prose, and the transcript shows
@@ -121,7 +131,7 @@ export type ThreadResult<Value> =
 
 export type RunThreadOpts = {
   prompt: string;
-  tools?: Record<string, Tool>;
+  tools?: Record<ToolName, Tool>;
   yieldSchema: Anthropic.Tool.InputSchema | "text";
   system?: string;
   /** How many times a turn that ends without a yield is nudged back to work. */
@@ -201,7 +211,7 @@ export class Thread {
 
   private readonly socket: Socket;
   private readonly system: string;
-  private readonly tools: Record<string, Tool>;
+  private readonly tools: Record<ToolName, Tool>;
   /** Present => the yield tool is offered and the turn can settle with data. */
   private readonly yieldSchema: Anthropic.Tool.InputSchema | "text" | undefined;
   private settled: TurnResult | undefined;
@@ -334,7 +344,7 @@ export class Thread {
       : this.isYield(call.name)
         ? // Echoing the yielded payload back at the model only spends tokens.
           { status: "ok", text: "Yield acknowledged." }
-        : await runTool(this.tools[call.name], call);
+        : await runTool(this.tools[call.name as ToolName], call);
     return {
       type: "tool_result",
       tool_use_id: call.id,

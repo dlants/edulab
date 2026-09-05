@@ -2,7 +2,13 @@ import type Anthropic from "@anthropic-ai/sdk";
 import type { ClientMessage } from "@edulab/iso/protocol.ts";
 import { expect, it } from "vitest";
 import { anchorText, type ThreadId } from "./selection.ts";
-import { type Socket, Thread, type Tool, type ToolResult } from "./thread.ts";
+import {
+  type Socket,
+  Thread,
+  type Tool,
+  type ToolResult,
+  toolset,
+} from "./thread.ts";
 
 class FakeSocket implements Socket {
   readonly sent: ClientMessage[] = [];
@@ -368,9 +374,9 @@ function toolTurn(
 it("answers a tool call and re-requests with the result", async () => {
   const socket = new FakeSocket();
   const thread = new Thread(socket, {
-    tools: {
-      read: tool("read", async () => ({ status: "ok", text: "contents" })),
-    },
+    tools: toolset(
+      tool("read", async () => ({ status: "ok", text: "contents" })),
+    ),
   });
 
   const turn = thread.send("hi");
@@ -397,9 +403,7 @@ it("answers a tool call and re-requests with the result", async () => {
 it("turns a throwing tool and an unknown tool into error results", async () => {
   const socket = new FakeSocket();
   const thread = new Thread(socket, {
-    tools: {
-      boom: tool("boom", () => Promise.reject(new Error("nope"))),
-    },
+    tools: toolset(tool("boom", () => Promise.reject(new Error("nope")))),
   });
 
   const turn = thread.send("hi");
@@ -433,7 +437,7 @@ it("turns a throwing tool and an unknown tool into error results", async () => {
 it("reports a tool call whose input never parsed as an error", async () => {
   const socket = new FakeSocket();
   const thread = new Thread(socket, {
-    tools: { read: tool("read", async () => ({ status: "ok", text: "ok" })) },
+    tools: toolset(tool("read", async () => ({ status: "ok", text: "ok" }))),
   });
 
   const turn = thread.send("hi");
@@ -460,7 +464,7 @@ it("reports a tool call whose input never parsed as an error", async () => {
 it("sends the configured tool specs, and none when there are none", async () => {
   const socket = new FakeSocket();
   const read = tool("read", async () => ({ status: "ok", text: "ok" }));
-  const thread = new Thread(socket, { tools: { read } });
+  const thread = new Thread(socket, { tools: toolset(read) });
   void thread.send("hi");
   expect(socket.sent[0]?.params.tools).toEqual([read.spec]);
 
@@ -472,7 +476,7 @@ it("sends the configured tool specs, and none when there are none", async () => 
 it("ends the turn when a request errors mid tool call", async () => {
   const socket = new FakeSocket();
   const thread = new Thread(socket, {
-    tools: { read: tool("read", async () => ({ status: "ok", text: "ok" })) },
+    tools: toolset(tool("read", async () => ({ status: "ok", text: "ok" }))),
   });
   const turn = thread.send("hi");
   toolCall(socket, 0, "t1", "read", ['{"path":"a.txt"}']);
@@ -546,7 +550,7 @@ it("runs tools called alongside a yield, then stops at the yield", async () => {
   const socket = new FakeSocket();
   const thread = new Thread(socket, {
     yieldSchema: REVIEW_SCHEMA,
-    tools: { read: tool("read", async () => ({ status: "ok", text: "abc" })) },
+    tools: toolset(tool("read", async () => ({ status: "ok", text: "abc" }))),
   });
   const turn = thread.send("hi");
   toolTurn(socket, [

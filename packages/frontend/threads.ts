@@ -1,7 +1,7 @@
 import type Anthropic from "@anthropic-ai/sdk";
 import { type Action, LEARNING_SYSTEM, seedTurn } from "./prompt.ts";
 import type { Anchor, Mark, ThreadId } from "./selection.ts";
-import type { Tool, TurnResult } from "./thread.ts";
+import type { Tool, ToolName, TurnResult } from "./thread.ts";
 import { type Socket, Thread } from "./thread.ts";
 
 export type { Action };
@@ -11,7 +11,7 @@ export type Origin = { anchor: Anchor; action: Action };
 
 /** What a child thread is given beyond its seed. */
 export type ChildOpts = {
-  tools?: Record<string, Tool>;
+  tools?: Record<ToolName, Tool>;
   yieldSchema?: Anthropic.Tool.InputSchema | "text";
 };
 
