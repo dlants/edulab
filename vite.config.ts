@@ -1,8 +1,27 @@
-import { defineConfig } from "vite";
+import { defineConfig, type Plugin } from "vite";
+
+// Prototype routes are real paths, so a deep link or a reload has to land on
+// index.html rather than a 404.
+function spaFallback(): Plugin {
+  return {
+    name: "spa-fallback",
+    configureServer(server) {
+      return () => {
+        server.middlewares.use((req, _res, next) => {
+          if (req.headers.accept?.includes("text/html") && req.url) {
+            req.url = "/index.html";
+          }
+          next();
+        });
+      };
+    },
+  };
+}
 
 export default defineConfig({
-  root: "packages/frontend",
-  base: "/",
+  appType: "mpa",
+  plugins: [spaFallback()],
+  root: "packages/frontend",  base: "/",
   build: {
     target: "esnext",
     outDir: "dist",

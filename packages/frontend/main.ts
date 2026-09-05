@@ -1,48 +1,38 @@
-import { Conversation } from "./conversation.ts";
-import { AppView, type Msg, type State } from "./view.ts";
+import { routeFor, routes } from "./routes.ts";
+import { cls, mountStyle } from "./vamp.ts";
 
-function connect(): WebSocket {
-  const proto = window.location.protocol === "https:" ? "wss:" : "ws:";
-  return new WebSocket(`${proto}//${window.location.host}/api/socket`);
+const navClass = cls("nav");
+
+mountStyle(`
+.${navClass} {
+  font-family: system-ui, sans-serif;
+  font-size: 0.875rem;
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
+  padding: 1rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+  margin-bottom: 1.5rem;
+}
+.${navClass} a { color: inherit; }
+.${navClass} a[aria-current="page"] { font-weight: 600; }
+`);
+
+const active = routeFor(window.location.pathname);
+
+const nav = document.createElement("nav");
+nav.className = navClass;
+for (const route of routes) {
+  const link = document.createElement("a");
+  link.href = route.path;
+  link.textContent = route.label;
+  if (route === active) link.setAttribute("aria-current", "page");
+  nav.append(link);
 }
 
-const conversation = new Conversation(connect());
-
-const state: State = { messages: [], inFlight: false, draft: "" };
-
-function update(state: State, msg: Msg): void {
-  switch (msg.type) {
-    case "DRAFT_CHANGED":
-      state.draft = msg.draft;
-      break;
-    case "SUBMIT": {
-      const text = state.draft.trim();
-      if (text === "" || conversation.inFlight) break;
-      state.draft = "";
-      conversation.send(text).then(undefined, (e: unknown) => {
-        console.error(e);
-      });
-      break;
-    }
-  }
-  state.messages = conversation.messages;
-  state.inFlight = conversation.inFlight;
-}
-
-let dispatching = false;
-function dispatch(msg: Msg): void {
-  if (dispatching) throw new Error("dispatch-in-dispatch");
-  dispatching = true;
-  update(state, msg);
-  view.sync(state);
-  dispatching = false;
-}
+const page = document.createElement("div");
 
 const root = document.getElementById("app") ?? document.body;
-const view = new AppView(root, dispatch, state);
+root.append(nav, page);
 
-conversation.onChange = () => {
-  state.messages = conversation.messages;
-  state.inFlight = conversation.inFlight;
-  view.sync(state);
-};
+active.mount(page);
