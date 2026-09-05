@@ -1,5 +1,8 @@
 import { Conversation } from "../conversation.ts";
+import type { Action } from "../prompt.ts";
 import { selectedSample } from "../samples/index.ts";
+import type { Mark, ThreadId } from "../selection.ts";
+import { overlaps } from "../selection.ts";
 import { AppView, type Msg, type State } from "../view.ts";
 
 function connect(): WebSocket {
@@ -13,11 +16,20 @@ export function mount(container: HTMLElement): void {
   const conversation = new Conversation(connect(), {
     initialTurns: selectedSample()?.turns,
   });
+  // Stage 3 replaces this with a ThreadTree; for now a committed mark is just
+  // a passage plus the action taken on it, and the "thread" it opens is a
+  // placeholder id that nothing streams into yet.
+  const commits: Array<Mark & { action: Action }> = [];
+  const root = "root" as ThreadId;
+
   const state: State = {
     messages: conversation.messages,
     inFlight: false,
     draft: "",
     mode: "task",
+    thread: root,
+    marks: commits,
+    activeMark: null,
     anchor: null,
     query: "",
     pending: null,
@@ -42,13 +54,30 @@ export function mount(container: HTMLElement): void {
         break;
       case "SELECTION_CHANGED":
         state.anchor = msg.anchor;
+        state.activeMark = null;
         state.pending = null;
         break;
+      case "MARK_CLICKED": {
+        const mark = commits.find((c) => c.thread === msg.thread);
+        if (!mark) break;
+        state.anchor = null;
+        state.activeMark = mark.thread;
+        state.pending = mark.action;
+        break;
+      }
       case "LEARNING_MSG":
         switch (msg.msg.type) {
-          case "ACTION":
+          case "ACTION": {
+            const anchor = state.anchor;
+            if (!anchor || overlaps(commits, anchor)) break;
+            const thread = `t${commits.length + 1}` as ThreadId;
+            commits.push({ thread, anchor, action: msg.msg.action });
+            state.anchor = null;
+            state.activeMark = thread;
             state.pending = msg.msg.action;
+            state.query = "";
             break;
+          }
           case "QUERY_CHANGED":
             state.query = msg.msg.query;
             break;

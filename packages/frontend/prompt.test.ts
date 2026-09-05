@@ -1,6 +1,6 @@
 import { expect, it } from "vitest";
 import { seedTurn } from "./prompt.ts";
-import type { Anchor } from "./selection.ts";
+import type { Anchor, ThreadId } from "./selection.ts";
 
 const messages = [
   { role: "user", text: "build a parser" },
@@ -14,6 +14,7 @@ const at = (
   endMsg: number,
   end: number,
 ): Anchor => ({
+  thread: "root" as ThreadId,
   start: { msg: startMsg, offset: start },
   end: { msg: endMsg, offset: end },
 });

@@ -8,6 +8,8 @@ export type Action =
 export type State = {
   /** The text the user highlighted, or null when nothing is selected. */
   selection: string | null;
+  /** The live selection intersects a committed mark, so no action is offered. */
+  overlapping: boolean;
   query: string;
   pending: Action | null;
 };
@@ -21,6 +23,7 @@ const emptyClass = cls("learning-empty");
 const quoteClass = cls("learning-quote");
 const actionsClass = cls("learning-actions");
 const pendingClass = cls("learning-pending");
+const warnClass = cls("learning-warn");
 
 mountStyle(`
 .${paneClass} {
@@ -35,6 +38,10 @@ mountStyle(`
 .${emptyClass} {
   opacity: 0.5;
   font-style: italic;
+}
+.${warnClass} {
+  font-style: italic;
+  color: #a35200;
 }
 .${quoteClass} {
   white-space: pre-wrap;
@@ -82,10 +89,12 @@ export class LearningPane implements View<State, Msg> {
     const quizRef = ref("quiz");
     const queryRef = ref("query");
     const pendingRef = ref("pending");
+    const warnRef = ref("warn");
 
     container.className = paneClass;
     container.innerHTML = sanitize`
       <p class="${emptyClass}" data-ref="${emptyRef}">Select some text to get started.</p>
+      <p class="${warnClass}" data-ref="${warnRef}">Select a non-overlapping section.</p>
       <div class="${actionsClass}" data-ref="${bodyRef}">
         <blockquote class="${quoteClass}" data-ref="${quoteRef}"></blockquote>
         <button type="button" data-ref="${explainRef}">I don't understand this.</button>
@@ -120,8 +129,9 @@ export class LearningPane implements View<State, Msg> {
       dispatch({ type: "ACTION", action: { type: "query", text } });
     });
 
-    this.b.bindVisible(emptyRef, (s) => s.selection === null);
-    this.b.bindVisible(bodyRef, (s) => s.selection !== null);
+    this.b.bindVisible(emptyRef, (s) => s.selection === null && !s.overlapping);
+    this.b.bindVisible(warnRef, (s) => s.overlapping);
+    this.b.bindVisible(bodyRef, (s) => s.selection !== null && !s.overlapping);
     this.b.bindText(quoteRef, (s) => s.selection ?? "");
     this.b.bindValue(queryRef, (s) => s.query);
     this.b.bindText(pendingRef, (s) =>

@@ -227,14 +227,23 @@ Deviations:
 
 ## Multiple, clickable marks
 
+**Status: done** (`packages/frontend/selection.ts`, `selection.test.ts`, `view.ts`, `learning.ts`, `prototypes/chat.ts`, `packages/e2e/tests/chat.spec.ts`).
+
+Deviations:
+- `segments`/`overlaps` take `Mark = { thread; anchor }` rather than a bare `Anchor`. `anchor.thread` names the *parent* (the transcript the offsets index), so it cannot also name the child the mark opens; the pair carries the edge.
+- `Segment` gained `live: boolean`. `thread: ThreadId | null` alone cannot tell the uncommitted live range apart from plain text, and the two render differently.
+- `clipToMessage` is now private to `selection.ts`, used by `segments` and `anchorText`.
+- A message renders its runs as a `bindList` of `SegmentView` spans (keyed by start offset) rather than `<mark>` elements, so all three visual states share one element and the list reconciles without remounting. The states are exposed as `data-mark` / `data-live` / `data-active` attributes, which is also what the Playwright specs select on.
+- Threads do not exist yet, so `chat.ts` keeps a local `Array<Mark & { action }>` with placeholder ids and the right pane shows the active mark's quote and action echo. Stage 3 replaces this with `ThreadTree`.
+- Fixed a latent bug: `AppView` passed `LearningPane` a message *mapper* where `bindSlot` expects a `dispatch`, so every action from the pane was silently dropped.
+
 - Goal: a message renders any number of highlights; the live selection and committed marks are visually distinct; clicking a mark dispatches.
 - Tests:
-  - `segments()` unit tests: no marks, one mark, two disjoint marks, a mark spanning message boundaries, a mark ending exactly at the message end, and a live selection sitting across a committed one.
-  - `overlaps()` unit tests: touching-but-not-overlapping ranges are fine; a shared character is not; containment either way is not.
-  - Playwright: selecting across an existing mark shows "select a non-overlapping section" and no action buttons; selecting beside it shows the menu again.
-  - Playwright: with two committed marks in one message, both are visible and clicking each swaps the right pane's content.
-  - Playwright: dragging a new selection over existing text leaves the old marks rendered.
-
+  - [x] `segments()` unit tests: no marks, one mark, two disjoint marks, a mark spanning message boundaries, a mark ending exactly at the message end, and a live selection sitting across a committed one.
+  - [x] `overlaps()` unit tests: touching-but-not-overlapping ranges are fine; a shared character is not; containment either way is not.
+  - [x] Playwright: selecting across an existing mark shows "select a non-overlapping section" and no action buttons; selecting beside it shows the menu again.
+  - [x] Playwright: with two committed marks in one message, both are visible and clicking each swaps the right pane's content.
+  - [x] Playwright: dragging a new selection over existing text leaves the old marks rendered.
 ## Threads on the right pane
 
 - Goal: picking an action opens a child thread, sends the seeded prompt, streams into the right pane, and leaves a permanent highlight. Clicking that highlight reopens the thread with its history intact.

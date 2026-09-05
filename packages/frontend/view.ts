@@ -8,14 +8,17 @@ import {
 import {
   type Anchor,
   anchorText,
-  clipToMessage,
+  type Mark,
+  overlaps,
   type Point,
+  type Segment,
+  segments,
+  type ThreadId,
 } from "./selection.ts";
 import {
   Binder,
   cls,
   mountStyle,
-  noop,
   type Ref,
   ref,
   sanitize,
@@ -31,6 +34,12 @@ export type State = {
   inFlight: boolean;
   draft: string;
   mode: Mode;
+  /** The thread whose transcript this pane shows; the live selection is over it. */
+  thread: ThreadId;
+  /** Committed highlights over this transcript. */
+  marks: ReadonlyArray<Mark>;
+  /** The mark whose thread the right pane is showing, drawn emphasized. */
+  activeMark: ThreadId | null;
   anchor: Anchor | null;
   query: string;
   pending: Action | null;
@@ -41,6 +50,7 @@ export type Msg =
   | { type: "SUBMIT" }
   | { type: "MODE_TOGGLED" }
   | { type: "SELECTION_CHANGED"; anchor: Anchor | null }
+  | { type: "MARK_CLICKED"; thread: ThreadId }
   | { type: "LEARNING_MSG"; msg: LearningMsg };
 
 const appClass = cls("app");
@@ -88,8 +98,18 @@ mountStyle(`
   cursor: pointer;
 }
 .${markClass} {
-  background: #ffe8a3;
   border-radius: 2px;
+}
+.${markClass}[data-live="true"] {
+  background: #cfe3ff;
+}
+.${markClass}[data-mark] {
+  background: #ffe8a3;
+  cursor: pointer;
+}
+.${markClass}[data-mark][data-active="true"] {
+  background: #ffcf4d;
+  box-shadow: 0 0 0 1px #b8860b;
 }
 .${transcriptClass} {
   list-style: none;
@@ -127,40 +147,100 @@ mountStyle(`
 }
 `);
 
-type MessageState = {
-  message: Message;
-  mark: { start: number; end: number } | null;
+type SegmentState = {
+  text: string;
+  /** The thread this run opens; null for plain text and the live selection. */
+  thread: ThreadId | null;
+  live: boolean;
+  active: boolean;
 };
 
-class MessageView implements View<MessageState> {
+type SegmentMsg = { type: "CLICKED"; thread: ThreadId };
+
+/** One run of a message's text: plain, a committed mark, or the live selection.
+ * A span rather than a <mark> so all three share one element and bindList can
+ * reconcile them without remounting. */
+class SegmentView implements View<SegmentState, SegmentMsg> {
+  container: HTMLElement;
+  private b: Binder<SegmentState>;
+  private current: SegmentState;
+
+  constructor(
+    container: HTMLElement,
+    dispatch: (msg: SegmentMsg) => void,
+    initial: SegmentState,
+  ) {
+    const textRef = ref("segment");
+    container.innerHTML = sanitize`<span data-ref="${textRef}"></span>`;
+    this.container = container;
+    this.current = initial;
+    this.b = new Binder(container, initial);
+    container.addEventListener("click", () => {
+      const thread = this.current.thread;
+      if (thread) dispatch({ type: "CLICKED", thread });
+    });
+    this.b.bindClass(container, (s) => (s.thread || s.live ? markClass : ""));
+    this.b.bindContainerAttr("data-mark", (s) => s.thread ?? undefined);
+    this.b.bindContainerAttr("data-live", (s) => (s.live ? "true" : undefined));
+    this.b.bindContainerAttr("data-active", (s) =>
+      s.active ? "true" : undefined,
+    );
+    this.b.bindText(textRef, (s) => s.text);
+  }
+
+  sync(state: SegmentState): void {
+    this.current = state;
+    this.b.sync(state);
+  }
+
+  destroy(): void {
+    this.b.cleanup();
+    this.container.innerHTML = "";
+  }
+}
+
+type MessageState = {
+  message: Message;
+  segments: ReadonlyArray<Segment>;
+  active: ThreadId | null;
+};
+
+class MessageView implements View<MessageState, SegmentMsg> {
   container: HTMLElement;
   private b: Binder<MessageState>;
 
   constructor(
     container: HTMLElement,
-    _dispatch: (msg: never) => void,
+    dispatch: (msg: SegmentMsg) => void,
     initial: MessageState,
   ) {
     const roleRef = ref("role");
-    const preRef = ref("pre");
-    const markRef = ref("mark");
-    const postRef = ref("post");
+    const textRef = ref("text");
     container.className = messageClass;
     container.innerHTML = sanitize`
       <span class="${roleClass}" data-ref="${roleRef}"></span>
-      <span class="${textClass}"><span data-ref="${preRef}"></span><mark class="${markClass}" data-ref="${markRef}"></mark><span data-ref="${postRef}"></span></span>
+      <span class="${textClass}" data-ref="${textRef}"></span>
     `;
     this.container = container;
     this.b = new Binder(container, initial);
     this.b.bindText(roleRef, (s) => s.message.role);
-    this.b.bindText(preRef, (s) =>
-      s.mark ? s.message.text.slice(0, s.mark.start) : s.message.text,
-    );
-    this.b.bindText(markRef, (s) =>
-      s.mark ? s.message.text.slice(s.mark.start, s.mark.end) : "",
-    );
-    this.b.bindText(postRef, (s) =>
-      s.mark ? s.message.text.slice(s.mark.end) : "",
+    // Keyed by start offset: the transcript is append-only, so a run keeps its
+    // start while the message grows and while marks are added after it.
+    this.b.bindList(textRef, "span", (s) =>
+      s.segments.map((seg) =>
+        showKeyed(
+          String(seg.start),
+          SegmentView,
+          {
+            text: s.message.text.slice(seg.start, seg.end),
+            thread: seg.thread,
+            live: seg.live,
+            active: seg.thread !== null && seg.thread === s.active,
+          },
+          {},
+          dispatch,
+        ),
+      ),
     );
     this.b.bindContainerAttr("data-role", (s) => s.message.role);
   }
@@ -178,6 +258,8 @@ class MessageView implements View<MessageState> {
 export class AppView implements View<State, Msg> {
   container: HTMLElement;
   private b: Binder<State>;
+  /** The latest state, for event handlers that need it outside a binding. */
+  private current: State;
 
   constructor(
     container: HTMLElement,
@@ -204,6 +286,7 @@ export class AppView implements View<State, Msg> {
       <div data-ref="${learningRef}"></div>
     `;
     this.container = container;
+    this.current = initialState;
     this.b = new Binder(container, initialState);
 
     const input = this.b.ref<HTMLTextAreaElement>(inputRef);
@@ -228,7 +311,7 @@ export class AppView implements View<State, Msg> {
     // which is exactly when we need the anchor to survive.
     const transcript = this.b.ref(transcriptRef);
     const capture = () => {
-      const anchor = readAnchor(transcript);
+      const anchor = readAnchor(transcript, this.current.thread);
       if (anchor !== undefined) dispatch({ type: "SELECTION_CHANGED", anchor });
     };
     transcript.addEventListener("mouseup", capture);
@@ -241,9 +324,14 @@ export class AppView implements View<State, Msg> {
         showKeyed(
           String(i),
           MessageView,
-          { message, mark: clipToMessage(s.anchor, i, message.text.length) },
+          {
+            message,
+            segments: segments(s.marks, s.anchor, i, message.text.length),
+            active: s.activeMark,
+          },
           {},
-          noop,
+          (msg: SegmentMsg) =>
+            dispatch({ type: "MARK_CLICKED", thread: msg.thread }),
         ),
       ),
     );
@@ -255,14 +343,16 @@ export class AppView implements View<State, Msg> {
     this.b.bindSlot(learningRef, (s) => {
       if (s.mode !== "learning") return undefined;
       const learningState: LearningState = {
-        selection: s.anchor ? anchorText(s.anchor, s.messages) : null,
+        selection: paneSelection(s),
+        overlapping: s.anchor !== null && overlaps(s.marks, s.anchor),
         query: s.query,
         pending: s.pending,
       };
-      return show(LearningPane, learningState, {}, (msg: LearningMsg) => ({
-        type: "LEARNING_MSG" as const,
-        msg,
-      }));
+      // bindSlot hands this straight to the child as its dispatch, so it must
+      // dispatch rather than return a wrapped message.
+      return show(LearningPane, learningState, {}, (msg: LearningMsg) =>
+        dispatch({ type: "LEARNING_MSG", msg }),
+      );
     });
     this.b.bindValue(inputRef, (s) => s.draft);
     this.b.bindDisabled(inputRef, (s) => s.inFlight);
@@ -270,6 +360,7 @@ export class AppView implements View<State, Msg> {
   }
 
   sync(state: State): void {
+    this.current = state;
     this.b.sync(state);
   }
 
@@ -279,10 +370,20 @@ export class AppView implements View<State, Msg> {
   }
 }
 
+/** The passage the right pane is about: the live selection, or - once one has
+ * been committed - the mark whose thread is active. */
+function paneSelection(s: State): string | null {
+  if (s.anchor) return anchorText(s.anchor, s.messages);
+  const active = s.marks.find((m) => m.thread === s.activeMark);
+  return active ? anchorText(active.anchor, s.messages) : null;
+}
 /** Reads the live browser selection as an Anchor. Returns `undefined` when the
  * selection has nothing to do with the transcript, which must not clobber a
  * previously captured anchor. */
-function readAnchor(transcript: HTMLElement): Anchor | null | undefined {
+function readAnchor(
+  transcript: HTMLElement,
+  thread: ThreadId,
+): Anchor | null | undefined {
   const selection = window.getSelection();
   if (!selection || selection.rangeCount === 0) return undefined;
   const range = selection.getRangeAt(0);
@@ -294,7 +395,7 @@ function readAnchor(transcript: HTMLElement): Anchor | null | undefined {
   const end = resolvePoint(transcript, range.endContainer, range.endOffset);
   if (!start || !end) return undefined;
   if (start.msg === end.msg && start.offset === end.offset) return null;
-  return { start, end };
+  return { thread, start, end };
 }
 
 function resolvePoint(
