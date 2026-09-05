@@ -1,0 +1,4 @@
+$ cd /Users/denis.lantsman/src/edulab && git check-ignore -v docs/transcripts; git ls-files docs/transcripts | wc -l; git status --short docs/transcripts
+stdout:
+     309
+exit code 0

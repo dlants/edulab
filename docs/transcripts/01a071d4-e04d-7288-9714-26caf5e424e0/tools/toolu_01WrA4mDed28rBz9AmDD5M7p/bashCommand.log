@@ -1,0 +1,29 @@
+$ cd /Users/denis.lantsman/src/edulab/docs/transcripts && for m in */meta.json; do node -e 'const j=JSON.parse(require("fs").readFileSync(process.argv[1],"utf8"));console.log(j.threadType, j.scriptName??"-", "|", j.title??"")' "$m"; done
+stdout:
+root - | Setup private GitHub repo
+root - | Design feedback and ideas
+root - | 
+root - | Prototype Scaffolding Plan
+subagent - | gatherus web service scaffolding analysis
+subagent - | Extract agentic loop interfaces & providers
+root - | Verify full conversation log capture
+subagent implement-plan | Breaking down prototype scaffolding plan
+subagent implement-plan | Stage 1: End to end pipe setup
+subagent implement-plan | Stage 2: Conversation implementation
+subagent implement-plan | Stage 3: Chat UI Implementation
+root - | Demo tasks feedback
+root - | Hook up canned transcripts to frontend
+root - | Task/Learning Mode Toggle with Selection
+subagent implement-plan | Break nested learning threads plan into stages
+subagent implement-plan | Stage 1: Nested Learning Threads Prompt
+subagent implement-plan | Stage 2: Multiple, clickable marks
+subagent implement-plan | Stage 3: Threads on the right pane
+subagent implement-plan | Stage 4: Nesting and arrows navigation
+root - | Record user action in deeper view
+root - | Thread refactor with tool use and yield
+subagent - | Yield tool mechanism in magenta.nvim
+subagent - | Tool streaming & agent execution in magenta
+subagent - | Conversation class usage and test structure
+root - | Consolidate prototypes into single view
+root - | Run transcript sync script
+exit code 0

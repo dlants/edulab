@@ -1,0 +1,13 @@
+$ cd /tmp/magenta/threads && for d in */; do [ -e "$d/meta.json" ] || { echo "$d"; ls -la "$d" "$d/tools" ; break; }; done
+stdout:
+01a03213-278a-762a-a23a-eb49f0d7a31d/
+01a03213-278a-762a-a23a-eb49f0d7a31d/:
+total 0
+drwxr-xr-x@   3 denis.lantsman  wheel     96 Aug 29 00:00 .
+drwxr-xr-x@ 451 denis.lantsman  wheel  14432 Sep  5 06:49 ..
+drwxr-xr-x@   2 denis.lantsman  wheel     64 Sep  2 00:00 tools
+01a03213-278a-762a-a23a-eb49f0d7a31d//tools:
+total 0
+drwxr-xr-x@ 2 denis.lantsman  wheel  64 Sep  2 00:00 .
+drwxr-xr-x@ 3 denis.lantsman  wheel  96 Aug 29 00:00 ..
+exit code 0

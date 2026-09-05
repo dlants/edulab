@@ -1,0 +1,4 @@
+$ cd /Users/denis.lantsman/src/edulab && git add -A && git commit -q -m "Collapse the prototype tabs into one page, sample picker in the header" && git push -q && git log --oneline -1
+stdout:
+41226d7 Collapse the prototype tabs into one page, sample picker in the header
+exit code 0

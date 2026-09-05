@@ -1,0 +1,31 @@
+$ cd /Users/denis.lantsman/src/edulab/docs/transcripts && ls 01a071d2-d244-7009-b24a-5271da1b3361/tools | wc -l && wc -c */conversation.jsonl
+stdout:
+      11
+  249921 01a06ed7-db07-72f9-a493-ce5b0518444a/conversation.jsonl
+  142368 01a06eda-1fbe-74db-890c-0cfd8d8d98a1/conversation.jsonl
+     133 01a06f96-da17-7238-99d6-9499133b50a1/conversation.jsonl
+  283263 01a06fa0-2a7e-700c-a1d7-1d05876ee2bb/conversation.jsonl
+  116316 01a06fb3-fd08-7079-b31e-d25f98902d2b/conversation.jsonl
+  136728 01a06fb3-fd0b-7519-a8e5-a791777c1090/conversation.jsonl
+   66317 01a06fd9-e266-715c-87e4-4f62556eaab5/conversation.jsonl
+   13463 01a06fd9-f5c3-7160-9c5a-9346e82ba68a/conversation.jsonl
+   90213 01a06fda-0cf1-7626-9b2d-8468390b6c69/conversation.jsonl
+   57930 01a06fe0-a518-720b-822b-7fe833daf692/conversation.jsonl
+  150316 01a06fe2-028f-713c-9d93-de57b1631f51/conversation.jsonl
+  258745 01a06fe2-9750-7150-8898-a2438b7ee2e2/conversation.jsonl
+   62468 01a07002-c45e-74bf-8535-1f74aeff3421/conversation.jsonl
+  316582 01a0700b-ae3b-7751-a85f-d886dd9fcfee/conversation.jsonl
+   30964 01a07039-cd76-72ec-b8e0-3dd95451c722/conversation.jsonl
+   84464 01a07039-f345-74ba-8ac2-66d6e0c92aed/conversation.jsonl
+  233157 01a0703b-86b6-7799-9b08-e51121690118/conversation.jsonl
+  191041 01a07040-9e4b-7168-9a48-4df8c29e793f/conversation.jsonl
+  123903 01a07044-33b9-76ef-9127-8aff3d6090ea/conversation.jsonl
+  150951 01a071bf-597d-7589-838a-1dd82a5dabb5/conversation.jsonl
+   95754 01a071cd-d7cb-7540-8cff-8cdf36666435/conversation.jsonl
+  164891 01a071d2-d244-7009-b24a-5271da1b3361/conversation.jsonl
+  101492 01a071d2-d246-7144-865d-9a403cc90cf5/conversation.jsonl
+   69593 01a071d2-d246-7144-865d-9d65df68851e/conversation.jsonl
+   67764 01a071d3-8170-760f-a2c8-767f91129f02/conversation.jsonl
+    8379 01a071d4-e04d-7288-9714-26caf5e424e0/conversation.jsonl
+ 3267116 total
+exit code 0

@@ -1,0 +1,7 @@
+$ cd /Users/denis.lantsman/src/edulab && git status --short && git log --oneline -3
+stdout:
+ M plans/2026-09-05-thread-tools-yield.md
+41226d7 Collapse the prototype tabs into one page, sample picker in the header
+25874b6 Show the opening action, and pin the bars around a scrolling transcript
+9b0ab1d Add five more task samples
+exit code 0

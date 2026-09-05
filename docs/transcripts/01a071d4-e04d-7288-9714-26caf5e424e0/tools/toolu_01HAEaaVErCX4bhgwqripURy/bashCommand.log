@@ -1,0 +1,5 @@
+$ cd /tmp/magenta/threads && n=0; for d in */; do [ -e "$d/meta.json" ] || { n=$((n+1)); ls "$d"; }; done | sort | uniq -c; echo "no-meta dirs: $n"
+stdout:
+ 278 tools
+no-meta dirs: 0
+exit code 0

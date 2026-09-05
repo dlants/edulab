@@ -1,0 +1,15 @@
+$ cd /tmp/magenta/threads && ls | wc -l && for m in */meta.json; do node -e 'const j=JSON.parse(require("fs").readFileSync(process.argv[1],"utf8"));console.log([j.cwd,j.type??"",j.kind??"",Object.keys(j).join("|")].join("  "))' "$m"; done | sort | uniq -c | sort -rn
+stdout:
+     449
+  36 /Users/denis.lantsman/src/magenta.nvim      title|threadType|cwd
+  31 /Users/denis.lantsman/src/magenta.nvim      title|threadType|scriptName|cwd
+  16 /Users/denis.lantsman/src/edulab      title|threadType|cwd
+   9 /Users/denis.lantsman/src/edulab      title|threadType|scriptName|cwd
+   2 /Users/denis.lantsman/src/magenta.nvim      threadType|cwd
+   1 /Users/denis.lantsman/src/glean      title|threadType|cwd
+   1 /Users/denis.lantsman/src/gatherus/custom-fields-to-person-sheet      title|threadType|cwd
+   1 /Users/denis.lantsman/src/finances      title|threadType|cwd
+   1 /Users/denis.lantsman/src/edulab      threadType|cwd
+   1 /Users/denis.lantsman/src/dotfiles      title|threadType|cwd
+   1 /Users/denis.lantsman/src/dotfiles      threadType|cwd
+exit code 0
