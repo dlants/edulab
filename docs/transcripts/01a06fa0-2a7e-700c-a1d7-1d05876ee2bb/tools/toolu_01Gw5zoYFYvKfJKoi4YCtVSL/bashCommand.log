@@ -1,0 +1,4 @@
+$ cd /Users/denis.lantsman/src/edulab && git add -A && git commit -q -m "Handle stream events explicitly; switch to opus with a task-mode prompt" && git log --oneline -1
+stdout:
+4fd1a5a Handle stream events explicitly; switch to opus with a task-mode prompt
+exit code 0

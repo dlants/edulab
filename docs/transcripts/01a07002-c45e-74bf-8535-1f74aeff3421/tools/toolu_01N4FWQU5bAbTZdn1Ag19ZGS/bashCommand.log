@@ -1,0 +1,7 @@
+$ cd /Users/denis.lantsman/src/edulab && npx biome check --write packages/frontend && npm run lint
+stdout:
+Checked 16 files in 93ms. Fixed 5 files.
+> edulab@0.0.1 lint
+> biome check .
+Checked 29 files in 92ms. No fixes applied.
+exit code 0

@@ -1,0 +1,9 @@
+$ cd /Users/denis.lantsman/src/edulab && grep -n "visible" plans/2026-09-05-nested-learning-threads.md
+stdout:
+27:The obvious construction — slice the parent's `MessageParam[]` up to the selection and append the framing turn — breaks the alternation the API requires whenever the selection lands in a user turn, and forces every thread to carry a "where does my visible transcript start" index into a shared array.
+33:"The task conversation up to the selection" means a thread's visible messages truncated after the message containing the selection's *end* — the agent should not see work that happened after the passage under discussion.
+35:Context accumulates down the tree, and it accumulates **flat** — but that falls out of the construction rather than needing machinery. A thread's hidden seed is already a flat prompt covering everything up to the point it was opened, so a child's seed is just that string, then the parent's own visible transcript, then the new selection and question, concatenated:
+40:<parent's visible transcript, truncated at the selection>
+202:- A live selection and an active child compete for the right pane; the newer one wins, so picking an action or clicking a mark clears the live anchor, and dragging a fresh selection replaces the visible child with the menu.
+227:  - Playwright: with two committed marks in one message, both are visible and clicking each swaps the right pane's content.
+exit code 0

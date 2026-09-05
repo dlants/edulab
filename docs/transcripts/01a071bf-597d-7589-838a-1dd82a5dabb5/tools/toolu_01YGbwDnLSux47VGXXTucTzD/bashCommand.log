@@ -1,0 +1,275 @@
+$ grep -n "ThreadPane" -A 60 packages/frontend/view.ts
+stdout:
+48:  child: ThreadPaneState | null;
+49-};
+50-
+51-export type Msg =
+52-  | { type: "DRAFT_CHANGED"; draft: string }
+53-  | { type: "SUBMIT" }
+54-  | { type: "GO_DEEPER" }
+55-  | { type: "GO_BACK" }
+56-  | { type: "SELECTION_CHANGED"; anchor: Anchor | null }
+57-  | { type: "MARK_CLICKED"; thread: ThreadId }
+58-  | { type: "LEARNING_MSG"; msg: LearningMsg }
+59:  | { type: "CHILD_MSG"; msg: ThreadPaneMsg };
+60-
+61-const appClass = cls("app");
+62-const transcriptClass = cls("transcript");
+63-const messageClass = cls("message");
+64-const roleClass = cls("role");
+65-const composerClass = cls("composer");
+66-const paneClass = cls("pane");
+67-const navClass = cls("nav");
+68-const depthClass = cls("depth");
+69-const markClass = cls("mark");
+70-const textClass = cls("text");
+71-const threadPaneClass = cls("thread-pane");
+72-const threadQuoteClass = cls("thread-quote");
+73-
+74-mountStyle(`
+75-.${appClass} {
+76-  font-family: system-ui, sans-serif;
+77-  max-width: 44rem;
+78-  margin: 0 auto;
+79-  padding: 1rem;
+80-  display: grid;
+81-  grid-template-columns: minmax(0, 1fr);
+82-  gap: 1rem 2rem;
+83-  align-items: start;
+84-}
+85-.${appClass}[data-split="true"] {
+86-  max-width: 88rem;
+87-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+88-}
+89-.${paneClass} {
+90-  display: flex;
+91-  flex-direction: column;
+92-  gap: 1rem;
+93-  min-width: 0;
+94-}
+95-.${navClass} {
+96-  position: fixed;
+97-  top: 4.5rem;
+98-  right: 1rem;
+99-  z-index: 10;
+100-  display: flex;
+101-  align-items: center;
+102-  gap: 0.5rem;
+103-  padding: 0.3rem 0.6rem;
+104-  border-radius: 999px;
+105-  border: 1px solid rgba(0, 0, 0, 0.2);
+106-  background: #fff;
+107-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+108-}
+109-.${navClass} button {
+110-  font: inherit;
+111-  padding: 0.2rem 0.6rem;
+112-  border-radius: 999px;
+113-  border: 1px solid rgba(0, 0, 0, 0.15);
+114-  background: #fff;
+115-  cursor: pointer;
+116-}
+117-.${navClass} button:disabled {
+118-  opacity: 0.4;
+119-  cursor: default;
+--
+301:export type ThreadPaneState = {
+302-  /** The passage this thread was opened from. */
+303-  quote: string;
+304-  messages: ReadonlyArray<Message>;
+305-  inFlight: boolean;
+306-  draft: string;
+307-};
+308-
+309:export type ThreadPaneMsg =
+310-  | { type: "DRAFT_CHANGED"; draft: string }
+311-  | { type: "SUBMIT" };
+312-
+313-/** A learning thread on the right: the passage it came from, its transcript,
+314- * and a composer. Read-only as far as selection goes - only the left pane
+315- * captures one. */
+316:class ThreadPane implements View<ThreadPaneState, ThreadPaneMsg> {
+317-  container: HTMLElement;
+318:  private b: Binder<ThreadPaneState>;
+319-
+320-  constructor(
+321-    container: HTMLElement,
+322:    dispatch: (msg: ThreadPaneMsg) => void,
+323:    initial: ThreadPaneState,
+324-  ) {
+325-    const quoteRef = ref("quote");
+326-    const transcriptRef = ref("thread-transcript");
+327-    const inputRef = ref("thread-input");
+328-    const sendRef = ref("thread-send");
+329-
+330-    container.className = threadPaneClass;
+331-    container.innerHTML = sanitize`
+332-      <blockquote class="${threadQuoteClass}" data-ref="${quoteRef}"></blockquote>
+333-      <ul class="${transcriptClass}" data-ref="${transcriptRef}"></ul>
+334-      <div class="${composerClass}">
+335-        <textarea data-ref="${inputRef}" rows="2" placeholder="Follow up…"></textarea>
+336-        <button type="button" data-ref="${sendRef}">Reply</button>
+337-      </div>
+338-    `;
+339-    this.container = container;
+340-    this.b = new Binder(container, initial);
+341-
+342-    const input = this.b.ref<HTMLTextAreaElement>(inputRef);
+343-    input.addEventListener("input", () => {
+344-      dispatch({ type: "DRAFT_CHANGED", draft: input.value });
+345-    });
+346-    input.addEventListener("keydown", (e: KeyboardEvent) => {
+347-      if (e.key === "Enter" && !e.shiftKey) {
+348-        e.preventDefault();
+349-        dispatch({ type: "SUBMIT" });
+350-      }
+351-    });
+352-    this.b
+353-      .ref(sendRef)
+354-      .addEventListener("click", () => dispatch({ type: "SUBMIT" }));
+355-
+356-    this.b.bindText(quoteRef, (s) => s.quote);
+357-    this.b.bindList(transcriptRef, "li", (s) =>
+358-      s.messages.map((message, i) =>
+359-        showKeyed(
+360-          String(i),
+361-          MessageView,
+362-          {
+363-            message,
+364-            segments: segments([], null, i, message.text.length),
+365-            active: null,
+366-          },
+367-          {},
+368-          () => {},
+369-        ),
+370-      ),
+371-    );
+372-    this.b.bindValue(inputRef, (s) => s.draft);
+373-    this.b.bindDisabled(inputRef, (s) => s.inFlight);
+374-    this.b.bindDisabled(sendRef, (s) => s.inFlight || s.draft.trim() === "");
+375-  }
+376-
+377:  sync(state: ThreadPaneState): void {
+378-    this.b.sync(state);
+379-  }
+380-
+381-  destroy(): void {
+382-    this.b.cleanup();
+383-    this.container.innerHTML = "";
+384-  }
+385-}
+386-
+387-export class AppView implements View<State, Msg> {
+388-  container: HTMLElement;
+389-  private b: Binder<State>;
+390-  /** The latest state, for event handlers that need it outside a binding. */
+391-  private current: State;
+392-
+393-  constructor(
+394-    container: HTMLElement,
+395-    dispatch: (msg: Msg) => void,
+396-    initialState: State,
+397-  ) {
+398-    const transcriptRef: Ref = ref("transcript");
+399-    const inputRef: Ref = ref("input");
+400-    const sendRef: Ref = ref("send");
+401-    const backRef: Ref = ref("back");
+402-    const forwardRef: Ref = ref("forward");
+403-    const depthRef: Ref = ref("depth");
+404-    const composerRef: Ref = ref("composer");
+405-    const learningRef: Ref = ref("learning");
+406-
+407-    container.className = appClass;
+408-    container.innerHTML = sanitize`
+409-      <div class="${navClass}">
+410-        <button type="button" data-ref="${backRef}">← Back</button>
+411-        <span class="${depthClass}" data-ref="${depthRef}"></span>
+412-        <button type="button" data-ref="${forwardRef}"></button>
+413-      </div>
+414-      <div class="${paneClass}">
+415-        <ul class="${transcriptClass}" data-ref="${transcriptRef}"></ul>
+416-        <div class="${composerClass}" data-ref="${composerRef}">
+417-          <textarea data-ref="${inputRef}" rows="2" placeholder="Ask something…"></textarea>
+418-          <button type="button" data-ref="${sendRef}">Send</button>
+419-        </div>
+420-      </div>
+421-      <div data-ref="${learningRef}"></div>
+422-    `;
+423-    this.container = container;
+424-    this.current = initialState;
+425-    this.b = new Binder(container, initialState);
+426-
+427-    const input = this.b.ref<HTMLTextAreaElement>(inputRef);
+428-    input.addEventListener("input", () => {
+429-      dispatch({ type: "DRAFT_CHANGED", draft: input.value });
+430-    });
+431-    input.addEventListener("keydown", (e: KeyboardEvent) => {
+432-      if (e.key === "Enter" && !e.shiftKey) {
+433-        e.preventDefault();
+434-        dispatch({ type: "SUBMIT" });
+435-      }
+436-    });
+437-    this.b
+--
+491:        return show(ThreadPane, child, {}, (msg: ThreadPaneMsg) =>
+492-          dispatch({ type: "CHILD_MSG", msg }),
+493-        );
+494-      }
+495-      const learningState: LearningState = {
+496-        selection: paneSelection(s),
+497-        overlapping: s.anchor !== null && overlaps(s.marks, s.anchor),
+498-        query: s.query,
+499-      };
+500-      // bindSlot hands this straight to the child as its dispatch, so it must
+501-      // dispatch rather than return a wrapped message.
+502-      return show(LearningPane, learningState, {}, (msg: LearningMsg) =>
+503-        dispatch({ type: "LEARNING_MSG", msg }),
+504-      );
+505-    });
+506-    this.b.bindValue(inputRef, (s) => s.draft);
+507-    this.b.bindDisabled(inputRef, (s) => s.inFlight);
+508-    this.b.bindDisabled(sendRef, (s) => s.inFlight || s.draft.trim() === "");
+509-  }
+510-
+511-  sync(state: State): void {
+512-    this.current = state;
+513-    this.b.sync(state);
+514-  }
+515-
+516-  destroy(): void {
+517-    this.b.cleanup();
+518-    this.container.innerHTML = "";
+519-  }
+520-}
+521-
+522-/** The passage the right pane is about: the live selection, or - once one has
+523- * been committed - the mark whose thread is active. */
+524-function paneSelection(s: State): string | null {
+525-  if (s.anchor) return anchorText(s.anchor, s.messages);
+526-  const active = s.marks.find((m) => m.thread === s.activeMark);
+527-  return active ? anchorText(active.anchor, s.messages) : null;
+528-}
+529-/** Reads the live browser selection as an Anchor. Returns `undefined` when the
+530- * selection has nothing to do with the transcript, which must not clobber a
+531- * previously captured anchor. */
+532-function readAnchor(
+533-  transcript: HTMLElement,
+534-  thread: ThreadId,
+535-): Anchor | null | undefined {
+536-  const selection = window.getSelection();
+537-  if (!selection || selection.rangeCount === 0) return undefined;
+538-  const range = selection.getRangeAt(0);
+539-  const start = resolvePoint(
+540-    transcript,
+541-    range.startContainer,
+542-    range.startOffset,
+543-  );
+544-  const end = resolvePoint(transcript, range.endContainer, range.endOffset);
+545-  if (!start || !end) return undefined;
+546-  if (start.msg === end.msg && start.offset === end.offset) return null;
+547-  return { thread, start, end };
+548-}
+549-
+550-function resolvePoint(
+551-  transcript: HTMLElement,
+exit code 0

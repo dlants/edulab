@@ -1,0 +1,36 @@
+$ cd /Users/denis.lantsman/src/edulab && sed -n '1,40p' packages/frontend/conversation.ts
+stdout:
+import type Anthropic from "@anthropic-ai/sdk";
+import type { ClientMessage, ServerFrame } from "@edulab/iso/protocol.ts";
+const MODEL = "claude-sonnet-4-5";
+const MAX_TOKENS = 4096;
+const SYSTEM =
+  "You are a patient tutor. Explain concepts clearly and concisely.";
+export type Message = { role: "user" | "assistant"; text: string };
+/** The subset of WebSocket the conversation uses, so tests can stand in for it. */
+export type Socket = {
+  send(data: string): void;
+  addEventListener(
+    type: "message",
+    listener: (e: MessageEvent<string>) => void,
+  ): void;
+};
+export class Conversation {
+  private readonly turns: Anthropic.MessageParam[] = [];
+  private pending: { requestId: string; blocks: string[] } | undefined;
+  private settle: (() => void) | undefined;
+  onChange: (() => void) | undefined;
+  private readonly socket: Socket;
+  constructor(socket: Socket) {
+    this.socket = socket;
+    socket.addEventListener("message", (e: MessageEvent<string>) => {
+      this.handleFrame(JSON.parse(e.data) as ServerFrame);
+    });
+  }
+  /** Committed turns plus the one currently streaming. */
+  get messages(): ReadonlyArray<Message> {
+    const committed = this.turns.map(
+      (turn): Message => ({
+        role: turn.role === "assistant" ? "assistant" : "user",
+        text: textOf(turn),
+exit code 0

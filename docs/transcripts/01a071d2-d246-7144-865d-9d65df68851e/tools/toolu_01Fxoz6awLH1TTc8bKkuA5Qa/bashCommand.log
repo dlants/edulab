@@ -1,0 +1,10 @@
+$ grep -n "routeWebSocket\|fakeBackend" packages/e2e/tests/chat.spec.ts
+stdout:
+26:async function fakeBackend(page: Page, chunks: string[]) {
+33:  await page.routeWebSocket("**/api/socket", (ws) => {
+100:  const backend = await fakeBackend(page, chunks);
+111:  const backend = await fakeBackend(page, ["Hello", ", world"]);
+127:  const backend = await fakeBackend(page, ["ok"]);
+141:  const backend = await fakeBackend(page, ["ok"]);
+297:  const backend = await fakeBackend(page, ["ok"]);
+exit code 0

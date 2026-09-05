@@ -1,0 +1,14 @@
+$ cd /Users/denis.lantsman/src/edulab && node scripts/fetch-wildchat.mjs 20 > /tmp/wildchat.json; echo "exit=$?"; ls -la /tmp/wildchat.json
+stderr:
+file:///Users/denis.lantsman/src/edulab/scripts/fetch-wildchat.mjs:22
+  if (body.error) throw new Error(body.error);
+                        ^
+Error: the dataset index is loading, this may take longer than usual
+    at page (file:///Users/denis.lantsman/src/edulab/scripts/fetch-wildchat.mjs:22:25)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async file:///Users/denis.lantsman/src/edulab/scripts/fetch-wildchat.mjs:30:16
+Node.js v24.14.0
+stdout:
+exit=1
+-rw-r--r--@ 1 denis.lantsman  wheel  0 Sep  4 21:57 /tmp/wildchat.json
+exit code 0

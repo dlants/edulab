@@ -1,0 +1,33 @@
+$ cd /Users/denis.lantsman/src/magenta.nvim && grep -rn "JSONSchemaType\|validateAgainstSchema" node/core/src --include="*.ts" | grep -i schema
+stdout:
+node/core/src/tools/yield-to-parent.ts:1:import type { JSONSchemaType } from "openai/lib/jsonschema.mjs";
+node/core/src/tools/yield-to-parent.ts:51:const DEFAULT_INPUT_SCHEMA: JSONSchemaType = {
+node/core/src/tools/yield-to-parent.ts:62:export function getSpec(yieldSchema?: JSONSchemaType): ProviderToolSpec {
+node/core/src/tools/toolManager.ts:1:import type { JSONSchemaType } from "openai/lib/jsonschema.mjs";
+node/core/src/tools/toolManager.ts:87:  yieldSchema?: JSONSchemaType,
+node/core/src/tools/mcp/client.ts:17:import type { JSONSchemaType } from "openai/lib/jsonschema.mjs";
+node/core/src/tools/mcp/client.ts:216:      input_schema: tool.inputSchema as JSONSchemaType,
+node/core/src/tools/run-script.ts:15:import { validateAgainstSchema } from "../utils/validate-schema.ts";
+node/core/src/tools/run-script.ts:124:    const schemaErrors = validateAgainstSchema(
+node/core/src/providers/provider-types.ts:2:import type { JSONSchemaType } from "openai/lib/jsonschema.mjs";
+node/core/src/providers/provider-types.ts:182:  input_schema: JSONSchemaType;
+node/core/src/providers/openai.ts:4:  JSONSchemaType,
+node/core/src/providers/openai.ts:94:  schema: JSONSchemaType,
+node/core/src/providers/openai.ts:95:): JSONSchemaType {
+node/core/src/providers/openai.ts:136:        value as JSONSchemaType,
+node/core/src/providers/openai.ts:141:  return sanitized as JSONSchemaType;
+node/core/src/utils/validate-schema.ts:8:export function validateAgainstSchema(
+node/core/src/utils/validate-schema.ts:49:        errors.push(...validateAgainstSchema(obj[key], sub, `${path}.${key}`));
+node/core/src/utils/validate-schema.ts:64:      errors.push(...validateAgainstSchema(item, itemSchema, `${path}[${i}]`));
+node/core/src/utils/validate-schema.test.ts:2:import { validateAgainstSchema } from "./validate-schema.ts";
+node/core/src/utils/validate-schema.test.ts:17:describe("validateAgainstSchema", () => {
+node/core/src/utils/validate-schema.test.ts:20:      validateAgainstSchema(
+node/core/src/utils/validate-schema.test.ts:28:    const errors = validateAgainstSchema({ stop: "x" }, schema);
+node/core/src/utils/validate-schema.test.ts:33:    const errors = validateAgainstSchema({ start: 5 }, schema);
+node/core/src/utils/validate-schema.test.ts:38:    const errors = validateAgainstSchema({ start: "m", count: 1.5 }, schema);
+node/core/src/utils/validate-schema.test.ts:43:    const errors = validateAgainstSchema(
+node/core/src/utils/validate-schema.test.ts:51:    const errors = validateAgainstSchema({ start: "m", mode: "c" }, schema);
+node/core/src/utils/validate-schema.test.ts:56:    const errors = validateAgainstSchema({ start: "m", extra: 1 }, schema);
+node/core/src/thread.ts:1:import type { JSONSchemaType } from "openai/lib/jsonschema.mjs";
+node/core/src/thread.ts:113:  yieldSchema?: JSONSchemaType;
+exit code 0

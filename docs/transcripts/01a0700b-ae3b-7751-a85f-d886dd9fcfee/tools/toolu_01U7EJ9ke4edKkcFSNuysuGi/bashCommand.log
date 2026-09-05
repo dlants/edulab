@@ -1,0 +1,50 @@
+$ cd /Users/denis.lantsman/src/edulab && ls plans/ && cat packages/frontend/samples/index.ts
+stdout:
+2026-09-04-prototype-scaffolding.md
+import type Anthropic from "@anthropic-ai/sdk";
+import adhesive from "./44bbcae8-tile-adhesive-formulation.json";
+import django from "./72c7ec37-django-event-app-urls.json";
+import heapFile from "./9833484b-c-heap-file-block-storage.json";
+import pontoon from "./74979366-floating-dock-pontoon.json";
+/** A canned task transcript, so a prototype can be exercised without spending a
+ * turn of real work first. The files are verbatim exports: a flat array of
+ * strictly alternating string-content turns, which is exactly MessageParam. */
+export type Sample = {
+  id: string;
+  label: string;
+  turns: Anthropic.MessageParam[];
+};
+type SampleFile = {
+  hash: string;
+  messages: { role: string; content: string }[];
+};
+function sample(label: string, file: SampleFile): Sample {
+  return {
+    id: file.hash.slice(0, 8),
+    label,
+    turns: file.messages.map((m) => ({
+      role: m.role === "assistant" ? "assistant" : "user",
+      content: m.content,
+    })),
+  };
+}
+export const samples: Sample[] = [
+  sample("Floating dock pontoon", pontoon),
+  sample("Tile adhesive formulation", adhesive),
+  sample("Django event app URLs", django),
+  sample("C heap file block storage", heapFile),
+];
+export const SAMPLE_PARAM = "sample";
+export function selectedSample(): Sample | undefined {
+  const id = new URLSearchParams(window.location.search).get(SAMPLE_PARAM);
+  return samples.find((s) => s.id === id);
+}
+/** Switching samples has to discard every scrap of prototype state, so it is a
+ * real navigation rather than a re-mount. */
+export function selectSample(id: string | undefined): void {
+  const url = new URL(window.location.href);
+  if (id === undefined) url.searchParams.delete(SAMPLE_PARAM);
+  else url.searchParams.set(SAMPLE_PARAM, id);
+  window.location.assign(url.toString());
+}
+exit code 0

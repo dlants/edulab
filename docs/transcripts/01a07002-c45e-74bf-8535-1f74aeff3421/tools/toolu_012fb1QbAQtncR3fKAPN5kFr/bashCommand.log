@@ -1,0 +1,14 @@
+$ ls -la task-samples/ && find task-samples -type f
+stdout:
+total 648
+drwxr-xr-x@  6 denis.lantsman  staff     192 Sep  4 22:17 .
+drwxr-xr-x@ 21 denis.lantsman  staff     672 Sep  4 22:18 ..
+-rw-r--r--@  1 denis.lantsman  staff   78262 Sep  4 22:17 44bbcae8-tile-adhesive-formulation.json
+-rw-r--r--@  1 denis.lantsman  staff  101554 Sep  4 22:17 72c7ec37-django-event-app-urls.json
+-rw-r--r--@  1 denis.lantsman  staff   77795 Sep  4 22:14 74979366-floating-dock-pontoon.json
+-rw-r--r--@  1 denis.lantsman  staff   66734 Sep  4 22:16 9833484b-c-heap-file-block-storage.json
+task-samples/74979366-floating-dock-pontoon.json
+task-samples/9833484b-c-heap-file-block-storage.json
+task-samples/44bbcae8-tile-adhesive-formulation.json
+task-samples/72c7ec37-django-event-app-urls.json
+exit code 0

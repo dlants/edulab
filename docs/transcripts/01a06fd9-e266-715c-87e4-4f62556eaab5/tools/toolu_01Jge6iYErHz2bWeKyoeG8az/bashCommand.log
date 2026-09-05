@@ -2,3 +2,6 @@ $ cd /Users/denis.lantsman/src/edulab && npm run sync:transcripts && git status 
 stdout:
 > edulab@0.0.1 sync:transcripts
 > ./scripts/sync-transcripts.sh
+synced 12 thread(s) into /Users/denis.lantsman/src/edulab/docs/transcripts
+       7
+exit code 0

@@ -1,0 +1,16 @@
+$ cd /Users/denis.lantsman/src/edulab && npm run lint:fix && npm test
+stdout:
+> edulab@0.0.1 lint:fix
+> biome check --write .
+Checked 35 files in 94ms. Fixed 1 file.
+> edulab@0.0.1 test
+> vitest run
+ RUN  v4.1.11 /Users/denis.lantsman/src/edulab
+ ✓ packages/frontend/prompt.test.ts (5 tests) 2ms
+ ✓ packages/frontend/selection.test.ts (8 tests) 2ms
+ ✓ packages/frontend/conversation.test.ts (6 tests) 12ms
+ Test Files  3 passed (3)
+      Tests  19 passed (19)
+   Start at  23:30:03
+   Duration  142ms (transform 73ms, setup 0ms, import 166ms, tests 16ms, environment 0ms)
+exit code 0

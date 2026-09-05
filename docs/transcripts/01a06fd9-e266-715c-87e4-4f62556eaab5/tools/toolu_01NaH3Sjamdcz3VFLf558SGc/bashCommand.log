@@ -1,0 +1,11 @@
+$ cd /Users/denis.lantsman/src/edulab && git add -A docs/transcripts scripts/sync-transcripts.sh package.json && git commit -m "Sync magenta thread transcripts into docs/transcripts" -q && git log --format='%h %s' -1 && git show --stat --format= HEAD
+stdout:
+On branch main
+Your branch is ahead of 'origin/main' by 4 commits.
+  (use "git push" to publish your local commits)
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	modified:   notes/prototype.md
+no changes added to commit (use "git add" and/or "git commit -a")
+exit code 1

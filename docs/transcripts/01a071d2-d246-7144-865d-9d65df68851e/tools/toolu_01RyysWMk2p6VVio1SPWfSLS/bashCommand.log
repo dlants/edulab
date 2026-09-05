@@ -1,0 +1,6 @@
+$ find packages -name "*.test.ts" -type f
+stdout:
+packages/frontend/prompt.test.ts
+packages/frontend/selection.test.ts
+packages/frontend/conversation.test.ts
+exit code 0

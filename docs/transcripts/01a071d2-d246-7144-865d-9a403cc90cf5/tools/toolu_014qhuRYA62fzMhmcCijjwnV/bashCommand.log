@@ -1,0 +1,8 @@
+$ grep -n "ABORT_TOOL_RESULT_TEXT" /Users/denis.lantsman/src/magenta.nvim/node/core/src/providers/*.ts
+stdout:
+/Users/denis.lantsman/src/magenta.nvim/node/core/src/providers/anthropic-inference.ts:24:  ABORT_TOOL_RESULT_TEXT,
+/Users/denis.lantsman/src/magenta.nvim/node/core/src/providers/anthropic-inference.ts:889:          ? ABORT_TOOL_RESULT_TEXT
+/Users/denis.lantsman/src/magenta.nvim/node/core/src/providers/inference-shared.ts:14:export const ABORT_TOOL_RESULT_TEXT =
+/Users/denis.lantsman/src/magenta.nvim/node/core/src/providers/openai-inference.test.ts:13:  ABORT_TOOL_RESULT_TEXT,
+/Users/denis.lantsman/src/magenta.nvim/node/core/src/providers/openai-inference.test.ts:587:      value: [{ type: "text", text: ABORT_TOOL_RESULT_TEXT }],
+exit code 0

@@ -1,0 +1,13 @@
+$ cd /Users/denis.lantsman/src/edulab && npm run test:e2e
+stdout:
+> edulab@0.0.1 test:e2e
+> npm -w @edulab/e2e run test
+> @edulab/e2e@0.0.1 test
+> playwright test
+Running 4 tests using 4 workers
+  ✓  4 tests/chat.spec.ts:79:1 › a second turn sends the full conversation (183ms)
+  ✓  2 tests/chat.spec.ts:65:1 › the composer is disabled while a turn is in flight (461ms)
+  ✓  3 tests/chat.spec.ts:49:1 › streams a response into the transcript (455ms)
+  ✓  1 tests/smoke.spec.ts:9:1 › streams a real response end to end (2.0s)
+  4 passed (5.0s)
+exit code 0

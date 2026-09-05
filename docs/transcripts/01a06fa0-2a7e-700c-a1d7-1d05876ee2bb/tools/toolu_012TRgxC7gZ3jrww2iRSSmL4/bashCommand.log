@@ -1,0 +1,47 @@
+$ cd /Users/denis.lantsman/src/edulab && cat > packages/frontend/main.ts <<'EOF'
+import { routeFor, routes } from "./routes.ts";
+import { cls, mountStyle } from "./vamp.ts";
+
+const navClass = cls("nav");
+
+mountStyle(`
+.${navClass} {
+  font-family: system-ui, sans-serif;
+  font-size: 0.875rem;
+  display: flex;
+  gap: 1rem;
+  max-width: 44rem;
+  margin: 0 auto;
+  padding: 1rem 1rem 0;
+}
+.${navClass} a { color: inherit; }
+.${navClass} a[aria-current="page"] { font-weight: 600; }
+`);
+
+const active = routeFor(window.location.pathname);
+
+const nav = document.createElement("nav");
+nav.className = navClass;
+for (const route of routes) {
+  const link = document.createElement("a");
+  link.href = route.path;
+  link.textContent = route.label;
+  if (route === active) link.setAttribute("aria-current", "page");
+  nav.append(link);
+}
+
+const page = document.createElement("div");
+
+const root = document.getElementById("app") ?? document.body;
+root.append(nav, page);
+
+active.mount(page);
+EOF
+npm run typecheck && npm run lint
+stdout:
+> edulab@0.0.1 typecheck
+> npm -w @edulab/iso exec tsc -- --noEmit && npm -w @edulab/frontend exec tsc -- --noEmit && npm -w @edulab/backend exec tsc -- --noEmit && npm -w @edulab/e2e exec tsc -- --noEmit
+> edulab@0.0.1 lint
+> biome check .
+Checked 24 files in 109ms. No fixes applied.
+exit code 0

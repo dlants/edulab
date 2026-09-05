@@ -1,0 +1,37 @@
+$ cd /Users/denis.lantsman/src/edulab && sed -n 1,40p packages/frontend/conversation.test.ts
+stdout:
+import type Anthropic from "@anthropic-ai/sdk";
+import type { ClientMessage } from "@edulab/iso/protocol.ts";
+import { expect, it } from "vitest";
+import { Conversation, type Socket } from "./conversation.ts";
+class FakeSocket implements Socket {
+  readonly sent: ClientMessage[] = [];
+  private listener: ((e: MessageEvent<string>) => void) | undefined;
+  send(data: string) {
+    this.sent.push(JSON.parse(data) as ClientMessage);
+  }
+  addEventListener(
+    _type: "message",
+    listener: (e: MessageEvent<string>) => void,
+  ) {
+    this.listener = listener;
+  }
+  get requestId(): string {
+    const last = this.sent[this.sent.length - 1];
+    if (!last) throw new Error("nothing sent");
+    return last.requestId;
+  }
+  deliver(event: Anthropic.RawMessageStreamEvent) {
+    this.listener?.(
+      new MessageEvent("message", {
+        data: JSON.stringify({
+          type: "event",
+          requestId: this.requestId,
+          event,
+        }),
+      }),
+    );
+  }
+  stream(chunks: string[]) {
+    this.deliver({
+exit code 0

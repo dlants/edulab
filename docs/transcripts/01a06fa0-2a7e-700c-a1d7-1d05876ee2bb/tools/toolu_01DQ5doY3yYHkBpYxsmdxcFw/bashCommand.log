@@ -1,0 +1,69 @@
+$ cd /Users/denis.lantsman/src/edulab && sed -n '80,120p;255,285p' packages/frontend/vamp.ts
+stdout:
+ * The slot reads this descriptor and handles the lifecycle: mount if new, sync if
+ * the same view is already shown, or destroy-and-remount if the constructor changed.
+ * childDispatch is the dispatch function passed to the child view. Use noop for leaf views.
+ * An optional key forces a remount when it changes, even if the view class is the same.
+ */
+export function show<ChildState, ChildMsg, ChildCtx>(
+  ViewClass: ViewCtor<ChildState, ChildMsg, ChildCtx>,
+  state: ChildState,
+  ctx: ChildCtx,
+  childDispatch: (childMsg: ChildMsg) => void,
+  key?: string,
+): SlotContent {
+  return {
+    key,
+    ctor: ViewClass,
+    state,
+    ctx,
+    childDispatch,
+  } as unknown as SlotContent;
+}
+/**
+ * Like show, but uses a key to distinguish identity instead of the ViewClass.
+ */
+export function showKeyed<ChildState, ChildMsg, ChildCtx>(
+  key: string,
+  ViewClass: ViewCtor<ChildState, ChildMsg, ChildCtx>,
+  state: ChildState,
+  ctx: ChildCtx,
+  childDispatch: (childMsg: ChildMsg) => void,
+): KeyedSlotContent {
+  return {
+    key,
+    ctor: ViewClass,
+    state,
+    ctx,
+    childDispatch,
+  } as unknown as KeyedSlotContent;
+}
+type Binding<State> = (state: State) => void;
+  /** Bind an attribute on the root container element (the element passed to the view's constructor). */
+  bindContainerAttr(attr: string, fn: (s: State) => string | undefined): void {
+    const el = this.container;
+    const binding = (s: State) => {
+      const val = fn(s);
+      if (val === undefined) el.removeAttribute(attr);
+      else el.setAttribute(attr, val);
+    };
+    this.bindings.push(binding);
+    binding(this.state);
+  }
+  /** Conditionally mount/unmount a child view. Return show() to mount, undefined to unmount. */
+  bindSlot(ref: Ref, fn: (s: State) => SlotContent | undefined): void {
+    const el = this.ref(ref);
+    let currentCtor: SlotContentInternal["ctor"] | undefined;
+    let currentKey: string | undefined;
+    let currentView: View<unknown, unknown> | undefined;
+    const cleanup = () => {
+      if (currentView) {
+        currentView.destroy();
+        el.innerHTML = "";
+        currentView = undefined;
+        currentCtor = undefined;
+        currentKey = undefined;
+      }
+    };
+    const binding = (s: State) => {
+exit code 0

@@ -1,0 +1,35 @@
+$ ls packages/e2e/tests; grep -rn "nav\|routes\|Layer\|select" packages/e2e/tests
+stdout:
+chat.spec.ts
+smoke.spec.ts
+packages/e2e/tests/chat.spec.ts:51:async function selectRange(
+packages/e2e/tests/chat.spec.ts:77:      const selection = window.getSelection();
+packages/e2e/tests/chat.spec.ts:78:      selection?.removeAllRanges();
+packages/e2e/tests/chat.spec.ts:79:      selection?.addRange(range);
+packages/e2e/tests/chat.spec.ts:158:test("a live selection overlapping a mark offers no actions", async ({
+packages/e2e/tests/chat.spec.ts:166:  await selectRange(page, 0, 0, 9);
+packages/e2e/tests/chat.spec.ts:170:  await selectRange(page, 0, 4, 15);
+packages/e2e/tests/chat.spec.ts:176:  await selectRange(page, 0, 10, 19);
+packages/e2e/tests/chat.spec.ts:187:  await selectRange(page, 0, 0, 9);
+packages/e2e/tests/chat.spec.ts:189:  await selectRange(page, 0, 16, 19);
+packages/e2e/tests/chat.spec.ts:203:test("an action opens a thread seeded with the selected passage", async ({
+packages/e2e/tests/chat.spec.ts:209:  await selectRange(page, 0, 4, 19);
+packages/e2e/tests/chat.spec.ts:227:  await selectRange(page, 0, 0, 9);
+packages/e2e/tests/chat.spec.ts:248:  await selectRange(page, 0, 0, 9);
+packages/e2e/tests/chat.spec.ts:252:  await selectRange(page, 0, 16, 19);
+packages/e2e/tests/chat.spec.ts:313:test("a thread opened at depth carries both selections once", async ({
+packages/e2e/tests/chat.spec.ts:317:  await selectRange(page, 0, 0, 9);
+packages/e2e/tests/chat.spec.ts:327:  await selectRange(page, 0, 0, 5);
+packages/e2e/tests/chat.spec.ts:344:  await expect(page.getByText("Layer 3")).toBeVisible();
+packages/e2e/tests/chat.spec.ts:349:  await selectRange(page, 0, 0, 9);
+packages/e2e/tests/chat.spec.ts:363:  await selectRange(page, 0, 0, 9);
+packages/e2e/tests/chat.spec.ts:368:  await selectRange(page, 0, 0, 5);
+packages/e2e/tests/chat.spec.ts:374:  await expect(page.getByText("Layer 1")).toBeVisible();
+packages/e2e/tests/chat.spec.ts:381:  await expect(page.getByText("Layer 3")).toBeVisible();
+packages/e2e/tests/chat.spec.ts:387:  await selectRange(page, 0, 0, 9);
+packages/e2e/tests/chat.spec.ts:392:  await selectRange(page, 0, 0, 5);
+packages/e2e/tests/chat.spec.ts:398:  await selectRange(page, 0, 6, 10);
+packages/e2e/tests/chat.spec.ts:407:test("a new selection leaves committed marks rendered", async ({ page }) => {
+packages/e2e/tests/chat.spec.ts:409:  await selectRange(page, 0, 0, 9);
+packages/e2e/tests/chat.spec.ts:412:  await selectRange(page, 0, 20, 25);
+exit code 0

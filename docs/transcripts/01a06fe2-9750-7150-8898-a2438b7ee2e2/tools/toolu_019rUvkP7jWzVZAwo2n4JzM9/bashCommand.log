@@ -1,0 +1,16 @@
+$ cd /tmp && python3 -c "
+import json,random
+d=json.load(open('wildchat.json'))
+ids='80e08978 5b878a60 aa0cb918 357dee9a 37734816 1df88eab'.split()
+random.seed(3)
+for h in ids:
+    c=next(x for x in d if x['hash'].startswith(h))
+    ms=c['messages']
+    print('='*70); print(c['hash'][:8], c['model'], c['turns'],'turns')
+    for i in sorted(random.sample(range(2,len(ms)),4)):
+        m=ms[i]
+        print(f'-- [{i}] {m[\"role\"]}: '+' '.join(m['content'][:330].split()))
+" > cand.txt; wc -l cand.txt
+stdout:
+      36 cand.txt
+exit code 0

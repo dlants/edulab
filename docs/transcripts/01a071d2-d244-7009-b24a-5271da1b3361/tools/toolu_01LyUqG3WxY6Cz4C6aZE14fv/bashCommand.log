@@ -1,0 +1,63 @@
+$ cd /Users/denis.lantsman/src/magenta.nvim && grep -rn "structuredToolResults\|structuredResultFor" node/core/src --include="*.ts" -A 2
+stdout:
+node/core/src/tool-types.ts:45:export function structuredResultFor<
+node/core/src/tool-types.ts-46-  K extends StructuredResultFor<string>["toolName"],
+node/core/src/tool-types.ts-47->(
+--
+node/core/src/system-reminder-supervisor.ts:16:  structuredResultFor,
+node/core/src/system-reminder-supervisor.ts-17-  type ToolRequestId,
+node/core/src/system-reminder-supervisor.ts-18-  type ToolStructuredResult,
+--
+node/core/src/system-reminder-supervisor.ts:86:      const bash = structuredResultFor(structured, "bash_command");
+node/core/src/system-reminder-supervisor.ts-87-      if (bash?.wasAbbreviated) this.pendingBashReminder = true;
+node/core/src/system-reminder-supervisor.ts:88:      const getFiles = structuredResultFor(structured, "get_files");
+node/core/src/system-reminder-supervisor.ts-89-      for (const file of getFiles?.files ?? []) {
+node/core/src/system-reminder-supervisor.ts-90-        if (file.systemReminder) this.activateReminder(file.systemReminder);
+--
+node/core/src/agent.test.ts:658:      core.structuredToolResults.set("tr-1" as ToolRequestId, {
+node/core/src/agent.test.ts-659-        toolName: "thread_title",
+node/core/src/agent.test.ts-660-      });
+--
+node/core/src/agent.test.ts:670:      expect(core.structuredToolResults.has("tr-1" as ToolRequestId)).toBe(
+node/core/src/agent.test.ts-671-        true,
+node/core/src/agent.test.ts-672-      );
+--
+node/core/src/agent.test.ts:2158:      const entry = core.structuredToolResults.get(requestId);
+node/core/src/agent.test.ts-2159-      if (entry) return entry;
+node/core/src/agent.test.ts-2160-      throw new Error("waiting for structured result");
+--
+node/core/src/agent.test.ts:2919:      const map = core.structuredToolResults;
+node/core/src/agent.test.ts-2920-      map.set(
+node/core/src/agent.test.ts-2921-        "req-1" as ToolRequestId,
+--
+node/core/src/agent.test.ts:2927:      expect(core.structuredToolResults).toBe(map);
+node/core/src/agent.test.ts:2928:      expect(core.structuredToolResults.has("req-1" as ToolRequestId)).toBe(
+node/core/src/agent.test.ts-2929-        true,
+node/core/src/agent.test.ts-2930-      );
+--
+node/core/src/thread.ts:81:import { structuredResultFor } from "./tool-types.ts";
+node/core/src/thread.ts-82-import { type CreateToolContext, createTool } from "./tools/create-tool.ts";
+node/core/src/thread.ts-83-import type { MCPToolManager as MCPToolManagerImpl } from "./tools/mcp/manager.ts";
+--
+node/core/src/thread.ts:274:  readonly structuredToolResults = new Map<
+node/core/src/thread.ts-275-    ToolRequestId,
+node/core/src/thread.ts-276-    ToolStructuredResult
+--
+node/core/src/thread.ts:356:    for (const [id, structured] of sourceThread.structuredToolResults) {
+node/core/src/thread.ts:357:      cloned.structuredToolResults.set(id, structured);
+node/core/src/thread.ts-358-    }
+node/core/src/thread.ts-359-    return cloned;
+--
+node/core/src/thread.ts:463:        this.structuredToolResults.set(request.id, structuredResult);
+node/core/src/thread.ts-464-      }
+node/core/src/thread.ts-465-      return { ...executed, result: wireResult };
+--
+node/core/src/thread.ts:772:            this.structuredToolResults,
+node/core/src/thread.ts-773-          );
+node/core/src/thread.ts-774-          return undefined;
+--
+node/core/src/thread.ts:788:      const structured = structuredResultFor(
+node/core/src/thread.ts:789:        this.structuredToolResults.get(id),
+node/core/src/thread.ts-790-        "yield_to_parent",
+node/core/src/thread.ts-791-      );
+exit code 0

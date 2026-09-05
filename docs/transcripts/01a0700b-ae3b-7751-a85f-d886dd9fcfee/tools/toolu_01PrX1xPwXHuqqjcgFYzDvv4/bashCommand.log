@@ -1,0 +1,5 @@
+$ cd /Users/denis.lantsman/src/edulab && sed -n 149,150p plans/2026-09-05-nested-learning-threads.md
+stdout:
+- One `WebSocket` for every thread. `Conversation.handleFrame` already drops frames whose `requestId` it does not own, so multiplexing needs no new code — but every `Conversation` adds a listener to the shared socket, so listeners must not be added anywhere else.
+- Anchor offsets index a thread's **visible** messages. `hiddenTurns` is the only thing that keeps that true, so anything that seeds turns must account for them.
+exit code 0

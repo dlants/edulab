@@ -1,0 +1,83 @@
+$ cd /Users/denis.lantsman/src/edulab && npm run typecheck && npx biome check packages/frontend/main.ts packages/frontend/samples/index.ts packages/frontend/prototypes/chat.ts packages/frontend/conversation.ts
+stdout:
+> edulab@0.0.1 typecheck
+> npm -w @edulab/iso exec tsc -- --noEmit && npm -w @edulab/frontend exec tsc -- --noEmit && npm -w @edulab/backend exec tsc -- --noEmit && npm -w @edulab/e2e exec tsc -- --noEmit
+stderr:
+packages/frontend/samples/index.ts
+:1:1 assist/source/organizeImports  FIXABLE  ━━━━━━━━━━━━━━━━━━━━━
+  × Sort these imports.
+  > 1 │ import type Anthropic from "@anthropic-ai/sdk";
+      │ ^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 2 │ import adhesive from "./44bbcae8
+-tile-adhesive-formulation.json";
+  > 3 │ import django from "./72c7ec37-django-event-app-urls.jso
+n";
+  > 4 │ import pontoon
+ from "./74979366-floating-dock-pont
+oon.json";
+  > 5 │ 
+import heapFile from "./9833484b-c-h
+eap-file-block-
+storage.json
+";
+      │ ^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^
+^^
+    6 │ 
+  7 │ /** A canned task tr
+anscript, so a
+ prototype can be exer
+cised withou
+t spending a
+  i Safe fix: Organize imports and exports (Biome)
+     2 
+ 2 │   import ad
+hesive from "
+./44bbcae8-tile-adhesiv
+e-formulation
+.json";
+     3
+  3 │   import djang
+o from "./72c
+7ec37-django-event-a
+pp-urls.json
+";
+     4    │ - im
+port·pontoon·
+from·"./74979366-flo
+ating-d
+ock-pontoon.js
+on";
+     5   
+ │ - import·heapF
+ile·from·"./
+9833484b-c-heap-fil
+e-block-sto
+rage.json";
+        4 │ 
++ import·
+heapFile·from·"./9
+833484b-c-he
+ap-file-block-stor
+age.json";
+        5 │ + impo
+rt
+·pontoon·from·"./749
+79366-floati
+ng-dock-pontoon.json";
+     6  6 │   
+     7  7 │   /** A canned task transcript, s
+o a prototype can be 
+exercised 
+without sp
+ending a
+stdout:
+Checked 4 files in 196ms. No fixes applied.
+Found 1 error.
+stderr:
+check 
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  × Some errors were emitted while running checks.
+exit code 1

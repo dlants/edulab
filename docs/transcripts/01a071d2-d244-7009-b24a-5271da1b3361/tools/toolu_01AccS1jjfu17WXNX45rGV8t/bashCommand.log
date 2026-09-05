@@ -1,0 +1,4 @@
+$ cd /Users/denis.lantsman/src/magenta.nvim && grep -rn "tool_use\|ProcessToolUse" node/core/src/agent.ts
+stdout:
+node/core/src/agent.ts:120:        // A rejecting executor is still a turn that must leave every tool_use
+exit code 0

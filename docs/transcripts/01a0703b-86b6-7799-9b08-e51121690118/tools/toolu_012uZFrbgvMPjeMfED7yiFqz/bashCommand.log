@@ -1,0 +1,16 @@
+$ cd /Users/denis.lantsman/src/edulab && npm run test:e2e
+stdout:
+> edulab@0.0.1 test:e2e
+> npm -w @edulab/e2e run test
+> @edulab/e2e@0.0.1 test
+> playwright test
+Running 7 tests using 7 workers
+  ✓  6 tests/chat.spec.ts:129:1 › a second turn sends the full conversation (210ms)
+  ✓  3 tests/chat.spec.ts:115:1 › the composer is disabled while a turn is in flight (310ms)
+  ✓  2 tests/chat.spec.ts:147:1 › a live selection overlapping a mark offers no actions (392ms)
+  ✓  5 tests/chat.spec.ts:99:1 › streams a response into the transcript (401ms)
+  ✓  4 tests/chat.spec.ts:186:1 › a new selection leaves committed marks rendered (439ms)
+  ✓  7 tests/chat.spec.ts:165:1 › two marks in one message are both clickable (521ms)
+  ✓  1 tests/smoke.spec.ts:9:1 › streams a real response end to end (1.5s)
+  7 passed (2.8s)
+exit code 0

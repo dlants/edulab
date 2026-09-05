@@ -1,0 +1,28 @@
+$ cd /Users/denis.lantsman/src/edulab && sed -n '1,25p' packages/frontend/view.ts
+stdout:
+import type { Message } from "./conversation.ts";
+import {
+  type Msg as LearningMsg,
+  LearningPane,
+  type State as LearningState,
+} from "./learning.ts";
+import {
+  type Anchor,
+  anchorText,
+  type Mark,
+  overlaps,
+  type Point,
+  type Segment,
+  segments,
+  type ThreadId,
+import { samples } from "./samples/index.ts";
+} from "./selection.ts";
+import {
+  Binder,
+  cls,
+  mountStyle,
+  type Ref,
+  ref,
+  sanitize,
+  show,
+exit code 0

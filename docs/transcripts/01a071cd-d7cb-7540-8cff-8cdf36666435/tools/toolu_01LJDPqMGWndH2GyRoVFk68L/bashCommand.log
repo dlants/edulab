@@ -1,0 +1,81 @@
+$ cd /Users/denis.lantsman/src/edulab && grep -rn "Message\b" packages/frontend --include=*.ts | grep -v node_modules && echo ---- && sed -n 1,60p packages/frontend/selection.ts && echo ---- && npx tsc --version && node -e "console.log(require('./node_modules/@anthropic-ai/sdk/package.json').version)"
+stdout:
+packages/frontend/selection.ts:53:  const liveClip = clipToMessage(live, i, length);
+packages/frontend/selection.ts:56:    const clip = clipToMessage(mark.anchor, i, length);
+packages/frontend/selection.ts:91:function clipToMessage(
+packages/frontend/selection.ts:109:    const clip = clipToMessage(anchor, i, messages[i]?.text.length ?? 0);
+packages/frontend/view.ts:1:import type { Message } from "./conversation.ts";
+packages/frontend/view.ts:30:  messages: ReadonlyArray<Message>;
+packages/frontend/view.ts:262:  message: Message;
+packages/frontend/view.ts:320:  messages: ReadonlyArray<Message>;
+packages/frontend/conversation.ts:2:import type { ClientMessage, ServerFrame } from "@edulab/iso/protocol.ts";
+packages/frontend/conversation.ts:18:export type Message = { role: "user" | "assistant"; text: string };
+packages/frontend/conversation.ts:60:  get messages(): ReadonlyArray<Message> {
+packages/frontend/conversation.ts:63:      (turn): Message => ({
+packages/frontend/conversation.ts:93:    const message: ClientMessage = {
+packages/frontend/vamp.ts:36:export interface View<State, _Message = never, _Ctx = unknown> {
+packages/frontend/vamp.ts:43:type ViewCtor<State, Message = never, Ctx = unknown> = new (
+packages/frontend/vamp.ts:45:  dispatch: (msg: Message) => void,
+packages/frontend/vamp.ts:48:) => View<State, Message, Ctx>;
+packages/frontend/conversation.test.ts:2:import type { ClientMessage } from "@edulab/iso/protocol.ts";
+packages/frontend/conversation.test.ts:7:  readonly sent: ClientMessage[] = [];
+packages/frontend/conversation.test.ts:11:    this.sent.push(JSON.parse(data) as ClientMessage);
+----
+/** Declared here rather than in threads.ts because an anchor is meaningless
+ * without one, and threads.ts will import this module. */
+export type ThreadId = string & { readonly __brand: "ThreadId" };
+/** A selection over the transcript, stored as character offsets into message
+ * text rather than as a live DOM Range: the browser's Range dies the moment the
+ * user clicks the learning pane, and the transcript is append-only, so offsets
+ * stay valid while a message is still streaming.
+ *
+ * `msg` is an absolute index into the owning thread's turns, `offset` a
+ * character offset into that turn's text. */
+export type Point = { msg: number; offset: number };
+/** `start` precedes `end` in document order; `thread` is the thread whose
+ * transcript the range indexes, i.e. the parent of whatever it opens. */
+export type Anchor = { thread: ThreadId; start: Point; end: Point };
+/** A committed highlight: the passage, plus the thread it opens. The opened
+ * thread's id cannot live on the anchor, because `anchor.thread` already names
+ * the other end of the edge - the parent. */
+export type Mark = { thread: ThreadId; anchor: Anchor };
+/** A run of one message's text: plain, a committed mark, or the live selection
+ * the user has just dragged and not yet acted on. */
+export type Segment = {
+  start: number;
+  end: number;
+  /** The thread this run opens, or null for plain text and the live range. */
+  thread: ThreadId | null;
+  live: boolean;
+};
+/** True when `live` intersects any committed mark, which makes it unusable:
+ * a passage owned by two threads has no honest meaning as an edge in the tree. */
+export function overlaps(marks: ReadonlyArray<Mark>, live: Anchor): boolean {
+  return marks.some(
+    (m) => before(m.anchor.start, live.end) && before(live.start, m.anchor.end),
+  );
+}
+function before(a: Point, b: Point): boolean {
+  return a.msg !== b.msg ? a.msg < b.msg : a.offset < b.offset;
+}
+/** Splits message `i` into plain, marked and live runs, left to right.
+ * `marks` are pairwise disjoint; `live` may overlap them, and wins where it
+ * does, so the user still sees what they dragged. */
+export function segments(
+  marks: ReadonlyArray<Mark>,
+  live: Anchor | null,
+  i: number,
+  length: number,
+): Segment[] {
+  const liveClip = clipToMessage(live, i, length);
+  const runs: Segment[] = [];
+  for (const mark of marks) {
+    const clip = clipToMessage(mark.anchor, i, length);
+    if (!clip) continue;
+    for (const part of subtract(clip, liveClip)) {
+      runs.push({ ...part, thread: mark.thread, live: false });
+    }
+----
+Version 5.9.3
+0.115.0
+exit code 0

@@ -1,0 +1,19 @@
+$ pgrep -f fetch-wildchat >/dev/null && echo RUNNING || echo DONE; cd /tmp && python3 -c "
+import json,random
+d=json.load(open('wildchat.json'))
+print('pool total',len(d))
+seen=set('74979366 443a520a f0e8d684 41bd0dca a95feae8 023ba035 e19ba72a 5ef514a8 fce92bb4 e926fc13 2c7a8e45 9833484b fb769c44 22ed653d 913cce67 746a6020 94c56861 604b3d77 1caa9395 479b20f8 fccada6c 925bc57a 99e7ae2e a357070d a653a81d 72c7ec37 9f861938 38728630 c1cf53c5 44bbcae8'.split())
+pool=[c for c in d if c['hash'][:8] not in seen]
+random.seed(2024)
+for c in random.sample(pool,10):
+    ms=c['messages']
+    print('='*70); print(c['hash'][:8], c['model'], c['turns'],'turns')
+    idxs=[0,1]+sorted(random.sample(range(2,len(ms)),3))
+    for i in idxs:
+        m=ms[i]
+        print(f'-- [{i}] {m[\"role\"]}: {m[\"content\"][:350].strip()}')
+" > sample4.txt; wc -l sample4.txt
+stdout:
+DONE
+     211 sample4.txt
+exit code 0

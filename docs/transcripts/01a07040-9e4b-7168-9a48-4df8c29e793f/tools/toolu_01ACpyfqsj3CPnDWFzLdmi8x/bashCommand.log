@@ -1,0 +1,25 @@
+$ cd /Users/denis.lantsman/src/edulab && grep -n "bind\w*(" packages/frontend/vamp.ts | grep -n "  bind" 
+stdout:
+1:160:  bindText(ref: Ref, fn: (s: State) => string): void {
+2:166:    binding(this.state);
+3:169:  bindClass(refOrEl: Ref | HTMLElement, fn: (s: State) => string): void {
+4:175:    binding(this.state);
+5:179:  bindVisible(ref: Ref, fn: (s: State) => boolean): void {
+6:185:    binding(this.state);
+7:189:  bindStyle(ref: Ref, fn: (s: State) => Record<string, string>): void {
+8:205:    binding(this.state);
+9:209:  bindValue(ref: Ref, fn: (s: State) => string): void {
+10:222:    binding(this.state);
+11:225:  bindChecked(ref: Ref, fn: (s: State) => boolean): void {
+12:231:    binding(this.state);
+13:234:  bindDisabled(ref: Ref, fn: (s: State) => boolean): void {
+14:242:    binding(this.state);
+15:245:  bindAttr(ref: Ref, attr: string, fn: (s: State) => string | undefined): void {
+16:253:    binding(this.state);
+17:257:  bindContainerAttr(attr: string, fn: (s: State) => string | undefined): void {
+18:265:    binding(this.state);
+19:269:  bindSlot(ref: Ref, fn: (s: State) => SlotContent | undefined): void {
+20:305:    binding(this.state);
+21:311:  bindList(
+22:405:    binding(this.state);
+exit code 0

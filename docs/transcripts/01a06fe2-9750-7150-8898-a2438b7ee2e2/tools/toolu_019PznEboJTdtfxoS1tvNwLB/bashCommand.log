@@ -1,0 +1,17 @@
+$ cd /tmp && python3 -c "
+import json,random
+d=json.load(open('wildchat.json'))
+seen=set('74979366 443a520a f0e8d684 41bd0dca a95feae8 023ba035 e19ba72a 5ef514a8 fce92bb4 e926fc13 2c7a8e45 9833484b fb769c44 22ed653d 913cce67 746a6020 94c56861 604b3d77 1caa9395 479b20f8'.split())
+pool=[c for c in d if c['hash'][:8] not in seen]
+random.seed(101)
+for c in random.sample(pool,10):
+    ms=c['messages']
+    print('='*70); print(c['hash'][:8], c['model'], c['turns'],'turns')
+    idxs=[0,1]+sorted(random.sample(range(2,len(ms)),3))
+    for i in idxs:
+        m=ms[i]
+        print(f'-- [{i}] {m[\"role\"]}: {m[\"content\"][:350].strip()}')
+" > sample3.txt; wc -l sample3.txt
+stdout:
+     124 sample3.txt
+exit code 0

@@ -1,0 +1,95 @@
+$ cd /Users/denis.lantsman/src/magenta.nvim && grep -rn "spawnThread\|yieldSchema" node/core/src --include="*.ts" | grep -E "(spawnThread|yieldSchema)"
+stdout:
+node/core/src/tools/yield-to-parent.ts:62:export function getSpec(yieldSchema?: JSONSchemaType): ProviderToolSpec {
+node/core/src/tools/yield-to-parent.ts:65:    input_schema: yieldSchema ?? DEFAULT_INPUT_SCHEMA,
+node/core/src/tools/spawn-subagents.test.ts:41:    spawnThread: vi.fn().mockResolvedValue("thread-1" as ThreadId),
+node/core/src/tools/spawn-subagents.test.ts:95:      expect(threadManager.spawnThread).toHaveBeenCalled();
+node/core/src/tools/spawn-subagents.test.ts:123:      expect(threadManager.spawnThread).toHaveBeenCalled();
+node/core/src/tools/spawn-subagents.test.ts:151:      expect(threadManager.spawnThread).toHaveBeenCalled();
+node/core/src/tools/spawn-subagents.test.ts:167:  it("returns error when spawnThread throws", async () => {
+node/core/src/tools/spawn-subagents.test.ts:169:      spawnThread: vi.fn().mockRejectedValue(new Error("spawn failed")),
+node/core/src/tools/spawn-subagents.test.ts:216:        expect(threadManager.spawnThread).toHaveBeenCalled();
+node/core/src/tools/spawn-subagents.test.ts:219:      expect(threadManager.spawnThread).toHaveBeenCalledWith(
+node/core/src/tools/spawn-subagents.test.ts:228:      spawnThread: vi.fn(() => {
+node/core/src/tools/spawn-subagents.test.ts:250:      expect(threadManager.spawnThread).toHaveBeenCalledTimes(2);
+node/core/src/tools/spawn-subagents.test.ts:270:      spawnThread: vi.fn(() => {
+node/core/src/tools/spawn-subagents.test.ts:292:      expect(threadManager.spawnThread).toHaveBeenCalledTimes(2);
+node/core/src/tools/spawn-subagents.test.ts:314:      spawnThread: vi.fn(() => {
+node/core/src/tools/spawn-subagents.test.ts:346:      expect(threadManager.spawnThread).toHaveBeenCalledTimes(2),
+node/core/src/tools/spawn-subagents.test.ts:357:      expect(threadManager.spawnThread).toHaveBeenCalledTimes(3),
+node/core/src/tools/spawn-subagents.test.ts:381:      spawnThread: vi.fn(() => {
+node/core/src/tools/spawn-subagents.test.ts:425:      expect(threadManager.spawnThread).toHaveBeenCalledTimes(2),
+node/core/src/tools/spawn-subagents.test.ts:438:      expect(threadManager.spawnThread).toHaveBeenCalledTimes(4),
+node/core/src/tools/spawn-subagents.test.ts:461:      spawnThread: vi.fn(() => {
+node/core/src/tools/spawn-subagents.test.ts:491:      expect(threadManager.spawnThread).toHaveBeenCalledTimes(2),
+node/core/src/tools/spawn-subagents.test.ts:502:      expect(threadManager.spawnThread).toHaveBeenCalledTimes(3),
+node/core/src/tools/spawn-subagents.test.ts:523:      spawnThread: vi.fn(
+node/core/src/tools/spawn-subagents.test.ts:559:  it("passes contextFiles to spawnThread", async () => {
+node/core/src/tools/spawn-subagents.test.ts:560:    const spawnThread = vi.fn(() => Promise.resolve("thread_1" as ThreadId));
+node/core/src/tools/spawn-subagents.test.ts:562:      spawnThread,
+node/core/src/tools/spawn-subagents.test.ts:586:      expect(spawnThread).toHaveBeenCalled();
+node/core/src/tools/spawn-subagents.test.ts:594:    expect(spawnThread).toHaveBeenCalledWith(
+node/core/src/tools/spawn-subagents.test.ts:601:  it("passes resolved cwd to spawnThread when directory is provided", async () => {
+node/core/src/tools/spawn-subagents.test.ts:602:    const spawnThread = vi.fn(() => Promise.resolve("thread_1" as ThreadId));
+node/core/src/tools/spawn-subagents.test.ts:604:      spawnThread,
+node/core/src/tools/spawn-subagents.test.ts:628:      expect(spawnThread).toHaveBeenCalled();
+node/core/src/tools/spawn-subagents.test.ts:636:    expect(spawnThread).toHaveBeenCalledWith(
+node/core/src/tools/spawn-subagents.test.ts:643:  it("does not pass cwd to spawnThread when directory is not provided", async () => {
+node/core/src/tools/spawn-subagents.test.ts:644:    const spawnThread = vi.fn(() => Promise.resolve("thread_1" as ThreadId));
+node/core/src/tools/spawn-subagents.test.ts:646:      spawnThread,
+node/core/src/tools/spawn-subagents.test.ts:669:      expect(spawnThread).toHaveBeenCalled();
+node/core/src/tools/spawn-subagents.test.ts:677:    expect(spawnThread).toHaveBeenCalledWith(
+node/core/src/tools/spawn-subagents.test.ts:765:      expect(threadManager.spawnThread).toHaveBeenCalled();
+node/core/src/tools/spawn-subagents.test.ts:831:      expect(threadManager.spawnThread).toHaveBeenCalled();
+node/core/src/tools/spawn-subagents.test.ts:907:      expect(threadManager.spawnThread).toHaveBeenCalled();
+node/core/src/tools/spawn-subagents.test.ts:915:    expect(threadManager.spawnThread).toHaveBeenCalledWith(
+node/core/src/tools/spawn-subagents.test.ts:955:      expect(threadManager.spawnThread).toHaveBeenCalled();
+node/core/src/tools/spawn-subagents.test.ts:958:    expect(threadManager.spawnThread).toHaveBeenCalledWith(
+node/core/src/tools/spawn-subagents.test.ts:1000:    const spawnThread = vi.fn(() => Promise.resolve("thread_1" as ThreadId));
+node/core/src/tools/spawn-subagents.test.ts:1001:    const threadManager = createMockThreadManager({ spawnThread });
+node/core/src/tools/spawn-subagents.test.ts:1029:      expect(spawnThread).toHaveBeenCalled();
+node/core/src/tools/spawn-subagents.test.ts:1038:    // contextFiles should NOT be passed to spawnThread for docker entries
+node/core/src/tools/spawn-subagents.test.ts:1039:    expect(spawnThread).toHaveBeenCalledWith(
+node/core/src/tools/spawn-subagents.test.ts:1046:    expect(spawnThread).toHaveBeenCalledWith(
+node/core/src/tools/spawn-subagents.test.ts:1051:    expect(spawnThread).toHaveBeenCalledWith(
+node/core/src/tools/spawn-subagents.test.ts:1056:    expect(spawnThread).toHaveBeenCalledWith(
+node/core/src/tools/spawn-subagents.test.ts:1089:      expect(threadManager.spawnThread).toHaveBeenCalled();
+node/core/src/tools/spawn-subagents.test.ts:1100:      spawnThread: vi.fn(() => {
+node/core/src/tools/spawn-subagents.test.ts:1131:      expect(threadManager.spawnThread).toHaveBeenCalledTimes(2);
+node/core/src/tools/spawn-subagents.test.ts:1150:    const spawnThread = vi.fn(() => Promise.resolve("thread_1" as ThreadId));
+node/core/src/tools/spawn-subagents.test.ts:1151:    const threadManager = createMockThreadManager({ spawnThread });
+node/core/src/tools/spawn-subagents.test.ts:1170:      expect(spawnThread).toHaveBeenCalledTimes(2);
+node/core/src/tools/spawn-subagents.test.ts:1173:    expect(spawnThread).toHaveBeenCalledWith(
+node/core/src/tools/spawn-subagents.test.ts:1178:    expect(spawnThread).toHaveBeenCalledWith(
+node/core/src/tools/spawn-subagents.test.ts:1192:    const spawnThread = vi.fn(() => Promise.resolve("thread_1" as ThreadId));
+node/core/src/tools/spawn-subagents.test.ts:1193:    const threadManager = createMockThreadManager({ spawnThread });
+node/core/src/tools/spawn-subagents.test.ts:1212:      expect(spawnThread).toHaveBeenCalled();
+node/core/src/tools/spawn-subagents.test.ts:1215:    expect(spawnThread).toHaveBeenCalledWith(
+node/core/src/tools/spawn-subagents.test.ts:1227:    const spawnThread = vi.fn(() => Promise.resolve("thread_1" as ThreadId));
+node/core/src/tools/spawn-subagents.test.ts:1228:    const threadManager = createMockThreadManager({ spawnThread });
+node/core/src/tools/spawn-subagents.test.ts:1255:      expect(spawnThread).toHaveBeenCalled();
+node/core/src/tools/spawn-subagents.test.ts:1258:    expect(spawnThread).toHaveBeenCalledWith(
+node/core/src/tools/spawn-subagents.test.ts:1272:    const spawnThread = vi.fn(() => Promise.resolve("thread_1" as ThreadId));
+node/core/src/tools/spawn-subagents.test.ts:1273:    const threadManager = createMockThreadManager({ spawnThread });
+node/core/src/tools/spawn-subagents.test.ts:1292:      expect(spawnThread).toHaveBeenCalled();
+node/core/src/tools/spawn-subagents.test.ts:1295:    expect(spawnThread).toHaveBeenCalledWith(
+node/core/src/tools/spawn-subagents.test.ts:1329:      expect(threadManager.spawnThread).toHaveBeenCalled();
+node/core/src/tools/spawn-subagents.test.ts:1332:    expect(threadManager.spawnThread).toHaveBeenCalledWith(
+node/core/src/tools/spawn-subagents.test.ts:1365:      expect(threadManager.spawnThread).toHaveBeenCalled();
+node/core/src/tools/spawn-subagents.test.ts:1368:    expect(threadManager.spawnThread).toHaveBeenCalledWith(
+node/core/src/tools/toolManager.ts:87:  yieldSchema?: JSONSchemaType,
+node/core/src/tools/toolManager.ts:145:      specs.push(YieldToParent.getSpec(yieldSchema));
+node/core/src/tools/spawn-subagents.ts:459:      const threadId = await context.threadManager.spawnThread({
+node/core/src/tools/spawn-subagents.ts:529:    const threadId = await ctx.threadManager.spawnThread({
+node/core/src/capabilities/thread-manager.ts:15:  spawnThread(opts: {
+node/core/src/compaction/compactor.ts:110:      const threadId = await this.thread.context.threadManager.spawnThread({
+node/core/src/thread-api.ts:15: * fixed at construction — a thread either has a `yieldSchema` or does not — so
+node/core/src/thread-api.ts:20:  /** conforms to the `yieldSchema` this thread was constructed with */
+node/core/src/agent.test.ts:125:      yieldSchema: {
+node/core/src/agent.test.ts:202:      yieldSchema: {
+node/core/src/agent.test.ts:752:  it("custom yieldSchema yields a structured JSON value", async () => {
+node/core/src/agent.test.ts:755:      yieldSchema: {
+node/core/src/thread.ts:113:  yieldSchema?: JSONSchemaType;
+node/core/src/thread.ts:194:    context.yieldSchema,
+node/core/src/thread.ts:794:        this.context.yieldSchema !== undefined
+exit code 0

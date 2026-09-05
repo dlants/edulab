@@ -1,0 +1,10 @@
+$ cd /Users/denis.lantsman/src/edulab && rm packages/frontend/routes.ts packages/frontend/prototypes/placeholder.ts && npm run typecheck && npm run lint
+stdout:
+> edulab@0.0.1 typecheck
+> npm -w @edulab/iso exec tsc -- --noEmit && npm -w @edulab/frontend exec tsc -- --noEmit && npm -w @edulab/backend exec tsc -- --noEmit && npm -w @edulab/e2e exec tsc -- --noEmit
+view.ts(16,1): error TS1003: Identifier expected.
+view.ts(16,8): error TS1005: ',' expected.
+view.ts(16,20): error TS1005: ';' expected.
+view.ts(17,1): error TS1128: Declaration or statement expected.
+view.ts(17,3): error TS1434: Unexpected keyword or identifier.
+exit code 2

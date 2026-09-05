@@ -1,0 +1,14 @@
+$ cd /Users/denis.lantsman/src/edulab && ls node_modules/@fastify/websocket/ && grep -n "clientTracking\|on('error'\|on(\"error\"\|ping\|close()" node_modules/@fastify/websocket/index.js
+stdout:
+eslint.config.js
+index.js
+LICENSE
+package.json
+README.md
+test
+tsconfig.json
+types
+130:      socket.on('error', (error) => {
+219:        client.close()
+232:    socket.close()
+exit code 0

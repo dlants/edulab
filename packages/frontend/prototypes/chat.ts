@@ -1,6 +1,6 @@
 import { Conversation } from "../conversation.ts";
 import { actionLabel } from "../prompt.ts";
-import { selectedSample } from "../samples/index.ts";
+import { selectedSample, selectSample } from "../samples/index.ts";
 import { anchorText, overlaps, type ThreadId } from "../selection.ts";
 import { ThreadTree } from "../threads.ts";
 import { AppView, type Msg, type State } from "../view.ts";
@@ -29,6 +29,7 @@ export function mount(container: HTMLElement): void {
   let focus = tree.root;
 
   const state: State = {
+    sample: selectedSample()?.id ?? "",
     messages: [],
     inFlight: false,
     draft: "",
@@ -96,6 +97,9 @@ export function mount(container: HTMLElement): void {
     switch (msg.type) {
       case "DRAFT_CHANGED":
         thread.draft = msg.draft;
+        break;
+      case "SAMPLE_CHANGED":
+        selectSample(msg.id === "" ? undefined : msg.id);
         break;
       case "SUBMIT":
         send(focus);

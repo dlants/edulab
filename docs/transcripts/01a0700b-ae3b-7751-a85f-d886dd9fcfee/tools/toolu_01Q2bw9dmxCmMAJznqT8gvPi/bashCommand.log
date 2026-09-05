@@ -1,0 +1,92 @@
+$ cd /Users/denis.lantsman/src/edulab && npm run typecheck && npm run lint
+stdout:
+> edulab@0.0.1 typecheck
+> npm -w @edulab/iso exec tsc -- --noEmit && npm -w @edulab/frontend exec tsc -- --noEmit && npm -w @edulab/backend exec tsc -- --noEmit && npm -w @edulab/e2e exec tsc -- --noEmit
+> edulab@0.0.1 lint
+> biome check .
+stderr:
+packages/frontend/view.ts
+:2:1 assist/source/organizeImports  FIXABLE  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  × Sort the imported names.
+    1 │ import type { Message } from "./conversation.ts";
+  > 2 │ import {
+      │ ^^^^^^^^
+  > 3 │   type Action,
+  > 4 │   LearningPane
+,
+  > 5 │   type Msg as LearningMsg,
+  > 6 │   type State as LearningState,
+  > 7 │ } from "./learning.ts";
+      │ ^^^^^^^^^^^^^^^^^^^^^^^
+    8 │ import 
+{
+    9 │   type Anchor,
+  i Safe fix: Organize imports and exports (Biome)
+      2   2 │   
+import {
+      3   3 │     t
+ype Action,
+      4     │ - 
+··LearningPane,
+      5     │ - ··t
+ype·Msg·as·LearningMsg,
+      6     │ - ··type·State·as·
+LearningState,
+   4 │ + ··type·M
+sg·as·LearningMsg,
+          5 │ +
+ ··LearningPane
+,
+          6 │ + ··type·State·as·LearningState
+,
+      7   7 │   } from 
+"./learning.ts";
+      8   8 │   
+import {
+packages/frontend/view.ts format
+ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  × Formatter would have printed the following content:
+    287 287 │    
+ if (!selection || selection.rangeCount === 0) return undefined;
+    288 288 │     const range = se
+lection.getRangeAt(0);
+    289     │ - ··con
+st·start·=·resolvePoint(transcript,·range.startContainer
+,·range.startOffset);
+289 │ + ··const·sta
+rt·=·resolvePoint(
+        290 │ + ···
+·transcript,
+        291 │ + 
+····range.startContainer,
+ 292 │ + ····range.
+startOffset,
+  293 │ + ··);
+    290 294 │    
+ const e
+nd = resolvePoint(tr
+anscript, range.e
+ndContainer, ra
+nge.endOffset);
+    291 295 │   
+  if (!start || !
+end) return undefined;
+  ······· │ 
+    314 318 │   
+  prefix.setEnd(node, offset
+);
+    315 319 │    
+ return { msg, offset: prefi
+x.toString().le
+ngth };
+    316   
+  │ - }
+        320 │ + }
+        321 │ + 
+stdout:
+Checked 31 files in 204ms. No fixes applied.
+Found 2 errors.
+stderr:
+check ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+× Some errors were emitted while running checks.
+exit code 1

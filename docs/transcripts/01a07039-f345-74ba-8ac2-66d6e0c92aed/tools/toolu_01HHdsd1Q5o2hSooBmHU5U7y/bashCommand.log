@@ -1,0 +1,12 @@
+$ cd /Users/denis.lantsman/src/edulab && grep -rn "new Conversation\|clipToMessage\|anchorText" packages --include=*.ts
+stdout:
+packages/frontend/selection.ts:9:export function clipToMessage(
+packages/frontend/selection.ts:21:export function anchorText(
+packages/frontend/selection.ts:27:    const clip = clipToMessage(anchor, i, messages[i]?.text.length ?? 0);
+packages/frontend/view.ts:10:  anchorText,
+packages/frontend/view.ts:11:  clipToMessage,
+packages/frontend/view.ts:244:          { message, mark: clipToMessage(s.anchor, i, message.text.length) },
+packages/frontend/view.ts:258:        selection: s.anchor ? anchorText(s.anchor, s.messages) : null,
+packages/frontend/prototypes/chat.ts:13:  const conversation = new Conversation(connect(), selectedSample()?.turns);
+packages/frontend/conversation.test.ts:61:  return { socket, conversation: new Conversation(socket) };
+exit code 0

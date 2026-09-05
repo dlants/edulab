@@ -1,0 +1,19 @@
+$ cd /Users/denis.lantsman/src/edulab && python3 -c "
+import json
+d=json.load(open('/tmp/wildchat.json'))
+for h,name in [('44bbcae8','tile-adhesive-formulation'),('72c7ec37','django-event-app-urls')]:
+    c=next(x for x in d if x['hash'].startswith(h))
+    json.dump(c,open(f'task-samples/{h}-{name}.json','w'),indent=2)
+    print(c['hash'],c['model'],c['turns'])
+"; ls -la task-samples
+stdout:
+44bbcae88cd6ef9506e5f864d3537f96 gpt-4-1106-preview 23
+72c7ec377f3e138bd98dd31676d9f94a gpt-4-1106-preview 22
+total 648
+drwxr-xr-x@  6 denis.lantsman  staff     192 Sep  4 22:17 .
+drwxr-xr-x@ 20 denis.lantsman  staff     640 Sep  4 22:14 ..
+-rw-r--r--@  1 denis.lantsman  staff   78262 Sep  4 22:17 44bbcae8-tile-adhesive-formulation.json
+-rw-r--r--@  1 denis.lantsman  staff  101554 Sep  4 22:17 72c7ec37-django-event-app-urls.json
+-rw-r--r--@  1 denis.lantsman  staff   77795 Sep  4 22:14 74979366-floating-dock-pontoon.json
+-rw-r--r--@  1 denis.lantsman  staff   66734 Sep  4 22:16 9833484b-c-heap-file-block-storage.json
+exit code 0

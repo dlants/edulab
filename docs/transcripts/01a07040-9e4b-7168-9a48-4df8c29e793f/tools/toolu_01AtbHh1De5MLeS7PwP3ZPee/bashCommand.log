@@ -1,0 +1,57 @@
+$ cd /Users/denis.lantsman/src/edulab && npm run typecheck && npm run test:e2e
+stdout:
+> edulab@0.0.1 typecheck
+> npm -w @edulab/iso exec tsc -- --noEmit && npm -w @edulab/frontend exec tsc -- --noEmit && npm -w @edulab/backend exec tsc -- --noEmit && npm -w @edulab/e2e exec tsc -- --noEmit
+> edulab@0.0.1 test:e2e
+> npm -w @edulab/e2e run test
+> @edulab/e2e@0.0.1 test
+> playwright test
+Running 10 tests using 7 workers
+  ✓   7 tests/chat.spec.ts:140:1 › a second turn sends the full conversation (330ms)
+  ✓   6 tests/chat.spec.ts:110:1 › streams a response into the transcript (431ms)
+  ✓   2 tests/chat.spec.ts:126:1 › the composer is disabled while a turn is in flight (517ms)
+  ✓   1 tests/chat.spec.ts:225:1 › a follow-up in the thread pane re-sends the seed (576ms)
+  ✓   5 tests/chat.spec.ts:158:1 › a live selection overlapping a mark offers no actions (582ms)
+  ✓   8 tests/chat.spec.ts:244:1 › clicking a mark reopens its thread without a new request (284ms)
+  ✓   3 tests/chat.spec.ts:180:1 › two marks in one message are both clickable (655ms)
+  ✓   9 tests/chat.spec.ts:263:1 › a new selection leaves committed marks rendered (265ms)
+  ✓  10 tests/smoke.spec.ts:9:1 › streams a real response end to end (1.4s)
+  ✘   4 tests/chat.spec.ts:203:1 › an action opens a thread seeded with the selected passage (5.6s)
+  1) tests/chat.spec.ts:203:1 › an action opens a thread seeded with the selected passage ──────────
+    Error: expect(locator).toHaveText(expected) failed
+    Locator: locator('ul').nth(1).locator('li')
+    Timeout: 5000ms
+    - Expected  - 1
+    + Received  + 4
+      Array [
+    -   "assistantok",
+    +   "
+    +       assistant
+    +       ok
+    +     ",
+      ]
+    Call log:
+      - Expect "toHaveText" locator('ul').nth(1).locator('li') with timeout 5000ms
+      - waiting for locator('ul').nth(1).locator('li')
+        14 × locator resolved to 1 element
+      219 |   expect(messages[0].content).toContain("quick brown fox");
+      220 |
+    > 221 |   await expect(threadTranscript(page).locator("li")).toHaveText(["assistantok"]);
+          |                                                      ^
+      222 |   await expect(page.locator("[data-mark]")).toHaveText("quick brown fox");
+      223 | });
+      224 |
+        at /Users/denis.lantsman/src/edulab/packages/e2e/tests/chat.spec.ts:221:54
+    Error Context: test-results/chat-an-action-opens-a-thr-a35f4-d-with-the-selected-passage/error-context.md
+  1 failed
+    tests/chat.spec.ts:203:1 › an action opens a thread seeded with the selected passage ───────────
+  9 passed (7.0s)
+stderr:
+npm error Lifecycle script `test` failed with error:
+npm error code 1
+npm error path /Users/denis.lantsman/src/edulab/packages/e2e
+npm error workspace @edulab/e2e@0.0.1
+npm error location /Users/denis.lantsman/src/edulab/packages/e2e
+npm error command failed
+npm error command sh -c playwright test
+exit code 1

@@ -1,0 +1,21 @@
+$ cd /Users/denis.lantsman/src/edulab && (nohup npm run dev > /tmp/edulab-dev.log 2>/dev/null &) ; sleep 6; curl -s -o /dev/null -w "frontend %{http_code}\n" http://localhost:5173/ ; cat /tmp/edulab-dev.log
+stdout:
+frontend 200
+> edulab@0.0.1 dev
+> npm run dev:frontend & npm run dev:backend
+> edulab@0.0.1 dev:backend
+> npm -w @edulab/backend run dev
+> edulab@0.0.1 dev:frontend
+> vite
+> @edulab/backend@0.0.1 dev
+> node --watch app.ts
+  VITE v6.4.3  ready in 121 ms
+  ➜  Local:   http://localhost:5173/
+◇ injected env (0) from ../../.env // tip: ⌘ suppress logs { quiet: true }
+{"level":30,"time":1788584029442,"pid":15758,"hostname":"ML-denis.lantsman-MJ2P9H3J1C","msg":"Server listening at http://127.0.0.1:3000"}
+{"level":30,"time":1788584029442,"pid":15758,"hostname":"ML-denis.lantsman-MJ2P9H3J1C","msg":"Server listening at http://192.168.0.66:3000"}
+{"level":30,"time":1788584029442,"pid":15758,"hostname":"ML-denis.lantsman-MJ2P9H3J1C","msg":"Server listening at http://192.168.139.3:3000"}
+{"level":30,"time":1788584029442,"pid":15758,"hostname":"ML-denis.lantsman-MJ2P9H3J1C","msg":"Server listening at http://192.168.97.0:3000"}
+{"level":30,"time":1788584029442,"pid":15758,"hostname":"ML-denis.lantsman-MJ2P9H3J1C","msg":"Server listening at http://192.168.147.0:3000"}
+{"level":30,"time":1788584029442,"pid":15758,"hostname":"ML-denis.lantsman-MJ2P9H3J1C","msg":"Server listening at http://192.168.215.0:3000"}
+exit code 0

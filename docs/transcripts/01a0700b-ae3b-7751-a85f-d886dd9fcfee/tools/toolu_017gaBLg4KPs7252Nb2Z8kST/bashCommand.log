@@ -1,0 +1,21 @@
+$ cd /Users/denis.lantsman/src/edulab && sed -n 60,84p plans/2026-09-05-nested-learning-threads.md
+stdout:
+## Interfaces
+`packages/frontend/threads.ts`:
+```ts
+export type ThreadId = string & { readonly __brand: "ThreadId" };
+export type Action =
+  | { type: "explain" }
+  | { type: "quiz" }
+  | { type: "query"; text: string };
+export type Origin = { parent: ThreadId; anchor: Anchor; action: Action };
+export type Thread = {
+  id: ThreadId;
+  origin: Origin | null; // null only for the root task thread
+  conversation: Conversation;
+  children: ThreadId[]; // creation order; each child's origin.anchor is its highlight
+  activeChild: ThreadId | null;
+  draft: string;
+```
+The live selection is not a property of a thread: only the left pane captures one, so a single `anchor: Anchor | null` lives in the prototype's own state alongside `focus` and `split`.
+exit code 0

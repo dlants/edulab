@@ -1,0 +1,5 @@
+$ cd /Users/denis.lantsman/src/edulab && git log --oneline -- docs/transcripts scripts/sync-transcripts.sh && git ls-files docs/transcripts | wc -l
+stdout:
+6e31f43 Stage 3: Chat UI
+     102
+exit code 0

@@ -1,0 +1,15 @@
+$ cd /Users/denis.lantsman/src/magenta.nvim && grep -rn "subagent\|yieldSchema" node/chat/thread.ts
+stdout:
+node/chat/thread.ts:296:   * subagents and subthreads neither see comments nor can reply to them. */
+node/chat/thread.ts:349:      yieldSchema?: JSONSchemaType;
+node/chat/thread.ts:354:      subagentConfig?: SubagentConfig;
+node/chat/thread.ts:466:          ...(context.subagentConfig
+node/chat/thread.ts:467:            ? { subagentConfig: context.subagentConfig }
+node/chat/thread.ts:487:            ? { subagentDockerfile: context.options.dockerfile }
+node/chat/thread.ts:489:          ...(context.yieldSchema ? { yieldSchema: context.yieldSchema } : {}),
+node/chat/thread.ts:855:        ...(sourceThread.context.subagentConfig
+node/chat/thread.ts:856:          ? { subagentConfig: sourceThread.context.subagentConfig }
+node/chat/thread.ts:875:          ? { subagentDockerfile: getOptions().dockerfile }
+node/chat/thread.ts:908:        ...(sourceThread.context.subagentConfig
+node/chat/thread.ts:909:          ? { subagentConfig: sourceThread.context.subagentConfig }
+exit code 0

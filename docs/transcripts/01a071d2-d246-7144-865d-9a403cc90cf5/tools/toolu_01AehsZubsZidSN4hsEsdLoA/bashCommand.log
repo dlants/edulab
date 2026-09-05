@@ -1,0 +1,10 @@
+$ grep -rn "type RequestedTool\|type ToolResults\|interface RequestedTool\|interface ToolResults" /Users/denis.lantsman/src/magenta.nvim/node/core/src --include="*.ts"
+stdout:
+/Users/denis.lantsman/src/magenta.nvim/node/core/src/providers/openai-inference.test.ts:26:  type RequestedTool,
+/Users/denis.lantsman/src/magenta.nvim/node/core/src/providers/openai-inference.test.ts:27:  type ToolResults,
+/Users/denis.lantsman/src/magenta.nvim/node/core/src/providers/provider-types.ts:296:export type RequestedTool = {
+/Users/denis.lantsman/src/magenta.nvim/node/core/src/providers/provider-types.ts:307:export type ToolResults = ReadonlyMap<
+/Users/denis.lantsman/src/magenta.nvim/node/core/src/providers/openai-inference-retry.test.ts:15:  type RequestedTool,
+/Users/denis.lantsman/src/magenta.nvim/node/core/src/providers/openai-inference-retry.test.ts:17:  type ToolResults,
+/Users/denis.lantsman/src/magenta.nvim/node/core/src/thread-api.ts:122:export type ToolResultsHook = (
+exit code 0

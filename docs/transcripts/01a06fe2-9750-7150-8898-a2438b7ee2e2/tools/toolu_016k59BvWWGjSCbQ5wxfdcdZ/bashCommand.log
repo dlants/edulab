@@ -1,0 +1,15 @@
+$ cd /Users/denis.lantsman/src/edulab && python3 -c "
+import json
+d=json.load(open('/tmp/wildchat.json'))
+c=next(x for x in d if x['hash'].startswith('9833484b'))
+json.dump(c,open('task-samples/9833484b-c-heap-file-block-storage.json','w'),indent=2)
+print(c['hash'],c['model'],c['turns'])
+"; ls -la task-samples
+stdout:
+9833484be3f14c9db249b0420858a4ea gpt-4-1106-preview 20
+total 288
+drwxr-xr-x@  4 denis.lantsman  staff    128 Sep  4 22:16 .
+drwxr-xr-x@ 20 denis.lantsman  staff    640 Sep  4 22:14 ..
+-rw-r--r--@  1 denis.lantsman  staff  77795 Sep  4 22:14 74979366-floating-dock-pontoon.json
+-rw-r--r--@  1 denis.lantsman  staff  66734 Sep  4 22:16 9833484b-c-heap-file-block-storage.json
+exit code 0

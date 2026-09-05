@@ -4,6 +4,7 @@ import {
   LearningPane,
   type State as LearningState,
 } from "./learning.ts";
+import { samples } from "./samples/index.ts";
 import {
   type Anchor,
   anchorText,
@@ -28,6 +29,8 @@ import {
 
 export type State = {
   messages: ReadonlyArray<Message>;
+  /** The id of the canned transcript in play, empty for a hand-written one. */
+  sample: string;
   inFlight: boolean;
   draft: string;
   /** False at layer 0 (the bare task transcript); true for the two-pane split. */
@@ -58,6 +61,7 @@ export type Msg =
   | { type: "SELECTION_CHANGED"; anchor: Anchor | null }
   | { type: "MARK_CLICKED"; thread: ThreadId }
   | { type: "LEARNING_MSG"; msg: LearningMsg }
+  | { type: "SAMPLE_CHANGED"; id: string }
   | { type: "CHILD_MSG"; msg: ThreadPaneMsg };
 
 const appClass = cls("app");
@@ -74,6 +78,8 @@ const threadPaneClass = cls("thread-pane");
 const threadActionClass = cls("thread-action");
 const bodyClass = cls("body");
 const originQuoteClass = cls("origin-quote");
+const sampleClass = cls("sample");
+const spacerClass = cls("spacer");
 
 mountStyle(`
 .${appClass} {
@@ -110,7 +116,6 @@ mountStyle(`
   flex: none;
   display: flex;
   align-items: center;
-  justify-content: flex-end;
   gap: 0.5rem;
   padding: 0.6rem 1rem;
   border-bottom: 1px solid rgba(0, 0, 0, 0.12);
@@ -127,6 +132,12 @@ mountStyle(`
 .${navClass} button:disabled {
   opacity: 0.4;
   cursor: default;
+}
+.${sampleClass} {
+  font: inherit;
+}
+.${spacerClass} {
+  flex: 1;
 }
 .${depthClass} {
   font-size: 0.75rem;
@@ -422,10 +433,13 @@ export class AppView implements View<State, Msg> {
     const originRef: Ref = ref("origin");
     const originActionRef: Ref = ref("origin-action");
     const originQuoteRef: Ref = ref("origin-quote");
+    const sampleRef: Ref = ref("sample");
 
     container.className = appClass;
     container.innerHTML = sanitize`
       <div class="${navClass}">
+        <select class="${sampleClass}" data-ref="${sampleRef}"></select>
+        <span class="${spacerClass}"></span>
         <button type="button" data-ref="${backRef}">← Back</button>
         <span class="${depthClass}" data-ref="${depthRef}"></span>
         <button type="button" data-ref="${forwardRef}"></button>
@@ -462,6 +476,23 @@ export class AppView implements View<State, Msg> {
     this.b
       .ref(sendRef)
       .addEventListener("click", () => dispatch({ type: "SUBMIT" }));
+    // The option list is a module constant, so it is built once rather than
+    // bound; switching sample is a page navigation anyway.
+    const picker = this.b.ref<HTMLSelectElement>(sampleRef);
+    const own = document.createElement("option");
+    own.value = "";
+    own.textContent = "Write your own";
+    picker.append(own);
+    for (const sample of samples) {
+      const option = document.createElement("option");
+      option.value = sample.id;
+      option.textContent = sample.label;
+      picker.append(option);
+    }
+    picker.addEventListener("change", () => {
+      dispatch({ type: "SAMPLE_CHANGED", id: picker.value });
+    });
+
     this.b
       .ref(backRef)
       .addEventListener("click", () => dispatch({ type: "GO_BACK" }));
@@ -498,6 +529,7 @@ export class AppView implements View<State, Msg> {
         ),
       ),
     );
+    this.b.bindValue(sampleRef, (s) => s.sample);
     this.b.bindContainerAttr("data-split", (s) => (s.split ? "true" : "false"));
     this.b.bindText(forwardRef, (s) => `${descendLabel(s.depth + 1)} →`);
     this.b.bindDisabled(forwardRef, (s) => s.split && !s.canDescend);

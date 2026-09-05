@@ -1,0 +1,9 @@
+$ cd /tmp && curl -sG "https://datasets-server.huggingface.co/filter" --data-urlencode 'dataset=allenai/WildChat-1M' --data-urlencode 'config=default' --data-urlencode 'split=train' --data-urlencode 'where="turn">=20 AND "language"='"'"'English'"'"'' --data-urlencode 'offset=0' --data-urlencode 'length=1' --data-urlencode 'columns=conversation_id,turn,language,model' > f.json; python3 -c "
+import json;d=json.load(open('f.json'))
+print(list(d.keys())); print(json.dumps(d,indent=1)[:1200])"
+stdout:
+['error']
+{
+ "error": "the dataset index is loading, this may take longer than usual"
+}
+exit code 0

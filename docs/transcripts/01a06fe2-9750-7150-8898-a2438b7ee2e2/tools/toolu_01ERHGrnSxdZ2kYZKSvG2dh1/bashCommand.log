@@ -1,0 +1,19 @@
+$ pgrep -f fetch-wildchat >/dev/null && echo RUNNING || echo STOPPED; cat /tmp/wildchat.log; ls -la /tmp/wildchat.json
+stdout:
+RUNNING
+retrying offset 0: the dataset index is loading, this may take longer than usual
+100/1569
+200/1569
+retrying offset 200: the dataset index is loading, this may take longer than usual
+300/1569
+400/1569
+500/1569
+retrying offset 500: the dataset index is loading, this may take longer than usual
+retrying offset 500: the dataset index is loading, this may take longer than usual
+600/1569
+700/1569
+800/1569
+retrying offset 800: the dataset index is loading, this may take longer than usual
+900/1569
+-rw-r--r--@ 1 denis.lantsman  wheel  21677779 Sep  4 22:12 /tmp/wildchat.json
+exit code 0

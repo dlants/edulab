@@ -1,0 +1,23 @@
+$ cd /Users/denis.lantsman/src/edulab && cat tsconfig.base.json && mkdir -p packages/frontend/samples && cp task-samples/*.json packages/frontend/samples/ && ls packages/frontend/samples
+stdout:
+{
+  "compilerOptions": {
+    "target": "esnext",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "erasableSyntaxOnly": true,
+    "verbatimModuleSyntax": true,
+    "allowImportingTsExtensions": true,
+    "rewriteRelativeImportExtensions": true,
+    "noEmit": true
+  }
+}
+44bbcae8-tile-adhesive-formulation.json
+72c7ec37-django-event-app-urls.json
+74979366-floating-dock-pontoon.json
+9833484b-c-heap-file-block-storage.json
+exit code 0

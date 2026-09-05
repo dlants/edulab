@@ -1,0 +1,15 @@
+$ grep -rn "Conversation" packages --include="*.ts" --include="*.tsx" --exclude-dir=node_modules
+stdout:
+packages/frontend/threads.ts:1:import { Conversation, type Socket } from "./conversation.ts";
+packages/frontend/threads.ts:14:  conversation: Conversation;
+packages/frontend/threads.ts:33:  constructor(socket: Socket, root: Conversation, onChange: () => void) {
+packages/frontend/threads.ts:50:    const conversation = new Conversation(this.socket, {
+packages/frontend/threads.ts:85:  private add(origin: Origin | null, conversation: Conversation): ThreadId {
+packages/frontend/prototypes/chat.ts:1:import { Conversation } from "../conversation.ts";
+packages/frontend/prototypes/chat.ts:16:  // One socket for the whole app: every thread's Conversation adds its own
+packages/frontend/prototypes/chat.ts:22:    new Conversation(socket, { initialTurns: selectedSample()?.turns }),
+packages/frontend/conversation.ts:29:export class Conversation {
+packages/frontend/conversation.test.ts:4:import { Conversation, type Socket } from "./conversation.ts";
+packages/frontend/conversation.test.ts:61:  return { socket, conversation: new Conversation(socket) };
+packages/frontend/conversation.test.ts:155:  const conversation = new Conversation(socket, {
+exit code 0

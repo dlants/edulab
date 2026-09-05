@@ -1,0 +1,8 @@
+$ cd /Users/denis.lantsman/src/edulab && find packages/frontend/src -type f | sort && echo --- && cat packages/frontend/src/routes.ts && echo --- && ls packages/frontend/src/prototypes && cat packages/frontend/src/main.ts
+stderr:
+find: packages/frontend/src: No such file or directory
+stdout:
+---
+stderr:
+cat: packages/frontend/src/routes.ts: No such file or directory
+exit code 1

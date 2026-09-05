@@ -1,0 +1,69 @@
+$ cd /Users/denis.lantsman/src/edulab && npm run typecheck && npm run lint && npm test && npm run test:e2e
+stdout:
+> edulab@0.0.1 typecheck
+> npm -w @edulab/iso exec tsc -- --noEmit && npm -w @edulab/frontend exec tsc -- --noEmit && npm -w @edulab/backend exec tsc -- --noEmit && npm -w @edulab/e2e exec tsc -- --noEmit
+> edulab@0.0.1 lint
+> biome check .
+stderr:
+packages/e2e/tests/chat.spec.ts format 
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  × Formatter would have printed the following content:
+    298 298 │   
+    299 299 │     await expect(back(page)).toBeHidden
+();
+    300     │ - ··awai
+t·expect(page.getByRole("button",·{·name:·"Learning·
+mode"·})).toBeVisible
+();
+        300 │ + 
+··await·expect(
+        301 │ + 
+····page.getByRole(
+"button",·{·n
+ame:·"Learnin
+g·mode"·}),
+        302 │ + ··).
+toBeVisible();
+    301 
+303 │   
+    302 304 │ 
+    await page
+.getByRole("button", { name: 
+"Learning
+ mode" })
+.click();
+······· │ 
+    306 308 │     await 
+back(page).click(
+);
+    307 309 │   
+  await expect
+(back(page)).toBeHidden();
+    308     │ - 
+··await·expe
+ct(page.getB
+yRole("button",·{·name
+:·"Learning·mo
+de"·})).toB
+eVisible(
+);
+        310 │ + 
+··await·expect(
+        311 │ + 
+····page.getByRole("b
+utton",·{·nam
+e:·"Learning·
+mode"·}),
+        312 │ + 
+··).toBeVisible
+();
+    309 313 │   
+});
+    310 314 │   
+stdout:
+Checked 35 files in 156ms. No fixes applied.
+Found 1 error.
+stderr:
+check ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  × Some errors were emitted while running checks.
+exit code 1

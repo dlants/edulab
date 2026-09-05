@@ -1,0 +1,32 @@
+$ cd /Users/denis.lantsman/src/edulab && cat vite.config.ts && grep -n "export function show\b\|export function showKeyed\|export function cls\|export function mountStyle\|bindSlot" packages/frontend/vamp.ts
+stdout:
+import { defineConfig } from "vite";
+export default defineConfig({
+  root: "packages/frontend",
+  base: "/",
+  build: {
+    target: "esnext",
+    outDir: "dist",
+    minify: true,
+  },
+  server: {
+    host: "localhost",
+    port: Number(process.env.VITE_PORT ?? 5173),
+    strictPort: true,
+    proxy: {
+      "/api/": {
+        target: process.env.API_TARGET ?? "http://localhost:3000",
+        secure: false,
+        ws: true,
+      },
+    },
+  },
+});
+4: * bindChecked, bindSlot, bindList) or through child views composed via
+50:/** Opaque descriptor returned by show(). Pass to bindSlot; do not inspect. */
+85:export function show<ChildState, ChildMsg, ChildCtx>(
+104:export function showKeyed<ChildState, ChildMsg, ChildCtx>(
+269:  bindSlot(ref: Ref, fn: (s: State) => SlotContent | undefined): void {
+555:export function cls(prefix: string): string {
+569:export function mountStyle(css: string): void {
+exit code 0

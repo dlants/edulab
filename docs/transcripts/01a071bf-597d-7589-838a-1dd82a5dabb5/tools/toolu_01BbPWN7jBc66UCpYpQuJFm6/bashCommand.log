@@ -1,0 +1,62 @@
+$ cd /Users/denis.lantsman/src/edulab && npm run typecheck && npm run lint && npm run test:e2e
+stdout:
+> edulab@0.0.1 typecheck
+> npm -w @edulab/iso exec tsc -- --noEmit && npm -w @edulab/frontend exec tsc -- --noEmit && npm -w @edulab/backend exec tsc -- --noEmit && npm -w @edulab/e2e exec tsc -- --noEmit
+> edulab@0.0.1 lint
+> biome check .
+stderr:
+packages/frontend/prototypes/chat.ts
+:1:1 assist/source/organizeImports  FIXABLE  ━━━━━━━━━━━━━━━━━━━
+  × Sort these imports.
+  > 1 │ import { Conversation } from "../conversation.ts";
+      │ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 2 │ 
+import { selectedSample } from "../samples/index.ts";
+  > 3 │ import { actionLabel } from "../prompt.ts";
+      │ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    4 │ 
+import { overlaps, type ThreadId } fr
+om "../selection.ts";
+    5 │ import { Thread
+Tree } from "../threa
+ds.ts";
+  i Safe fix: Organize imports and exports (Biome)
+      1 
+  1 │   import {
+ Conversation } fro
+m "../conversation.ts";
+      2
+     │ - impor
+t·{·selectedS
+ample·}·from·"../samples/ind
+ex.ts";
+      3    
+ │ - import
+·{·actionLabel
+·}·from·"../prompt.ts";
+      2 │ + im
+port·{·action
+Label·}·from·"../prompt.
+ts";
+    3 │ + 
+import·{·selectedSample·
+}·from·"../samp
+les/index.ts
+";
+      4   4 │   
+import { overlaps, type Thre
+adId } from ".
+./selection
+.ts";
+      5   5 │   impo
+rt { ThreadTree }
+ from "../th
+reads.ts";
+stdout:
+Checked 35 files in 200ms. No fixes applied.
+Found 1 error.
+stderr:
+check ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  × 
+Some errors were emitted while running checks.
+exit code 1

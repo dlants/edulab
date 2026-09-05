@@ -1,0 +1,12 @@
+$ cd /Users/denis.lantsman/src/edulab && sed -n 160,172p plans/2026-09-05-nested-learning-threads.md
+stdout:
+# Stages
+## Prompt construction
+- Goal: `prompt.ts` produces the seed turn for all three actions, and `Conversation` accepts a system prompt, seed turns, and `hiddenTurns`.
+- Tests (`prompt.test.ts`, `conversation.test.ts`, vitest):
+  - The seed turn contains the selected text verbatim, including when the selection spans two messages.
+  - The rendered transcript stops after the message containing the end of the selection — a later message's text does not appear.
+  - `explain`, `quiz` and a free-form query produce visibly different instructions, and the query's text is carried through.
+  - A conversation constructed with `hiddenTurns: 1` reports no messages until the assistant replies, and still uploads the seed turn on `send`.
+## Multiple, clickable marks
+exit code 0

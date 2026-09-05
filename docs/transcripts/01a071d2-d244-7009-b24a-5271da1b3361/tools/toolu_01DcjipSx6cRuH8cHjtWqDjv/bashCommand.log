@@ -1,0 +1,4 @@
+$ cd /Users/Denis.lantsman/src/magenta.nvim && grep -rn "yieldSchema\|getSpec" node/core/src/tools/spawn-subagents.ts
+stdout:
+node/core/src/tools/spawn-subagents.ts:811:export function getSpec(
+exit code 0

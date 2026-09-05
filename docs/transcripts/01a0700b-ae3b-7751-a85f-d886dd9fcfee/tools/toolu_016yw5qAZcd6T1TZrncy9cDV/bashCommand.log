@@ -1,0 +1,11 @@
+$ cd /Users/denis.lantsman/src/edulab && grep -n "Mark\b\|clipToMessage\|anchor.thread\|parent" plans/2026-09-05-nested-learning-threads.md
+stdout:
+10:- `Anchor` / `Point` (`packages/frontend/selection.ts`) — `{ msg, offset }` pairs indexing the *displayed* message list, plus `clipToMessage` and `anchorText`.
+21:Every conversation in the UI is a `Thread`. The root thread is the task. Each other thread is created from a `(parent thread, anchor, action)` triple and never disappears — that is what "any selection the user interacts with should be retained" means. A thread's anchor is the identity of its highlight, so the mark and the conversation are the same object viewed two ways.
+27:The obvious construction — slice the parent's `MessageParam[]` up to the selection and append the framing turn — breaks the alternation the API requires whenever the selection lands in a user turn, and forces every thread to carry a "where does my visible transcript start" index into a shared array.
+29:Instead a child thread's conversation is seeded with **exactly one** `MessageParam`: a user turn containing the parent transcript rendered as text, the verbatim selection, and the question. The whole conversation is re-uploaded every turn anyway (see `plans/2026-09-04-prototype-scaffolding.md`), so nothing is lost, and the seed is a pure `string`-producing function that unit tests can read.
+33:"The task conversation up to the selection" means the parent's visible messages truncated after the message containing the selection's *end* — the agent should not see work that happened after the passage under discussion.
+51:- `←` is not rendered at all at layer 0. In the split it reads "Back", and moves `focus` to its parent — which puts the thread you were reading back on the right. From layer 1 it closes the split and returns to the bare task transcript.
+99:/** `anchor.thread` is the parent, so the link upward is the highlight itself. */
+151:- A thread is never destroyed and never reparented; `origin.anchor` is immutable once created. The highlight and the conversation therefore cannot drift.
+exit code 0

@@ -1,0 +1,16 @@
+$ cd /Users/denis.lantsman/src/edulab && grep -n "goto\|locator\|getBy" packages/e2e/tests/chat.spec.ts
+stdout:
+51:  await page.goto("/");
+53:  await page.getByRole("textbox").fill("hi");
+54:  await page.getByRole("button", { name: "Send" }).click();
+56:  await expect(page.locator('[data-role="user"]')).toHaveText(/hi/);
+59:  await expect(page.locator('[data-role="assistant"]')).toHaveText(
+62:  await expect(page.locator("li")).toHaveCount(2);
+67:  await page.goto("/");
+69:  const input = page.getByRole("textbox");
+71:  await page.getByRole("button", { name: "Send" }).click();
+82:  await page.goto("/");
+84:  const input = page.getByRole("textbox");
+87:  await expect(page.locator("li")).toHaveCount(2);
+91:  await expect(page.locator("li")).toHaveCount(4);
+exit code 0

@@ -1,0 +1,63 @@
+$ cd /Users/denis.lantsman/src/edulab && grep -n "quote\|ThreadPaneState\|action" packages/frontend/prototypes/chat.ts packages/frontend/learning.ts packages/frontend/threads.ts && grep -n "threadQuoteClass" -A 10 packages/frontend/view.ts && grep -rn "quote" packages/e2e/tests/chat.spec.ts
+stdout:
+packages/frontend/prototypes/chat.ts:65:      quote: origin ? anchorText(origin.anchor, state.messages) : "",
+packages/frontend/prototypes/chat.ts:124:            const id = tree.open(anchor, msg.msg.action);
+packages/frontend/learning.ts:9:  /** The live selection intersects a committed mark, so no action is offered. */
+packages/frontend/learning.ts:15:  | { type: "ACTION"; action: Action }
+packages/frontend/learning.ts:20:const quoteClass = cls("learning-quote");
+packages/frontend/learning.ts:21:const actionsClass = cls("learning-actions");
+packages/frontend/learning.ts:42:.${quoteClass} {
+packages/frontend/learning.ts:50:.${actionsClass} {
+packages/frontend/learning.ts:56:.${actionsClass} button {
+packages/frontend/learning.ts:61:.${actionsClass} textarea {
+packages/frontend/learning.ts:79:    const quoteRef = ref("quote");
+packages/frontend/learning.ts:89:      <div class="${actionsClass}" data-ref="${bodyRef}">
+packages/frontend/learning.ts:90:        <blockquote class="${quoteClass}" data-ref="${quoteRef}"></blockquote>
+packages/frontend/learning.ts:102:        dispatch({ type: "ACTION", action: { type: "explain" } }),
+packages/frontend/learning.ts:107:        dispatch({ type: "ACTION", action: { type: "quiz" } }),
+packages/frontend/learning.ts:119:      dispatch({ type: "ACTION", action: { type: "query", text } });
+packages/frontend/learning.ts:125:    this.b.bindText(quoteRef, (s) => s.selection ?? "");
+packages/frontend/threads.ts:8:export type Origin = { anchor: Anchor; action: Action };
+packages/frontend/threads.ts:48:  open(anchor: Anchor, action: Action): ThreadId {
+packages/frontend/threads.ts:56:        action,
+packages/frontend/threads.ts:59:    const id = this.add({ anchor, action }, conversation);
+72:const threadQuoteClass = cls("thread-quote");
+73-
+74-mountStyle(`
+75-.${appClass} {
+76-  font-family: system-ui, sans-serif;
+77-  max-width: 44rem;
+78-  margin: 0 auto;
+79-  padding: 1rem;
+80-  display: grid;
+81-  grid-template-columns: minmax(0, 1fr);
+82-  gap: 1rem 2rem;
+--
+176:.${threadQuoteClass} {
+177-  white-space: pre-wrap;
+178-  border-left: 3px solid #f0b429;
+179-  margin: 0;
+180-  padding-left: 0.75rem;
+181-  max-height: 8rem;
+182-  overflow-y: auto;
+183-  font-size: 0.9rem;
+184-}
+185-.${composerClass} textarea {
+186-  flex: 1;
+--
+332:      <blockquote class="${threadQuoteClass}" data-ref="${quoteRef}"></blockquote>
+333-      <ul class="${transcriptClass}" data-ref="${transcriptRef}"></ul>
+334-      <div class="${composerClass}">
+335-        <textarea data-ref="${inputRef}" rows="2" placeholder="Follow up…"></textarea>
+336-        <button type="button" data-ref="${sendRef}">Reply</button>
+337-      </div>
+338-    `;
+339-    this.container = container;
+340-    this.b = new Binder(container, initial);
+341-
+342-    const input = this.b.ref<HTMLTextAreaElement>(inputRef);
+packages/e2e/tests/chat.spec.ts:185:  const quote = page.locator("blockquote");
+packages/e2e/tests/chat.spec.ts:198:  await expect(quote).toHaveText("the quick");
+packages/e2e/tests/chat.spec.ts:200:  await expect(quote).toHaveText("fox");
+packages/e2e/tests/chat.spec.ts:258:  await expect(page.locator("blockquote")).toHaveText("the quick");
+exit code 0

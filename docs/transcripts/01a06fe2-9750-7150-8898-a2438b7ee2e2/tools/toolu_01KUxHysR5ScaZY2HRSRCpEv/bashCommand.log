@@ -1,0 +1,4 @@
+$ cd /Users/denis.lantsman/src/edulab && nohup node scripts/fetch-wildchat.mjs 20 > /tmp/wildchat.json 2>/tmp/wildchat.log & echo started $!
+stdout:
+started 21411
+exit code 0

@@ -1,0 +1,69 @@
+$ cd /Users/denis.lantsman/src/edulab && npm run lint:fix && npm run lint && npm run typecheck && npm test
+stdout:
+> edulab@0.0.1 lint:fix
+> biome check --write .
+stderr:
+packages/frontend/view.ts
+:22:3 lint/correctness/noUnusedImports  FIXABLE  ━━━━━━━━━━━━━━━━━━━━━━━━━━
+  ! Several of these imports are unused.
+20 │   c
+ls,
+    21 │   mountStyle,
+  > 22 │   noop,
+   │   ^^^^
+    23 │   ty
+pe Ref,
+    24 │   ref,
+  i Unused imports might be the result of an incomplete refactoring.
+  i Unsafe fix: Remove the unused imports.
+     20  20 │  
+   cls,
+     21  21 │    
+ mountStyle,
+     22    
+ │ - 
+··noop,
+     23  22 │ 
+    type Ref
+,
+     24  23 │     ref,
+stdout:
+Skipped 1 suggested fixes.
+If you wish to apply the suggested (unsafe) fixes, use the command biome check --write --unsafe
+Checked 34 files in 125ms. Fixed 5 files.
+Found 1 warning.
+> edulab@0.0.1 lint
+> biome check .
+stderr:
+packages/frontend/view.ts:22:3 lint/correctness/noUnusedImports
+  FIXABLE  ━━━━━━━━━━━━━━━━━━━━━━━━━━
+  ! Several of these imports are unused.
+    20 │   cls,
+    21 │   mountStyle,
+  > 22 │   noop,
+       │   ^^^^
+    23 │   type Ref,
+    24 │   ref,
+  i Unused imports might be the result of an incomplete refactoring.
+  i Unsafe fix: Remove the unused imports.
+     20  20 │     cls,
+ 21  21 │     mountStyle,
+     22     │ - ··noop,
+     23  22 │     type Ref,
+     24  23 │     ref,
+stdout:
+Checked 34 files in 98ms. No fixes applied.
+Found 1 warning.
+> edulab@0.0.1 typecheck
+> npm -w @edulab/iso exec tsc -- --noEmit && npm -w @edulab/frontend exec tsc -- --noEmit && npm -w @edulab/backend exec tsc -- --noEmit && npm -w @edulab/e2e exec tsc -- --noEmit
+> edulab@0.0.1 test
+> vitest run
+ RUN  v4.1.11 /Users/denis.lantsman/src/edulab
+ ✓ packages/frontend/selection.test.ts (8 tests) 2ms
+ ✓ packages/frontend/prompt.test.ts (5 tests) 2ms
+ ✓ packages/frontend/conversation.test.ts (6 tests) 12ms
+ Test Files  3 passed (3)
+      Tests  19 passed (19)
+   Start at  23:27:15
+   Duration  144ms (transform 76ms, setup 0ms, import 159ms, tests 16ms, environment 0ms)
+exit code 0

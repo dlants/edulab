@@ -1,0 +1,4 @@
+$ cd /Users/denis.lantsman/src/edulab && git add -A && git commit -m "Show the opening action, and pin the bars around a scrolling transcript" -q && git log --oneline -1
+stdout:
+25874b6 Show the opening action, and pin the bars around a scrolling transcript
+exit code 0

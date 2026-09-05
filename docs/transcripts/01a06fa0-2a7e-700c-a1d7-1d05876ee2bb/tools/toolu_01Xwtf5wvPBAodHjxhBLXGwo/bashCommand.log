@@ -1,0 +1,21 @@
+$ cd /Users/denis.lantsman/src/edulab && npm test && npm run test:e2e
+stdout:
+> edulab@0.0.1 test
+> vitest run
+ RUN  v4.1.11 /Users/denis.lantsman/src/edulab
+ ✓ packages/frontend/conversation.test.ts (5 tests) 10ms
+ Test Files  1 passed (1)
+      Tests  5 passed (5)
+   Start at  22:11:48
+   Duration  136ms (transform 19ms, setup 0ms, import 52ms, tests 10ms, environment 0ms)
+> edulab@0.0.1 test:e2e
+> npm -w @edulab/e2e run test
+> @edulab/e2e@0.0.1 test
+> playwright test
+Running 4 tests using 4 workers
+  ✓  2 tests/chat.spec.ts:79:1 › a second turn sends the full conversation (297ms)
+  ✓  4 tests/chat.spec.ts:49:1 › streams a response into the transcript (349ms)
+  ✓  3 tests/chat.spec.ts:65:1 › the composer is disabled while a turn is in flight (361ms)
+  ✓  1 tests/smoke.spec.ts:9:1 › streams a real response end to end (1.6s)
+  4 passed (3.0s)
+exit code 0

@@ -1,0 +1,5 @@
+$ find packages/frontend/prototypes -name "*.ts" -type f
+stdout:
+packages/frontend/prototypes/chat.ts
+packages/frontend/prototypes/placeholder.ts
+exit code 0

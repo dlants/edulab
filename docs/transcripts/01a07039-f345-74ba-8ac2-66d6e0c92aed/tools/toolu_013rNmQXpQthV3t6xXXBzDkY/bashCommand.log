@@ -1,0 +1,60 @@
+$ cd /Users/denis.lantsman/src/edulab && npm test && npm run typecheck && npm run lint
+stdout:
+> edulab@0.0.1 test
+> vitest run
+ RUN  v4.1.11 /Users/denis.lantsman/src/edulab
+ ✓ packages/frontend/conversation.test.ts (6 tests) 12ms
+ ❯ packages/frontend/prompt.test.ts (5 tests | 2 failed) 5ms
+   × quotes the selection verbatim 4ms
+   ✓ quotes a selection spanning two messages 0ms
+   ✓ truncates the transcript after the message containing the selection end 0ms
+   ✓ distinguishes the three actions and carries a query through 0ms
+   × composes flat at depth, oldest section first 1ms
+stderr:
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  packages/frontend/prompt.test.ts > quotes the selection verbatim
+AssertionError: expected 'User: build a parser\n\nAssistant: I …' to contain 'The user then selected: "recursive de…'
+- Expected
++ Received
+- The user then selected: "recursive descent"
++ User: build a parser
++
++ Assistant: I used a recursive descent approach.
++
++ The user then selected: "a recursive desce"
++ They said they don't understand this. Explain what it means and why it is there.
+ ❯ packages/frontend/prompt.test.ts:25:16
+     23|     type: "explain",
+     24|   });
+     25|   expect(seed).toContain('The user then selected: "recursive descent"'…
+       |                ^
+     26| });
+     27|
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+ FAIL  packages/frontend/prompt.test.ts > composes flat at depth, oldest section first
+AssertionError: expected 'User: build a parser\n\nAssistant: I …' to be 'User: build a parser\n\nAssistant: I …' // Object.is equality
+- Expected
++ Received
+  User: build a parser
+  Assistant: I used a recursive descent approach.
+- The user then selected: "recursive descent"
++ The user then selected: "a recursive desce"
+  They said they don't understand this. Explain what it means and why it is there.
+  Assistant: It parses top-down.
+- The user then selected: "top-down"
++ The user then selected: "p-down."
+  They asked to be quizzed on this. Ask one question that checks whether they understand it, and wait for their answer.
+ ❯ packages/frontend/prompt.test.ts:62:18
+     60|   const depth2 = seedTurn(root, level1, at(0, 12, 0, 20), { type: "qui…
+     61|
+     62|   expect(depth2).toBe(
+       |                  ^
+     63|     [
+     64|       "User: build a parser",
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+stdout:
+ Test Files  1 failed | 1 passed (2)
+      Tests  2 failed | 9 passed (11)
+   Start at  23:21:51
+   Duration  341ms (transform 69ms, setup 0ms, import 111ms, tests 18ms, environment 0ms)
+exit code 1

@@ -1,0 +1,10 @@
+$ cd /Users/denis.lantsman/src/edulab && ls packages/backend/.env .env 2>/dev/null; echo "key set: ${ANTHROPIC_API_KEY:+yes}"; grep -rn "ANTHROPIC_API_KEY\|dotenv\|PORT" packages/backend/app.ts
+stdout:
+.env
+key set: yes
+packages/backend/app.ts:3:import dotenv from "dotenv";
+packages/backend/app.ts:7:dotenv.config({
+packages/backend/app.ts:12:  const apiKey = process.env.ANTHROPIC_API_KEY;
+packages/backend/app.ts:13:  if (!apiKey) throw new Error("Missing required env var: ANTHROPIC_API_KEY");
+packages/backend/app.ts:18:  const port = Number(process.env.PORT ?? 3000);
+exit code 0

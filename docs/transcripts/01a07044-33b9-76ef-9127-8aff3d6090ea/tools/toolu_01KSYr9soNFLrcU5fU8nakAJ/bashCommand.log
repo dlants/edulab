@@ -1,0 +1,36 @@
+$ cd /Users/denis.lantsman/src/edulab && npm run lint:fix && npm test && npm run test:e2e
+stdout:
+> edulab@0.0.1 lint:fix
+> biome check --write .
+Checked 35 files in 90ms. Fixed 1 file.
+> edulab@0.0.1 test
+> vitest run
+ RUN  v4.1.11 /Users/denis.lantsman/src/edulab
+ ✓ packages/frontend/prompt.test.ts (5 tests) 2ms
+ ✓ packages/frontend/selection.test.ts (8 tests) 2ms
+ ✓ packages/frontend/conversation.test.ts (6 tests) 12ms
+ Test Files  3 passed (3)
+      Tests  19 passed (19)
+   Start at  23:33:56
+   Duration  140ms (transform 72ms, setup 0ms, import 161ms, tests 16ms, environment 0ms)
+> edulab@0.0.1 test:e2e
+> npm -w @edulab/e2e run test
+> @edulab/e2e@0.0.1 test
+> playwright test
+Running 14 tests using 7 workers
+  ✓   1 tests/chat.spec.ts:140:1 › a second turn sends the full conversation (349ms)
+  ✓   2 tests/chat.spec.ts:126:1 › the composer is disabled while a turn is in flight (391ms)
+  ✓   5 tests/chat.spec.ts:110:1 › streams a response into the transcript (422ms)
+  ✓   7 tests/chat.spec.ts:203:1 › an action opens a thread seeded with the selected passage (521ms)
+  ✓   4 tests/chat.spec.ts:225:1 › a follow-up in the thread pane re-sends the seed (568ms)
+  ✓   3 tests/chat.spec.ts:158:1 › a live selection overlapping a mark offers no actions (573ms)
+  ✓   6 tests/chat.spec.ts:180:1 › two marks in one message are both clickable (635ms)
+  ✓   8 tests/chat.spec.ts:244:1 › clicking a mark reopens its thread without a new request (304ms)
+  ✓   9 tests/chat.spec.ts:294:1 › the arrows name the layer and stop at the ends (242ms)
+  ✓  10 tests/chat.spec.ts:315:1 › a thread opened at depth carries both selections once (361ms)
+  ✓  13 tests/chat.spec.ts:395:1 › a new selection leaves committed marks rendered (245ms)
+  ✓  12 tests/chat.spec.ts:373:1 › nesting goes three deep (373ms)
+  ✓  11 tests/chat.spec.ts:349:1 › ← climbs back without losing threads or highlights (387ms)
+  ✓  14 tests/smoke.spec.ts:9:1 › streams a real response end to end (1.4s)
+  14 passed (5.1s)
+exit code 0

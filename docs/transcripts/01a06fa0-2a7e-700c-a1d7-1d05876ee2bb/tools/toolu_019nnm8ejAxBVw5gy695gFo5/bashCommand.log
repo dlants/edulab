@@ -1,0 +1,13 @@
+$ cd /Users/denis.lantsman/src/edulab && sed -n '85,95p' packages/frontend/conversation.ts
+stdout:
+        // arrived, so the next turn's array stays valid.
+        this.commit();
+        break;
+    }
+    this.onChange?.();
+  }
+/** This prototype has no tools and no thinking, so the non-text variants are
+ * listed to be explicitly ignored rather than silently dropped - when we add
+ * them, this is where they surface. */
+function blockStartText(block: Anthropic.ContentBlock): string {
+exit code 0

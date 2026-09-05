@@ -1,0 +1,17 @@
+$ cd /Users/denis.lantsman/src/edulab && npm run typecheck && npm run lint:fix && npm test
+stdout:
+> edulab@0.0.1 typecheck
+> npm -w @edulab/iso exec tsc -- --noEmit && npm -w @edulab/frontend exec tsc -- --noEmit && npm -w @edulab/backend exec tsc -- --noEmit && npm -w @edulab/e2e exec tsc -- --noEmit
+> edulab@0.0.1 lint:fix
+> biome check --write .
+Checked 33 files in 187ms. Fixed 2 files.
+> edulab@0.0.1 test
+> vitest run
+ RUN  v4.1.11 /Users/denis.lantsman/src/edulab
+ ✓ packages/frontend/prompt.test.ts (5 tests) 2ms
+ ✓ packages/frontend/conversation.test.ts (6 tests) 10ms
+ Test Files  2 passed (2)
+      Tests  11 passed (11)
+   Start at  23:22:08
+   Duration  135ms (transform 48ms, setup 0ms, import 102ms, tests 12ms, environment 0ms)
+exit code 0

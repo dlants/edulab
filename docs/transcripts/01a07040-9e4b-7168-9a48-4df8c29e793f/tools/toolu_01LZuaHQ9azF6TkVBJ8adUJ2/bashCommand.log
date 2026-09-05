@@ -1,0 +1,4 @@
+$ cd /Users/denis.lantsman/src/edulab && perl -0pi -e 's/until stage 4\.\n\n- The e2e/until stage 4.\n- The e2e/' plans/2026-09-05-nested-learning-threads.md && git add -A && git commit -m "Stage 3: Threads on the right pane" -q && git log --oneline -1
+stdout:
+20be80b Stage 3: Threads on the right pane
+exit code 0

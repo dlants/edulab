@@ -1,0 +1,8 @@
+$ cd /Users/denis.lantsman/src/edulab && grep -n "anchorText\|prompt.ts\|import" packages/frontend/prototypes/chat.ts
+stdout:
+1:import { Conversation } from "../conversation.ts";
+2:import { selectedSample } from "../samples/index.ts";
+3:import { anchorText, overlaps, type ThreadId } from "../selection.ts";
+4:import { ThreadTree } from "../threads.ts";
+5:import { AppView, type Msg, type State } from "../view.ts";
+exit code 0

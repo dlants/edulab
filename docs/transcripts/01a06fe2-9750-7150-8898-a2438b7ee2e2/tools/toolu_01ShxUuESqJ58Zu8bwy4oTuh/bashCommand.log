@@ -1,0 +1,7 @@
+$ sleep 45; cd /tmp && curl -sG "https://datasets-server.huggingface.co/filter" --data-urlencode 'dataset=allenai/WildChat-1M' --data-urlencode 'config=default' --data-urlencode 'split=train' --data-urlencode 'where="turn">=20 AND "language"='"'"'English'"'"'' --data-urlencode 'length=3' --data-urlencode 'columns=conversation_id,turn,language,model' > f.json; python3 -c "
+import json;d=json.load(open('f.json'))
+print(d.get('num_rows_total'), d.get('error'))
+for r in d.get('rows',[]): print(r['row'])"
+stdout:
+None the dataset index is loading, this can take a minute
+exit code 0

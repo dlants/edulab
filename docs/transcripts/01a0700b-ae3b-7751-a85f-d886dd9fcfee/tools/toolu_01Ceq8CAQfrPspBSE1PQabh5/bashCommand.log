@@ -1,0 +1,4 @@
+$ cd /Users/denis.lantsman/src/edulab && ls packages/e2e/*.spec.ts && cat plans/2026-09-04-prototype-scaffolding.md
+stderr:
+ls: packages/e2e/*.spec.ts: No such file or directory
+exit code 1

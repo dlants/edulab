@@ -1,0 +1,7 @@
+$ cd /Users/denis.lantsman/src/edulab && grep -rn "MODE_TOGGLED\|Mode\b\|learning mode" packages --include=*.ts | grep -v node_modules; npm run typecheck
+stdout:
+packages/e2e/tests/chat.spec.ts:98:/** A transcript with one user message of known text, in learning mode. */
+packages/e2e/tests/chat.spec.ts:106:  await page.getByRole("button", { name: "Switch to learning mode" }).click();
+> edulab@0.0.1 typecheck
+> npm -w @edulab/iso exec tsc -- --noEmit && npm -w @edulab/frontend exec tsc -- --noEmit && npm -w @edulab/backend exec tsc -- --noEmit && npm -w @edulab/e2e exec tsc -- --noEmit
+exit code 0

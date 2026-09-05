@@ -1,0 +1,71 @@
+$ cd /Users/denis.lantsman/src/edulab && cat packages/frontend/tsconfig.json tsconfig.json vite.config.ts 2>/dev/null; ls
+stdout:
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "strictPropertyInitialization": false,
+    "moduleResolution": "bundler",
+    "lib": ["DOM", "DOM.Iterable", "ESNext"],
+    "types": ["vite/client"]
+  },
+  "include": ["**/*"],
+  "exclude": ["node_modules"]
+}
+import { defineConfig, type Plugin } from "vite";
+// Prototype routes are real paths, so a deep link or a reload has to land on
+// index.html rather than a 404.
+function spaFallback(): Plugin {
+  return {
+    name: "spa-fallback",
+    configureServer(server) {
+      return () => {
+        server.middlewares.use((req, _res, next) => {
+          if (req.headers.accept?.includes("text/html") && req.url) {
+            req.url = "/index.html";
+          }
+          next();
+        });
+      };
+    },
+  };
+}
+export default defineConfig({
+  appType: "mpa",
+  plugins: [spaFallback()],
+  root: "packages/frontend",  base: "/",
+  build: {
+    target: "esnext",
+    outDir: "dist",
+    minify: true,
+  },
+  server: {
+    host: "localhost",
+    port: Number(process.env.VITE_PORT ?? 5173),
+    strictPort: true,
+    proxy: {
+      "/api/": {
+        target: process.env.API_TARGET ?? "http://localhost:3000",
+        secure: false,
+        ws: true,
+      },
+    },
+  },
+});
+biome.json
+context.md
+docs
+node_modules
+notes
+package-lock.json
+package.json
+packages
+plans
+README.md
+scripts
+task-samples
+tsconfig.base.json
+vite.config.ts
+vitest.config.ts
+exit code 0

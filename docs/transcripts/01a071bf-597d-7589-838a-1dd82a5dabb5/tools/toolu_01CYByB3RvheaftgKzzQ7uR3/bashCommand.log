@@ -1,0 +1,4 @@
+$ cd /Users/denis.lantsman/src/edulab && grep -n "anchorText" packages/frontend/prototypes/chat.ts
+stdout:
+3:import { anchorText, overlaps, type ThreadId } from "../selection.ts";
+exit code 0

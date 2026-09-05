@@ -1,0 +1,34 @@
+$ cd /Users/denis.lantsman/src/edulab && npm run test:e2e && npm run lint:fix && npm test && npm run typecheck
+stdout:
+> edulab@0.0.1 test:e2e
+> npm -w @edulab/e2e run test
+> @edulab/e2e@0.0.1 test
+> playwright test
+Running 10 tests using 7 workers
+  ✓   6 tests/chat.spec.ts:140:1 › a second turn sends the full conversation (337ms)
+  ✓   7 tests/chat.spec.ts:110:1 › streams a response into the transcript (450ms)
+  ✓   5 tests/chat.spec.ts:126:1 › the composer is disabled while a turn is in flight (476ms)
+  ✓   2 tests/chat.spec.ts:203:1 › an action opens a thread seeded with the selected passage (493ms)
+  ✓   3 tests/chat.spec.ts:225:1 › a follow-up in the thread pane re-sends the seed (505ms)
+  ✓   1 tests/chat.spec.ts:158:1 › a live selection overlapping a mark offers no actions (551ms)
+  ✓   4 tests/chat.spec.ts:180:1 › two marks in one message are both clickable (629ms)
+  ✓   8 tests/chat.spec.ts:244:1 › clicking a mark reopens its thread without a new request (300ms)
+  ✓   9 tests/chat.spec.ts:263:1 › a new selection leaves committed marks rendered (238ms)
+  ✓  10 tests/smoke.spec.ts:9:1 › streams a real response end to end (924ms)
+  10 passed (2.8s)
+> edulab@0.0.1 lint:fix
+> biome check --write .
+Checked 35 files in 400ms. No fixes applied.
+> edulab@0.0.1 test
+> vitest run
+ RUN  v4.1.11 /Users/denis.lantsman/src/edulab
+ ✓ packages/frontend/prompt.test.ts (5 tests) 2ms
+ ✓ packages/frontend/selection.test.ts (8 tests) 2ms
+ ✓ packages/frontend/conversation.test.ts (6 tests) 12ms
+ Test Files  3 passed (3)
+      Tests  19 passed (19)
+   Start at  23:30:56
+   Duration  301ms (transform 89ms, setup 0ms, import 149ms, tests 16ms, environment 0ms)
+> edulab@0.0.1 typecheck
+> npm -w @edulab/iso exec tsc -- --noEmit && npm -w @edulab/frontend exec tsc -- --noEmit && npm -w @edulab/backend exec tsc -- --noEmit && npm -w @edulab/e2e exec tsc -- --noEmit
+exit code 0

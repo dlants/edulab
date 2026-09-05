@@ -1,0 +1,2 @@
+$ cd /Users/denis.lantsman/src/edulab && printf 'test-results\nplaywright-report\n' >> .gitignore && git rm -r -q --cached packages/e2e/test-results && git add .gitignore && git commit -q --amend --no-edit && git status --short
+exit code 0

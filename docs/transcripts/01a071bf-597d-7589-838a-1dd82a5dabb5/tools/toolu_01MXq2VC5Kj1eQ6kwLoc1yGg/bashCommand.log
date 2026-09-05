@@ -1,0 +1,15 @@
+$ cd /Users/denis.lantsman/src/edulab && grep -rn "Learning mode\|Go deeper\|Layer " packages/frontend packages/e2e/tests --include=*.ts | grep -v node_modules
+stdout:
+packages/frontend/prompt.ts:8:/** Learning mode: the agent is explaining work that already happened, to a
+packages/frontend/view.ts:483:      s.split ? "Go deeper →" : "Learning mode →",
+packages/frontend/view.ts:488:    this.b.bindText(depthRef, (s) => `Layer ${s.depth}`);
+packages/frontend/conversation.ts:6:// Task mode: the agent is here to get the user's work done. Learning mode is
+packages/e2e/tests/chat.spec.ts:106:  await page.getByRole("button", { name: "Learning mode" }).click();
+packages/e2e/tests/chat.spec.ts:276:  return page.getByRole("button", { name: "Go deeper" });
+packages/e2e/tests/chat.spec.ts:303:    page.getByRole("button", { name: "Learning mode" }),
+packages/e2e/tests/chat.spec.ts:306:  await page.getByRole("button", { name: "Learning mode" }).click();
+packages/e2e/tests/chat.spec.ts:313:    page.getByRole("button", { name: "Learning mode" }),
+packages/e2e/tests/chat.spec.ts:348:  await expect(page.getByText("Layer 3")).toBeVisible();
+packages/e2e/tests/chat.spec.ts:364:  await expect(page.getByText("Layer 1")).toBeVisible();
+packages/e2e/tests/chat.spec.ts:371:  await expect(page.getByText("Layer 3")).toBeVisible();
+exit code 0

@@ -1,0 +1,32 @@
+$ cd /Users/denis.lantsman/src/edulab && npm run lint && npm run typecheck && npm test && npm run test:e2e && git add -A && git commit -q -m "Stage 2: Multiple, clickable marks" && git log --oneline -1
+stdout:
+> edulab@0.0.1 lint
+> biome check .
+Checked 34 files in 112ms. No fixes applied.
+> edulab@0.0.1 typecheck
+> npm -w @edulab/iso exec tsc -- --noEmit && npm -w @edulab/frontend exec tsc -- --noEmit && npm -w @edulab/backend exec tsc -- --noEmit && npm -w @edulab/e2e exec tsc -- --noEmit
+> edulab@0.0.1 test
+> vitest run
+ RUN  v4.1.11 /Users/denis.lantsman/src/edulab
+ ✓ packages/frontend/prompt.test.ts (5 tests) 2ms
+ ✓ packages/frontend/selection.test.ts (8 tests) 2ms
+ ✓ packages/frontend/conversation.test.ts (6 tests) 11ms
+ Test Files  3 passed (3)
+      Tests  19 passed (19)
+   Start at  23:27:44
+   Duration  144ms (transform 68ms, setup 0ms, import 172ms, tests 16ms, environment 0ms)
+> edulab@0.0.1 test:e2e
+> npm -w @edulab/e2e run test
+> @edulab/e2e@0.0.1 test
+> playwright test
+Running 7 tests using 7 workers
+  ✓  6 tests/chat.spec.ts:129:1 › a second turn sends the full conversation (313ms)
+  ✓  2 tests/chat.spec.ts:115:1 › the composer is disabled while a turn is in flight (345ms)
+  ✓  7 tests/chat.spec.ts:99:1 › streams a response into the transcript (455ms)
+  ✓  3 tests/chat.spec.ts:192:1 › a new selection leaves committed marks rendered (455ms)
+  ✓  5 tests/chat.spec.ts:147:1 › a live selection overlapping a mark offers no actions (489ms)
+  ✓  4 tests/chat.spec.ts:169:1 › two marks in one message are both clickable (532ms)
+  ✓  1 tests/smoke.spec.ts:9:1 › streams a real response end to end (1.6s)
+  7 passed (3.0s)
+e5dc95a Stage 2: Multiple, clickable marks
+exit code 0

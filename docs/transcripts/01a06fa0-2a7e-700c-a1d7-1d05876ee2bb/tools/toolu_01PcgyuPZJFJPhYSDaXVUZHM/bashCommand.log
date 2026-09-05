@@ -1,0 +1,16 @@
+$ cd /Users/denis.lantsman/src/edulab && node -e "
+const A=require('@anthropic-ai/sdk');
+new (A.default||A)().models.list({limit:20}).then(r=>console.log(r.data.map(m=>m.id).join('\n')))"
+stdout:
+claude-fable-5-1
+claude-opus-5
+claude-sonnet-5
+claude-fable-5
+claude-opus-4-8
+claude-opus-4-7
+claude-sonnet-4-6
+claude-opus-4-6
+claude-opus-4-5-20251101
+claude-haiku-4-5-20251001
+claude-sonnet-4-5-20250929
+exit code 0

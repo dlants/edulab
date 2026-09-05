@@ -1,0 +1,2 @@
+$ cd /Users/denis.lantsman/src/edulab && grep -n "sketch\|earlier" plans/2026-09-05-nested-learning-threads.md
+exit code 1

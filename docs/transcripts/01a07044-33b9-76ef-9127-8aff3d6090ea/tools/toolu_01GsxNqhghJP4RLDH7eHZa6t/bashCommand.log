@@ -1,0 +1,4 @@
+$ cd /Users/denis.lantsman/src/edulab && git add -A && git commit -q -m "Stage 4: Nesting and the arrows" && git log --oneline -1
+stdout:
+343ff8d Stage 4: Nesting and the arrows
+exit code 0

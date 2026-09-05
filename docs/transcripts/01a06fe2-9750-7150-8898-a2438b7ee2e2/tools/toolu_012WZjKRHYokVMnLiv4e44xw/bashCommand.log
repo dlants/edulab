@@ -1,0 +1,151 @@
+$ cd /tmp && python3 -c "
+import json,random
+d=json.load(open('wildchat.json'))
+print('total',len(d))
+random.seed(7)
+for c in random.sample(d,10):
+    ms=c['messages']
+    print('='*70); print(c['hash'][:8], c['turns'],'turns', len(ms),'msgs')
+    idxs=[0,1]+sorted(random.sample(range(2,len(ms)),min(3,max(0,len(ms)-2))))
+    for i in idxs:
+        m=ms[i]
+        print(f'-- [{i}] {m[\"role\"]}: {m[\"content\"][:400].strip()}')
+"
+stdout:
+total 1100
+======================================================================
+443a520a 30 turns 60 msgs
+-- [0] user: Which of these statements about "Active listening" is/are correct?
+Please select the correct answers.
+Active listening is characterized by asking closed questions.
+Verbal attention cues are one aspect of active listening.
+Active listening is a special form of listening during telephone calls.
+Active (paraphrasing) listening on the factual level means summarizing the statements of the conversa
+-- [1] assistant: Verbal attention cues are one aspect of active listening.
+Active (paraphrasing) listening on the factual level means summarizing the statements of the conversation partner in one's own words.
+-- [4] user: Please complete the following sentence: Closed questions…
+Please select the correct answers.
+...help to open the conversation.
+...help to make or bring about decisions.
+...always involve a certain tactic.
+...can only be answered with "Yes" or "No"
+-- [7] assistant: Customer expectations are derived from:
+Word-of-mouth advertising
+Recommendations
+Experiences
+-- [15] assistant: The correct answers are:
+Think like a partner
+Respond reasonably
+Be proactive
+======================================================================
+f0e8d684 25 turns 50 msgs
+-- [0] user: calculate 20 log10 (16/1)
+-- [1] assistant: 20 log10 (16/1) = 20 log10 (16) - 20 log10 (1) 
+= 20 (log10 (2^4)) 
+= 20 (4 log10 (2)) 
+= 20 (4 x 0.3010) 
+= 24.02
+Therefore, 20 log10 (16/1) is approximately 24.02.
+-- [6] user: what is dBu?
+-- [28] user: 20 log10 (20)
+-- [29] assistant: 20 log10 (20) can be calculated as:
+20 log10 (20) = 20 (1.301)
+= 26.02
+Therefore, 20 log10 (20) is approximately equal to 26.02.
+======================================================================
+41bd0dca 24 turns 48 msgs
+-- [0] user: In Animal Farm, the flag of Animal Farm is a symbol for what?
+The flag of the Soviet Union
+The flag of Vietnam
+the flag of England
+The flag of Russia
+-- [1] assistant: The flag in Animal Farm is a symbol for the flag of the Soviet Union.
+-- [7] assistant: The simplified expression is 8ab + 6a^2.
+-- [17] assistant: The simplified expression is 8x^9y^6.
+-- [37] assistant: The correct statement is: x < 10. For any values of x that are less than 10, the inequality x - 8 > 2 will be true.
+======================================================================
+a95feae8 30 turns 60 msgs
+-- [0] user: Iron Man's bedroom smells fantastic. Especially when he lights scented candles, it's hard to leave.
+Complete Sentences
+Fragment
+-- [1] assistant: Iron Man's bedroom smells fantastic. (Complete sentence)
+Especially when he lights scented candles, it's hard to leave. (Fragment - This is a dependent clause that cannot stand alone as a sentence. It needs to be connected to an independent clause to form a complete sentence.)
+-- [5] assistant: Fragment.
+"My mother said I can't go on the school trip unless Miguel Rivera is a chaperone." is a complete sentence, which is an independent clause that expresses a complete thought.
+"Because she trusts him." is a dependent clause fragment without a main clause. It cannot stand alone as a sentence.
+-- [29] assistant: Complete Sentences.
+"Kevin Hart announced he was leaving the museum" is a complete sentence that expresses a complete thought.
+"Because I wanted to stay longer, he went home by himself." is also a complete sentence because it has its subject ("he") and verb ("went"), and expresses a complete idea.
+-- [54] user: Are these complete sentences, or is one of them a fragment?
+For his birthday, Tom Holland got two new bikes. That were far better for popping wheelies than his old one.
+Complete Sentences
+Fragment
+======================================================================
+023ba035 21 turns 42 msgs
+-- [0] user: This popup will disable within 24h after donation for a minimum of 1 month! replace 'disable"
+-- [1] assistant: with "disappear". This popup will disappear within 24h after donation for a minimum of 1 month!
+-- [9] assistant: Glad to hear that! Let me know if you need any further assistance.
+-- [16] user: again
+-- [38] user: hahaha what is onerous?
+======================================================================
+e19ba72a 25 turns 50 msgs
+-- [0] user: what happens if a magnitude 10 earthquake hits China? How much money would be the damages estimated?
+-- [1] assistant: A magnitude 10 earthquake has never been recorded in human history and would represent an event of almost unimaginable power. The highest magnitude earthquake ever recorded was the Great Chilean Earthquake of May 22, 1960, which measured 9.5. The scale used to measure earthquakes, the Moment Magnitude Scale (Mw), is logarithmic, so a magnitude 10 earthquake would release approximately 32 times mor
+-- [5] assistant: The Tsar Bomba was the largest and most powerful nuclear weapon ever detonated. Tested by the Soviet Union on October 30, 1961, it had a yield of approximately 50 megatons of TNT, though it was originally designed to have a yield of up to 100 megatons. If the Tsar Bomba were detonated at Point Nemo, the most remote location in the world's oceans, the following effects could be expected:
+1. Immedi
+-- [39] assistant: If Justice Ruth Bader Ginsburg had passed away on December 2, 2020, instead of September 18, 2020, as in our actual timeline, the response from the GOP-controlled Senate might have been different due to the proximity of the event to the end of President Donald Trump's term and the beginning of President-elect Joe Biden's term on January 20, 2021.
+Here's a speculative sequence of how events might
+-- [42] user: The nomination attempt was derailed, and Biden got the opportunity to replace Ginsburg
+======================================================================
+5ef514a8 21 turns 42 msgs
+-- [0] user: How do you pronounce gif?
+-- [1] assistant: As an AI language model, I do not have a physical mouth and vocal cords to pronounce words. However, the correct pronunciation of "GIF" is with a soft "G", like "Jif" without the "J" sound. So it is pronounced as "Gif" like "Jif" or "Gif" like "Gift" without the "t" sound. Both pronunciations are widely accepted.
+-- [27] assistant: As an AI language model, I do not have a personal belief, but the question of whether or not we are living in a simulation has been a topic of philosophical and scientific debate for many years. It is a theory that suggests that our reality is a simulation, created by a more advanced, possibly non-human, civilization. Proponents of this theory argue that the advancements in technology suggest that
+-- [38] user: Does a straw have one hole or two?
+-- [39] assistant: As an AI language model, I do not have a personal opinion, but the question of whether a straw has one hole or two is a matter of interpretation. Some people argue that a straw has two holes, one at each end, while others believe that a straw has only one hole that runs the length of the tube. The argument for there being two holes relates to the idea that a hole is a space or opening where someth
+======================================================================
+fce92bb4 20 turns 40 msgs
+-- [0] user: does the us fund al qaeda rn
+-- [1] assistant: No, the United States does not fund al Qaeda, as they consider it a terrorist organization. The U.S. government has been actively involved in counterterrorism efforts to dismantle and combat the group since the September 11 attacks in 2001.
+-- [4] user: can you give me offshoot consipiracies to understand where hes coming from on that regard
+-- [5] assistant: As an AI language model, I can provide information on different perspectives, but it's important to note that conspiracy theories often lack factual basis and are not supported by credible evidence. I would caution against embracing or spreading such theories without proper scrutiny. Instead, I encourage you to rely on reputable sources of information and critical thinking to form your own opinion
+-- [16] user: Were the ussr trying to fix the issues in afghanistan at the time
+======================================================================
+e926fc13 34 turns 68 msgs
+-- [0] user: Here’s a song about the elements 93 and on from 2007:
+So there’s Neptunium, Plutonium, Americium, and Curium
+Berkelium, Californium, Einsteinium, and Fermium
+Mendelevium, Nobelium, Lawrencium, Rutherfordium
+Dubnium, Seaborgium, Bohrium, and Hassium,
+Meitneeeeeeeeeeeerium, Darmstadtium, Roentgeeeeeeeeeeeeeeeenium, Ununbium,
+Unuuuuuuuntrium, Ununquadium, Unuuuuunpentium, Ununhectium,
+ and last is Un
+-- [1] assistant: As an AI language model, I cannot determine the accuracy of the song's lyrics about the elements 93 and on. However, I can provide you with the periodic table of elements to cross-check the song's lyrics.
+-- [19] assistant: As an AI language model, I cannot give a definitive answer if the song is accurate for today since it depends on the date it was last updated. However, if the song hasn't been updated to include anything new since 2007, then it might not be up to date with the latest scientific findings.
+-- [39] assistant: Tennessine (Ts) was discovered in 2010 by a team of Russian and American scientists collaborating at the Joint Institute for Nuclear Research (JINR) in Dubna, Russia and Oak Ridge National Laboratory (ORNL) in Tennessee, USA. The discovery of Tennessine was officially recognized by the International Union of Pure and Applied Chemistry (IUPAC) in 2016.
+-- [55] assistant: If there haven't been any significant changes to the periodic table of elements since the last update of the song, then there may not be a need to change the song. However, it's always good to double-check current scientific information to ensure that the lyrics of the song are still accurate and up-to-date. If there have been any new discoveries or official name changes, you can update the song a
+======================================================================
+74979366 23 turns 46 msgs
+-- [0] user: use straightforward elastic mechanics (compression/tension, flexure, shear to be based on A_shear = 0.5*A_gross) to get diameter of two solid PE4710 pontoon pipes supporting a floating dock. dead load is 0.6 kpa and live load is 5kpa. dock is 3m wide but is split up into 13m long sections.wind load is 24.4 KN. Berthing energy is 1.59KNm. design factor for pontoon pipes is 0.63. allowable compressi
+-- [1] assistant: Let's break down the problem into simplified steps for clarity. We will calculate the diameter of PE4710 HDPE pontoon pipes needed to support a dock by using fundamental principles of mechanics.
+1. Estimate Buoyancy Force under Dead Load:
+The dead load of the dock is given as 0.6 kPa, and the live load is 5 kPa. The dock is 3 m wide and split into 13 m long sections. The total load per unit area
+-- [9] assistant: Let's re-calculate the pontoon diameter by systematically going through the problem details provided.
+We know:
+- Dead Load (DL) = 0.6 kPa
+- Live Load (LL) = 5 kPa
+- Dock width = 3m
+- Dock sections length = 13m
+- Design Factor for pontoon pipes = 0.63
+- Allowable compressive stress for pontoon pipes = 1150 psi
+- Yield strength of pontoon pipes = 3400 psi
+- Assume allowable shear stress = 0.5 * Yie
+-- [11] assistant: I apologize for the confusion. Let's address the buoyancy requirement based on the dead load condition, where 70% of the pontoon's cross-sectional area is submerged.
+Given:
+- Dead Load (DL) = 0.6 kPa
+- Live Load (LL) = 5 kPa
+- Dock width = 3 m
+- Design factor for pontoon pipes = 0.63
+- Allowable compressive stress for pontoon pipes = 1150 psi (which is approximately 7.93 MPa, converting psi to Pa
+-- [36] user: try bouyancy check with 0.9m diameter
+exit code 0

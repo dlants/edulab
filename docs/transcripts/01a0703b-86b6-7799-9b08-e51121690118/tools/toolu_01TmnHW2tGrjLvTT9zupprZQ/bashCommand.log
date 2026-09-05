@@ -1,0 +1,185 @@
+$ cd /Users/denis.lantsman/src/edulab && cat > /tmp/dbg.spec.ts <<'EOF'
+EOF
+cat packages/e2e/test-results/chat-two-marks-in-one-message-are-both-clickable/error-context.md
+stdout:
+# Instructions
+- Following Playwright test failed.
+- Explain why, be concise, respect Playwright best practices.
+- Provide a snippet of code with the fix, if possible.
+# Test info
+- Name: chat.spec.ts >> two marks in one message are both clickable
+- Location: tests/chat.spec.ts:165:1
+# Error details
+```
+Error: expect(locator).toHaveCount(expected) failed
+Locator:  locator('[data-mark]')
+Expected: 2
+Received: 0
+Timeout:  5000ms
+Call log:
+  - Expect "toHaveCount" locator('[data-mark]') with timeout 5000ms
+  - waiting for locator('[data-mark]')
+    14 × locator resolved to 0 elements
+       - unexpected value "0"
+```
+# Page snapshot
+```yaml
+- generic [ref=e2]:
+  - navigation [ref=e3]:
+    - link "1. User-driven review" [ref=e4] [cursor=pointer]:
+      - /url: /
+    - link "2. Suggested review" [ref=e5] [cursor=pointer]:
+      - /url: /suggested
+    - link "3. Domain map" [ref=e6] [cursor=pointer]:
+      - /url: /map
+    - link "4. Interactives" [ref=e7] [cursor=pointer]:
+      - /url: /interactive
+    - combobox [ref=e8]:
+      - option "Write your own" [selected]
+      - option "Floating dock pontoon"
+      - option "Tile adhesive formulation"
+      - option "Django event app URLs"
+      - option "C heap file block storage"
+  - generic [ref=e9]:
+    - button "Back to task mode" [ref=e10] [cursor=pointer]
+    - list [ref=e12]:
+      - listitem [ref=e13]:
+        - generic [ref=e14]: user
+        - generic [ref=e15]:
+          - generic [ref=e16]: the quick brown
+          - generic [ref=e17]: fox
+          - generic [ref=e18]: jumps over the lazy dog
+      - listitem [ref=e19]:
+        - generic [ref=e20]: assistant
+        - generic [ref=e21]: ok
+    - generic [ref=e24]:
+      - blockquote [ref=e25]: fox
+      - button "I don't understand this." [ref=e26]
+      - button "Quiz me on this." [active] [ref=e27]
+      - textbox "Ask your own question…" [ref=e28]
+```
+# Test source
+```ts
+  76  |       range.setEnd(to[0], to[1]);
+  77  |       const selection = window.getSelection();
+  78  |       selection?.removeAllRanges();
+  79  |       selection?.addRange(range);
+  80  |     },
+  81  |     { msg, start, end },
+  82  |   );
+  83  |   await page.locator("ul").dispatchEvent("mouseup");
+  84  | }
+  85  | 
+  86  | const SENTENCE = "the quick brown fox jumps over the lazy dog";
+  87  | 
+  88  | /** A transcript with one user message of known text, in learning mode. */
+  89  | async function transcript(page: Page) {
+  90  |   const backend = await fakeBackend(page, ["ok"]);
+  91  |   backend.release();
+  92  |   await page.goto("/");
+  93  |   await page.getByRole("textbox").fill(SENTENCE);
+  94  |   await page.getByRole("textbox").press("Enter");
+  95  |   await expect(page.locator("li")).toHaveCount(2);
+  96  |   await page.getByRole("button", { name: "Switch to learning mode" }).click();
+  97  | }
+  98  | 
+  99  | test("streams a response into the transcript", async ({ page }) => {
+  100 |   const backend = await fakeBackend(page, ["Hello", ", world"]);
+  101 |   await page.goto("/");
+  102 | 
+  103 |   await page.getByRole("textbox").fill("hi");
+  104 |   await page.getByRole("button", { name: "Send" }).click();
+  105 | 
+  106 |   await expect(page.locator('[data-role="user"]')).toHaveText(/hi/);
+  107 |   backend.release();
+  108 | 
+  109 |   await expect(page.locator('[data-role="assistant"]')).toHaveText(
+  110 |     /Hello, world/,
+  111 |   );
+  112 |   await expect(page.locator("li")).toHaveCount(2);
+  113 | });
+  114 | 
+  115 | test("the composer is disabled while a turn is in flight", async ({ page }) => {
+  116 |   const backend = await fakeBackend(page, ["ok"]);
+  117 |   await page.goto("/");
+  118 | 
+  119 |   const input = page.getByRole("textbox");
+  120 |   await input.fill("hi");
+  121 |   await page.getByRole("button", { name: "Send" }).click();
+  122 | 
+  123 |   await expect(input).toBeDisabled();
+  124 |   backend.release();
+  125 |   await expect(input).toBeEnabled();
+  126 |   await expect(input).toHaveValue("");
+  127 | });
+  128 | 
+  129 | test("a second turn sends the full conversation", async ({ page }) => {
+  130 |   const backend = await fakeBackend(page, ["ok"]);
+  131 |   backend.release();
+  132 |   await page.goto("/");
+  133 | 
+  134 |   const input = page.getByRole("textbox");
+  135 |   await input.fill("first");
+  136 |   await input.press("Enter");
+  137 |   await expect(page.locator("li")).toHaveCount(2);
+  138 | 
+  139 |   await input.fill("second");
+  140 |   await input.press("Enter");
+  141 |   await expect(page.locator("li")).toHaveCount(4);
+  142 | 
+  143 |   expect(backend.started).toHaveLength(2);
+  144 |   expect(JSON.parse(backend.started[1])).toHaveLength(3);
+  145 | });
+  146 | 
+  147 | test("a live selection overlapping a mark offers no actions", async ({
+  148 |   page,
+  149 | }) => {
+  150 |   await transcript(page);
+  151 |   const explain = page.getByRole("button", { name: "I don't understand this." });
+  152 | 
+  153 |   await selectRange(page, 0, 0, 9);
+  154 |   await explain.click();
+  155 |   await expect(page.locator("[data-mark]")).toHaveCount(1);
+  156 | 
+  157 |   await selectRange(page, 0, 4, 15);
+  158 |   await expect(page.getByText("Select a non-overlapping section.")).toBeVisible();
+  159 |   await expect(explain).toBeHidden();
+  160 | 
+  161 |   await selectRange(page, 0, 10, 19);
+  162 |   await expect(explain).toBeVisible();
+  163 | });
+  164 | 
+  165 | test("two marks in one message are both clickable", async ({ page }) => {
+  166 |   await transcript(page);
+  167 |   const explain = page.getByRole("button", { name: "I don't understand this." });
+  168 |   const quote = page.locator("blockquote");
+  169 | 
+  170 |   await selectRange(page, 0, 0, 9);
+  171 |   await explain.click();
+  172 |   await selectRange(page, 0, 16, 19);
+  173 |   await page.getByRole("button", { name: "Quiz me on this." }).click();
+  174 | 
+  175 |   const marks = page.locator("[data-mark]");
+> 176 |   await expect(marks).toHaveCount(2);
+      |                       ^ Error: expect(locator).toHaveCount(expected) failed
+  177 |   await expect(marks.nth(0)).toHaveText("the quick");
+  178 |   await expect(marks.nth(1)).toHaveText("fox");
+  179 | 
+  180 |   await marks.nth(0).click();
+  181 |   await expect(quote).toHaveText("the quick");
+  182 |   await marks.nth(1).click();
+  183 |   await expect(quote).toHaveText("fox");
+  184 | });
+  185 | 
+  186 | test("a new selection leaves committed marks rendered", async ({ page }) => {
+  187 |   await transcript(page);
+  188 |   await selectRange(page, 0, 0, 9);
+  189 |   await page.getByRole("button", { name: "I don't understand this." }).click();
+  190 | 
+  191 |   await selectRange(page, 0, 20, 25);
+  192 |   await expect(page.locator("[data-mark]")).toHaveCount(1);
+  193 |   await expect(page.locator("[data-live]")).toHaveText("jumps");
+  194 | });
+  195 | 
+```
+exit code 0

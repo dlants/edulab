@@ -1,0 +1,4 @@
+$ cd /Users/denis.lantsman/src/edulab && git add -A && git commit -q -m "Stage 1: Prompt construction" && git log --oneline -1
+stdout:
+0d8ca2c Stage 1: Prompt construction
+exit code 0

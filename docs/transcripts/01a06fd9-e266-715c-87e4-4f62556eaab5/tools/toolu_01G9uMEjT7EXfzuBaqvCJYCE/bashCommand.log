@@ -1,0 +1,11 @@
+$ cd /Users/denis.lantsman/src/edulab && cat .gitignore && git check-ignore -v docs/transcripts/01a06ed7-db07-72f9-a493-ce5b0518444a/meta.json; git log --format='%h %s' -3
+stdout:
+.env
+node_modules
+dist
+test-results
+playwright-report
+6e31f43 Stage 3: Chat UI
+dde2fc6 Stage 2: Conversation
+96b0825 Stage 1: End to end pipe
+exit code 0

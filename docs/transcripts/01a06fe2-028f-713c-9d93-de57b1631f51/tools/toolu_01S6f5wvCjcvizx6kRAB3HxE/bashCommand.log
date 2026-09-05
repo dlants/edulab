@@ -1,0 +1,11 @@
+$ cd /Users/denis.lantsman/src/edulab && npm run lint:fix && npm run lint && npm run typecheck
+stdout:
+> edulab@0.0.1 lint:fix
+> biome check --write .
+Checked 21 files in 117ms. Fixed 2 files.
+> edulab@0.0.1 lint
+> biome check .
+Checked 21 files in 115ms. No fixes applied.
+> edulab@0.0.1 typecheck
+> npm -w @edulab/iso exec tsc -- --noEmit && npm -w @edulab/frontend exec tsc -- --noEmit && npm -w @edulab/backend exec tsc -- --noEmit && npm -w @edulab/e2e exec tsc -- --noEmit
+exit code 0

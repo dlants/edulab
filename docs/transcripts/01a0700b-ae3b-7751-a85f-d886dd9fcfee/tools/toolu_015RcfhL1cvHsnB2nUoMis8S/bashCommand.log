@@ -1,0 +1,10 @@
+$ cd /Users/denis.lantsman/src/edulab && grep -n "hiddenTurns\|hidden" plans/2026-09-05-nested-learning-threads.md
+stdout:
+35:Context accumulates down the tree, and it accumulates **flat** — but that falls out of the construction rather than needing machinery. A thread's hidden seed is already a flat prompt covering everything up to the point it was opened, so a child's seed is just that string, then the parent's own visible transcript, then the new selection and question, concatenated:
+38:<parent's hidden seed, verbatim - already flat>
+60:The thing to get right is that the hidden seed is emitted **verbatim, not quoted or labelled** — the naive version wraps it in "here is the previous conversation: ..." at each level, and by depth three the task is buried inside three layers of framing. Nothing walks the path and nothing is re-rendered: each level's text was already written once, when that thread was opened.
+195:- A thread has at most one hidden turn: the seed, at index 0. Depth never adds more, because `seedTurn` collapses the entire prefix into that one string.
+210:- Goal: `prompt.ts` produces the seed turn for all three actions, and `Conversation` accepts a system prompt, seed turns, and `hiddenTurns`.
+215:  - **Shape of the composition at depth**: build a root seed, feed it back in as the hidden turn of a second call, and again for a third; assert the resulting string against an expected literal. Sections read oldest first, each transcript appears exactly once, and no section is wrapped in another's framing.
+218:  - A conversation constructed with a seed turn and `hiddenTurns: 1` renders an empty transcript, and after a reply renders only the reply — while both its `start` frames carry the seed turn as the first element of `params.messages`.
+exit code 0

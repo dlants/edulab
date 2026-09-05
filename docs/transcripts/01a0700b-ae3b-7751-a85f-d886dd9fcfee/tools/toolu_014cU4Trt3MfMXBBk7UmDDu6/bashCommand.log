@@ -1,0 +1,16 @@
+$ cd /Users/denis.lantsman/src/edulab && git add -A && git commit -m "Add learning mode with transcript selection to prototype 1
+
+A fixed toggle switches between task and learning mode. Learning mode
+hides the composer, splits the screen, and offers an action menu for the
+selected text.
+
+The selection is stored as character offsets into message text rather
+than a live DOM Range, since the browser collapses the range as soon as
+the user clicks the learning pane. The highlight is rendered from that
+state as a <mark>, so it survives interacting with the right pane."
+stdout:
+[main c58e4dc] Add learning mode with transcript selection to prototype 1
+ 4 files changed, 373 insertions(+), 15 deletions(-)
+ create mode 100644 packages/frontend/learning.ts
+ create mode 100644 packages/frontend/selection.ts
+exit code 0

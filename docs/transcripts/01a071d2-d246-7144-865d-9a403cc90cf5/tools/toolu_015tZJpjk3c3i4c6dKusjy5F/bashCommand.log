@@ -1,0 +1,6 @@
+$ grep -rn "type ProviderToolResult\|interface ProviderToolResult" /Users/denis.lantsman/src/magenta.nvim/node/core/src --include="*.ts"
+stdout:
+/Users/denis.lantsman/src/magenta.nvim/node/core/src/providers/openai-inference.test.ts:24:  type ProviderToolResult,
+/Users/denis.lantsman/src/magenta.nvim/node/core/src/providers/provider-types.ts:162:export type ProviderToolResultContent =
+/Users/denis.lantsman/src/magenta.nvim/node/core/src/providers/provider-types.ts:167:export type ProviderToolResult = {
+exit code 0

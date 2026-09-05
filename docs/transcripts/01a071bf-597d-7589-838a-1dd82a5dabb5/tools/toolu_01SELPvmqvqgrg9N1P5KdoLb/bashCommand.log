@@ -1,0 +1,56 @@
+$ cd /Users/denis.lantsman/src/edulab && npm run lint && npm run test:e2e
+stdout:
+> edulab@0.0.1 lint
+> biome check .
+Checked 35 files in 133ms. No fixes applied.
+> edulab@0.0.1 test:e2e
+> npm -w @edulab/e2e run test
+> @edulab/e2e@0.0.1 test
+> playwright test
+Running 15 tests using 7 workers
+  ✓   7 tests/chat.spec.ts:140:1 › a second turn sends the full conversation (344ms)
+  ✓   1 tests/chat.spec.ts:110:1 › streams a response into the transcript (467ms)
+  ✓   2 tests/chat.spec.ts:158:1 › a live selection overlapping a mark offers no actions (497ms)
+  ✓   5 tests/chat.spec.ts:126:1 › the composer is disabled while a turn is in flight (529ms)
+  ✓   4 tests/chat.spec.ts:203:1 › an action opens a thread seeded with the selected passage (624ms)
+  ✓   6 tests/chat.spec.ts:225:1 › a follow-up in the thread pane re-sends the seed (588ms)
+  ✓   9 tests/chat.spec.ts:296:1 › the arrows name the layer and stop at the ends (224ms)
+  ✓   3 tests/chat.spec.ts:180:1 › two marks in one message are both clickable (683ms)
+  ✓   8 tests/chat.spec.ts:244:1 › clicking a mark reopens its thread without a new request (403ms)
+  ✓  10 tests/chat.spec.ts:313:1 › a thread opened at depth carries both selections once (331ms)
+  ✘  11 tests/chat.spec.ts:347:1 › a descended thread shows what it was opened from (303ms)
+  ✓  14 tests/chat.spec.ts:407:1 › a new selection leaves committed marks rendered (209ms)
+  ✓  13 tests/chat.spec.ts:385:1 › nesting goes three deep (384ms)
+  ✓  12 tests/chat.spec.ts:361:1 › ← climbs back without losing threads or highlights (407ms)
+  ✓  15 tests/smoke.spec.ts:9:1 › streams a real response end to end (1.4s)
+  1) tests/chat.spec.ts:347:1 › a descended thread shows what it was opened from ───────────────────
+    Error: expect(locator).toHaveText(expected) failed
+    Locator: locator('blockquote')
+    Expected: "the quick"
+    Error: strict mode violation: locator('blockquote') resolved to 2 elements:
+        1) <blockquote class="origin-quote_18" data-ref="origin-quote_10">the quick</blockquote> aka getByText('the quick')
+        2) <blockquote data-ref="quote_34" class="learning-quote_2"></blockquote> aka locator('blockquote').nth(1)
+    Call log:
+      - Expect "toHaveText" locator('blockquote') with timeout 5000ms
+      - waiting for locator('blockquote')
+      356 |     "I don't understand this.",
+      357 |   );
+    > 358 |   await expect(page.locator("blockquote")).toHaveText("the quick");
+          |                                            ^
+      359 | });
+      360 |
+      361 | test("← climbs back without losing threads or highlights", async ({ page }) => {
+        at /Users/denis.lantsman/src/edulab/packages/e2e/tests/chat.spec.ts:358:44
+    Error Context: test-results/chat-a-descended-thread-shows-what-it-was-opened-from/error-context.md
+  1 failed
+    tests/chat.spec.ts:347:1 › a descended thread shows what it was opened from ────────────────────
+  14 passed (3.6s)
+stderr:
+npm error Lifecycle script `test` failed with error:
+npm error code 1
+npm error path /Users/denis.lantsman/src/edulab/packages/e2e
+npm error workspace @edulab/e2e@0.0.1
+npm error location /Users/denis.lantsman/src/edulab/packages/e2e
+npm error command failed
+npm error command sh -c playwright test
+exit code 1

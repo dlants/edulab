@@ -1,0 +1,5 @@
+$ cd /Users/denis.lantsman/src/edulab && git commit -am "Tint user messages in the transcript"
+stdout:
+[main b1e8b93] Tint user messages in the transcript
+ 1 file changed, 5 insertions(+)
+exit code 0

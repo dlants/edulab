@@ -1,0 +1,9 @@
+$ cd /tmp && for d in allenai/WildChat-1M allenai/WildChat lmsys/lmsys-chat-1m; do echo "=== $d"; curl -s "https://datasets-server.huggingface.co/is-valid?dataset=$d"; echo; done
+stdout:
+=== allenai/WildChat-1M
+{"preview":true,"viewer":true,"search":true,"filter":true,"statistics":true}
+=== allenai/WildChat
+{"preview":true,"viewer":true,"search":true,"filter":true,"statistics":true}
+=== lmsys/lmsys-chat-1m
+{"error":"The dataset does not exist, or is not accessible without authentication (private or gated). Please check the spelling of the dataset name or retry with authentication."}
+exit code 0

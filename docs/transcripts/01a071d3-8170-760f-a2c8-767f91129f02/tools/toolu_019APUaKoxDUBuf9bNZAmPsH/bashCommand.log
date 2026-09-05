@@ -1,0 +1,10 @@
+$ grep -n "bar\|Bar\|nav\|top" packages/frontend/view.ts
+stdout:
+33:  /** False at layer 0 (the bare task transcript); true for the two-pane split. */
+69:const navClass = cls("nav");
+109:.${navClass} {
+119:.${navClass} button {
+127:.${navClass} button:disabled {
+179:  top: 0;
+428:      <div class="${navClass}">
+exit code 0

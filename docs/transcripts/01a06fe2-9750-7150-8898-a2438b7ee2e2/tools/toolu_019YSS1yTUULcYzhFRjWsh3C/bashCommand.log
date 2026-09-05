@@ -1,0 +1,15 @@
+$ cat /tmp/wildchat.log
+stdout:
+index warming, retrying...
+<anonymous_script>:1
+<html>
+^
+SyntaxError: Unexpected token '<', "<html>
+<h"... is not valid JSON
+    at JSON.parse (<anonymous>)
+    at parseJSONFromBytes (node:internal/deps/undici/undici:4255:19)
+    at successSteps (node:internal/deps/undici/undici:6902:27)
+    at readAllBytes (node:internal/deps/undici/undici:5825:13)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+Node.js v24.14.0
+exit code 0

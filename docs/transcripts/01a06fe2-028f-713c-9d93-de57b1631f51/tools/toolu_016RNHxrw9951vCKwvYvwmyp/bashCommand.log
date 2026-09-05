@@ -1,0 +1,12 @@
+$ cd /Users/denis.lantsman/src/edulab && grep -n "routeWebSocket(url" node_modules/playwright-core/types/types.d.ts; grep -n "interface WebSocketRoute" -A 40 node_modules/playwright-core/types/types.d.ts | grep -n "onMessage\|send(\|close(\|connectToServer" 
+stdout:
+4557:  routeWebSocket(url: string|RegExp|URLPattern|((url: URL) => boolean), handler: ((websocketroute: WebSocketRoute) => Promise<any>|any)): Promise<void>;
+10482:  routeWebSocket(url: string|RegExp|((url: URL) => boolean), handler: ((websocketroute: WebSocketRoute) => Promise<any>|any)): Promise<void>;
+18423: * [page.routeWebSocket(url, handler)](https://playwright.dev/docs/api/class-page#page-route-web-socket) or
+18424: * [browserContext.routeWebSocket(url, handler)](https://playwright.dev/docs/api/class-browsercontext#browser-context-route-web-socket),
+7:18519-   * [webSocketRoute.send(message)](https://playwright.dev/docs/api/class-websocketroute#web-socket-route-send),
+9:18521-   * [webSocketRoute.connectToServer()](https://playwright.dev/docs/api/class-websocketroute#web-socket-route-connect-to-server)
+14:18526-   * [webSocketRoute.send(message)](https://playwright.dev/docs/api/class-websocketroute#web-socket-route-send). See
+20:18532-  onMessage(handler: (message: string | Buffer) => any): void;
+37:18549-  close(options?: {
+exit code 0

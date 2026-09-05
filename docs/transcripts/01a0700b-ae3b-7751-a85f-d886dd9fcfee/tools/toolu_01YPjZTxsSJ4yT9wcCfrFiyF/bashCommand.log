@@ -1,0 +1,14 @@
+$ cd /Users/denis.lantsman/src/edulab && grep -n "nav\|position\|padding\|height" packages/frontend/main.ts
+stdout:
+5:const navClass = cls("nav");
+8:.${navClass} {
+14:  padding: 1rem;
+18:.${navClass} a { color: inherit; }
+19:.${navClass} a[aria-current="page"] { font-weight: 600; }
+20:.${navClass} select { font: inherit; }
+25:const nav = document.createElement("nav");
+26:nav.className = navClass;
+32:  nav.append(link);
+50:nav.append(picker);
+55:root.append(nav, page);
+exit code 0

@@ -1,0 +1,17 @@
+$ cd /tmp && python3 -c "
+import json
+d=json.load(open('wildchat.json'))
+seen=set('74979366 443a520a f0e8d684 41bd0dca a95feae8 023ba035 e19ba72a 5ef514a8 fce92bb4 e926fc13 2c7a8e45 9833484b fb769c44 22ed653d 913cce67 746a6020 94c56861 604b3d77 1caa9395 479b20f8 fccada6c 925bc57a 99e7ae2e a357070d a653a81d 72c7ec37 9f861938 38728630 c1cf53c5 44bbcae8 690759dd e47b2e1f d49d7531 3890541b f87b284a e2360b90 f34e9861 0c4ab6a4 21825bbf 478df6d0 cfb8980c 1c8fb14f c3465cd7 7e9371ff cbddd95f 6b2f1f11 9517f9ef 0757f1d7 8fb52fcb c750245b'.split())
+pool=[c for c in d if c['hash'][:8] not in seen]
+def key(c):
+    u=[m['content'] for m in c['messages'] if m['role']=='user'][:2]
+    return max(len(x) for x in u) if u else 0
+pool.sort(key=key,reverse=True)
+for c in pool[:50]:
+    u=[m['content'] for m in c['messages'] if m['role']=='user'][:2]
+    o=max(u,key=len)
+    print(f\"[{c['hash'][:8]}] {c['model']} {c['turns']}t open={key(c)} :: \" + ' '.join(o[:260].split()))
+" > rank.txt; wc -l rank.txt
+stdout:
+      50 rank.txt
+exit code 0

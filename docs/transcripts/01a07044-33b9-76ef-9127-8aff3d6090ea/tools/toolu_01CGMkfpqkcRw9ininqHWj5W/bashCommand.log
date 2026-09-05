@@ -1,0 +1,18 @@
+$ cd /Users/denis.lantsman/src/edulab && sed -n '260,280p' plans/2026-09-05-nested-learning-threads.md
+stdout:
+- Goal: picking an action opens a child thread, sends the seeded prompt, streams into the right pane, and leaves a permanent highlight. Clicking that highlight reopens the thread with its history intact.
+- Tests (Playwright, against the fake backend that records `start` frames):
+  - [x] Selecting a passage and clicking "I don't understand this" sends exactly one `start` frame whose `messages` is a single user turn containing the passage verbatim.
+  - [x] The reply streams into the right pane and the passage stays marked after the pane is clicked.
+  - [x] Following up in the right pane's composer sends a conversation whose first turn is still the seed.
+  - [x] Selecting a second passage opens a second thread; clicking the first mark restores the first thread's transcript, and no new `start` frame is sent.
+## Nesting and the arrows
+- Goal: `→` descends into the active child and `←` climbs back, and a thread opened at depth behaves exactly like one opened at the root.
+- Tests (Playwright):
+  - Explain from the task, press `→` so the explanation is on the left, then select part of it and click "Quiz me on this": the new `start` frame's seed has two sections — the task transcript with the first selection, then the explanation with the second — and the task text appears exactly once.
+  - Taking that action does not move the panes — the quiz appears on the right; pressing `→` again puts it on the left.
+  - `←` back to the root leaves the explanation on the right and both highlights intact, and pressing `→` twice returns to the quiz thread rather than starting over.
+  - At layer 0 the button reads "Learning mode" and there is no `←`; one layer in, it reads "Go deeper" and `←` closes the split again.
+  - `→` is disabled in the split with no active child.
+  - Depth three works, i.e. nothing in the design caps the recursion.
+exit code 0

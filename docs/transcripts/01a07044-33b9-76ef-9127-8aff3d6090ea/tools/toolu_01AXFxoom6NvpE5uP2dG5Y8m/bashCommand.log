@@ -1,0 +1,20 @@
+$ cd /Users/denis.lantsman/src/edulab && wc -l packages/frontend/*.ts packages/frontend/prototypes/*.ts packages/e2e/tests/*.ts
+stdout:
+     184 packages/frontend/conversation.test.ts
+     194 packages/frontend/conversation.ts
+     137 packages/frontend/learning.ts
+      57 packages/frontend/main.ts
+      89 packages/frontend/prompt.test.ts
+      54 packages/frontend/prompt.ts
+      33 packages/frontend/routes.ts
+      97 packages/frontend/selection.test.ts
+     113 packages/frontend/selection.ts
+      98 packages/frontend/threads.ts
+     573 packages/frontend/vamp.ts
+     536 packages/frontend/view.ts
+     145 packages/frontend/prototypes/chat.ts
+      10 packages/frontend/prototypes/placeholder.ts
+     271 packages/e2e/tests/chat.spec.ts
+      19 packages/e2e/tests/smoke.spec.ts
+    2610 total
+exit code 0

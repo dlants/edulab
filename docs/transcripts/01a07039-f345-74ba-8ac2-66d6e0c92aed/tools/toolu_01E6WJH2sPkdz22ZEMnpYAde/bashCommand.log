@@ -1,0 +1,12 @@
+$ cd /Users/denis.lantsman/src/edulab && sed -i '' 's/at(1, 7, 1, 24)/at(1, 9, 1, 26)/g; s/at(0, 12, 0, 20)/at(0, 10, 0, 18)/g' packages/frontend/prompt.test.ts && npm test
+stdout:
+> edulab@0.0.1 test
+> vitest run
+ RUN  v4.1.11 /Users/denis.lantsman/src/edulab
+ ✓ packages/frontend/prompt.test.ts (5 tests) 2ms
+ ✓ packages/frontend/conversation.test.ts (6 tests) 12ms
+ Test Files  2 passed (2)
+      Tests  11 passed (11)
+   Start at  23:21:56
+   Duration  141ms (transform 48ms, setup 0ms, import 101ms, tests 14ms, environment 0ms)
+exit code 0

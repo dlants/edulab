@@ -1,0 +1,176 @@
+$ cd /Users/denis.lantsman/src/edulab && npm test && npm run typecheck && npm run lint
+stdout:
+> edulab@0.0.1 test
+> vitest run
+ RUN  v4.1.11 /Users/denis.lantsman/src/edulab
+ ✓ packages/frontend/conversation.test.ts (5 tests) 10ms
+ Test Files  1 passed (1)
+      Tests  5 passed (5)
+   Start at  21:46:45
+   Duration  126ms (transform 18ms, setup 0ms, import 35ms, tests 10ms, environment 0ms)
+> edulab@0.0.1 typecheck
+> npm -w @edulab/iso exec tsc -- --noEmit && npm -w @edulab/frontend exec tsc -- --noEmit && npm -w @edulab/backend exec tsc -- --noEmit && npm -w @edulab/e2e exec tsc -- --noEmit
+> edulab@0.0.1 lint
+> biome check .
+stderr:
+packages/e2e/tests/chat.spec.ts:
+3:1 assist/source/organizeImports  FIXABLE  ━━━━━━━━━━━━━━━━━━━━━━━━
+  × Sort the imported names.
+1 │ import type
+ Anthropic from "@anthropic-ai/sdk";
+    2 │ import
+ type { ClientMessage, Se
+rverFrame } from 
+"@edulab/iso/protocol.ts";
+  > 3 │ import { expect, test, type
+ Page } from 
+"@playwright/te
+st";
+      │ ^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^
+^^^
+    4 │ 
+    5 │ functio
+n events(chunks: string[]): 
+Anthropic.RawM
+essageStreamEv
+ent[] {
+  i Safe fix: Organize imports and exports (Biome)
+     1  1 │   import type Anthr
+opic from "@anthropic-ai/sdk";
+     2  2 │   import type { ClientMessage, ServerFrame } 
+from "@edulab/iso/protocol.ts";
+ 3    │ - import·{·expect,·test,·type·Page·}·fr
+om·"@playwright/test";
+        3 │ + impo
+rt·{·expect,·type·Page,·test·}·fr
+om·"@playwright/test";
+     4
+  4 │   
+     5  5 │  
+ function events(chunks: strin
+g[]): Anthropic
+.RawMessageSt
+reamEvent[]
+ {
+packages/frontend/view.ts:1:1 assist/source/organizeImports  FIXABLE  
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  × Sort these imports.
+   > 1 │ import {
+       │ ^^^^^
+^^^
+   > 2 │   Binder,
+   > 3 │   cls,
+   > 4 │   mount
+Style,
+        ...
+  > 11 │ } from "./vamp.ts";
+  > 12 │ import t
+ype { Message } from "./c
+onversation.ts";
+       │ ^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^
+    13 │ 
+    14 │ export ty
+pe State = {
+  i Safe fix: Organize imports and exports (Biome)
+      1     │ - impo
+rt·{
+      2     │ - ··Binder
+,
+      3     │ - ·
+·cls,
+      4     │ 
+- ··mountStyle,
+      5     │ 
+- ··noop,
+      6
+     │ - ··re
+f,
+      7     │ - ··sanitize,
+      8     │ - ··s
+howKeyed,
+      9     │ -
+ ··type·R
+ef,
+     10     │ - ··ty
+pe·View,
+   11     │ - 
+}·from·"./v
+amp.ts";
+     12     │ - 
+import·type·
+{·Message·}·from·".
+/conversation.t
+s";
+          1 │ + im
+port·type·{·Me
+ssage·}·fro
+m·"./conve
+rsation.ts";
+          2
+ │ + import·{
+          3 │ + 
+··Bin
+der,
+          4 │ + 
+··cls,
+          5 │ + ··moun
+tStyle,
+          6 │ + ··
+noop,
+          7 │ +
+ ··type
+·Ref,
+          8 │ + ·
+·ref,
+          9 │ +
+ ··sani
+tize,
+ 10 │ + ··showKeyed,
+         11 │ + ··ty
+pe·View,
+    12 │ + }·from·".
+/vamp.ts"
+;
+     13  13 │   
+     14  14 │   exp
+ort type Stat
+e = {
+packages/frontend/view.ts format 
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  × Formatter would have printed the following content:
+     18  18 │   };
+     19  19
+ │   
+     20     │ - export
+·type·Msg·=
+     21 
+    │ - ··
+|·{·type:·"DRAFT_CHANGE
+D";·draft:·string
+·}
+     22   
+  │ - ··|·{·type:·"
+SUBMIT"·};
+     20 │ + 
+export·typ
+e·Msg·=·{·type:·"DR
+AFT_CHANGED"
+;·draft:·st
+ring·}·|·{
+·type:·"SUBMIT"·};
+     23 
+ 21 │   
+     24  22 │   
+const appCl
+ass = cls("app");
+stdout:
+Checked 21 files in 100ms. No fixes applied.
+Found 3 errors.
+stderr:
+check ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  × Some errors were emitted while running checks.
+exit code 1

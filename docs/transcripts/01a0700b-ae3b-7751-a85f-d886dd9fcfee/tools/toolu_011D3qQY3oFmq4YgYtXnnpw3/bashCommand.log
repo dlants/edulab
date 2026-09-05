@@ -1,0 +1,10 @@
+$ cd /Users/denis.lantsman/src/edulab && git status --short && git diff --stat
+stdout:
+ M packages/frontend/prototypes/chat.ts
+ M packages/frontend/view.ts
+?? packages/frontend/learning.ts
+?? packages/frontend/selection.ts
+ packages/frontend/prototypes/chat.ts |  21 ++++
+ packages/frontend/view.ts            | 185 ++++++++++++++++++++++++++++++++---
+ 2 files changed, 191 insertions(+), 15 deletions(-)
+exit code 0

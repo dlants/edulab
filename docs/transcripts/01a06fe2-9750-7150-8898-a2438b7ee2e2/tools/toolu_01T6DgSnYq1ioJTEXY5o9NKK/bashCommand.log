@@ -1,0 +1,25 @@
+$ cd /Users/denis.lantsman/src/edulab && python3 -c "
+import json
+d=json.load(open('/tmp/wildchat.json'))
+for h,name in [('80e08978','quantum-espresso-burai-relaxation'),('5b878a60','solidity-guildtoken-audit'),('37734816','colbert-raptor-rag-design'),('357dee9a','statsforecast-zero-constraints'),('aa0cb918','statsforecast-polars-series-lengths')]:
+    c=next(x for x in d if x['hash'].startswith(h))
+    json.dump(c,open(f'task-samples/{h}-{name}.json','w'),indent=2)
+    print(c['hash'][:8],c['model'],c['turns'])
+" && git add task-samples && git commit -q -m "Add five more task samples" && ls task-samples
+stdout:
+80e08978 gpt-4-1106-preview 21
+5b878a60 gpt-4-1106-preview 26
+37734816 gpt-4-0125-preview 25
+357dee9a gpt-4-1106-preview 20
+aa0cb918 gpt-4-1106-preview 23
+357dee9a-statsforecast-zero-constraints.json
+37734816-colbert-raptor-rag-design.json
+3890541b-chiller-system-hysys-model.json
+44bbcae8-tile-adhesive-formulation.json
+5b878a60-solidity-guildtoken-audit.json
+72c7ec37-django-event-app-urls.json
+74979366-floating-dock-pontoon.json
+80e08978-quantum-espresso-burai-relaxation.json
+9833484b-c-heap-file-block-storage.json
+aa0cb918-statsforecast-polars-series-lengths.json
+exit code 0

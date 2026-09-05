@@ -1,0 +1,17 @@
+$ cd /Users/denis.lantsman/src/edulab && find packages/frontend packages/iso -type f -not -path "*/node_modules/*" | sort
+stdout:
+packages/frontend/conversation.test.ts
+packages/frontend/conversation.ts
+packages/frontend/index.html
+packages/frontend/main.ts
+packages/frontend/package.json
+packages/frontend/prototypes/chat.ts
+packages/frontend/prototypes/placeholder.ts
+packages/frontend/routes.ts
+packages/frontend/tsconfig.json
+packages/frontend/vamp.ts
+packages/frontend/view.ts
+packages/iso/package.json
+packages/iso/protocol.ts
+packages/iso/tsconfig.json
+exit code 0

@@ -1,0 +1,14 @@
+$ cd /Users/denis.lantsman/src/edulab && mkdir -p task-samples && python3 -c "
+import json
+d=json.load(open('/tmp/wildchat.json'))
+c=next(x for x in d if x['hash'].startswith('74979366'))
+json.dump(c,open('task-samples/74979366-floating-dock-pontoon.json','w'),indent=2)
+print(c['hash'], c['model'], c['turns'],'turns', len(c['messages']),'msgs')
+"; ls -la task-samples
+stdout:
+749793662bc45e092da7ffdfc726ec70 gpt-4-1106-preview 23 turns 46 msgs
+total 152
+drwxr-xr-x@  3 denis.lantsman  staff     96 Sep  4 22:14 .
+drwxr-xr-x@ 20 denis.lantsman  staff    640 Sep  4 22:14 ..
+-rw-r--r--@  1 denis.lantsman  staff  77795 Sep  4 22:14 74979366-floating-dock-pontoon.json
+exit code 0

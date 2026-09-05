@@ -1,0 +1,141 @@
+$ cd /Users/denis.lantsman/src/edulab && cat >> packages/e2e/tests/chat.spec.ts <<'EOF'
+
+test("a live selection overlapping a mark offers no actions", async ({
+  page,
+}) => {
+  await transcript(page);
+  const explain = page.getByRole("button", { name: "I don't understand this." });
+
+  await selectRange(page, 0, 0, 9);
+  await explain.click();
+  await expect(page.locator("[data-mark]")).toHaveCount(1);
+
+  await selectRange(page, 0, 4, 15);
+  await expect(page.getByText("Select a non-overlapping section.")).toBeVisible();
+  await expect(explain).toBeHidden();
+
+  await selectRange(page, 0, 10, 19);
+  await expect(explain).toBeVisible();
+});
+
+test("two marks in one message are both clickable", async ({ page }) => {
+  await transcript(page);
+  const explain = page.getByRole("button", { name: "I don't understand this." });
+  const quote = page.locator("blockquote");
+
+  await selectRange(page, 0, 0, 9);
+  await explain.click();
+  await selectRange(page, 0, 16, 19);
+  await page.getByRole("button", { name: "Quiz me on this." }).click();
+
+  const marks = page.locator("[data-mark]");
+  await expect(marks).toHaveCount(2);
+  await expect(marks.nth(0)).toHaveText("the quick");
+  await expect(marks.nth(1)).toHaveText("fox");
+
+  await marks.nth(0).click();
+  await expect(quote).toHaveText("the quick");
+  await marks.nth(1).click();
+  await expect(quote).toHaveText("fox");
+});
+
+test("a new selection leaves committed marks rendered", async ({ page }) => {
+  await transcript(page);
+  await selectRange(page, 0, 0, 9);
+  await page.getByRole("button", { name: "I don't understand this." }).click();
+
+  await selectRange(page, 0, 20, 25);
+  await expect(page.locator("[data-mark]")).toHaveCount(1);
+  await expect(page.locator("[data-live]")).toHaveText("jumps");
+});
+EOF
+npm run typecheck && npm run test:e2e
+stdout:
+> edulab@0.0.1 typecheck
+> npm -w @edulab/iso exec tsc -- --noEmit && npm -w @edulab/frontend exec tsc -- --noEmit && npm -w @edulab/backend exec tsc -- --noEmit && npm -w @edulab/e2e exec tsc -- --noEmit
+> edulab@0.0.1 test:e2e
+> npm -w @edulab/e2e run test
+> @edulab/e2e@0.0.1 test
+> playwright test
+Running 7 tests using 7 workers
+  ✓  3 tests/chat.spec.ts:129:1 › a second turn sends the full conversation (453ms)
+  ✓  4 tests/chat.spec.ts:115:1 › the composer is disabled while a turn is in flight (478ms)
+  ✓  2 tests/chat.spec.ts:99:1 › streams a response into the transcript (523ms)
+  ✓  1 tests/smoke.spec.ts:9:1 › streams a real response end to end (1.7s)
+  ✘  5 tests/chat.spec.ts:147:1 › a live selection overlapping a mark offers no actions (5.6s)
+  ✘  7 tests/chat.spec.ts:186:1 › a new selection leaves committed marks rendered (5.6s)
+  ✘  6 tests/chat.spec.ts:165:1 › two marks in one message are both clickable (5.6s)
+  1) tests/chat.spec.ts:147:1 › a live selection overlapping a mark offers no actions ──────────────
+    Error: expect(locator).toHaveCount(expected) failed
+    Locator:  locator('[data-mark]')
+    Expected: 1
+    Received: 0
+    Timeout:  5000ms
+    Call log:
+      - Expect "toHaveCount" locator('[data-mark]') with timeout 5000ms
+      - waiting for locator('[data-mark]')
+        14 × locator resolved to 0 elements
+           - unexpected value "0"
+      153 |   await selectRange(page, 0, 0, 9);
+      154 |   await explain.click();
+    > 155 |   await expect(page.locator("[data-mark]")).toHaveCount(1);
+          |                                             ^
+      156 |
+      157 |   await selectRange(page, 0, 4, 15);
+      158 |   await expect(page.getByText("Select a non-overlapping section.")).toBeVisible();
+        at /Users/denis.lantsman/src/edulab/packages/e2e/tests/chat.spec.ts:155:45
+    Error Context: test-results/chat-a-live-selection-overlapping-a-mark-offers-no-actions/error-context.md
+  2) tests/chat.spec.ts:165:1 › two marks in one message are both clickable ────────────────────────
+    Error: expect(locator).toHaveCount(expected) failed
+    Locator:  locator('[data-mark]')
+    Expected: 2
+    Received: 0
+    Timeout:  5000ms
+    Call log:
+      - Expect "toHaveCount" locator('[data-mark]') with timeout 5000ms
+      - waiting for locator('[data-mark]')
+        14 × locator resolved to 0 elements
+           - unexpected value "0"
+      174 |
+      175 |   const marks = page.locator("[data-mark]");
+    > 176 |   await expect(marks).toHaveCount(2);
+          |                       ^
+      177 |   await expect(marks.nth(0)).toHaveText("the quick");
+      178 |   await expect(marks.nth(1)).toHaveText("fox");
+      179 |
+        at /Users/denis.lantsman/src/edulab/packages/e2e/tests/chat.spec.ts:176:23
+    Error Context: test-results/chat-two-marks-in-one-message-are-both-clickable/error-context.md
+  3) tests/chat.spec.ts:186:1 › a new selection leaves committed marks rendered ────────────────────
+    Error: expect(locator).toHaveCount(expected) failed
+    Locator:  locator('[data-mark]')
+    Expected: 1
+    Received: 0
+    Timeout:  5000ms
+    Call log:
+      - Expect "toHaveCount" locator('[data-mark]') with timeout 5000ms
+      - waiting for locator('[data-mark]')
+        14 × locator resolved to 0 elements
+           - unexpected value "0"
+      190 |
+      191 |   await selectRange(page, 0, 20, 25);
+    > 192 |   await expect(page.locator("[data-mark]")).toHaveCount(1);
+          |                                             ^
+      193 |   await expect(page.locator("[data-live]")).toHaveText("jumps");
+      194 | });
+      195 |
+        at /Users/denis.lantsman/src/edulab/packages/e2e/tests/chat.spec.ts:192:45
+    Error Context: test-results/chat-a-new-selection-leaves-committed-marks-rendered/error-context.md
+  3 failed
+    tests/chat.spec.ts:147:1 › a live selection overlapping a mark offers no actions ───────────────
+    tests/chat.spec.ts:165:1 › two marks in one message are both clickable ─────────────────────────
+    tests/chat.spec.ts:186:1 › a new selection leaves committed marks rendered ─────────────────────
+  4 passed (10.0s)
+stderr:
+npm error Lifecycle script `test` failed with error:
+npm error code 1
+npm error path /Users/denis.lantsman/src/edulab/packages/e2e
+npm error workspace @edulab/e2e@0.0.1
+npm error location /Users/denis.lantsman/src/edulab/packages/e2e
+npm error command failed
+npm error command sh -c playwright test
+exit code 1

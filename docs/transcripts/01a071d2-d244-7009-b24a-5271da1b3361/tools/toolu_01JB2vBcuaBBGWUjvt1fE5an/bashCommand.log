@@ -1,0 +1,263 @@
+$ cd /Users/denis.lantsman/src/magenta.nvim && grep -rn "awaitThreadResult\|ThreadResult\|yield" node/core/src --include="*.ts" | grep -E "(yield|ThreadResult|awaitThreadResult)"
+stdout:
+node/core/src/tool-types.ts:29:import type * as YieldToParent from "./tools/yield-to-parent.ts";
+node/core/src/tools/helpers.ts:12:import * as YieldToParent from "./yield-to-parent.ts";
+node/core/src/tools/helpers.ts:40:    case "yield_to_parent":
+node/core/src/tools/yield-to-parent.ts:20:export type StructuredResult = { toolName: "yield_to_parent"; input: Input };
+node/core/src/tools/yield-to-parent.ts:22:export type ToolRequest = GenericToolRequest<"yield_to_parent", Input>;
+node/core/src/tools/yield-to-parent.ts:34:            // The model just wrote the yielded text; echoing it back only
+node/core/src/tools/yield-to-parent.ts:41:          toolName: "yield_to_parent" as const,
+node/core/src/tools/yield-to-parent.ts:62:export function getSpec(yieldSchema?: JSONSchemaType): ProviderToolSpec {
+node/core/src/tools/yield-to-parent.ts:65:    input_schema: yieldSchema ?? DEFAULT_INPUT_SCHEMA,
+node/core/src/tools/yield-to-parent.ts:70:  name: "yield_to_parent" as ToolName,
+node/core/src/tools/yield-to-parent.ts:77:The parent agent can only observe your final yield message - none of the rest of the text is visible to the parent.
+node/core/src/tools/tool-registry.ts:8:  "yield_to_parent",
+node/core/src/tools/tool-registry.ts:32:  "yield_to_parent",
+node/core/src/tools/tool-registry.ts:36:  "yield_to_parent",
+node/core/src/tools/tool-registry.ts:43:  "yield_to_parent",
+node/core/src/tools/tool-registry.ts:70:  yield_to_parent: new Set(),
+node/core/src/tools/spawn-subagents.test.ts:8:import type { ThreadResult } from "../thread-api.ts";
+node/core/src/tools/spawn-subagents.test.ts:31:  const defers = new Map<string, Defer<ThreadResult>>();
+node/core/src/tools/spawn-subagents.test.ts:35:      defer = new Defer<ThreadResult>();
+node/core/src/tools/spawn-subagents.test.ts:43:    awaitThreadResult: vi.fn(
+node/core/src/tools/spawn-subagents.test.ts:49:          ? { type: "yielded", value: { type: "text", text: result.value } }
+node/core/src/tools/spawn-subagents.test.ts:93:    // Wait for spawn, then simulate yield
+node/core/src/tools/spawn-subagents.test.ts:308:  it("respects maxConcurrentSubagents, only launching more once earlier ones yield", async () => {
+node/core/src/tools/spawn-subagents.test.ts:344:    // launch until one of the first two yields.
+node/core/src/tools/spawn-subagents.test.ts:495:    // successful yield would, allowing the 3rd element to spawn.
+node/core/src/tools/spawn-subagents.test.ts:747:  it("abort during Phase 2 (waiting for yields) returns aborted error", async () => {
+node/core/src/tools/spawn-subagents.test.ts:768:    // Now we're in Phase 2 (waiting for yields). Abort here.
+node/core/src/tools/spawn-subagents.test.ts:771:    // Simulate the yield after abort - it should not matter
+node/core/src/tools/toolManager.ts:30:import * as YieldToParent from "./yield-to-parent.ts";
+node/core/src/tools/toolManager.ts:45:  yield_to_parent: { input: YieldToParent.Input };
+node/core/src/tools/toolManager.ts:74:  yield_to_parent: YieldToParent.spec,
+node/core/src/tools/toolManager.ts:87:  yieldSchema?: JSONSchemaType,
+node/core/src/tools/toolManager.ts:144:    } else if (toolName === "yield_to_parent") {
+node/core/src/tools/toolManager.ts:145:      specs.push(YieldToParent.getSpec(yieldSchema));
+node/core/src/tools/create-tool.ts:33:import * as YieldToParent from "./yield-to-parent.ts";
+node/core/src/tools/create-tool.ts:136:    case "yield_to_parent": {
+node/core/src/tools/spawn-subagents.ts:15:import type { ThreadResult } from "../thread-api.ts";
+node/core/src/tools/spawn-subagents.ts:430:    /** Woken by `abort()` so waiters unblock without a yield. */
+node/core/src/tools/spawn-subagents.ts:435:  const threadResults = new Map<ThreadId, ThreadResult>();
+node/core/src/tools/spawn-subagents.ts:553:  // actually yields. This is what makes an element "live" for concurrency
+node/core/src/tools/spawn-subagents.ts:572:      context.threadManager.awaitThreadResult(threadId).then(
+node/core/src/tools/spawn-subagents.ts:667:  threadResults: ReadonlyMap<ThreadId, ThreadResult>,
+node/core/src/tools/spawn-subagents.ts:711:      threadResult.type === "yielded"
+node/core/src/tools/spawn-subagents.ts:805:- **docker** / **docker_unsupervised** — run a sub-agent in an isolated Docker container with full shell access. This project configures a Dockerfile at \`${dockerfile}\`; pass it as the \`dockerfile\` field (along with \`workspacePath\`). The container is built from a host directory (default: current working directory). When the agent yields, file changes are automatically rsynced back to the host directory.
+node/core/src/tools/docker-toolspecs.test.ts:9:  it("includes root tools plus yield_to_parent", () => {
+node/core/src/tools/docker-toolspecs.test.ts:17:    expect(names).toContain("yield_to_parent");
+node/core/src/tools/docker-toolspecs.test.ts:36:    expect(names).toContain("yield_to_parent");
+node/core/src/tools/yield-to-parent.test.ts:3:import * as YieldToParent from "./yield-to-parent.ts";
+node/core/src/tools/yield-to-parent.test.ts:5:describe("yield-to-parent unit tests", () => {
+node/core/src/tools/yield-to-parent.test.ts:9:      toolName: "yield_to_parent" as const,
+node/core/src/tools/yield-to-parent.test.ts:20:        toolName: "yield_to_parent",
+node/core/src/tools/yield-to-parent.test.ts:30:      toolName: "yield_to_parent" as const,
+node/core/src/tools/yield-to-parent.test.ts:38:        toolName: "yield_to_parent",
+node/core/src/tools/yield-to-parent.test.ts:48:      toolName: "yield_to_parent" as const,
+node/core/src/tools/yield-to-parent.test.ts:68:      toolName: "yield_to_parent" as const,
+node/core/src/tools/toolManager.test.ts:66:    // yield_to_parent has no required capabilities
+node/core/src/tools/toolManager.test.ts:67:    expect(names).toContain("yield_to_parent");
+node/core/src/tools/toolManager.test.ts:84:    expect(names).toContain("yield_to_parent");
+node/core/src/tools/toolManager.test.ts:99:    expect(names).toContain("yield_to_parent");
+node/core/src/tools/toolManager.test.ts:114:    expect(names).toContain("yield_to_parent");
+node/core/src/tools/toolManager.test.ts:127:    expect(names).toContain("yield_to_parent");
+node/core/src/tools/toolManager.test.ts:140:    expect(names).toContain("yield_to_parent");
+node/core/src/context/comment-supervisor.test.ts:52:  it("yields nothing when no comments are pending", async () => {
+node/core/src/context/git-supervisor.test.ts:68:  it("yields nothing when git state is unchanged", async () => {
+node/core/src/context/file-context-supervisor.test.ts:90:  it("yields nothing when nothing is tracked", async () => {
+node/core/src/capabilities/thread-manager.ts:2:import type { ThreadResult } from "../thread-api.ts";
+node/core/src/capabilities/thread-manager.ts:30:  /** Delete a thread and its descendants. Any `awaitThreadResult` on them
+node/core/src/capabilities/thread-manager.ts:34:  /** Resolves when the thread finishes — an accepted yield, or a teardown
+node/core/src/capabilities/thread-manager.ts:37:  awaitThreadResult(threadId: ThreadId): Promise<ThreadResult>;
+node/core/src/archive.ts:39: * descending, which — because uuidv7 is time-ordered — yields most-recent
+node/core/src/providers/openai-inference.test.ts:348:          results: okResults(requests, "yielded"),
+node/core/src/providers/system-reminders.ts:47:CRITICAL: You are in a Docker container. Call yield_to_parent when done. Your changes will be synced back automatically.`;
+node/core/src/providers/system-reminders.ts:56:CRITICAL: Use yield_to_parent tool when task is complete.`;
+node/core/src/providers/openai-wiring.test.ts:119:      "call-yield-1" as ToolRequestId,
+node/core/src/providers/openai-wiring.test.ts:120:      "yield_to_parent" as ToolName,
+node/core/src/providers/openai-wiring.test.ts:126:      if (core.yielded) return true;
+node/core/src/providers/openai-wiring.test.ts:127:      throw new Error(`waiting for yielded, got ${loopLabel(core.loopState)}`);
+node/core/src/providers/openai-wiring.test.ts:129:    expect(core.yielded?.response).toBe("all done");
+node/core/src/providers/openai.ts:510:      // Headers constructor -- spreading it yields an empty object and drops
+node/core/src/providers/system-reminders.test.ts:47:  it("root standing reminder does not include yield_to_parent", () => {
+node/core/src/providers/system-reminders.test.ts:52:    expect(reminder).not.toContain("yield_to_parent");
+node/core/src/providers/system-reminders.test.ts:55:  it("docker_root standing reminder includes the docker yield_to_parent instruction", () => {
+node/core/src/providers/system-reminders.test.ts:62:    expect(reminder).toContain("yield_to_parent");
+node/core/src/providers/system-reminders.test.ts:65:  it("subagent standing reminder includes the subagent yield_to_parent instruction", () => {
+node/core/src/providers/system-reminders.test.ts:71:    expect(reminder).toContain("yield_to_parent");
+node/core/src/compaction/compactor.ts:34:      /** chunk threads that have already yielded, in order */
+node/core/src/compaction/compactor.ts:145:        await this.thread.context.threadManager.awaitThreadResult(threadId);
+node/core/src/compaction/compactor.ts:181:   * `awaitThreadResult` it is parked on settles `aborted` as a result. */
+node/core/src/compaction/compactor.ts:250:    "When /summary.md is up to date, call yield_to_parent to hand it back.",
+node/core/src/agents/agents.test.ts:83:Remember to yield when done.
+node/core/src/agents/agents.test.ts:92:      "Remember to yield when done.\nAlways be concise.",
+node/core/src/thread-supervisor.ts:49:/** The model called yield_to_parent and its result is in the log. Produced
+node/core/src/thread-supervisor.ts:50: * only by Thread's own yield gate and consumed only by Thread's turn loop —
+node/core/src/thread-supervisor.ts:52:export type YieldSuspendReason = { kind: "yield"; value: YieldValue };
+node/core/src/thread-supervisor.ts:80: * with a blank line, and the first `accept`/`reject` wins a yield. Request
+node/core/src/thread-supervisor.ts:109:        // Supervisors observe tool results; only the thread's own yield gate
+node/core/src/thread-supervisor.ts:124:        // The built-in supervisors predate structured yields and read text.
+node/core/src/thread-supervisor.ts:213:    if (block.type === "text" && /<\/?yield[\w_]*[\s/>]/i.test(block.text)) {
+node/core/src/thread-supervisor.ts:256: * refusal to yield. */
+node/core/src/thread-supervisor.ts:267: *  `<yield>` XML tag instead of calling the tool. Otherwise allows
+node/core/src/thread-supervisor.ts:275:        text: "You wrote a yield XML tag in your text. XML tags in your response are not parsed as tool calls. You must invoke the yield_to_parent tool (via a proper tool call) to return results to the parent agent.",
+node/core/src/thread-supervisor.ts:287: *  the agent to resume work when it stops without yielding. */
+node/core/src/thread-supervisor.ts:308:        text: "You wrote a yield XML tag in your text. XML tags in your response are not parsed as tool calls. You must invoke the yield_to_parent tool (via a proper tool call) to return results to the parent agent.",
+node/core/src/thread-supervisor.ts:314:      text: `You stopped without yielding. You must complete your task and call yield_to_parent when done. (auto-restart ${this.restartCount}/${this.maxRestarts})`,
+node/core/src/edl/executor.ts:134:    // A trailing newline yields a phantom empty final line; don't report it as content.
+node/core/src/edl/parser.ts:322:    yield tok;
+node/core/src/edl/parser.ts:329: * Tolerant variant of `lex` that yields each token together with its start
+node/core/src/edl/parser.ts:366:      yield {
+node/core/src/edl/parser.ts:378:      yield {
+node/core/src/edl/parser.ts:425:          yield { token: { type: "heredoc", value }, start };
+node/core/src/edl/parser.ts:457:      yield { token: { type: "quoted", value }, start };
+node/core/src/edl/parser.ts:463:    yield {
+node/core/src/thread-api.ts:14:/** What a thread hands back when it yields. Which variant a thread produces is
+node/core/src/thread-api.ts:15: * fixed at construction — a thread either has a `yieldSchema` or does not — so
+node/core/src/thread-api.ts:20:  /** conforms to the `yieldSchema` this thread was constructed with */
+node/core/src/thread-api.ts:23:/** The display/transport rendering of a yield: what a human reads and what a
+node/core/src/thread-api.ts:60:  | { type: "yielded"; value: YieldValue }
+node/core/src/thread-api.ts:77:export type ThreadResult =
+node/core/src/thread-api.ts:78:  | { type: "yielded"; value: YieldValue }
+node/core/src/thread-api.ts:79:  /** destroyed before it ever yielded */
+node/core/src/thread-api.ts:126:/** The model called yield_to_parent and the tool result is already in the log.
+node/core/src/thread-api.ts:147:  /** The model called yield_to_parent and the agent settled on it. The first
+node/core/src/thread-api.ts:154:  /** The agent stopped without yielding. */
+node/core/src/agent.test.ts:122:  it("surfaces a structured yield as a structured result", async () => {
+node/core/src/agent.test.ts:125:      yieldSchema: {
+node/core/src/agent.test.ts:135:      "yield_to_parent" as ToolName,
+node/core/src/agent.test.ts:140:      if (core.yielded) return true;
+node/core/src/agent.test.ts:141:      throw new Error("waiting for yield");
+node/core/src/agent.test.ts:143:    expect(core.yielded).toBeDefined();
+node/core/src/agent.test.ts:145:      type: "yielded",
+node/core/src/agent.test.ts:150:  it("reports a yield as an idle thread with a yielded result", async () => {
+node/core/src/agent.test.ts:157:      "tool-phase-yield" as ToolRequestId,
+node/core/src/agent.test.ts:158:      "yield_to_parent" as ToolName,
+node/core/src/agent.test.ts:163:      if (core.yielded) return true;
+node/core/src/agent.test.ts:164:      throw new Error("waiting for yield");
+node/core/src/agent.test.ts:166:    expect(core.yielded).toBeDefined();
+node/core/src/agent.test.ts:168:      type: "yielded",
+node/core/src/agent.test.ts:182:  it("resolves yielded with the text a plain yield produced", async () => {
+node/core/src/agent.test.ts:189:      "send-yield-text" as ToolRequestId,
+node/core/src/agent.test.ts:190:      "yield_to_parent" as ToolName,
+node/core/src/agent.test.ts:195:      type: "yielded",
+node/core/src/agent.test.ts:199:  it("resolves yielded with the structured value a schema'd yield produced", async () => {
+node/core/src/agent.test.ts:202:      yieldSchema: {
+node/core/src/agent.test.ts:211:      "send-yield-structured" as ToolRequestId,
+node/core/src/agent.test.ts:212:      "yield_to_parent" as ToolName,
+node/core/src/agent.test.ts:217:      type: "yielded",
+node/core/src/agent.test.ts:253:    // without driving a whole yield + teardown.
+node/core/src/agent.test.ts:254:    (core as unknown as { yieldState: YieldState }).yieldState = {
+node/core/src/agent.test.ts:730:    const toolUseId = "tool-yield-1" as ToolRequestId;
+node/core/src/agent.test.ts:732:    // Stream a yield_to_parent tool_use, then stop with max_tokens
+node/core/src/agent.test.ts:733:    stream.streamToolUse(toolUseId, "yield_to_parent" as ToolName, {
+node/core/src/agent.test.ts:739:    // which executes the yield tool, and maybeAutoRespond transitions to yielded mode
+node/core/src/agent.test.ts:741:      if (core.yielded) return true;
+node/core/src/agent.test.ts:743:        `waiting for yielded mode, currently: ${loopLabel(core.loopState)}`,
+node/core/src/agent.test.ts:747:    const yielded = core.yielded;
+node/core/src/agent.test.ts:748:    if (!yielded) throw new Error("expected a yield");
+node/core/src/agent.test.ts:749:    expect(yielded.response).toBe("Here is the result of my work");
+node/core/src/agent.test.ts:752:  it("custom yieldSchema yields a structured JSON value", async () => {
+node/core/src/agent.test.ts:755:      yieldSchema: {
+node/core/src/agent.test.ts:765:    const toolUseId = "tool-yield-structured" as ToolRequestId;
+node/core/src/agent.test.ts:766:    stream.streamToolUse(toolUseId, "yield_to_parent" as ToolName, {
+node/core/src/agent.test.ts:772:      if (core.yielded) return true;
+node/core/src/agent.test.ts:774:        `waiting for yielded mode, currently: ${loopLabel(core.loopState)}`,
+node/core/src/agent.test.ts:778:    const yielded = core.yielded;
+node/core/src/agent.test.ts:779:    if (!yielded) throw new Error("expected a yield");
+node/core/src/agent.test.ts:780:    expect(JSON.parse(yielded.response)).toEqual({ count: 3 });
+node/core/src/agent.test.ts:892:    expect(continuationText).not.toContain("stopped without yielding");
+node/core/src/agent.test.ts:894:    // The truncated stop was not a refusal to yield, so the restart budget is
+node/core/src/agent.test.ts:901:  it("takes precedence over a subagent's yield-tag nudge", async () => {
+node/core/src/agent.test.ts:911:    stream.streamText("<yield>partial resu");
+node/core/src/agent.test.ts:920:describe("yield_to_parent as an ordinary tool", () => {
+node/core/src/agent.test.ts:928:      "yield-1" as ToolRequestId,
+node/core/src/agent.test.ts:929:      "yield_to_parent" as ToolName,
+node/core/src/agent.test.ts:934:      type: "yielded",
+node/core/src/agent.test.ts:943:        { type: "tool_result", id: "yield-1", result: { status: "ok" } },
+node/core/src/agent.test.ts:959:      "yield-1" as ToolRequestId,
+node/core/src/agent.test.ts:960:      "yield_to_parent" as ToolName,
+node/core/src/agent.test.ts:965:      type: "yielded",
+node/core/src/agent.test.ts:977:      { content: [{ id: "yield-1", result: { status: "ok" } }] },
+node/core/src/agent.test.ts:994:      "yield-1" as ToolRequestId,
+node/core/src/agent.test.ts:995:      "yield_to_parent" as ToolName,
+node/core/src/agent.test.ts:1001:      type: "yielded",
+node/core/src/agent.test.ts:1013:      "yield-bad" as ToolRequestId,
+node/core/src/agent.test.ts:1014:      "yield_to_parent" as ToolName,
+node/core/src/agent.test.ts:1021:    expect(core.yielded).toBeUndefined();
+node/core/src/agent.test.ts:1026:describe("Agent.abort on yielded thread", () => {
+node/core/src/agent.test.ts:1027:  it("abort is a no-op when thread has already yielded", async () => {
+node/core/src/agent.test.ts:1035:    const toolUseId = "tool-yield-1" as ToolRequestId;
+node/core/src/agent.test.ts:1037:    // Drive the thread to yielded state
+node/core/src/agent.test.ts:1038:    stream.streamToolUse(toolUseId, "yield_to_parent" as ToolName, {
+node/core/src/agent.test.ts:1044:      if (core.yielded) return true;
+node/core/src/agent.test.ts:1046:        `waiting for yielded mode, currently: ${loopLabel(core.loopState)}`,
+node/core/src/agent.test.ts:1050:    expect(core.yielded).toBeDefined();
+node/core/src/agent.test.ts:1055:    // Mode should still be yielded with the original response
+node/core/src/agent.test.ts:1056:    const yielded = core.yielded;
+node/core/src/agent.test.ts:1057:    if (!yielded) throw new Error("expected a yield");
+node/core/src/agent.test.ts:1058:    expect(yielded.response).toBe("Here is the result of my work");
+node/core/src/agent.test.ts:1061:  it("abortAndWait leaves the yield in place", async () => {
+node/core/src/agent.test.ts:1068:      "tool-yield-2" as ToolRequestId,
+node/core/src/agent.test.ts:1069:      "yield_to_parent" as ToolName,
+node/core/src/agent.test.ts:1076:      if (core.yielded) return true;
+node/core/src/agent.test.ts:1078:        `waiting for yielded, currently: ${loopLabel(core.loopState)}`,
+node/core/src/agent.test.ts:1081:    // `abort()` short-circuits on a yielded agent, but the preempting-send path
+node/core/src/agent.test.ts:1082:    // winds the agent's turn down directly: it must not erase the yield either.
+node/core/src/agent.test.ts:1084:    expect(core.yielded).toBeDefined();
+node/core/src/agent.test.ts:1086:      type: "yielded",
+node/core/src/agent.test.ts:1185:describe("SubagentSupervisor yield tag detection", () => {
+node/core/src/agent.test.ts:1186:  it("nudges agent when it writes a <yield_to_parent> XML tag instead of calling the tool", async () => {
+node/core/src/agent.test.ts:1195:    // Runner writes a <yield> tag in text instead of calling the tool
+node/core/src/agent.test.ts:1197:      "<yield_to_parent>Here is the result of my work</yield_to_parent>",
+node/core/src/agent.test.ts:1209:    // Verify the correction message mentions the yield_to_parent tool
+node/core/src/agent.test.ts:1216:      textBlocks.some((b) => b.text.includes("yield_to_parent tool")),
+node/core/src/agent.test.ts:1220:  it("does not intervene when agent stops without a yield tag", async () => {
+node/core/src/agent.test.ts:1833:  it("reports tool results when the turn yields instead of continuing", async () => {
+node/core/src/agent.test.ts:1859:      "yield-1" as ToolRequestId,
+node/core/src/agent.test.ts:1860:      "yield_to_parent" as ToolName,
+node/core/src/agent.test.ts:1865:      if (core.yielded) return true;
+node/core/src/agent.test.ts:1867:        `waiting for yielded mode, currently: ${loopLabel(core.loopState)}`,
+node/core/src/index.ts:273:  ThreadResult,
+node/core/src/index.ts:376:export * as YieldToParent from "./tools/yield-to-parent.ts";
+node/core/src/thread.test.ts:241:      uniqueThreadId("deferred-yield-rejection"),
+node/core/src/thread.test.ts:259:      "tool-yield-rejected" as ToolRequestId,
+node/core/src/thread.test.ts:260:      "yield_to_parent" as ToolName,
+node/core/src/thread.ts:67:  ThreadResult,
+node/core/src/thread.ts:90:/** How a thread's yield came to rest. */
+node/core/src/thread.ts:110:  /** The shape this thread yields in. The thread's own concern: it decides the
+node/core/src/thread.ts:111:   * tool's spec and reads the yielded input back — the agent never sees a
+node/core/src/thread.ts:112:   * yield. */
+node/core/src/thread.ts:113:  yieldSchema?: JSONSchemaType;
+node/core/src/thread.ts:194:    context.yieldSchema,
+node/core/src/thread.ts:398:    if (this.yieldState) {
+node/core/src/thread.ts:399:      return { type: "yielded", value: this.yieldState.value };
+node/core/src/thread.ts:576:  /** Set once the thread's yield has been resolved. `tornDown` means an owner
+node/core/src/thread.ts:579:  private yieldState: YieldState | undefined;
+node/core/src/thread.ts:580:  get yielded(): YieldState | undefined {
+node/core/src/thread.ts:581:    return this.yieldState;
+node/core/src/thread.ts:585:    // A yielded thread has already completed its work.
+node/core/src/thread.ts:586:    if (this.yieldState) return { unsent: [] };
+node/core/src/thread.ts:594:  get result(): Promise<ThreadResult> {
+node/core/src/thread.ts:597:  private resultDefer = new Defer<ThreadResult>();
+node/core/src/thread.ts:599:  private settleResult(result: ThreadResult): void {
+node/core/src/thread.ts:767:        (results) => this.yieldGate(results),
+node/core/src/thread.ts:780:  /** `yield_to_parent` ran like any other tool; the suspension it raises is
+node/core/src/thread.ts:784:   * it, and only for ids in this step's results, so an earlier yield inherited
+node/core/src/thread.ts:786:  private yieldGate(results: ToolResults): SuspendReason | undefined {
+node/core/src/thread.ts:790:        "yield_to_parent",
+node/core/src/thread.ts:794:        this.context.yieldSchema !== undefined
+node/core/src/thread.ts:797:      return { kind: "yield", value };
+node/core/src/thread.ts:832:    if (this.yieldState?.tornDown) {
+node/core/src/thread.ts:873:      if (r.type === "yielded") this.settleResult(r);
+node/core/src/thread.ts:981:      // A yield suspension is the thread's own, raised by `yieldGate`, and
+node/core/src/thread.ts:983:      if (result.type === "suspended" && result.reason.kind === "yield") {
+node/core/src/thread.ts:986:        // A rejected yield goes back in through the front door, as an
+node/core/src/thread.ts:1023:  /** The agent has yielded and settled; the supervisors decide whether that
+node/core/src/thread.ts:1045:        this.yieldState = { value: accepted, response, tornDown: true };
+node/core/src/thread.ts:1048:          result: { type: "yielded", value: accepted },
+node/core/src/thread.ts:1060:      this.yieldState = {
+node/core/src/thread.ts:1065:      return { type: "settled", result: { type: "yielded", value } };
+node/core/src/thread.ts:1133:      case "yield":
+node/core/src/thread.ts:1264:      reason: "thread destroyed before it yielded",
+exit code 0

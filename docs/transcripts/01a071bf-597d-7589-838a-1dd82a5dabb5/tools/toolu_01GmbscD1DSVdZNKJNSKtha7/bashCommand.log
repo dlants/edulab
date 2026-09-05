@@ -1,0 +1,25 @@
+$ cd /Users/denis.lantsman/src/edulab && npm run lint && npm run test:e2e
+stdout:
+> edulab@0.0.1 lint
+> biome check .
+Checked 35 files in 92ms. No fixes applied.
+> edulab@0.0.1 test:e2e
+> npm -w @edulab/e2e run test
+> @edulab/e2e@0.0.1 test
+> playwright test
+Running 15 tests using 7 workers
+  ✓   1 tests/chat.spec.ts:140:1 › a second turn sends the full conversation (406ms)
+  ✓   5 tests/chat.spec.ts:126:1 › the composer is disabled while a turn is in flight (300ms)
+  ✓   7 tests/chat.spec.ts:110:1 › streams a response into the transcript (370ms)
+  ✓   4 tests/chat.spec.ts:203:1 › an action opens a thread seeded with the selected passage (473ms)
+  ✓   2 tests/chat.spec.ts:158:1 › a live selection overlapping a mark offers no actions (534ms)
+  ✓   6 tests/chat.spec.ts:225:1 › a follow-up in the thread pane re-sends the seed (500ms)
+  ✓   3 tests/chat.spec.ts:180:1 › two marks in one message are both clickable (668ms)
+  ✓   9 tests/chat.spec.ts:296:1 › the arrows name the layer and stop at the ends (255ms)
+  ✓   8 tests/chat.spec.ts:244:1 › clicking a mark reopens its thread without a new request (290ms)
+  ✓  10 tests/chat.spec.ts:313:1 › a thread opened at depth carries both selections once (338ms)
+  ✓  11 tests/chat.spec.ts:347:1 › a descended thread shows what it was opened from (264ms)
+  ✓  14 tests/chat.spec.ts:407:1 › a new selection leaves committed marks rendered (227ms)
+  ✓  13 tests/chat.spec.ts:385:1 › nesting goes three deep (387ms)
+  ✓  12 tests/chat.spec.ts:361:1 › ← climbs back without losing threads or highlights (420ms)
+terminated by signal SIGTERM

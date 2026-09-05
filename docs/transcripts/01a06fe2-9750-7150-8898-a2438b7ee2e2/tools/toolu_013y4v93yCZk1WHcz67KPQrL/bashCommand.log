@@ -1,0 +1,8 @@
+$ cd /Users/denis.lantsman/src/edulab && sed -i '' 's|// Usage: node scripts/fetch-wildchat.mjs \[minTurns\] > /tmp/wildchat.json|// Usage: node scripts/fetch-wildchat.mjs [minTurns] [outPath]|' scripts/fetch-wildchat.mjs && nohup node scripts/fetch-wildchat.mjs 20 /tmp/wildchat.json >/tmp/wildchat.log 2>&1 & sleep 50; cat /tmp/wildchat.log
+stdout:
+retrying offset 0: the dataset index is loading, this may take longer than usual
+100/1569
+200/1569
+stderr:
+Promise timed out after 300000ms
+exit code 1

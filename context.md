@@ -6,9 +6,8 @@ Everything here is a demo. No database, no auth, no persistence, no configuratio
 
 - **`packages/iso/protocol.ts`** — the websocket message union (`ClientMessage`, `ServerFrame`). Imported by both sides.
 - **`packages/backend/`** — Fastify server, entry `app.ts` (reads `ANTHROPIC_API_KEY` from the root `.env`, listens on 3000). `socket.ts` registers `GET /api/socket` and is a **pipe**: it forwards the client's `MessageCreateParamsStreaming` to the SDK unexamined and streams `RawMessageStreamEvent`s back. It holds no conversation state.
-- **`packages/frontend/`** — entry `main.ts`, which renders the nav and mounts the active route.
-  - `routes.ts` — one entry per prototype. Navigation is a plain `<a href>` full page load; there is no client router.
-  - `prototypes/` — one module per prototype, each exporting `mount(container)` and owning its own state and dispatch loop.
+- **`packages/frontend/`** — entry `main.ts`, which mounts `prototypes/chat.ts` into the page. There is one prototype and no router; later ideas from `notes/prototype.md` land as new actions inside it rather than as separate pages. The sample picker lives in the header bar next to the layer navigation, and switching sample is a full page load.
+  - `prototypes/chat.ts` — owns the thread tree, the state, and the single dispatch loop.
   - `conversation.ts` — the `MessageParam[]` plus the stream accumulator. Model, max tokens, and the system prompt are module constants here. The system prompt is deliberately **task mode**, not tutoring: learning mode is what we layer on top of the transcript it produces.
   - `view.ts` — the transcript and composer. `vamp.ts` is copied verbatim from gatherus.
 - **`packages/e2e/`** — Playwright specs (`.spec.ts`, so vitest's `packages/**/*.test.ts` glob ignores them).
@@ -22,6 +21,7 @@ Everything here is a demo. No database, no auth, no persistence, no configuratio
 - `npm run dev` — vite on **5173** plus the backend on **3000**. Open http://localhost:5173. `/api/` (including the websocket) is proxied.
 - `npm test` — vitest, node environment. The only unit tests are over the stream accumulator.
 - `npm run test:e2e` — Playwright on its own ports (5174/3100). UI specs stub the socket with `page.routeWebSocket`, so they need no API key; `smoke.spec.ts` hits the real API and is skipped without `ANTHROPIC_API_KEY`.
+- `npm run sync:transcripts` — re-run `scripts/sync-transcripts.sh` to pull magenta thread archives whose `cwd` is this repo into `docs/transcripts/`. Incremental: existing threads are updated in place, so it is safe to re-run any time.
 - `npm run typecheck` — `tsc --noEmit` across every package. Always run this rather than a bare `tsc`.
 - `npm run lint` / `npm run lint:fix` — biome.
 

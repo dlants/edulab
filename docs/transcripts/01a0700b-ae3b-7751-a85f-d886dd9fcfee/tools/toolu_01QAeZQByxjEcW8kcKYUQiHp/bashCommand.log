@@ -1,0 +1,22 @@
+$ cd /Users/denis.lantsman/src/edulab && grep -n "mode\|Mode\|pane\|arrow\|focus" plans/2026-09-05-nested-learning-threads.md
+stdout:
+9:- `Conversation` (`packages/frontend/conversation.ts`) — owns a `MessageParam[]`, the streaming accumulator, `messages`, `inFlight`, `send(text)`, `onChange`. `MODEL`, `MAX_TOKENS` and `SYSTEM` are module constants; `SYSTEM` is deliberately task mode.
+11:- `AppView` (`packages/frontend/view.ts`) — the whole prototype-1 shell: mode toggle, transcript `bindList`, composer, `readAnchor`/`resolvePoint` selection capture, and a `bindSlot` holding `LearningPane`.
+31:`Conversation` grows a `hiddenTurns` count so those seed turns are excluded from `messages`; the pane therefore shows the assistant's answer first, and anchor offsets keep indexing the list the user can actually see, at every depth. This is the only change to `conversation.ts` beyond making `system` a constructor option.
+41:Two visual states matter: the *live* selection the user just dragged (no thread yet) and *committed* marks (a thread exists). The active thread's mark is emphasized further, so the user can see which highlight the right pane belongs to.
+45:The app shows two panes. `focus` is the thread on the left; the thread on the right is `focus.activeChild`. Both panes are the same `ThreadView`: transcript, marks, selection capture, composer, and — when that pane holds a live selection — the action menu.
+47:- Selecting in the **left** pane and picking an action creates a child of `focus` and makes it active: the right pane fills in.
+48:- Selecting in the **right** pane and picking an action creates a child of *that* thread, and then **shifts left**: `focus` becomes the right-hand thread, and the new child becomes the right pane. This is the "go deeper" loop, and it falls out of the model rather than needing its own machinery.
+49:- Clicking any mark in the left pane activates that thread (right pane). Clicking a mark in the right pane shifts left and activates it.
+51:A breadcrumb above the panes shows the path from the root to `focus`; clicking an ancestor moves `focus` back up, leaving the descendant as its active child so the right pane still shows where you were.
+53:Task mode is unchanged: one pane, composer, no selection capture. Learning mode is what turns on the second pane and the marks.
+136:- `activeChild` is always a member of `children`, and `focus` is always a live thread id.
+137:- The right pane exists iff `focus.activeChild !== null`; the action menu renders in whichever pane owns the live selection, and at most one pane has one (starting a selection in a pane clears the other's).
+156:  - Playwright: with two committed marks in one message, both are visible and clicking each dispatches the right thread — verified through the observable effect (the right pane's content changes).
+159:## Threads on the right pane
+161:- Goal: picking an action opens a child thread, sends the seeded prompt, streams into the right pane, and leaves a permanent highlight. Clicking that highlight reopens the thread with its history intact.
+164:  - The reply streams into the right pane and the passage stays marked after the pane is clicked.
+165:  - Following up in the right pane's composer sends a conversation whose first turn is still the seed.
+172:  - Explain, then select part of the explanation and click "Quiz me on this": the new `start` frame's seed contains text from the *explanation*, not from the task transcript, and the explanation is now the left pane.
+173:  - The breadcrumb shows three entries; clicking the root returns the task to the left pane with the explanation still on the right and both highlights intact.
+exit code 0

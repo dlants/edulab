@@ -1,0 +1,167 @@
+$ cd /Users/denis.lantsman/src/edulab && cat > packages/e2e/tests/chat.spec.ts <<'EOF'
+import type Anthropic from "@anthropic-ai/sdk";
+import type { ClientMessage, ServerFrame } from "@edulab/iso/protocol.ts";
+import { expect, test, type Page } from "@playwright/test";
+
+function events(chunks: string[]): Anthropic.RawMessageStreamEvent[] {
+  return [
+    {
+      type: "message_start",
+      message: {
+        id: "msg_fake",
+        type: "message",
+        role: "assistant",
+        model: "claude-sonnet-4-5",
+        content: [],
+        stop_reason: null,
+        stop_sequence: null,
+        usage: {
+          input_tokens: 1,
+          output_tokens: 1,
+          cache_creation_input_tokens: null,
+          cache_read_input_tokens: null,
+          server_tool_use: null,
+          service_tier: null,
+        },
+      },
+    },
+    {
+      type: "content_block_start",
+      index: 0,
+      content_block: { type: "text", text: "", citations: null },
+    },
+    ...chunks.map(
+      (text): Anthropic.RawMessageStreamEvent => ({
+        type: "content_block_delta",
+        index: 0,
+        delta: { type: "text_delta", text },
+      }),
+    ),
+    { type: "content_block_stop", index: 0 },
+    {
+      type: "message_delta",
+      delta: { stop_reason: "end_turn", stop_sequence: null },
+      usage: {
+        input_tokens: null,
+        output_tokens: 3,
+        cache_creation_input_tokens: null,
+        cache_read_input_tokens: null,
+        server_tool_use: null,
+      },
+    },
+    { type: "message_stop" },
+  ];
+}
+
+/** Stand in for the backend: replay `chunks` one delta at a time, and expose a
+ * promise that resolves once the browser has sent its `start` frame. */
+async function fakeBackend(page: Page, chunks: string[]) {
+  let release!: () => void;
+  const gate = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  const started: string[] = [];
+
+  await page.routeWebSocket("**/api/socket", (ws) => {
+    ws.onMessage(async (raw) => {
+      const message = JSON.parse(String(raw)) as ClientMessage;
+      started.push(JSON.stringify(message.params.messages));
+      await gate;
+      const send = (frame: ServerFrame) => ws.send(JSON.stringify(frame));
+      for (const event of events(chunks)) {
+        send({ type: "event", requestId: message.requestId, event });
+      }
+      send({ type: "done", requestId: message.requestId });
+    });
+  });
+
+  return { release, started };
+}
+
+test("streams a response into the transcript", async ({ page }) => {
+  const backend = await fakeBackend(page, ["Hello", ", world"]);
+  await page.goto("/");
+
+  await page.getByRole("textbox").fill("hi");
+  await page.getByRole("button", { name: "Send" }).click();
+
+  await expect(page.locator('[data-role="user"]')).toHaveText(/hi/);
+  backend.release();
+
+  await expect(page.locator('[data-role="assistant"]')).toHaveText(
+    /Hello, world/,
+  );
+  await expect(page.locator("li")).toHaveCount(2);
+});
+
+test("the composer is disabled while a turn is in flight", async ({ page }) => {
+  const backend = await fakeBackend(page, ["ok"]);
+  await page.goto("/");
+
+  const input = page.getByRole("textbox");
+  await input.fill("hi");
+  await page.getByRole("button", { name: "Send" }).click();
+
+  await expect(input).toBeDisabled();
+  backend.release();
+  await expect(input).toBeEnabled();
+  await expect(input).toHaveValue("");
+});
+
+test("a second turn sends the full conversation", async ({ page }) => {
+  const backend = await fakeBackend(page, ["ok"]);
+  backend.release();
+  await page.goto("/");
+
+  const input = page.getByRole("textbox");
+  await input.fill("first");
+  await input.press("Enter");
+  await expect(page.locator("li")).toHaveCount(2);
+
+  await input.fill("second");
+  await input.press("Enter");
+  await expect(page.locator("li")).toHaveCount(4);
+
+  expect(backend.started).toHaveLength(2);
+  expect(JSON.parse(backend.started[1])).toHaveLength(3);
+});
+EOF
+cat > packages/e2e/tests/smoke.spec.ts <<'EOF'
+import { expect, test } from "@playwright/test";
+
+// Guards against the scripted stream in chat.spec.ts drifting from the SDK.
+test.skip(
+  !process.env.ANTHROPIC_API_KEY,
+  "requires ANTHROPIC_API_KEY for the real backend",
+);
+
+test("streams a real response end to end", async ({ page }) => {
+  await page.goto("/");
+  const input = page.getByRole("textbox");
+  await input.fill("Reply with exactly the word: pong");
+  await input.press("Enter");
+
+  await expect(page.locator('[data-role="assistant"]')).toContainText("pong", {
+    timeout: 30_000,
+  });
+  await expect(input).toBeEnabled({ timeout: 30_000 });
+});
+EOF
+sed -i '' 's#"test": "vitest run"#"test": "vitest run",\n    "test:e2e": "npm -w @edulab/e2e run test"#' package.json
+sed -i '' 's#npm -w @edulab/backend exec tsc -- --noEmit#npm -w @edulab/backend exec tsc -- --noEmit \&\& npm -w @edulab/e2e exec tsc -- --noEmit#' package.json
+npm -w @edulab/e2e exec tsc -- --noEmit
+stdout:
+tests/chat.spec.ts(17,9): error TS2739: Type '{ input_tokens: number; output_tokens: number; cache_creation_input_tokens: null; cache_read_input_tokens: null; server_tool_use: null; service_tier: null; }' is missing the following properties from type 'Usage': cache_creation, inference_geo, output_tokens_details
+tests/chat.spec.ts(32,5): error TS2322: Type '{ type: "message_delta"; delta: { stop_reason: "end_turn"; stop_sequence: null; }; usage: { input_tokens: null; output_tokens: number; cache_creation_input_tokens: null; cache_read_input_tokens: null; server_tool_use: null; }; }' is not assignable to type 'RawMessageStreamEvent'.
+  Types of property 'delta' are incompatible.
+    Type '{ stop_reason: "end_turn"; stop_sequence: null; }' is missing the following properties from type 'Delta': container, stop_details
+tests/chat.spec.ts(39,5): error TS2322: Type '{ type: "message_delta"; delta: { stop_reason: "end_turn"; stop_sequence: null; }; usage: { input_tokens: null; output_tokens: number; cache_creation_input_tokens: null; cache_read_input_tokens: null; server_tool_use: null; }; }' is not assignable to type 'RawMessageStreamEvent'.
+  Types of property 'delta' are incompatible.
+    Type '{ stop_reason: "end_turn"; stop_sequence: null; }' is missing the following properties from type 'Delta': container, stop_details
+tests/chat.spec.ts(40,5): error TS2322: Type '{ type: "message_delta"; delta: { stop_reason: "end_turn"; stop_sequence: null; }; usage: { input_tokens: null; output_tokens: number; cache_creation_input_tokens: null; cache_read_input_tokens: null; server_tool_use: null; }; }' is not assignable to type 'RawMessageStreamEvent'.
+  Types of property 'delta' are incompatible.
+    Type '{ stop_reason: "end_turn"; stop_sequence: null; }' is missing the following properties from type 'Delta': container, stop_details
+tests/chat.spec.ts(51,5): error TS2322: Type '{ type: "message_delta"; delta: { stop_reason: "end_turn"; stop_sequence: null; }; usage: { input_tokens: null; output_tokens: number; cache_creation_input_tokens: null; cache_read_input_tokens: null; server_tool_use: null; }; }' is not assignable to type 'RawMessageStreamEvent'.
+  Types of property 'delta' are incompatible.
+    Type '{ stop_reason: "end_turn"; stop_sequence: null; }' is missing the following properties from type 'Delta': container, stop_details
+exit code 2

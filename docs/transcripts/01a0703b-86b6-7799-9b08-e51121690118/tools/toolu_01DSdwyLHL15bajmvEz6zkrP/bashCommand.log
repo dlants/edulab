@@ -1,0 +1,6 @@
+$ cd /Users/denis.lantsman/src/edulab && npm run typecheck
+stdout:
+> edulab@0.0.1 typecheck
+> npm -w @edulab/iso exec tsc -- --noEmit && npm -w @edulab/frontend exec tsc -- --noEmit && npm -w @edulab/backend exec tsc -- --noEmit && npm -w @edulab/e2e exec tsc -- --noEmit
+prompt.test.ts(16,15): error TS2741: Property 'thread' is missing in type '{ start: { msg: number; offset: number; }; end: { msg: number; offset: number; }; }' but required in type 'Anchor'.
+exit code 2

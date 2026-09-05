@@ -1,0 +1,114 @@
+$ cd /Users/denis.lantsman/src/edulab && ls -R packages docs scripts | sed -n '1,60p' && echo ===E2E && cat packages/e2e/playwright.config.ts && echo ===ENV && sed -n '1,3p' .env | cut -c1-20 && cat packages/backend/package.json
+stdout:
+docs:
+assignment.md
+assignment.pdf
+transcripts
+docs/transcripts:
+01a06ed7-db07-72f9-a493-ce5b0518444a
+01a06eda-1fbe-74db-890c-0cfd8d8d98a1
+01a06f96-da17-7238-99d6-9499133b50a1
+01a06fa0-2a7e-700c-a1d7-1d05876ee2bb
+01a06fb3-fd08-7079-b31e-d25f98902d2b
+01a06fb3-fd0b-7519-a8e5-a791777c1090
+01a06fd9-e266-715c-87e4-4f62556eaab5
+01a06fd9-f5c3-7160-9c5a-9346e82ba68a
+01a06fda-0cf1-7626-9b2d-8468390b6c69
+01a06fe0-a518-720b-822b-7fe833daf692
+01a06fe2-028f-713c-9d93-de57b1631f51
+01a06fe2-9750-7150-8898-a2438b7ee2e2
+docs/transcripts/01a06ed7-db07-72f9-a493-ce5b0518444a:
+conversation.jsonl
+meta.json
+tools
+docs/transcripts/01a06ed7-db07-72f9-a493-ce5b0518444a/tools:
+toolu_0133CHtuPjiXLr4P3wmUymwZ
+toolu_014YSzd9e8uPXpFRJyEv2jh6
+toolu_018Ud41kHsA8feC4QRYu9LDA
+toolu_01CuRXUvnmyV8XXbJFP9NJcc
+toolu_01Rg6FCc8o1LbpfDcgVbNsaz
+docs/transcripts/01a06ed7-db07-72f9-a493-ce5b0518444a/tools/toolu_0133CHtuPjiXLr4P3wmUymwZ:
+bashCommand.log
+docs/transcripts/01a06ed7-db07-72f9-a493-ce5b0518444a/tools/toolu_014YSzd9e8uPXpFRJyEv2jh6:
+bashCommand.log
+docs/transcripts/01a06ed7-db07-72f9-a493-ce5b0518444a/tools/toolu_018Ud41kHsA8feC4QRYu9LDA:
+bashCommand.log
+docs/transcripts/01a06ed7-db07-72f9-a493-ce5b0518444a/tools/toolu_01CuRXUvnmyV8XXbJFP9NJcc:
+bashCommand.log
+docs/transcripts/01a06ed7-db07-72f9-a493-ce5b0518444a/tools/toolu_01Rg6FCc8o1LbpfDcgVbNsaz:
+bashCommand.log
+docs/transcripts/01a06eda-1fbe-74db-890c-0cfd8d8d98a1:
+conversation.jsonl
+meta.json
+docs/transcripts/01a06f96-da17-7238-99d6-9499133b50a1:
+conversation.jsonl
+meta.json
+docs/transcripts/01a06fa0-2a7e-700c-a1d7-1d05876ee2bb:
+conversation.jsonl
+meta.json
+tools
+docs/transcripts/01a06fa0-2a7e-700c-a1d7-1d05876ee2bb/tools:
+===E2E
+import { defineConfig } from "@playwright/test";
+const backendPort = Number(process.env.TEST_BACKEND_PORT ?? 3100);
+const frontendPort = Number(process.env.TEST_FRONTEND_PORT ?? 5174);
+const backendUrl = `http://127.0.0.1:${backendPort}`;
+// The smoke spec is the only one that reaches the real API, so the backend is
+// only booted when a key is available.
+const hasApiKey = Boolean(process.env.ANTHROPIC_API_KEY);
+export default defineConfig({
+  testDir: "./tests",
+  fullyParallel: true,
+  timeout: 30_000,
+  expect: { timeout: 5_000 },
+  use: {
+    baseURL: `http://localhost:${frontendPort}`,
+    actionTimeout: 5_000,
+  },
+  webServer: [
+    ...(hasApiKey
+      ? [
+          {
+            command: "node app.ts",
+            cwd: "../backend",
+            env: { PORT: String(backendPort) },
+            port: backendPort,
+            reuseExistingServer: false,
+            timeout: 60_000,
+          },
+        ]
+      : []),
+    {
+      command: "vite",
+      cwd: "../..",
+      env: { VITE_PORT: String(frontendPort), API_TARGET: backendUrl },
+      port: frontendPort,
+      reuseExistingServer: false,
+      timeout: 60_000,
+    },
+  ],
+});
+===ENV
+ANTHROPIC_API_KEY=sk
+{
+  "name": "@edulab/backend",
+  "version": "0.0.1",
+  "license": "UNLICENSED",
+  "type": "module",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.115.0",
+    "@edulab/iso": "*",
+    "@fastify/websocket": "^11.3.0",
+    "dotenv": "^17.4.1",
+    "fastify": "^5.8.4"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/ws": "^8.18.1",
+    "typescript": "^5.9.3"
+  },
+  "scripts": {
+    "dev": "node --watch app.ts"
+  }
+}
+exit code 0

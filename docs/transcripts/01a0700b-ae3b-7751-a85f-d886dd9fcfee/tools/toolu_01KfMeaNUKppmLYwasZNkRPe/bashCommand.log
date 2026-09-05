@@ -1,0 +1,14 @@
+$ cd /Users/denis.lantsman/src/edulab && sed -n 43,60p plans/2026-09-05-nested-learning-threads.md
+stdout:
+## Panes and navigation
+The app shows two panes. `focus` is the thread on the left; the thread on the right is `focus.activeChild`, or the "select some text to get started" prompt when there is none. Both panes are the same `ThreadView`: transcript, marks, selection capture, composer, and — when that pane holds a live selection — the action menu.
+**The panes are moved by a pair of arrows, not by selections.** The mode toggle is replaced by `←` / `→` in the same fixed pill. Layer 0 is the bare task transcript in a single column; every deeper layer is the two-pane split, so the depth the user is at is `split ? path(focus).length : 0`:
+- `→` at layer 0 reads **"Learning mode"** and opens the split: the task stays on the left and the right pane appears (its active child, or the "select some text to get started" prompt).
+- `→` at any deeper layer reads **"Go deeper"** and moves `focus` to `focus.activeChild`, so the right pane slides left and *its* active child becomes the new right pane. Disabled when there is no active child.
+- `←` is not rendered at all at layer 0. In the split it reads "Back", and moves `focus` to its parent — which puts the thread you were reading back on the right. From layer 1 it closes the split and returns to the bare task transcript.
+Everything else only ever affects `activeChild`, never `focus`:
+- Picking an action in either pane creates a child of the pane's thread and makes it that thread's active child. From the left pane the right pane fills in; from the right pane nothing visibly moves until the user presses `→`.
+- Clicking a mark makes its thread the active child of the pane it lives in — a preview on the right, again without moving `focus`.
+Separating the two removes the case analysis the earlier sketch needed ("selecting on the right implicitly shifts left"), and it means the user's position in the tree only changes when they ask for it. The mode toggle disappears with it: there is no longer a task/learning mode, just a task thread at the root of a tree, always selectable, always with a composer.
+The arrows carry a label naming the destination thread, and `path(focus)` is rendered next to them as a depth indicator, so the user can tell where they are without a separate breadcrumb widget.
+exit code 0

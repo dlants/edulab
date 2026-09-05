@@ -1,0 +1,4 @@
+$ cd /Users/denis.lantsman/src/edulab && which duckdb python3 && ls && echo "---HF token---" && ls ~/.cache/huggingface/token 2>/dev/null; env | grep -i "HF_\|HUGGING" 
+stdout:
+/opt/homebrew/bin/python3
+exit code 1

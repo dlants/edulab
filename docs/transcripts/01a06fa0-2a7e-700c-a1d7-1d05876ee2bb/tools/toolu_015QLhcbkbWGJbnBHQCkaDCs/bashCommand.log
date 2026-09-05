@@ -1,0 +1,43 @@
+$ cd /Users/denis.lantsman/src/edulab && sed -n '120,140p;210,240p' node_modules/@fastify/websocket/index.js
+stdout:
+    } catch (err) {
+      fastify.log.warn({ err }, 'websocket upgrade failed')
+    }
+  }
+  websocketListenServer.on('upgrade', onUpgrade)
+  const handleUpgrade = (rawRequest, callback) => {
+    wss.handleUpgrade(rawRequest, rawRequest[kWs], rawRequest[kWsHead], (socket) => {
+      wss.emit('connection', socket, rawRequest)
+      socket.on('error', (error) => {
+        fastify.log.error(error)
+      })
+      callback(socket)
+    })
+  }
+  fastify.addHook('onRequest', (request, _reply, done) => { // this adds req.ws to the Request object
+    if (request.raw[kWs]) {
+      request.ws = true
+    }
+  })
+  fastify.addHook('preClose', preClose)
+  function defaultPreClose (done) {
+    const server = this.websocketServer
+    if (server.clients) {
+      for (const client of server.clients) {
+        client.close()
+      }
+    }
+    fastify.server.removeListener('upgrade', onUpgrade)
+    server.close(done)
+    done()
+  }
+  function noHandle (socket, rawRequest) {
+    this.log.info({ path: rawRequest.url }, 'closed incoming websocket connection for path with no websocket handler')
+    socket.close()
+  }
+  function defaultErrorHandler (error, socket, request) {
+    request.log.error(error)
+    socket.terminate()
+  }
+  next()
+exit code 0

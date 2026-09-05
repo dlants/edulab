@@ -1,0 +1,110 @@
+$ cd /Users/denis.lantsman/src/edulab && npm run typecheck && npm run lint && npm test
+stdout:
+> edulab@0.0.1 typecheck
+> npm -w @edulab/iso exec tsc -- --noEmit && npm -w @edulab/frontend exec tsc -- --noEmit && npm -w @edulab/backend exec tsc -- --noEmit && npm -w @edulab/e2e exec tsc -- --noEmit
+> edulab@0.0.1 lint
+> biome check .
+stderr:
+packages/frontend/main.ts format ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  × Formatter would have printed the following content:
+    18 18 │   const root = document.getElementById("app") ?? document.body;
+    19 19 │   root.append(page);
+    20    │ - mount(page);
+       20 │ + mount(page);
+     21 │ + 
+packages/frontend/view.ts:1:1
+ assist/source/organizeImports  FIXABLE  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  × Sort these imports.
+   > 1 │ 
+import type { Message
+ } from "./conversation.ts";
+       │ ^^^
+^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^
+^^^^^^^^^^^^
+   > 2 │ imp
+ort {
+   > 3 │   type Msg
+ as Learni
+ngMsg,
+   > 
+4 │   Learn
+ingPane,
+        ...
+  > 16 │ } f
+rom "./selection.t
+s";
+  > 17 │ import { samples } f
+rom "./samples/index.ts";
+       │ ^^^^^^^
+^^^^^^^^^^^^^
+^^^^^^^^^^^
+^^^^^^^^^^^^^^
+    18 │ 
+import {
+    19 │ 
+  Binder,
+  i Safe fix: Organize imports and exports (Biome)
+      5   5 │     type S
+tate as LearningState,
+      6   6 │   } from "./learning.ts";
+      7     │ - import·{
+      8     │ - 
+··type·Anchor,
+      9     │ - ··anchorText,
+     10     │ - ··type·Mark,
+     11     │ - ··overlaps,
+     12     │ - 
+··type·Point,
+     13     │ - ··type·Segment,
+     14     │ - 
+··segments,
+     15     │ - 
+··type·Threa
+dId,
+     16     │ - }·from·"./sele
+ction.ts";
+     17   
+  │ - import
+·{·samples·}
+·from·"./samples/index.t
+s";
+          7 │ + 
+import·{·
+samples
+·}·from·"./samples
+/index.ts";
+        8 │ + 
+import·{
+      9 │ + ··type·Anc
+hor,
+         10 │ 
++ ··ancho
+rText,
+         11 │ + ··type·Mark,
+         12 │ + 
+··overlaps,
+  13 │ + ··t
+ype·Point,
+         14 │ + 
+··type·Seg
+ment,
+   15 │ + 
+··segments,
+ 16 │ + ··ty
+pe·ThreadId
+,
+         17 │ 
++ }·from·"./selec
+tion.ts";
+ 18  18 │   
+import {
+     19
+  19 │     Binder,
+stdout:
+Checked 33 files in 114ms. No fixes applied.
+Found 2 errors.
+stderr:
+check ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  × Some errors were emitted while running checks.
+exit code 1

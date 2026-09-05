@@ -1,0 +1,5 @@
+$ find packages/e2e -name "*.spec.ts" -type f
+stdout:
+packages/e2e/tests/smoke.spec.ts
+packages/e2e/tests/chat.spec.ts
+exit code 0

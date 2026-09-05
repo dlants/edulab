@@ -1,0 +1,5 @@
+$ grep -n "ABORT_TOOL_RESULT_TEXT" /Users/denis.lantsman/src/magenta.nvim/node/core/src/providers/anthropic-inference.ts
+stdout:
+24:  ABORT_TOOL_RESULT_TEXT,
+889:          ? ABORT_TOOL_RESULT_TEXT
+exit code 0

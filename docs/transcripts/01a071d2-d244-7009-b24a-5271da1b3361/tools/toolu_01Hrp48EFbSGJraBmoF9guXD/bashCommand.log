@@ -1,0 +1,128 @@
+$ cd /Users/denis.lantsman/src/magenta.nvim && grep -rn "new Thread\|new NvimThread" node --include="*.ts" -B 2 -A 5
+stdout:
+node/core/dist/thread-core.d.ts-204-    /** Build an independent copy of `sourceCore` that resumes the conversation
+node/core/dist/thread-core.d.ts-205-     * frozen at `nativeMessageIdx`. The cloned agent is created exactly once
+node/core/dist/thread-core.d.ts:206:     * here and ownership is transferred to the new ThreadCore. The source is
+node/core/dist/thread-core.d.ts-207-     * not aborted and shares no mutable state with the result. */
+node/core/dist/thread-core.d.ts-208-    static clone(args: {
+node/core/dist/thread-core.d.ts-209-        sourceCore: ThreadCore;
+node/core/dist/thread-core.d.ts-210-        newId: ThreadId;
+node/core/dist/thread-core.d.ts-211-        nativeMessageIdx: NativeMessageIdx;
+--
+node/core/src/test-helpers.ts-274-
+node/core/src/test-helpers.ts-275-  return {
+node/core/src/test-helpers.ts:276:    core: new Thread(
+node/core/src/test-helpers.ts-277-      threadId,
+node/core/src/test-helpers.ts-278-      context,
+node/core/src/test-helpers.ts-279-      { onUpdate: onUpdate ?? (() => {}), resolve: resolve ?? resolveAsText },
+node/core/src/test-helpers.ts-280-      { type: "fresh" },
+node/core/src/test-helpers.ts-281-      {
+--
+node/core/src/providers/openai-wiring.test.ts-88-  };
+node/core/src/providers/openai-wiring.test.ts-89-  return {
+node/core/src/providers/openai-wiring.test.ts:90:    core: new Thread(
+node/core/src/providers/openai-wiring.test.ts-91-      "openai-thread" as ThreadId,
+node/core/src/providers/openai-wiring.test.ts-92-      context,
+node/core/src/providers/openai-wiring.test.ts-93-      { onUpdate: () => {}, resolve: resolveAsText },
+node/core/src/providers/openai-wiring.test.ts-94-      { type: "fresh" },
+node/core/src/providers/openai-wiring.test.ts-95-      {
+--
+node/core/src/thread-logger.test.ts-66-    const { logger } = makeLogger();
+node/core/src/thread-logger.test.ts-67-    const messages: ProviderMessage[] = [];
+node/core/src/thread-logger.test.ts:68:    const tl = new ThreadLogger(threadId, "root", () => messages, logger, {
+node/core/src/thread-logger.test.ts-69-      baseDir: TEST_BASE_DIR,
+node/core/src/thread-logger.test.ts-70-    });
+node/core/src/thread-logger.test.ts-71-
+node/core/src/thread-logger.test.ts-72-    tl.recordTitle("Hello");
+node/core/src/thread-logger.test.ts-73-    tl.recordTitle("Hello 2");
+--
+node/core/src/thread-logger.test.ts-96-    const { logger } = makeLogger();
+node/core/src/thread-logger.test.ts-97-    const messages: ProviderMessage[] = [msg("a"), msg("b"), msg("c")];
+node/core/src/thread-logger.test.ts:98:    const tl = new ThreadLogger(threadId, "root", () => messages, logger, {
+node/core/src/thread-logger.test.ts-99-      baseDir: TEST_BASE_DIR,
+node/core/src/thread-logger.test.ts-100-    });
+node/core/src/thread-logger.test.ts-101-
+node/core/src/thread-logger.test.ts-102-    tl.record("streaming");
+node/core/src/thread-logger.test.ts-103-    await tl.flushed();
+--
+node/core/src/thread-logger.test.ts-147-    const { logger, errors } = makeLogger();
+node/core/src/thread-logger.test.ts-148-    const messages: ProviderMessage[] = [];
+node/core/src/thread-logger.test.ts:149:    const tl = new ThreadLogger(threadId, "root", () => messages, logger, {
+node/core/src/thread-logger.test.ts-150-      baseDir: TEST_BASE_DIR,
+node/core/src/thread-logger.test.ts-151-    });
+node/core/src/thread-logger.test.ts-152-    await tl.flushed();
+node/core/src/thread-logger.test.ts-153-
+node/core/src/thread-logger.test.ts-154-    // Replace the thread dir with a file so the meta.json write fails.
+--
+node/core/src/thread-logger.test.ts-171-    const { logger, errors } = makeLogger();
+node/core/src/thread-logger.test.ts-172-    const messages: ProviderMessage[] = [];
+node/core/src/thread-logger.test.ts:173:    const tl = new ThreadLogger(threadId, "root", () => messages, logger, {
+node/core/src/thread-logger.test.ts-174-      baseDir: TEST_BASE_DIR,
+node/core/src/thread-logger.test.ts-175-    });
+node/core/src/thread-logger.test.ts-176-    await tl.flushed();
+node/core/src/thread-logger.test.ts-177-
+node/core/src/thread-logger.test.ts-178-    // Replace the thread dir with a file so subsequent appends fail.
+--
+node/core/src/thread.ts-291-  ) {
+node/core/src/thread.ts-292-    const forkProvenance = init.type === "clone" ? init.provenance : undefined;
+node/core/src/thread.ts:293:    this.threadLogger = new ThreadLogger(
+node/core/src/thread.ts-294-      id,
+node/core/src/thread.ts-295-      context.threadType,
+node/core/src/thread.ts-296-      () => this.getProviderMessages(),
+node/core/src/thread.ts-297-      context.logger,
+node/core/src/thread.ts-298-      {
+--
+node/core/src/thread.ts-335-  }): Promise<Thread> {
+node/core/src/thread.ts-336-    const { sourceThread, newId, nativeMessageIdx, context, callbacks } = args;
+node/core/src/thread.ts:337:    const cloned = new Thread(
+node/core/src/thread.ts-338-      newId,
+node/core/src/thread.ts-339-      context,
+node/core/src/thread.ts-340-      callbacks,
+node/core/src/thread.ts-341-      {
+node/core/src/thread.ts-342-        type: "clone",
+--
+node/chat/chat.ts-740-    });
+node/chat/chat.ts-741-
+node/chat/chat.ts:742:    const thread = new NvimThread(threadId, threadType, systemPrompt, {
+node/chat/chat.ts-743-      ...this.context,
+node/chat/chat.ts-744-      options: this.context.getOptions(),
+node/chat/chat.ts-745-      mcpToolManager: this.mcpToolManager,
+node/chat/chat.ts-746-      profile,
+node/chat/chat.ts-747-      chat: this,
+--
+node/chat/thread.ts-454-      this.core.callbacks = this.coreCallbacks();
+node/chat/thread.ts-455-    } else {
+node/chat/thread.ts:456:      this.core = new Thread(
+node/chat/thread.ts-457-        id,
+node/chat/thread.ts-458-        {
+node/chat/thread.ts-459-          logger: context.nvim.logger,
+node/chat/thread.ts-460-          profile: context.profile,
+node/chat/thread.ts-461-          cwd,
+--
+node/chat/thread.ts-503-
+node/chat/thread.ts-504-    this.compactor =
+node/chat/thread.ts:505:      threadType === "compact" ? undefined : new ThreadCompactor(this.core);
+node/chat/thread.ts-506-    // The status line and the history section both read the compactor, so a
+node/chat/thread.ts-507-    // chunk boundary has to repaint even though nothing on the thread moved.
+node/chat/thread.ts-508-    this.compactor?.on("transition", () => this.onCoreUpdate());
+node/chat/thread.ts-509-
+node/chat/thread.ts-510-    // The pending-comments view lives in the display buffer, so a comment
+--
+node/chat/thread.ts-760-   * The cloned agent is created exactly once (by Agent.clone). The source
+node/chat/thread.ts-761-   * is not aborted, no auto-context is re-resolved, and no system prompt is
+node/chat/thread.ts:762:   * regenerated. The result is a new NvimThread with its own environment and
+node/chat/thread.ts-763-   * Layer 3 view state, ready to continue from the snapshot. */
+node/chat/thread.ts-764-  static async cloneFromNativeMessageIdx(args: {
+node/chat/thread.ts-765-    sourceThread: NvimThread;
+node/chat/thread.ts-766-    newThreadId: ThreadId;
+node/chat/thread.ts-767-    nativeMessageIdx: NativeMessageIdx;
+--
+node/chat/thread.ts-888-    });
+node/chat/thread.ts-889-
+node/chat/thread.ts:890:    const thread = new NvimThread(
+node/chat/thread.ts-891-      newThreadId,
+node/chat/thread.ts-892-      sourceCoreState.threadType,
+node/chat/thread.ts-893-      sourceCoreState.systemPrompt,
+node/chat/thread.ts-894-      {
+node/chat/thread.ts-895-        dispatch,
+exit code 0

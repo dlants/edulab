@@ -1,0 +1,120 @@
+$ find packages/frontend -type f -not -path '*/node_modules/*' | sort && echo --- && cat packages/frontend/routes.ts packages/frontend/main.ts
+stdout:
+packages/frontend/conversation.test.ts
+packages/frontend/conversation.ts
+packages/frontend/index.html
+packages/frontend/learning.ts
+packages/frontend/main.ts
+packages/frontend/package.json
+packages/frontend/prompt.test.ts
+packages/frontend/prompt.ts
+packages/frontend/prototypes/chat.ts
+packages/frontend/prototypes/placeholder.ts
+packages/frontend/routes.ts
+packages/frontend/samples/44bbcae8-tile-adhesive-formulation.json
+packages/frontend/samples/72c7ec37-django-event-app-urls.json
+packages/frontend/samples/74979366-floating-dock-pontoon.json
+packages/frontend/samples/9833484b-c-heap-file-block-storage.json
+packages/frontend/samples/index.ts
+packages/frontend/selection.test.ts
+packages/frontend/selection.ts
+packages/frontend/threads.ts
+packages/frontend/tsconfig.json
+packages/frontend/vamp.ts
+packages/frontend/view.ts
+---
+import { mount as mountChat } from "./prototypes/chat.ts";
+import { placeholder } from "./prototypes/placeholder.ts";
+export type Route = {
+  path: string;
+  label: string;
+  mount: (container: HTMLElement) => void;
+};
+/** One entry per prototype in notes/prototype.md. Navigation is a full page
+ * load, which is free here because all state is ephemeral anyway. */
+export const routes: Route[] = [
+  { path: "/", label: "1. User-driven review", mount: mountChat },
+  {
+    path: "/suggested",
+    label: "2. Suggested review",
+    mount: placeholder("The agent picks the areas worth reviewing."),
+  },
+  {
+    path: "/map",
+    label: "3. Domain map",
+    mount: placeholder("A visualization of the key moments in the task."),
+  },
+  {
+    path: "/interactive",
+    label: "4. Interactives",
+    mount: placeholder("A generated interactive to test the user's thinking."),
+  },
+];
+export function routeFor(pathname: string): Route {
+  return routes.find((r) => r.path === pathname) ?? routes[0];
+}
+import { routeFor, routes } from "./routes.ts";
+import { samples, selectedSample, selectSample } from "./samples/index.ts";
+import { cls, mountStyle } from "./vamp.ts";
+const navClass = cls("nav");
+const pageClass = cls("page");
+mountStyle(`
+html, body { height: 100%; }
+body { margin: 0; }
+#app { height: 100%; }
+.${pageClass} {
+  height: 100%;
+  min-height: 0;
+}
+.${navClass} {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 20;
+  font-family: system-ui, sans-serif;
+  font-size: 0.875rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  padding: 0.75rem 1rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.12);
+  background: #fff;
+}
+.${navClass} a { color: inherit; }
+.${navClass} a[aria-current="page"] { font-weight: 600; }
+.${navClass} select { font: inherit; }
+`);
+const active = routeFor(window.location.pathname);
+const nav = document.createElement("nav");
+nav.className = navClass;
+for (const route of routes) {
+  const link = document.createElement("a");
+  link.href = route.path + window.location.search;
+  link.textContent = route.label;
+  if (route === active) link.setAttribute("aria-current", "page");
+  nav.append(link);
+}
+const picker = document.createElement("select");
+const own = document.createElement("option");
+own.value = "";
+own.textContent = "Write your own";
+picker.append(own);
+for (const sample of samples) {
+  const option = document.createElement("option");
+  option.value = sample.id;
+  option.textContent = sample.label;
+  picker.append(option);
+}
+picker.value = selectedSample()?.id ?? "";
+picker.addEventListener("change", () => {
+  selectSample(picker.value === "" ? undefined : picker.value);
+});
+nav.append(picker);
+const page = document.createElement("div");
+page.className = pageClass;
+const root = document.getElementById("app") ?? document.body;
+root.append(nav, page);
+active.mount(page);
+exit code 0

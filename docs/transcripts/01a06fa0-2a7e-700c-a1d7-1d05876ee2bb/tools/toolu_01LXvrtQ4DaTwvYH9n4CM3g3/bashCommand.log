@@ -1,0 +1,4 @@
+$ cd /Users/denis.lantsman/src/edulab && git add -A && git commit -q -m "Add prototype routing tabs and repo context.md" && git log --oneline -1
+stdout:
+8a96d76 Add prototype routing tabs and repo context.md
+exit code 0

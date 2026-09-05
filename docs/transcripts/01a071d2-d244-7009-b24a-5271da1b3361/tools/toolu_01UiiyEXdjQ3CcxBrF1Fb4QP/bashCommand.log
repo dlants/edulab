@@ -1,0 +1,23 @@
+$ cd /Users/denis.lantsman/src/magenta.nvim && grep -rn "validateInput\|yieldSchema" node/core/src/tools/yield-to-parent.ts -B 2 -A 5
+stdout:
+node/core/src/tools/yield-to-parent.ts-60-};
+node/core/src/tools/yield-to-parent.ts-61-
+node/core/src/tools/yield-to-parent.ts:62:export function getSpec(yieldSchema?: JSONSchemaType): ProviderToolSpec {
+node/core/src/tools/yield-to-parent.ts-63-  return {
+node/core/src/tools/yield-to-parent.ts-64-    ...spec,
+node/core/src/tools/yield-to-parent.ts:65:    input_schema: yieldSchema ?? DEFAULT_INPUT_SCHEMA,
+node/core/src/tools/yield-to-parent.ts-66-  };
+node/core/src/tools/yield-to-parent.ts-67-}
+node/core/src/tools/yield-to-parent.ts-68-
+node/core/src/tools/yield-to-parent.ts-69-export const spec: ProviderToolSpec = {
+node/core/src/tools/yield-to-parent.ts-70-  name: "yield_to_parent" as ToolName,
+--
+node/core/src/tools/yield-to-parent.ts-89-};
+node/core/src/tools/yield-to-parent.ts-90-
+node/core/src/tools/yield-to-parent.ts:91:export function validateInput(input: {
+node/core/src/tools/yield-to-parent.ts-92-  [key: string]: unknown;
+node/core/src/tools/yield-to-parent.ts-93-}): Result<Input> {
+node/core/src/tools/yield-to-parent.ts-94-  if ("result" in input && typeof input.result !== "string") {
+node/core/src/tools/yield-to-parent.ts-95-    return {
+node/core/src/tools/yield-to-parent.ts-96-      status: "error",
+exit code 0

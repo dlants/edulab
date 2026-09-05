@@ -1,0 +1,19 @@
+$ cd /Users/denis.lantsman/src/edulab && grep -n "export function ref\|function cls" -A 8 packages/frontend/vamp.ts
+stdout:
+548:export function ref(prefix: string): Ref {
+549-  return `${prefix}_${refCounter++}` as Ref;
+550-}
+551-
+552-let clsCounter = 0;
+553-
+554-/** Generate a unique CSS class name. Avoids style collisions between components. */
+555:export function cls(prefix: string): string {
+556-  return `${prefix}_${clsCounter++}`;
+557-}
+558-
+559-/**
+560- * Smoothly scroll an element into view. This is a layout side effect (no DOM
+561- * creation), so it is the one sanctioned imperative touch — drive it from a
+562- * post-render subscriber via a `ref`, never from a `sync`-time render.
+563- */
+exit code 0

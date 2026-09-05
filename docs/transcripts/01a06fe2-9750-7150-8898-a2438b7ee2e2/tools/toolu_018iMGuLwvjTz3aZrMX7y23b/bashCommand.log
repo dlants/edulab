@@ -1,0 +1,11 @@
+$ cd /Users/denis.lantsman/src/edulab && python3 -c "
+import json
+d=json.load(open('/tmp/wildchat.json'))
+c=next(x for x in d if x['hash'].startswith('3890541b'))
+json.dump(c,open('task-samples/3890541b-chiller-system-hysys-model.json','w'),indent=2)
+print(c['hash'],c['model'],c['turns'])
+" && git add task-samples && git commit -q -m "Add chiller/HYSYS task sample" && git log --oneline -1
+stdout:
+3890541ba7053e372eb4c4a7f406f5a2 gpt-4-1106-preview 26
+ee3c295 Add chiller/HYSYS task sample
+exit code 0
