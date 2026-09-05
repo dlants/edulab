@@ -26,13 +26,16 @@ import {
   type View,
 } from "./vamp.ts";
 
-export type Mode = "task" | "learning";
-
 export type State = {
   messages: ReadonlyArray<Message>;
   inFlight: boolean;
   draft: string;
-  mode: Mode;
+  /** False at layer 0 (the bare task transcript); true for the two-pane split. */
+  split: boolean;
+  /** How deep in the tree the left pane is: 0 at layer 0. */
+  depth: number;
+  /** Whether `→` can move deeper, i.e. there is something to move left. */
+  canDescend: boolean;
   /** The thread whose transcript this pane shows; the live selection is over it. */
   thread: ThreadId;
   /** Committed highlights over this transcript. */
@@ -48,7 +51,8 @@ export type State = {
 export type Msg =
   | { type: "DRAFT_CHANGED"; draft: string }
   | { type: "SUBMIT" }
-  | { type: "MODE_TOGGLED" }
+  | { type: "GO_DEEPER" }
+  | { type: "GO_BACK" }
   | { type: "SELECTION_CHANGED"; anchor: Anchor | null }
   | { type: "MARK_CLICKED"; thread: ThreadId }
   | { type: "LEARNING_MSG"; msg: LearningMsg }
@@ -60,7 +64,8 @@ const messageClass = cls("message");
 const roleClass = cls("role");
 const composerClass = cls("composer");
 const paneClass = cls("pane");
-const toggleClass = cls("toggle");
+const navClass = cls("nav");
+const depthClass = cls("depth");
 const markClass = cls("mark");
 const textClass = cls("text");
 const threadPaneClass = cls("thread-pane");
@@ -77,7 +82,7 @@ mountStyle(`
   gap: 1rem 2rem;
   align-items: start;
 }
-.${appClass}[data-mode="learning"] {
+.${appClass}[data-split="true"] {
   max-width: 88rem;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
 }
@@ -87,18 +92,35 @@ mountStyle(`
   gap: 1rem;
   min-width: 0;
 }
-.${toggleClass} {
+.${navClass} {
   position: fixed;
   top: 4.5rem;
   right: 1rem;
   z-index: 10;
-  font: inherit;
-  padding: 0.4rem 0.8rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.3rem 0.6rem;
   border-radius: 999px;
   border: 1px solid rgba(0, 0, 0, 0.2);
   background: #fff;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+}
+.${navClass} button {
+  font: inherit;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  background: #fff;
   cursor: pointer;
+}
+.${navClass} button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.${depthClass} {
+  font-size: 0.75rem;
+  opacity: 0.6;
 }
 .${markClass} {
   border-radius: 2px;
@@ -376,13 +398,19 @@ export class AppView implements View<State, Msg> {
     const transcriptRef: Ref = ref("transcript");
     const inputRef: Ref = ref("input");
     const sendRef: Ref = ref("send");
-    const toggleRef: Ref = ref("toggle");
+    const backRef: Ref = ref("back");
+    const forwardRef: Ref = ref("forward");
+    const depthRef: Ref = ref("depth");
     const composerRef: Ref = ref("composer");
     const learningRef: Ref = ref("learning");
 
     container.className = appClass;
     container.innerHTML = sanitize`
-      <button type="button" class="${toggleClass}" data-ref="${toggleRef}"></button>
+      <div class="${navClass}">
+        <button type="button" data-ref="${backRef}">← Back</button>
+        <span class="${depthClass}" data-ref="${depthRef}"></span>
+        <button type="button" data-ref="${forwardRef}"></button>
+      </div>
       <div class="${paneClass}">
         <ul class="${transcriptClass}" data-ref="${transcriptRef}"></ul>
         <div class="${composerClass}" data-ref="${composerRef}">
@@ -410,8 +438,11 @@ export class AppView implements View<State, Msg> {
       .ref(sendRef)
       .addEventListener("click", () => dispatch({ type: "SUBMIT" }));
     this.b
-      .ref(toggleRef)
-      .addEventListener("click", () => dispatch({ type: "MODE_TOGGLED" }));
+      .ref(backRef)
+      .addEventListener("click", () => dispatch({ type: "GO_BACK" }));
+    this.b
+      .ref(forwardRef)
+      .addEventListener("click", () => dispatch({ type: "GO_DEEPER" }));
 
     // Capture on mouseup/keyup rather than `selectionchange`: the browser
     // collapses the selection as soon as the user clicks the learning pane,
@@ -442,13 +473,16 @@ export class AppView implements View<State, Msg> {
         ),
       ),
     );
-    this.b.bindContainerAttr("data-mode", (s) => s.mode);
-    this.b.bindText(toggleRef, (s) =>
-      s.mode === "task" ? "Switch to learning mode" : "Back to task mode",
+    this.b.bindContainerAttr("data-split", (s) => (s.split ? "true" : "false"));
+    this.b.bindText(forwardRef, (s) =>
+      s.split ? "Go deeper →" : "Learning mode →",
     );
-    this.b.bindVisible(composerRef, (s) => s.mode === "task");
+    this.b.bindDisabled(forwardRef, (s) => s.split && !s.canDescend);
+    // Not rendered at layer 0: there is nowhere above the task thread.
+    this.b.bindVisible(backRef, (s) => s.split);
+    this.b.bindText(depthRef, (s) => `Layer ${s.depth}`);
     this.b.bindSlot(learningRef, (s) => {
-      if (s.mode !== "learning") return undefined;
+      if (!s.split) return undefined;
       const child = s.child;
       // A live selection and an active child compete for this pane; the newer
       // one wins, and a selection is always the newer of the two here because

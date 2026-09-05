@@ -266,11 +266,20 @@ Deviations:
 
 ## Nesting and the arrows
 
+**Status: done** (`packages/frontend/view.ts`, `prototypes/chat.ts`, `packages/e2e/tests/chat.spec.ts`).
+
+Deviations:
+- `State.mode` is replaced by `split: boolean` plus derived `depth` and `canDescend`; the container attribute is `data-split` and the `Mode` type is gone.
+- The pill holds both arrows and the depth indicator, rendered as "Layer n" (`path(focus).length` in the split, 0 outside it) rather than a list of thread ids.
+- The left pane's composer stays visible in the split: descending moves a learning thread to the left, and it would otherwise lose its only composer.
+- The buttons read "Learning mode →" / "Go deeper →" / "← Back".
+- Descending or climbing clears the live anchor and the query draft, since both belong to the pane that just moved.
+
 - Goal: `→` descends into the active child and `←` climbs back, and a thread opened at depth behaves exactly like one opened at the root.
 - Tests (Playwright):
-  - Explain from the task, press `→` so the explanation is on the left, then select part of it and click "Quiz me on this": the new `start` frame's seed has two sections — the task transcript with the first selection, then the explanation with the second — and the task text appears exactly once.
-  - Taking that action does not move the panes — the quiz appears on the right; pressing `→` again puts it on the left.
-  - `←` back to the root leaves the explanation on the right and both highlights intact, and pressing `→` twice returns to the quiz thread rather than starting over.
-  - At layer 0 the button reads "Learning mode" and there is no `←`; one layer in, it reads "Go deeper" and `←` closes the split again.
-  - `→` is disabled in the split with no active child.
-  - Depth three works, i.e. nothing in the design caps the recursion.
+  - [x] Explain from the task, press `→` so the explanation is on the left, then select part of it and click "Quiz me on this": the new `start` frame's seed has two sections — the task transcript with the first selection, then the explanation with the second — and the task text appears exactly once.
+  - [x] Taking that action does not move the panes — the quiz appears on the right; pressing `→` again puts it on the left.
+  - [x] `←` back to the root leaves the explanation on the right and both highlights intact, and pressing `→` twice returns to the quiz thread rather than starting over.
+  - [x] At layer 0 the button reads "Learning mode" and there is no `←`; one layer in, it reads "Go deeper" and `←` closes the split again.
+  - [x] `→` is disabled in the split with no active child.
+  - [x] Depth three works, i.e. nothing in the design caps the recursion.

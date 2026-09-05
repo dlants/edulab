@@ -96,14 +96,14 @@ function taskTranscript(page: Page) {
 const SENTENCE = "the quick brown fox jumps over the lazy dog";
 
 /** A transcript with one user message of known text, in learning mode. */
-async function transcript(page: Page) {
-  const backend = await fakeBackend(page, ["ok"]);
+async function transcript(page: Page, chunks: string[] = ["ok"]) {
+  const backend = await fakeBackend(page, chunks);
   backend.release();
   await page.goto("/");
   await page.getByRole("textbox").fill(SENTENCE);
   await page.getByRole("textbox").press("Enter");
   await expect(taskTranscript(page).locator("li")).toHaveCount(2);
-  await page.getByRole("button", { name: "Switch to learning mode" }).click();
+  await page.getByRole("button", { name: "Learning mode" }).click();
   return backend;
 }
 
@@ -258,6 +258,138 @@ test("clicking a mark reopens its thread without a new request", async ({
   await expect(page.locator("blockquote")).toHaveText("the quick");
   await expect(threadTranscript(page).locator("li")).toHaveCount(1);
   expect(backend.started).toHaveLength(sent);
+});
+
+const REPLY = "alpha beta gamma delta";
+
+function explainButton(page: Page) {
+  return page.getByRole("button", { name: "I don't understand this." });
+}
+
+function quizButton(page: Page) {
+  return page.getByRole("button", { name: "Quiz me on this." });
+}
+
+function deeper(page: Page) {
+  return page.getByRole("button", { name: "Go deeper" });
+}
+
+function back(page: Page) {
+  return page.getByRole("button", { name: "Back" });
+}
+
+/** The last `start` frame's single seed turn. */
+function seedOf(backend: { started: string[] }, i: number): string {
+  const messages = JSON.parse(backend.started[i]) as Array<{
+    content: string;
+  }>;
+  expect(messages).toHaveLength(1);
+  return messages[0].content;
+}
+
+function occurrences(text: string, needle: string): number {
+  return text.split(needle).length - 1;
+}
+
+test("the arrows name the layer and stop at the ends", async ({ page }) => {
+  const backend = await fakeBackend(page, ["ok"]);
+  backend.release();
+  await page.goto("/");
+
+  await expect(back(page)).toBeHidden();
+  await expect(
+    page.getByRole("button", { name: "Learning mode" }),
+  ).toBeVisible();
+
+  await page.getByRole("button", { name: "Learning mode" }).click();
+  await expect(deeper(page)).toBeDisabled();
+  await expect(back(page)).toBeVisible();
+
+  await back(page).click();
+  await expect(back(page)).toBeHidden();
+  await expect(
+    page.getByRole("button", { name: "Learning mode" }),
+  ).toBeVisible();
+});
+
+test("a thread opened at depth carries both selections once", async ({
+  page,
+}) => {
+  const backend = await transcript(page, [REPLY]);
+  await selectRange(page, 0, 0, 9);
+  await explainButton(page).click();
+  await expect(threadTranscript(page).locator("li")).toHaveCount(1);
+
+  await deeper(page).click();
+  await expect(taskTranscript(page).locator("li")).toHaveText([
+    new RegExp(REPLY),
+  ]);
+
+  const sent = backend.started.length;
+  await selectRange(page, 0, 0, 5);
+  await quizButton(page).click();
+
+  const seed = seedOf(backend, sent);
+  expect(occurrences(seed, SENTENCE)).toBe(1);
+  expect(seed).toContain("the quick");
+  expect(seed).toContain("alpha");
+  expect(seed.indexOf("the quick")).toBeLessThan(seed.indexOf("alpha"));
+
+  // Taking the action does not move the panes: the quiz lands on the right.
+  await expect(taskTranscript(page).locator("li")).toHaveText([
+    new RegExp(REPLY),
+  ]);
+  await expect(threadTranscript(page).locator("li")).toHaveCount(1);
+
+  await deeper(page).click();
+  await expect(taskTranscript(page).locator("li")).toHaveCount(1);
+  await expect(page.getByText("Layer 3")).toBeVisible();
+});
+
+test("← climbs back without losing threads or highlights", async ({ page }) => {
+  const backend = await transcript(page, [REPLY]);
+  await selectRange(page, 0, 0, 9);
+  await explainButton(page).click();
+  await expect(threadTranscript(page).locator("li")).toHaveCount(1);
+
+  await deeper(page).click();
+  await selectRange(page, 0, 0, 5);
+  await quizButton(page).click();
+  await expect(threadTranscript(page).locator("li")).toHaveCount(1);
+  const sent = backend.started.length;
+
+  await back(page).click();
+  await expect(page.getByText("Layer 1")).toBeVisible();
+  await expect(page.locator("[data-mark]")).toHaveText("the quick");
+  await expect(threadTranscript(page).locator("li")).toHaveCount(1);
+
+  await deeper(page).click();
+  await expect(page.locator("[data-mark]")).toHaveText("alpha");
+  await deeper(page).click();
+  await expect(page.getByText("Layer 3")).toBeVisible();
+  expect(backend.started).toHaveLength(sent);
+});
+
+test("nesting goes three deep", async ({ page }) => {
+  const backend = await transcript(page, [REPLY]);
+  await selectRange(page, 0, 0, 9);
+  await explainButton(page).click();
+  await expect(threadTranscript(page).locator("li")).toHaveCount(1);
+
+  await deeper(page).click();
+  await selectRange(page, 0, 0, 5);
+  await quizButton(page).click();
+  await expect(threadTranscript(page).locator("li")).toHaveCount(1);
+
+  await deeper(page).click();
+  const sent = backend.started.length;
+  await selectRange(page, 0, 6, 10);
+  await explainButton(page).click();
+
+  const seed = seedOf(backend, sent);
+  expect(occurrences(seed, SENTENCE)).toBe(1);
+  expect(occurrences(seed, REPLY)).toBe(2);
+  expect(seed).toContain("beta");
 });
 
 test("a new selection leaves committed marks rendered", async ({ page }) => {

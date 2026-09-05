@@ -24,13 +24,16 @@ export function mount(container: HTMLElement): void {
       view.sync(state);
     },
   );
-  const focus = tree.root;
+  // The thread on the left. Moved only by the arrows.
+  let focus = tree.root;
 
   const state: State = {
     messages: [],
     inFlight: false,
     draft: "",
-    mode: "task",
+    split: false,
+    depth: 0,
+    canDescend: false,
     thread: focus,
     marks: [],
     activeMark: null,
@@ -43,6 +46,9 @@ export function mount(container: HTMLElement): void {
    * user is editing is derived, so this runs after every dispatch. */
   function refresh(): void {
     const thread = tree.get(focus);
+    state.thread = focus;
+    state.depth = state.split ? tree.path(focus).length : 0;
+    state.canDescend = thread.activeChild !== null;
     state.messages = thread.conversation.messages;
     state.inFlight = thread.conversation.inFlight;
     state.draft = thread.draft;
@@ -82,9 +88,26 @@ export function mount(container: HTMLElement): void {
       case "SUBMIT":
         send(focus);
         break;
-      case "MODE_TOGGLED":
-        state.mode = state.mode === "task" ? "learning" : "task";
+      case "GO_DEEPER": {
+        if (!state.split) {
+          state.split = true;
+          break;
+        }
+        const child = thread.activeChild;
+        if (!child) break;
+        focus = child;
+        state.anchor = null;
+        state.query = "";
         break;
+      }
+      case "GO_BACK": {
+        const parent = thread.origin?.anchor.thread;
+        if (parent === undefined) state.split = false;
+        else focus = parent;
+        state.anchor = null;
+        state.query = "";
+        break;
+      }
       case "SELECTION_CHANGED":
         state.anchor = msg.anchor;
         thread.activeChild = null;
