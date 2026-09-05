@@ -35,3 +35,7 @@ I think one experiment that would be interesting would be to have the agent sugg
 # prototype 3 - domain map
 
 Instead of suggesting sections from the transcript, can we have the agent create a visualization of the key moments in the task completion, and have the user interact with that in some way?
+
+# prototype 4 - interactives
+
+Given a transcript, and a chosen focus area, can we generate an interactive for the user to verify their thinking?

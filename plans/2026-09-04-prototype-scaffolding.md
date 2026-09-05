@@ -111,7 +111,14 @@ Notes:
 - Work: root `package.json` with `packages/*` workspaces; `vite.config.ts` from gatherus minus the MPA/`spaFallback` bits; `biome.json`; tsconfigs; `packages/iso/protocol.ts`; `packages/backend/{app,socket}.ts`; `packages/frontend/{index.html,main.ts}` plus `vamp.ts` copied verbatim.
 - Tests: none. This stage is entirely wiring against a live API, and the manual check - events land in the console - is stronger than anything a mock would tell us.
 
-## conversation
+## conversation — DONE
+
+Notes:
+
+- `Socket` is a structural `{ send, addEventListener("message", ...) }` rather than `WebSocket`, so the vitest fakes need no cast; the real `WebSocket` satisfies it.
+- `Conversation` exposes `handleFrame` (so tests can inject `done`/`error` frames), `inFlight`, and an `onChange` callback for the next stage's render loop.
+- An assistant message only appears in `messages` once it has text, so an in-flight turn with no deltas yet shows no empty bubble.
+- Root `test` script is now `vitest run` with a root `vitest.config.ts` (node environment, `packages/**/*.test.ts`).
 
 - Goal: `conversation.send("count to five")` resolves with two turns in `conversation.messages`.
 - Work: `conversation.ts`.
