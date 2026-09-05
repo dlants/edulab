@@ -61,3 +61,41 @@ Having spent some time thinking about this, the idea of people just interacting 
 Maybe in some settings this is manageable. Perhaps the user is also having human mentorship, coworker relationships, etc... while they engage with this software.
 
 As a design note though, I really think it would be good to keep an eye out for opportunities for human connection. Can this system bring in mentors and coworkers? Can we create a learning community? Can we encourage and facilitate discussions with other people?
+
+# Prototype exploration
+
+## domain map
+
+The big questions above all anchor on the degree to which we can leverage the intelligence in the LLM to tackle these problems - can the agent pick fruitful things for the user to work on, model user understanding, or come up with interventions for the user to engage with.
+
+I think the trivial implementation of this is just text - maybe the agent can maintain an internal document where it keeps track of the domain, and its model of the user's understanding of the domain space, and some memory / history of previous interactions.
+
+Something I've been experimenting with in my own harness work and with software engineering is - can we create hybrid neuro-symbolic representations that can improve over this?
+
+As mentioned previously, fully symbolic systems for domain mapping have been attempted and well studied. As far as I recall (reading Carnegie Leraning papers and interacting with their tutoring systems) is kinda meh.
+
+But our goal is different. We don't have to have a complete symbolic system that generates interventions. We just have to create a representation that's useful for steering the agent. And LLMs allow us to be a lot more loose about the structure and content of these representations. For example, we could just have a graph of text. We don't have to commit to an individual node perfectly modeling a distinct piece of domain knowledge. We can navigate this space between ambiguous and formal representations.
+
+I think this could be a way of representing the "agent suggests key points" / "domain map" parts of the prototype, and even one we could expose to the user or mentor. It could be an interesting way that the user gets to reflect on their own understanding and learning, and navigate the domain space. Or it could be a surface area for a mentor to come in and make tweaks - adjusting the way the agent is interacting with the user at a high level, without digging into the individual tasks and transcripts.
+
+## prototype 1 - user-driven review
+
+I think a really interesting interaction is a user being able to highlight some text in the transcript, and get a tool tip of interacting with it, like being able to ask a followup question about it or just say "I don't understand this", "quiz me on this".
+
+This can open up a second vertical split, to the right of the transcript, where the user can engage with a reflective / learning task.
+
+## prototype 2 - the agent suggests key points to review
+
+Prototype 1 assumes that the user has pretty solid metacognitive skills, and can apply them to effectively choose their own learning objectives. In other words, they're an autodidact.
+
+What if the user is not so good at this? Can we leverage the agent and the UI to make them a better autodidact?
+
+I think one experiment that would be interesting would be to have the agent suggest areas for review, instead of having the user pick it from the entire transcript.
+
+## prototype 3 - domain map
+
+Instead of suggesting sections from the transcript, can we have the agent create a visualization of the key moments in the task completion, and have the user interact with that in some way?
+
+## prototype 4 - interactives
+
+Given a transcript, and a chosen focus area, can we generate an interactive for the user to verify their thinking?

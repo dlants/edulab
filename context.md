@@ -1,19 +1,18 @@
-**edulab** is a set of throwaway prototypes exploring how a user can *learn* from an agent that is doing their work for them, rather than passively watching it. See `notes/exploration.md` for the thinking and `notes/prototype.md` for the prototype ladder.
+**edulab** is a set of throwaway prototypes exploring how a user can *learn* from an agent that is doing their work for them, rather than passively watching it. See `notes/exploration.md` for the thinking and the prototype ladder, and `notes/studies.md` for the supporting literature.
 
-Everything here is a demo. No database, no auth, no persistence, no configuration. Refreshing the page discards all state, by design.
+Everything here is a demo, and the scaffolding constraints are deliberate. No database, no auth, no persistence, no configuration, no router. All state is client-side and in memory, discarded on refresh. The backend holds no conversation state: it is a pipe from the websocket to the Anthropic SDK, and inference is streamed rather than awaited so the demo reads as a real agent session instead of a latency pause. The agentic loop is a heavily simplified take on `~/src/magenta.nvim` (anthropic only, api key only, no MCP); the web setup is lifted from `~/src/gatherus/`.
 
 # Layout
 
 - **`packages/iso/protocol.ts`** — the websocket message union (`ClientMessage`, `ServerFrame`). Imported by both sides.
 - **`packages/backend/`** — Fastify server, entry `app.ts` (reads `ANTHROPIC_API_KEY` from the root `.env`, listens on 3000). `socket.ts` registers `GET /api/socket` and is a **pipe**: it forwards the client's `MessageCreateParamsStreaming` to the SDK unexamined and streams `RawMessageStreamEvent`s back. It holds no conversation state.
-- **`packages/frontend/`** — entry `main.ts`, which mounts `prototypes/chat.ts` into the page. There is one prototype and no router; later ideas from `notes/prototype.md` land as new actions inside it rather than as separate pages. The sample picker lives in the header bar next to the layer navigation, and switching sample is a full page load.
+- **`packages/frontend/`** — entry `main.ts`, which mounts `prototypes/chat.ts` into the page. There is one prototype and no router; later ideas land as new actions inside it rather than as separate pages. The sample picker lives in the header bar next to the layer navigation, and switching sample is a full page load.
   - `prototypes/chat.ts` — owns the thread tree, the state, and the single dispatch loop.
   - `conversation.ts` — the `MessageParam[]` plus the stream accumulator. Model, max tokens, and the system prompt are module constants here. The system prompt is deliberately **task mode**, not tutoring: learning mode is what we layer on top of the transcript it produces.
   - `view.ts` — the transcript and composer. `vamp.ts` is copied verbatim from gatherus.
 - **`packages/e2e/`** — Playwright specs (`.spec.ts`, so vitest's `packages/**/*.test.ts` glob ignores them).
 - **`docs/transcripts/`** — synced magenta thread archives, raw material for the prototypes. Refresh with `npm run sync:transcripts`.
-- **`notes/exploration.md`** — the framing. What the learning problem actually is, why the obvious moves (student modeling, agent-as-tutor) are traps, and what we are deliberately not building. **Read this before proposing a direction.**
-- **`notes/prototype.md`** — the prototype ladder and the scaffolding constraints. **Read this before adding a prototype.** Each numbered prototype there maps to an entry in `routes.ts`.
+- **`notes/exploration.md`** — the framing. What the learning problem actually is, why the obvious moves (student modeling, agent-as-tutor) are traps, and what we are deliberately not building. **Read this before proposing a direction or adding a prototype.** The numbered prototype sketches at the end are the roadmap.
 - **`plans/`** — implementation plans, annotated with what actually happened as each stage landed.
 
 # Commands
