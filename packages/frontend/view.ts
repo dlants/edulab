@@ -116,25 +116,35 @@ mountStyle(`
 .${bodyClass} {
   flex: 1;
   min-height: 0;
-  overflow-y: auto;
+  overflow: hidden;
   width: 100%;
   max-width: 44rem;
   margin: 0 auto;
-  padding: 1rem 1rem 5rem;
+  padding: 0 1rem;
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: 1rem 2rem;
-  align-items: start;
+  align-items: stretch;
 }
 .${appClass}[data-split="true"] .${bodyClass} {
   max-width: 88rem;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
 }
+/* Each layer column scrolls on its own: a long transcript on the left must not
+ * drag the thread on the right out of view. */
 .${paneClass} {
   display: flex;
   flex-direction: column;
   gap: 1rem;
   min-width: 0;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 1rem 0 5rem;
+}
+/* The transcript takes the slack so the composer sits at the bottom of the
+ * viewport rather than floating under the header on a short thread. */
+.${paneClass} > .${transcriptClass} {
+  flex: 1;
 }
 .${navClass} {
   flex: none;
@@ -276,13 +286,13 @@ mountStyle(`
   gap: 0.5rem;
 }
 .${threadPaneClass} {
-  position: sticky;
-  top: 0;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 1rem 0 5rem 1.5rem;
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
   border-left: 1px solid rgba(0, 0, 0, 0.1);
-  padding-left: 1.5rem;
 }
 .${originQuoteClass} {
   white-space: pre-wrap;
@@ -466,13 +476,22 @@ class MessageView implements View<MessageState, MessageMsg> {
    * expand affordance is worth showing, and by how many lines. The count is
    * remembered while expanded, when there is nothing left to measure. */
   private measure(expanded: boolean): void {
-    if (!expanded) {
-      const lineHeight =
-        Number.parseFloat(getComputedStyle(this.clip).lineHeight) || 1;
-      this.hiddenLines = Math.round(
-        (this.clip.scrollHeight - this.clip.clientHeight) / lineHeight,
-      );
+    // On first render the container is still detached (bindList constructs and
+    // syncs before inserting), so there is no layout to read yet.
+    if (!this.container.isConnected) {
+      requestAnimationFrame(() => {
+        if (this.container.isConnected) this.measure(expanded);
+      });
+      return;
     }
+    const lineHeight =
+      Number.parseFloat(getComputedStyle(this.clip).lineHeight) || 1;
+    // scrollHeight is the full content height whether or not the box is
+    // clipped, so this reads the same while expanded - which it must, since
+    // an expanded message still needs its collapse affordance.
+    this.hiddenLines = Math.round(
+      this.clip.scrollHeight / lineHeight - MAX_MESSAGE_LINES,
+    );
     const clipped = this.hiddenLines > 0;
     this.container.dataset.overflowing = clipped ? "true" : "false";
     this.more.textContent =
@@ -483,6 +502,17 @@ class MessageView implements View<MessageState, MessageMsg> {
     this.b.cleanup();
     this.container.innerHTML = "";
   }
+}
+
+/** The newest block is expanded by default - it is the one being written, and
+ * clipping it hides the work as it lands. The toggle still applies, so the user
+ * can collapse it; membership in the set flips the default either way. */
+function lastExpanded(
+  expanded: ReadonlySet<number>,
+  index: number,
+  count: number,
+): boolean {
+  return expanded.has(index) !== (index === count - 1);
 }
 
 function resultText(message: Message): string {
@@ -557,7 +587,7 @@ class ThreadPane implements View<ThreadPaneState, ThreadPaneMsg> {
           MessageView,
           {
             message,
-            expanded: s.expanded.has(i),
+            expanded: lastExpanded(s.expanded, i, s.messages.length),
             segments: segments([], null, i, messageText(message).length),
             active: null,
           },
@@ -702,7 +732,7 @@ export class AppView implements View<State, Msg> {
           MessageView,
           {
             message,
-            expanded: s.expanded.has(i),
+            expanded: lastExpanded(s.expanded, i, s.messages.length),
             segments: segments(
               s.marks,
               s.anchor,
@@ -741,6 +771,9 @@ export class AppView implements View<State, Msg> {
     // The threads pane is hidden rather than unmounted: the transcript, the
     // draft and the live selection all survive a trip to the graph tab.
     this.b.bindVisible(bodyRef, (s) => s.tab === "threads");
+    // Otherwise the empty graph slot still claims its flex share of the column
+    // and the transcript only gets part of the viewport.
+    this.b.bindVisible(graphSlotRef, (s) => s.tab === "graph");
     this.b.bindSlot(graphSlotRef, (s) =>
       s.tab === "graph"
         ? show(GraphView, s.graph, {}, (msg: GraphMsg) =>
