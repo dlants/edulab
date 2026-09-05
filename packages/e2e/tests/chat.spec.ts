@@ -103,7 +103,7 @@ async function transcript(page: Page, chunks: string[] = ["ok"]) {
   await page.getByRole("textbox").fill(SENTENCE);
   await page.getByRole("textbox").press("Enter");
   await expect(taskTranscript(page).locator("li")).toHaveCount(2);
-  await page.getByRole("button", { name: "Learning mode" }).click();
+  await page.getByRole("button", { name: "Reflect" }).click();
   return backend;
 }
 
@@ -182,7 +182,7 @@ test("two marks in one message are both clickable", async ({ page }) => {
   const explain = page.getByRole("button", {
     name: "I don't understand this.",
   });
-  const quote = page.locator("blockquote");
+  const openedWith = page.locator("[data-thread-action]");
 
   await selectRange(page, 0, 0, 9);
   await explain.click();
@@ -195,9 +195,9 @@ test("two marks in one message are both clickable", async ({ page }) => {
   await expect(marks.nth(1)).toHaveText("fox");
 
   await marks.nth(0).click();
-  await expect(quote).toHaveText("the quick");
+  await expect(openedWith).toHaveText("I don't understand this.");
   await marks.nth(1).click();
-  await expect(quote).toHaveText("fox");
+  await expect(openedWith).toHaveText("Quiz me on this.");
 });
 
 test("an action opens a thread seeded with the selected passage", async ({
@@ -255,7 +255,9 @@ test("clicking a mark reopens its thread without a new request", async ({
   const sent = backend.started.length;
 
   await page.locator("[data-mark]").first().click();
-  await expect(page.locator("blockquote")).toHaveText("the quick");
+  await expect(page.locator("[data-thread-action]")).toHaveText(
+    "I don't understand this.",
+  );
   await expect(threadTranscript(page).locator("li")).toHaveCount(1);
   expect(backend.started).toHaveLength(sent);
 });
@@ -271,7 +273,7 @@ function quizButton(page: Page) {
 }
 
 function deeper(page: Page) {
-  return page.getByRole("button", { name: "Go deeper" });
+  return page.getByRole("button", { name: /→/ });
 }
 
 function back(page: Page) {
@@ -297,19 +299,15 @@ test("the arrows name the layer and stop at the ends", async ({ page }) => {
   await page.goto("/");
 
   await expect(back(page)).toBeHidden();
-  await expect(
-    page.getByRole("button", { name: "Learning mode" }),
-  ).toBeVisible();
+  await expect(page.getByRole("button", { name: "Reflect" })).toBeVisible();
 
-  await page.getByRole("button", { name: "Learning mode" }).click();
+  await page.getByRole("button", { name: "Reflect" }).click();
   await expect(deeper(page)).toBeDisabled();
   await expect(back(page)).toBeVisible();
 
   await back(page).click();
   await expect(back(page)).toBeHidden();
-  await expect(
-    page.getByRole("button", { name: "Learning mode" }),
-  ).toBeVisible();
+  await expect(page.getByRole("button", { name: "Reflect" })).toBeVisible();
 });
 
 test("a thread opened at depth carries both selections once", async ({
@@ -344,6 +342,20 @@ test("a thread opened at depth carries both selections once", async ({
   await deeper(page).click();
   await expect(taskTranscript(page).locator("li")).toHaveCount(1);
   await expect(page.getByText("Layer 3")).toBeVisible();
+});
+
+test("a descended thread shows what it was opened from", async ({ page }) => {
+  await transcript(page, [REPLY]);
+  await selectRange(page, 0, 0, 9);
+  await explainButton(page).click();
+  await expect(threadTranscript(page).locator("li")).toHaveCount(1);
+
+  await expect(page.locator("[data-focus-action]")).toBeHidden();
+  await deeper(page).click();
+  await expect(page.locator("[data-focus-action]")).toHaveText(
+    "I don't understand this.",
+  );
+  await expect(page.locator("[data-focus-quote]")).toHaveText("the quick");
 });
 
 test("← climbs back without losing threads or highlights", async ({ page }) => {

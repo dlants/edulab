@@ -44,6 +44,8 @@ export type State = {
   activeMark: ThreadId | null;
   anchor: Anchor | null;
   query: string;
+  /** How the left pane's thread was opened, absent for the task thread. */
+  origin: { action: string; quote: string } | null;
   /** The active child thread, shown on the right when nothing is selected. */
   child: ThreadPaneState | null;
 };
@@ -69,20 +71,32 @@ const depthClass = cls("depth");
 const markClass = cls("mark");
 const textClass = cls("text");
 const threadPaneClass = cls("thread-pane");
-const threadQuoteClass = cls("thread-quote");
+const threadActionClass = cls("thread-action");
+const bodyClass = cls("body");
+const originQuoteClass = cls("origin-quote");
 
 mountStyle(`
 .${appClass} {
   font-family: system-ui, sans-serif;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.${bodyClass} {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  width: 100%;
   max-width: 44rem;
   margin: 0 auto;
-  padding: 1rem;
+  padding: 1rem 1rem 5rem;
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: 1rem 2rem;
   align-items: start;
 }
-.${appClass}[data-split="true"] {
+.${appClass}[data-split="true"] .${bodyClass} {
   max-width: 88rem;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
 }
@@ -93,18 +107,14 @@ mountStyle(`
   min-width: 0;
 }
 .${navClass} {
-  position: fixed;
-  top: 4.5rem;
-  right: 1rem;
-  z-index: 10;
+  flex: none;
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: 0.5rem;
-  padding: 0.3rem 0.6rem;
-  border-radius: 999px;
-  border: 1px solid rgba(0, 0, 0, 0.2);
+  padding: 0.6rem 1rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
   background: #fff;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
 }
 .${navClass} button {
   font: inherit;
@@ -166,21 +176,27 @@ mountStyle(`
 }
 .${threadPaneClass} {
   position: sticky;
-  top: 4rem;
+  top: 0;
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
   border-left: 1px solid rgba(0, 0, 0, 0.1);
   padding-left: 1.5rem;
 }
-.${threadQuoteClass} {
+.${originQuoteClass} {
   white-space: pre-wrap;
   border-left: 3px solid #f0b429;
-  margin: 0;
+  margin: 0.4rem 0 0;
   padding-left: 0.75rem;
   max-height: 8rem;
   overflow-y: auto;
   font-size: 0.9rem;
+  opacity: 0.8;
+}
+.${threadActionClass} {
+  white-space: pre-wrap;
+  font-weight: 600;
+  font-size: 0.95rem;
 }
 .${composerClass} textarea {
   flex: 1;
@@ -299,8 +315,8 @@ class MessageView implements View<MessageState, SegmentMsg> {
 }
 
 export type ThreadPaneState = {
-  /** The passage this thread was opened from. */
-  quote: string;
+  /** What the user asked for when they opened this thread. */
+  action: string;
   messages: ReadonlyArray<Message>;
   inFlight: boolean;
   draft: string;
@@ -322,14 +338,14 @@ class ThreadPane implements View<ThreadPaneState, ThreadPaneMsg> {
     dispatch: (msg: ThreadPaneMsg) => void,
     initial: ThreadPaneState,
   ) {
-    const quoteRef = ref("quote");
+    const actionRef = ref("thread-action");
     const transcriptRef = ref("thread-transcript");
     const inputRef = ref("thread-input");
     const sendRef = ref("thread-send");
 
     container.className = threadPaneClass;
     container.innerHTML = sanitize`
-      <blockquote class="${threadQuoteClass}" data-ref="${quoteRef}"></blockquote>
+      <div class="${threadActionClass}" data-thread-action data-ref="${actionRef}"></div>
       <ul class="${transcriptClass}" data-ref="${transcriptRef}"></ul>
       <div class="${composerClass}">
         <textarea data-ref="${inputRef}" rows="2" placeholder="Follow up…"></textarea>
@@ -353,7 +369,7 @@ class ThreadPane implements View<ThreadPaneState, ThreadPaneMsg> {
       .ref(sendRef)
       .addEventListener("click", () => dispatch({ type: "SUBMIT" }));
 
-    this.b.bindText(quoteRef, (s) => s.quote);
+    this.b.bindText(actionRef, (s) => s.action);
     this.b.bindList(transcriptRef, "li", (s) =>
       s.messages.map((message, i) =>
         showKeyed(
@@ -403,6 +419,9 @@ export class AppView implements View<State, Msg> {
     const depthRef: Ref = ref("depth");
     const composerRef: Ref = ref("composer");
     const learningRef: Ref = ref("learning");
+    const originRef: Ref = ref("origin");
+    const originActionRef: Ref = ref("origin-action");
+    const originQuoteRef: Ref = ref("origin-quote");
 
     container.className = appClass;
     container.innerHTML = sanitize`
@@ -411,14 +430,20 @@ export class AppView implements View<State, Msg> {
         <span class="${depthClass}" data-ref="${depthRef}"></span>
         <button type="button" data-ref="${forwardRef}"></button>
       </div>
+      <div class="${bodyClass}">
       <div class="${paneClass}">
+        <div data-ref="${originRef}">
+          <div class="${threadActionClass}" data-focus-action data-ref="${originActionRef}"></div>
+          <blockquote class="${originQuoteClass}" data-focus-quote data-ref="${originQuoteRef}"></blockquote>
+        </div>
         <ul class="${transcriptClass}" data-ref="${transcriptRef}"></ul>
         <div class="${composerClass}" data-ref="${composerRef}">
           <textarea data-ref="${inputRef}" rows="2" placeholder="Ask something…"></textarea>
           <button type="button" data-ref="${sendRef}">Send</button>
         </div>
       </div>
-      <div data-ref="${learningRef}"></div>
+        <div data-ref="${learningRef}"></div>
+      </div>
     `;
     this.container = container;
     this.current = initialState;
@@ -474,13 +499,14 @@ export class AppView implements View<State, Msg> {
       ),
     );
     this.b.bindContainerAttr("data-split", (s) => (s.split ? "true" : "false"));
-    this.b.bindText(forwardRef, (s) =>
-      s.split ? "Go deeper →" : "Learning mode →",
-    );
+    this.b.bindText(forwardRef, (s) => `${descendLabel(s.depth + 1)} →`);
     this.b.bindDisabled(forwardRef, (s) => s.split && !s.canDescend);
     // Not rendered at layer 0: there is nowhere above the task thread.
     this.b.bindVisible(backRef, (s) => s.split);
     this.b.bindText(depthRef, (s) => `Layer ${s.depth}`);
+    this.b.bindVisible(originRef, (s) => s.origin !== null);
+    this.b.bindText(originActionRef, (s) => s.origin?.action ?? "");
+    this.b.bindText(originQuoteRef, (s) => s.origin?.quote ?? "");
     this.b.bindSlot(learningRef, (s) => {
       if (!s.split) return undefined;
       const child = s.child;
@@ -516,6 +542,20 @@ export class AppView implements View<State, Msg> {
   destroy(): void {
     this.b.cleanup();
     this.container.innerHTML = "";
+  }
+}
+
+/** Names the layer `→` leads to. */
+function descendLabel(destination: number): string {
+  switch (destination) {
+    case 1:
+      return "Reflect";
+    case 3:
+      return "We must go deeper";
+    case 4:
+      return "Thinkception!";
+    default:
+      return "Go deeper";
   }
 }
 

@@ -42,6 +42,19 @@ function transcript(
     .join("\n\n");
 }
 
+/** How the thread was opened, shown at the top of its pane so the user can see
+ * what they asked for. */
+export function actionLabel(action: Action): string {
+  switch (action.type) {
+    case "explain":
+      return "I don't understand this.";
+    case "quiz":
+      return "Quiz me on this.";
+    case "query":
+      return action.text;
+  }
+}
+
 function question(action: Action): string {
   switch (action.type) {
     case "explain":

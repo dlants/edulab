@@ -1,4 +1,5 @@
 import { Conversation } from "../conversation.ts";
+import { actionLabel } from "../prompt.ts";
 import { selectedSample } from "../samples/index.ts";
 import { anchorText, overlaps, type ThreadId } from "../selection.ts";
 import { ThreadTree } from "../threads.ts";
@@ -39,6 +40,7 @@ export function mount(container: HTMLElement): void {
     activeMark: null,
     anchor: null,
     query: "",
+    origin: null,
     child: null,
   };
 
@@ -53,6 +55,16 @@ export function mount(container: HTMLElement): void {
     state.inFlight = thread.conversation.inFlight;
     state.draft = thread.draft;
     state.marks = tree.marks(focus);
+    const own = thread.origin;
+    state.origin = own
+      ? {
+          action: actionLabel(own.action),
+          quote: anchorText(
+            own.anchor,
+            tree.get(own.anchor.thread).conversation.messages,
+          ),
+        }
+      : null;
     state.activeMark = thread.activeChild;
     const activeChild = thread.activeChild;
     if (!activeChild) {
@@ -62,7 +74,7 @@ export function mount(container: HTMLElement): void {
     const child = tree.get(activeChild);
     const origin = child.origin;
     state.child = {
-      quote: origin ? anchorText(origin.anchor, state.messages) : "",
+      action: origin ? actionLabel(origin.action) : "",
       messages: child.conversation.messages,
       inFlight: child.conversation.inFlight,
       draft: child.draft,
