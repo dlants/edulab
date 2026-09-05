@@ -237,8 +237,25 @@ Deviations:
 
 ## yield
 
-- Goal: a thread constructed with `yieldSchema` offers the yield tool and settles with structured data.
-- Tests (unit):
+**Done.** `send()`/`start()` resolve with a `TurnResult`; a thread constructed
+with `yieldSchema` offers a `yield` tool and settles the turn with the yielded
+value, recorded on `Thread.result`. Yield runs in the batch like any other tool
+(its result is the fixed `"Yield acknowledged."`), and the loop stops only after
+the whole batch's results are in the log.
+
+Deviations:
+
+- `yieldSchema` is `Anthropic.Tool.InputSchema | "text"` rather than an optional
+  schema. The plan said both "the default `{ result: string }` schema when no
+  schema is given" and "without a `yieldSchema` the tool is not offered at all",
+  which cannot both hold for a single optional field. `"text"` selects the
+  default schema and a `{ type: "text" }` yield value; absent means no yield
+  tool, so a model that calls `yield` anyway gets an unknown-tool error.
+- A turn ended by a `done`/`error` frame resolves `{ type: "error" }`; that
+  result is not stored on `Thread.result`, which only holds a settled yield.
+- `chat.ts` ignores the new return value, so nothing else changed this stage.
+
+- Goal:- Tests (unit):
   - A thread with a `yieldSchema` sends that schema as the yield tool's `input_schema`; without one, the default `{ result: string }` schema.
   - A yield call resolves the turn as `{ type: "yielded", value: { type: "structured", value: <input> } }`, and **no further request is sent**.
   - A yield alongside an ordinary tool call: both execute, both results are written into the message array, and the turn still stops at the yield.

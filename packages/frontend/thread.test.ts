@@ -494,3 +494,99 @@ it("drops the assistant turn when no text arrived", async () => {
   await turn;
   expect(thread.messages).toEqual([{ type: "text", role: "user", text: "hi" }]);
 });
+
+const REVIEW_SCHEMA = {
+  type: "object" as const,
+  properties: { verdict: { type: "string" } },
+  required: ["verdict"],
+};
+
+it("offers the yield tool with the supplied schema, and the default for text", () => {
+  const structured = new FakeSocket();
+  void new Thread(structured, { yieldSchema: REVIEW_SCHEMA }).send("hi");
+  expect(structured.sent[0]?.params.tools).toEqual([
+    expect.objectContaining({ name: "yield", input_schema: REVIEW_SCHEMA }),
+  ]);
+
+  const text = new FakeSocket();
+  void new Thread(text, { yieldSchema: "text" }).send("hi");
+  expect(text.sent[0]?.params.tools?.[0]).toMatchObject({
+    name: "yield",
+    input_schema: { required: ["result"] },
+  });
+});
+
+it("settles on a yield without issuing another request", async () => {
+  const socket = new FakeSocket();
+  const thread = new Thread(socket, { yieldSchema: REVIEW_SCHEMA });
+  const turn = thread.send("hi");
+  toolTurn(socket, [{ id: "y1", name: "yield", json: '{"verdict":"good"}' }]);
+  const result = await turn;
+  expect(result).toEqual({
+    type: "yielded",
+    value: { type: "structured", value: { verdict: "good" } },
+  });
+  expect(thread.result).toEqual(result);
+  expect(socket.sent).toHaveLength(1);
+  expect(thread.inFlight).toBe(false);
+});
+
+it("yields text when constructed without a schema", async () => {
+  const socket = new FakeSocket();
+  const thread = new Thread(socket, { yieldSchema: "text" });
+  const turn = thread.send("hi");
+  toolTurn(socket, [{ id: "y1", name: "yield", json: '{"result":"done"}' }]);
+  expect(await turn).toEqual({
+    type: "yielded",
+    value: { type: "text", text: "done" },
+  });
+});
+
+it("runs tools called alongside a yield, then stops at the yield", async () => {
+  const socket = new FakeSocket();
+  const thread = new Thread(socket, {
+    yieldSchema: REVIEW_SCHEMA,
+    tools: { read: tool("read", async () => ({ status: "ok", text: "abc" })) },
+  });
+  const turn = thread.send("hi");
+  toolTurn(socket, [
+    { id: "t1", name: "read", json: "{}" },
+    { id: "y1", name: "yield", json: '{"verdict":"good"}' },
+  ]);
+  await turn;
+  expect(socket.sent).toHaveLength(1);
+  const call = thread.messages.find(
+    (m) => m.type === "tool_use" && m.call.id === "t1",
+  );
+  if (call?.type !== "tool_use") throw new Error("expected the read call");
+  expect(call.call.result).toEqual({ status: "ok", text: "abc" });
+  const yielded = thread.messages.find(
+    (m) => m.type === "tool_use" && m.call.id === "y1",
+  );
+  if (yielded?.type !== "tool_use") throw new Error("expected the yield call");
+  expect(yielded.call.result).toEqual({
+    status: "ok",
+    text: "Yield acknowledged.",
+  });
+});
+
+it("does not offer yield when no schema was given", async () => {
+  const { socket, thread } = setup();
+  const turn = thread.send("hi");
+  expect(socket.sent[0]?.params.tools).toBeUndefined();
+  toolTurn(socket, [{ id: "y1", name: "yield", json: "{}" }]);
+  await flush();
+  socket.stream(["oops"]);
+  expect(await turn).toEqual({ type: "completed" });
+  expect(socket.sent[1]?.params.messages.at(-1)).toEqual({
+    role: "user",
+    content: [
+      {
+        type: "tool_result",
+        tool_use_id: "y1",
+        content: "unknown tool: yield",
+        is_error: true,
+      },
+    ],
+  });
+});

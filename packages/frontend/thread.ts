@@ -15,6 +15,18 @@ const SYSTEM = [
   "and do not check whether they are following - just do the work well.",
 ].join(" ");
 
+const YIELD = "yield";
+const DEFAULT_YIELD_SCHEMA: Anthropic.Tool.InputSchema = {
+  type: "object",
+  properties: {
+    result: {
+      type: "string",
+      description: "The result to return to whoever spawned this thread.",
+    },
+  },
+  required: ["result"],
+};
+
 export type ToolCall = {
   id: string;
   name: string;
@@ -26,6 +38,26 @@ export type ToolCall = {
   /** Derived from the paired tool_result block in the next user turn; absent
    * while the tool is still running. */
   result: ToolResult | undefined;
+};
+
+export type YieldValue =
+  | { type: "text"; text: string }
+  | { type: "structured"; value: Record<string, unknown> };
+
+export type TurnResult =
+  | { type: "completed" }
+  | { type: "yielded"; value: YieldValue }
+  | { type: "error"; message: string };
+
+export type ThreadOpts = {
+  system?: string;
+  initialTurns?: Anthropic.MessageParam[];
+  seed?: string;
+  tools?: Record<string, Tool>;
+  /** Present => the yield tool is offered. `"text"` uses the default
+   * `{ result: string }` schema and settles with a text value; a schema
+   * settles with the whole input object. */
+  yieldSchema?: Anthropic.Tool.InputSchema | "text";
 };
 
 export type ToolResult =
@@ -102,21 +134,17 @@ export class Thread {
   private readonly socket: Socket;
   private readonly system: string;
   private readonly tools: Record<string, Tool>;
+  /** Present => the yield tool is offered and the turn can settle with data. */
+  private readonly yieldSchema: Anthropic.Tool.InputSchema | "text" | undefined;
+  private settled: TurnResult | undefined;
   /** Turn 0 when present: sent like any other turn, never rendered. */
   readonly seed: string | undefined;
 
-  constructor(
-    socket: Socket,
-    opts: {
-      system?: string;
-      initialTurns?: Anthropic.MessageParam[];
-      seed?: string;
-      tools?: Record<string, Tool>;
-    } = {},
-  ) {
+  constructor(socket: Socket, opts: ThreadOpts = {}) {
     this.socket = socket;
     this.system = opts.system ?? SYSTEM;
     this.tools = opts.tools ?? {};
+    this.yieldSchema = opts.yieldSchema;
     this.seed = opts.seed;
     this.turns = opts.seed
       ? [{ role: "user", content: opts.seed }]
@@ -143,8 +171,13 @@ export class Thread {
     return this.running;
   }
 
-  send(text: string): Promise<void> {
-    if (this.running) return Promise.resolve();
+  /** The settled yield, once the thread has produced one. */
+  get result(): TurnResult | undefined {
+    return this.settled;
+  }
+
+  send(text: string): Promise<TurnResult> {
+    if (this.running) return Promise.resolve({ type: "completed" });
     this.turns.push({ role: "user", content: text });
     this.version++;
     return this.run();
@@ -152,25 +185,26 @@ export class Thread {
 
   /** Requests a reply to the turns already present - the seeded first turn of
    * a learning thread, which the user never typed. */
-  start(): Promise<void> {
-    if (this.running || this.turns.length === 0) return Promise.resolve();
+  start(): Promise<TurnResult> {
+    if (this.running || this.turns.length === 0)
+      return Promise.resolve({ type: "completed" });
     return this.run();
   }
 
   /** One agent turn: request, execute whatever tools the model asked for,
    * request again, until it replies without calling any. */
-  private async run(): Promise<void> {
+  private async run(): Promise<TurnResult> {
     this.running = true;
     this.failed = false;
     try {
       for (;;) {
         const content = await this.request();
-        if (this.failed) return;
+        if (this.failed) return { type: "error", message: "request ended" };
         const calls = content.filter(
           (block): block is Anthropic.ToolUseBlockParam =>
             block.type === "tool_use",
         );
-        if (calls.length === 0) return;
+        if (calls.length === 0) return { type: "completed" };
         // Every tool_use must be answered by exactly one tool_result in the
         // immediately following user turn, in request order, or the next
         // request is rejected outright.
@@ -180,6 +214,19 @@ export class Thread {
         this.turns.push({ role: "user", content: results });
         this.version++;
         this.onChange?.();
+        // Yield is not special-cased during execution: the whole batch runs and
+        // every result lands in the log, and only then does the turn stop.
+        const yielded = calls.find((call) => this.isYield(call.name));
+        if (yielded) {
+          const result: TurnResult = {
+            type: "yielded",
+            value: this.yieldValue(
+              (yielded.input ?? {}) as Record<string, unknown>,
+            ),
+          };
+          this.settled = result;
+          return result;
+        }
       }
     } finally {
       this.running = false;
@@ -187,12 +234,39 @@ export class Thread {
     }
   }
 
+  private isYield(name: string): boolean {
+    return this.yieldSchema !== undefined && name === YIELD;
+  }
+
+  private yieldValue(input: Record<string, unknown>): YieldValue {
+    return this.yieldSchema === "text"
+      ? { type: "text", text: String(input.result ?? "") }
+      : { type: "structured", value: input };
+  }
+
+  private toolSpecs(): Anthropic.Tool[] {
+    const specs = Object.values(this.tools).map((tool) => tool.spec);
+    if (this.yieldSchema !== undefined) {
+      specs.push({
+        name: YIELD,
+        description:
+          "Finish this thread and return your result to whoever spawned it. Call this exactly once, when you are done; do not call it before you have finished the work.",
+        input_schema:
+          this.yieldSchema === "text" ? DEFAULT_YIELD_SCHEMA : this.yieldSchema,
+      });
+    }
+    return specs;
+  }
+
   private async execute(
     call: Anthropic.ToolUseBlockParam,
   ): Promise<Anthropic.ToolResultBlockParam> {
-    const result = this.unparsed.has(call.id)
-      ? ({ status: "error", error: "could not parse tool input" } as const)
-      : await runTool(this.tools[call.name], call);
+    const result: ToolResult = this.unparsed.has(call.id)
+      ? { status: "error", error: "could not parse tool input" }
+      : this.isYield(call.name)
+        ? // Echoing the yielded payload back at the model only spends tokens.
+          { status: "ok", text: "Yield acknowledged." }
+        : await runTool(this.tools[call.name], call);
     return {
       type: "tool_result",
       tool_use_id: call.id,
@@ -203,6 +277,7 @@ export class Thread {
 
   /** Resolves with the assistant content the request committed. */
   private request(): Promise<Anthropic.ContentBlockParam[]> {
+    const specs = this.toolSpecs();
     const requestId = crypto.randomUUID();
     this.pending = { requestId, blocks: [], stopReason: null };
     this.version++;
@@ -215,9 +290,7 @@ export class Thread {
         system: this.system,
         stream: true,
         messages: [...this.turns],
-        ...(Object.keys(this.tools).length > 0
-          ? { tools: Object.values(this.tools).map((tool) => tool.spec) }
-          : {}),
+        ...(specs.length > 0 ? { tools: specs } : {}),
       },
     };
     this.socket.send(JSON.stringify(message));
