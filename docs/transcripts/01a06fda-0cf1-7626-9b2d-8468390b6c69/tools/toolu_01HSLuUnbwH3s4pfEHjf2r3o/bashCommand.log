@@ -1,0 +1,153 @@
+$ cd ~/src/gatherus/main && ls && cat package.json && cat vite.config.ts && cat biome.json && cat tsconfig.json && ls packages
+stdout:
+biome.json
+context.md
+docker
+docker-compose.dev.yml
+hooks
+node_modules
+package-lock.json
+package.json
+packages
+plans
+render.yaml
+review.md
+test-results
+todo.md
+tsconfig.base.json
+vite.config.ts
+{
+  "name": "gatherus",
+  "version": "0.0.1",
+  "description": "Flexible modern SIS",
+  "type": "module",
+  "license": "UNLICENSED",
+  "private": true,
+  "engines": { "node": ">=24" },
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:frontend": "vite",
+    "dev:backend": "npm -w @gatherus/backend run dev",
+    "dev": "npm run dev:frontend & npm run dev:backend",
+    "build": "vite build",
+    "test": "npm test --workspaces --if-present",
+    "test:backend": "npm -w @gatherus/backend test",
+    "typecheck": "npm -w @gatherus/iso exec tsc -- --noEmit && npm -w @gatherus/frontend exec tsc -- --noEmit && npm -w @gatherus/test exec tsc -- --noEmit && npm -w @gatherus/backend exec tsc -- --noEmit && npm -w @gatherus/e2e exec tsc -- --noEmit",
+    "check:models": "node packages/backend/scripts/check-models.ts",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
+    "test:e2e": "npm -w @gatherus/e2e exec playwright test",
+    "test:e2e:cleanup": "node packages/test/scripts/cleanup-test-runs.ts"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.4.11",
+    "typescript": "^7.0.2",
+    "vite": "^6.0.0",
+    "vitest": "^4.1.4"
+  }
+}
+import { defineConfig, type Plugin } from "vite";
+export default defineConfig({
+  appType: "mpa",
+  plugins: [spaFallback()],
+  base: "/",
+  root: "packages/frontend",
+  build: {
+    target: "esnext",
+    outDir: "dist",
+    minify: true,
+  },
+  server: {
+    host: "localhost",
+    port: Number(process.env.VITE_PORT ?? 5173),
+    strictPort: true,
+    proxy: {
+      "/api/": {
+        target: process.env.API_TARGET ?? "http://localhost:3000",
+        secure: false,
+      },
+    },
+  },
+});
+function spaFallback(): Plugin {
+  return {
+    name: "spa-fallback",
+    configureServer(server) {
+      return () => {
+        server.middlewares.use((req, _res, next) => {
+          if (req.headers.accept?.includes("text/html") && req.url) {
+            req.url = "/index.html";
+          }
+          next();
+        });
+      };
+    },
+  };
+}
+{
+  "$schema": "https://biomejs.dev/schemas/2.4.11/schema.json",
+  "assist": {
+    "actions": {
+      "source": {
+        "organizeImports": "on"
+      }
+    }
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "recommended": true,
+      "nursery": {
+        "noFloatingPromises": "error"
+      }
+    }
+  },
+  "formatter": {
+    "enabled": true,
+    "indentStyle": "space",
+    "indentWidth": 2
+  },
+  "files": {
+    "includes": [
+      "packages/**",
+      "!**/node_modules",
+      "!**/dist",
+      "!**/build",
+      "!**/*.d.ts",
+      "!**/*.queries.ts",
+      "!**/db.generated.ts",
+      "!**/playwright-report",
+      "!**/test-results"
+    ]
+  },
+  "overrides": [
+    {
+      "includes": ["packages/backend/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "paths": {
+                  "kysely": "kysely belongs in packages/backend/models — a built statement is still a statement"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "includes": ["packages/backend/models/**"],
+      "linter": {
+        "rules": { "style": { "noRestrictedImports": "off" } }
+      }
+    }
+  ]
+}
+stderr:
+cat: tsconfig.json: No such file or directory
+exit code 1

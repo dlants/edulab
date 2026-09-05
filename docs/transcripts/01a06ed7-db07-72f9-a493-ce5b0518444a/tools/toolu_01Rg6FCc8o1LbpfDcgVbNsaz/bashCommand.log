@@ -1,0 +1,11 @@
+$ ls -a /Users/denis.lantsman/src/edulab && gh auth status
+stdout:
+.
+..
+github.com
+  ✓ Logged in to github.com account dlants (keyring)
+  - Active account: true
+  - Git operations protocol: ssh
+  - Token: gho_************************************
+  - Token scopes: 'admin:public_key', 'gist', 'read:org', 'repo'
+exit code 0

@@ -1,0 +1,69 @@
+$ cd /Users/denis.lantsman/src/edulab && npm run lint:fix && npm run lint && npm test
+stdout:
+> edulab@0.0.1 lint:fix
+> biome check --write .
+stderr:
+biome.json:2:14 deserialize 
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  i The configuration schema version does not match the CLI version 2.5.12
+    1 │ {
+  > 2 │   "$schema": "https://biomejs.dev/schemas/2.4.11/schema.json",
+      │              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    3 │   "assist": {
+    4 │     "actions": {
+  i   Expected:                     2.5.12
+      Found:                        2.4.11
+  i Run the command biome migrate to migrate the configuration file.
+biome.json:10:13 deserialize  DEPRECATED  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  i The use of the recommended field has been deprecated, and will removed in the next major version of Biome. Use preset instead.
+     8 │     }
+     9 │   },
+  > 10 │   "linter": {
+       │             ^
+  > 11 │     "enabled": true,
+        ...
+  > 17 │     }
+  > 18 │   },
+       │   ^
+    19 │   "formatter": {
+    20 │     "enabled": true,
+  i Migrate the configuration with the proper command
+  $ biome migrate
+stdout:
+Checked 13 files in 108ms. Fixed 1 file.
+Found 2 infos.
+> edulab@0.0.1 lint
+> biome check .
+stderr:
+biome.json:2:14 deserialize ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  i The configuration schema version does not match the CLI version 2.5.12
+    1 │ {
+  > 2 │   "$schema": "https://biomejs.dev/schemas/2.4.11/schema.json",
+      │              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    3 │   "assist": {
+    4 │     "actions": {
+  i   Expected:                     2.5.12
+      Found:                        2.4.11
+  i Run the command biome migrate to migrate the configuration file.
+biome.json:10:13 deserialize  DEPRECATED  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  i The use of the recommended field has been deprecated, and will removed in the next major version of Biome. Use preset instead.
+     8 │     }
+     9 │   },
+  > 10 │   "linter": {
+       │             ^
+  > 11 │     "enabled": true,
+        ...
+  > 17 │     }
+  > 18 │   },
+       │   ^
+    19 │   "formatter
+": {
+    20 │     "enabled": true,
+  i Migrate the configuration with the proper command
+  $ biome migrate
+stdout:
+Checked 13 files in 97ms. No fixes applied.
+Found 2 infos.
+> edulab@0.0.1 test
+> npm test --workspaces --if-present
+exit code 0

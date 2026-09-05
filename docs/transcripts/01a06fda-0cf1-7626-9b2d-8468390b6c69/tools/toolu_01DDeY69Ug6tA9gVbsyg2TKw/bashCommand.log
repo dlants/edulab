@@ -1,0 +1,1118 @@
+$ cd ~/src/gatherus/main && wc -l packages/frontend/vamp.ts && cat packages/frontend/main.ts
+stdout:
+     573 packages/frontend/vamp.ts
+import {
+  assertNever,
+  type EventId,
+  type MessageTemplateId,
+  type PersonId,
+  type PublicSlug,
+  type SurveyInstanceId,
+  type SurveyTemplateId,
+} from "@gatherus/iso/types.ts";
+import { api } from "./api.ts";
+import { type AppCtx, createAppCtx, type MainMsg } from "./app-ctx.ts";
+import {
+  type Auth,
+  clearLastOrg,
+  resolveActiveOrg,
+  resolveInitialAuth,
+} from "./auth-controller.ts";
+import {
+  AcceptInvitePage,
+  type AcceptInviteState,
+  acceptInviteState,
+  acceptInviteUpdate,
+} from "./pages/accept-invite.ts";
+import {
+  AccountPage,
+  type AccountState,
+  accountState,
+  accountUpdate,
+} from "./pages/account.ts";
+import {
+  CalendarPage,
+  type CalendarState,
+  calendarState,
+  calendarUpdate,
+} from "./pages/calendar.ts";
+import {
+  CreateOrgPage,
+  type CreateOrgState,
+  createOrgState,
+  createOrgUpdate,
+} from "./pages/create-org.ts";
+import { HomePage, homeState } from "./pages/home.ts";
+import {
+  DEMO_EMAIL,
+  ImportPage,
+  type ImportState,
+  importState,
+  importUpdate,
+} from "./pages/import.ts";
+import {
+  KioskPage,
+  type KioskState,
+  kioskState,
+  kioskUpdate,
+} from "./pages/kiosk.ts";
+import { LoginPage, loginState } from "./pages/login.ts";
+import { MarketingPage, marketingState } from "./pages/marketing.ts";
+import { MeHomePage, type MeHomeState, meHomeState } from "./pages/me-home.ts";
+import {
+  MessageCampaignsPage,
+  type MessageCampaignsState,
+  messageCampaignsState,
+  messageCampaignsUpdate,
+} from "./pages/message-campaigns.ts";
+import {
+  MessageTemplateBuilderPage,
+  type MessageTemplateBuilderState,
+  messageTemplateBuilderState,
+  messageTemplateBuilderUpdate,
+} from "./pages/message-template-builder.ts";
+import {
+  OrganizationPage,
+  type OrganizationState,
+  organizationState,
+  organizationUpdate,
+} from "./pages/organization.ts";
+import {
+  PermissionDeniedPage,
+  type PermissionDeniedState,
+  permissionDeniedState,
+} from "./pages/permission-denied.ts";
+import {
+  PersonDetailPage,
+  type PersonDetailState,
+  personDetailGetCrumbs,
+  personDetailState,
+  personDetailUpdate,
+} from "./pages/person-detail.ts";
+import {
+  PublicCalendarPage,
+  type PublicCalendarState,
+  publicCalendarState,
+  publicCalendarUpdate,
+} from "./pages/public-calendar.ts";
+import {
+  PublicSurveyPage,
+  type PublicSurveyState,
+  publicSurveyState,
+  publicSurveyUpdate,
+} from "./pages/public-survey.ts";
+import {
+  ReservationRedeemPage,
+  type ReservationRedeemState,
+  reservationRedeemState,
+  reservationRedeemUpdate,
+} from "./pages/reservation-redeem.ts";
+import {
+  SearchPage,
+  type SearchState,
+  searchState,
+  searchUpdate,
+} from "./pages/search/page.ts";
+import {
+  SurveyBuilderPage,
+  type SurveyBuilderState,
+  surveyBuilderGetCrumbs,
+  surveyBuilderState,
+  surveyBuilderUpdate,
+} from "./pages/survey-builder.ts";
+import {
+  currentRoute,
+  getCurrentOrgSlug,
+  type Route,
+  RouterView,
+  routeKind,
+  routeToPath,
+  setCurrentOrgSlug,
+} from "./router.ts";
+import {
+  calendarSeedParams,
+  type SearchStoreMsg,
+  weekStartMs,
+} from "./stores/search-store.ts";
+import { centeredColumn } from "./theme.ts";
+import {
+  Binder,
+  cls,
+  mountStyle,
+  noop,
+  ref,
+  type SlotContent,
+  sanitize,
+  show,
+  type View,
+} from "./vamp.ts";
+import { AppHeaderView, type HeaderState } from "./views/app-header.ts";
+import { BreadcrumbsView, type Crumb } from "./views/breadcrumbs.ts";
+import {
+  customFieldsPermissions,
+  parseRefKey,
+  refKey,
+  tagsCanApply,
+} from "./views/entity-detail/index.ts";
+const rootClass = cls("shell");
+mountStyle(`
+.${rootClass} { font-family: system-ui, sans-serif; }
+.${rootClass} main { padding: 1.5rem; }
+`);
+export type PageState =
+  | { page: "home" }
+  | { page: "marketing" }
+  | { page: "login" }
+  | { page: "me"; state: MeHomeState }
+  | { page: "create-org"; state: CreateOrgState }
+  | { page: "permission-denied"; state: PermissionDeniedState }
+  | { page: "organization"; state: OrganizationState }
+  | { page: "account"; state: AccountState }
+  | { page: "person"; state: PersonDetailState }
+  | { page: "calendar"; state: CalendarState }
+  | { page: "search"; state: SearchState }
+  | { page: "message-template-edit"; state: MessageTemplateBuilderState }
+  | { page: "message-campaigns"; state: MessageCampaignsState }
+  | { page: "survey-edit"; state: SurveyBuilderState }
+  | { page: "person-custom-fields"; state: SurveyBuilderState }
+  | { page: "import"; state: ImportState }
+  | { page: "kiosk"; state: KioskState }
+  | { page: "public-calendar"; state: PublicCalendarState }
+  | { page: "reservation-redeem"; state: ReservationRedeemState }
+  | { page: "public-survey"; state: PublicSurveyState }
+  | { page: "accept-invite"; state: AcceptInviteState };
+export interface MainState {
+  pageState: PageState;
+}
+function searchUrlWriteKind(
+  type: SearchStoreMsg["type"],
+): "push" | "replace" | null {
+  switch (type) {
+    case "SET_QUERY":
+      return "replace";
+    case "SELECT_FACET":
+    case "SET_FACET_VALUES":
+    case "SET_RANGE":
+    case "SET_CUSTOM_TEXT":
+    case "SET_SORT":
+    case "SET_SORT_DIR":
+    case "TOGGLE_DIR":
+    case "NEXT_PAGE":
+    case "PREV_PAGE":
+      return "push";
+    case "RESET":
+    case "REFRESH":
+    case "OK":
+    case "ERR":
+    case "NEXT_EVENT_OK":
+      return null;
+  }
+}
+function pageStateFor(route: Route, auth: Auth): PageState {
+  if (route.page === "public-calendar") {
+    return {
+      page: "public-calendar",
+      state: publicCalendarState(route.slug as PublicSlug),
+    };
+  }
+  if (route.page === "reservation-redeem") {
+    return {
+      page: "reservation-redeem",
+      state: reservationRedeemState(route.token, route.orgSlug),
+    };
+  }
+  if (route.page === "public-survey") {
+    return {
+      page: "public-survey",
+      state: publicSurveyState(route.slug as PublicSlug),
+    };
+  }
+  if (route.page === "accept-invite") {
+    return {
+      page: "accept-invite",
+      state: acceptInviteState(route.token),
+    };
+  }
+  // Neutral root `/`: only ever reached here while anonymous — a signed-in user
+  // is dispatched to /me or their org back-office at the RouterController. Render
+  // the marketing homepage (login CTA).
+  if (route.page === "home") {
+    return { page: "marketing" };
+  }
+  if (auth.status === "anonymous" || route.page === "login") {
+    return { page: "login" };
+  }
+  if (route.page === "me") {
+    return { page: "me", state: meHomeState() };
+  }
+  // "Become an organizer": the explicit create-org action, reachable by any
+  // signed-in user under /me/new-org.
+  if (route.page === "new-org") {
+    return { page: "create-org", state: createOrgState() };
+  }
+  // Back-office route: requires membership in the org named by <orgSlug>. A
+  // logged-in non-member (a client, or a member of a *different* org) gets the
+  // permission-denied render state — never a redirect, since they ARE signed in.
+  const activeOrg = resolveActiveOrg(auth.me, getCurrentOrgSlug() ?? undefined);
+  if (activeOrg === null) {
+    return { page: "permission-denied", state: permissionDeniedState() };
+  }
+  const orgId = activeOrg.id;
+  switch (route.page) {
+    case "dashboard":
+      return { page: "home" };
+    case "search":
+      return {
+        page: "search",
+        state: searchState(
+          orgId,
+          route.params.query,
+          activeOrg.person_custom_fields_template_id,
+          activeOrg,
+          auth.me.user.id,
+          route.params.select ?? null,
+        ),
+      };
+    case "calendar": {
+      const { canRead, canWrite } = customFieldsPermissions(
+        activeOrg,
+        auth.me.user.id,
+      );
+      const canApplyTags = tagsCanApply(activeOrg, auth.me.user.id);
+      return {
+        page: "calendar",
+        state: calendarState(
+          orgId,
+          route.params.startsFrom ?? 0,
+          route.params.query,
+          activeOrg.person_custom_fields_template_id,
+          canRead,
+          canWrite,
+          canApplyTags,
+          parseRefKey(route.params.select ?? null),
+        ),
+      };
+    }
+    case "person":
+      return {
+        page: "person",
+        state: personDetailState(
+          route.id as PersonId,
+          auth.me.organizations.find((o) => o.id === orgId) ?? null,
+          auth.me.user.id,
+        ),
+      };
+    case "organization":
+      return { page: "organization", state: organizationState() };
+    case "account":
+      return { page: "account", state: accountState() };
+    case "import":
+      return {
+        page: "import",
+        state: importState(
+          activeOrg.person_custom_fields_template_id,
+          orgId,
+          auth.me.user.email === DEMO_EMAIL,
+        ),
+      };
+    case "survey-edit":
+      return {
+        page: "survey-edit",
+        state: surveyBuilderState(route.id as SurveyTemplateId),
+      };
+    case "message-template-edit":
+      return {
+        page: "message-template-edit",
+        state: messageTemplateBuilderState(route.id as MessageTemplateId),
+      };
+    case "message-campaigns":
+      return {
+        page: "message-campaigns",
+        state: messageCampaignsState(),
+      };
+    case "person-custom-fields":
+      return {
+        page: "person-custom-fields",
+        state: surveyBuilderState(
+          activeOrg.person_custom_fields_template_id,
+          "custom-fields",
+        ),
+      };
+    case "kiosk":
+      return {
+        page: "kiosk",
+        state: kioskState(
+          route.source === "event"
+            ? { kind: "event", id: route.id as EventId }
+            : { kind: "instance", id: route.id as SurveyInstanceId },
+        ),
+      };
+    default:
+      return assertNever(route);
+  }
+}
+function crumbsForPage(ps: PageState): Crumb[] {
+  switch (ps.page) {
+    case "home":
+    case "marketing":
+    case "login":
+    case "me":
+    case "create-org":
+    case "permission-denied":
+    case "search":
+    case "calendar":
+    case "account":
+    case "organization":
+    case "public-survey":
+    case "public-calendar":
+    case "reservation-redeem":
+    case "accept-invite":
+      return [];
+    case "person":
+      return personDetailGetCrumbs(ps.state);
+    case "message-template-edit":
+      return [{ label: "message templates" }, { label: "edit" }];
+    case "message-campaigns":
+      return [{ label: "campaigns" }];
+    case "survey-edit":
+      return surveyBuilderGetCrumbs(ps.state);
+    case "import":
+      return [
+        {
+          label: "organization",
+          href: routeToPath({ page: "organization" }),
+        },
+        { label: "import" },
+      ];
+    case "person-custom-fields":
+      return [
+        {
+          label: "organization",
+          href: routeToPath({ page: "organization" }),
+        },
+        { label: "custom fields" },
+      ];
+    case "kiosk":
+      return [];
+    default:
+      return assertNever(ps);
+  }
+}
+function navSection(route: Route): string | null {
+  switch (route.page) {
+    case "home":
+    case "dashboard":
+      return "home";
+    case "me":
+      return null;
+    case "calendar":
+      return "calendar";
+    case "search":
+    case "survey-edit":
+    case "person":
+      return "search";
+    case "organization":
+    case "person-custom-fields":
+    case "import":
+      return "organization";
+    default:
+      return null;
+  }
+}
+// Back-office nav chrome shows only on the org back-office surface
+// (`/org/<orgSlug>/*`), and never on the full-screen kiosk. The front-office,
+// the personal surface, and the neutral root/marketing page render chrome-free.
+function navHidden(route: Route, auth: Auth): boolean {
+  return (
+    routeKind(route) !== "back-office" ||
+    route.page === "kiosk" ||
+    auth.status === "anonymous"
+  );
+}
+// Derive the shared header bar's contents from the current route + auth, or
+// `undefined` to render no header at all (the full-screen kiosk, the login
+// page, and the public front-office stay chrome-free). The three live modes
+// map onto the three surfaces: anonymous root -> "anonymous", `/me` ->,
+// "personal", the org back-office -> "back-office".
+function headerStateFor(route: Route, auth: Auth): HeaderState | undefined {
+  if (route.page === "kiosk" || route.page === "login") return undefined;
+  if (routeKind(route) === "front-office") return undefined;
+  if (auth.status === "anonymous") {
+    return {
+      mode: "anonymous",
+      navSection: null,
+      email: null,
+      orgs: [],
+      activeOrgId: null,
+    };
+  }
+  const orgs = auth.me.organizations.map((o) => ({ id: o.id, name: o.name }));
+  const active = resolveActiveOrg(auth.me, getCurrentOrgSlug() ?? undefined);
+  return {
+    mode: routeKind(route) === "back-office" ? "back-office" : "personal",
+    navSection: navSection(route),
+    email: auth.me.user.email,
+    orgs,
+    activeOrgId: active ? active.id : null,
+  };
+}
+function expectPage<T extends PageState["page"]>(
+  state: MainState,
+  page: T,
+  msgType: string,
+): (PageState & { page: T }) | null {
+  if (state.pageState.page !== page) {
+    console.warn(
+      `dropped ${msgType} for non-${page} page (current: ${state.pageState.page})`,
+    );
+    return null;
+  }
+  return state.pageState as PageState & { page: T };
+}
+// Apply a route transition to the live state. Kept dispatch-free so it can be
+// called both from the NAVIGATE message and synchronously from other reducer
+// branches (e.g. the calendar's next-event jump) without re-entering dispatch.
+// Commit a navigation: the controller resolves auth redirects and owns the new
+// route; here we derive the matching page state and (re)seed the shared search
+// store for the search/calendar views.
+function applyNavigate(
+  state: MainState,
+  route: Route,
+  ctx: AppCtx,
+  dispatch: (m: MainMsg) => void,
+): void {
+  const next = ctx.router.update({ type: "NAVIGATE", route });
+  state.pageState = pageStateFor(next, ctx.auth.get());
+  if (next.page === "search" || next.page === "calendar") {
+    ctx.searchStore.update({ type: "RESET", params: next.params }, (m) =>
+      dispatch({ type: "SEARCH_STORE_MSG", msg: m }),
+    );
+  }
+}
+function update(
+  state: MainState,
+  msg: MainMsg,
+  ctx: AppCtx,
+  dispatch: (m: MainMsg) => void,
+): void {
+  switch (msg.type) {
+    case "NAVIGATE": {
+      applyNavigate(state, msg.route, ctx, dispatch);
+      break;
+    }
+    case "SELECT_ORG": {
+      // The org switcher is a navigate control: remember the choice, point the
+      // active back-office slug at the new org, and re-navigate the current
+      // route so the URL's <orgSlug> segment updates.
+      ctx.auth.rememberOrg(msg.orgId);
+      const auth = ctx.auth.get();
+      if (auth.status !== "anonymous") {
+        const org = auth.me.organizations.find((o) => o.id === msg.orgId);
+        if (org) setCurrentOrgSlug(org.slug);
+      }
+      applyNavigate(state, ctx.router.route, ctx, dispatch);
+      break;
+    }
+    case "SIGN_OUT":
+      api("/api/auth/sign-out", {})
+        .catch(() => {})
+        .finally(() => {
+          clearLastOrg();
+          setCurrentOrgSlug(null);
+          window.location.href = "/login";
+        });
+      break;
+    case "SURVEY_TEMPLATE_STORE_MSG":
+      ctx.surveyTemplateStore.update(msg.msg);
+      break;
+    case "RESPONSE_STORE_MSG":
+      ctx.responseStore.update(msg.msg);
+      break;
+    case "EVENT_GROUP_STORE_MSG":
+      ctx.eventGroupStore.update(msg.msg);
+      break;
+    case "ROSTER_STORE_MSG":
+      ctx.rosterStore.update(msg.msg);
+      break;
+    case "TAG_STORE_MSG":
+      ctx.tagStore.update(msg.msg);
+      break;
+    case "PERSON_GROUP_STORE_MSG":
+      ctx.personGroupStore.update(msg.msg);
+      break;
+    case "NAME_STORE_MSG":
+      ctx.nameStore.update(msg.msg);
+      break;
+    case "ACCEPT_INVITE_MSG": {
+      const ps = expectPage(state, "accept-invite", "ACCEPT_INVITE_MSG");
+      if (!ps) break;
+      acceptInviteUpdate(ps.state, msg.msg, (m) =>
+        dispatch({ type: "ACCEPT_INVITE_MSG", msg: m }),
+      );
+      break;
+    }
+    case "PERSON_DETAIL_MSG": {
+      const ps = expectPage(state, "person", "PERSON_DETAIL_MSG");
+      if (!ps) break;
+      personDetailUpdate(
+        ps.state,
+        msg.msg,
+        (m) => dispatch({ type: "PERSON_DETAIL_MSG", msg: m }),
+        {
+          surveyTemplateStore: ctx.surveyTemplateStore,
+          dismissStack: ctx.dismissStack,
+        },
+      );
+      break;
+    }
+    case "CREATE_ORG_MSG": {
+      const ps = expectPage(state, "create-org", "CREATE_ORG_MSG");
+      if (!ps) break;
+      createOrgUpdate(ps.state, msg.msg, (m) =>
+        dispatch({ type: "CREATE_ORG_MSG", msg: m }),
+      );
+      break;
+    }
+    case "KIOSK_MSG": {
+      const ps = expectPage(state, "kiosk", "KIOSK_MSG");
+      if (!ps) break;
+      kioskUpdate(ps.state, msg.msg, (m) =>
+        dispatch({ type: "KIOSK_MSG", msg: m }),
+      );
+      break;
+    }
+    case "IMPORT_MSG": {
+      const ps = expectPage(state, "import", "IMPORT_MSG");
+      if (!ps) break;
+      importUpdate(
+        ps.state,
+        msg.msg,
+        (m) => dispatch({ type: "IMPORT_MSG", msg: m }),
+        { surveyTemplateStore: ctx.surveyTemplateStore },
+      );
+      break;
+    }
+    case "ACCOUNT_MSG": {
+      const ps = expectPage(state, "account", "ACCOUNT_MSG");
+      if (!ps) break;
+      accountUpdate(ps.state, msg.msg, (m) =>
+        dispatch({ type: "ACCOUNT_MSG", msg: m }),
+      );
+      break;
+    }
+    case "ORGANIZATION_MSG": {
+      const ps = expectPage(state, "organization", "ORGANIZATION_MSG");
+      if (!ps) break;
+      organizationUpdate(ps.state, msg.msg, (m) =>
+        dispatch({ type: "ORGANIZATION_MSG", msg: m }),
+      );
+      break;
+    }
+    case "PUBLIC_SURVEY_MSG": {
+      const ps = expectPage(state, "public-survey", "PUBLIC_SURVEY_MSG");
+      if (!ps) break;
+      publicSurveyUpdate(ps.state, msg.msg, (m) =>
+        dispatch({ type: "PUBLIC_SURVEY_MSG", msg: m }),
+      );
+      break;
+    }
+    case "PUBLIC_CALENDAR_MSG": {
+      const ps = expectPage(state, "public-calendar", "PUBLIC_CALENDAR_MSG");
+      if (!ps) break;
+      publicCalendarUpdate(ps.state, msg.msg, (m) =>
+        dispatch({ type: "PUBLIC_CALENDAR_MSG", msg: m }),
+      );
+      break;
+    }
+    case "RESERVATION_REDEEM_MSG": {
+      const ps = expectPage(
+        state,
+        "reservation-redeem",
+        "RESERVATION_REDEEM_MSG",
+      );
+      if (!ps) break;
+      reservationRedeemUpdate(ps.state, msg.msg, (m) =>
+        dispatch({ type: "RESERVATION_REDEEM_MSG", msg: m }),
+      );
+      break;
+    }
+    case "EMAIL_TEMPLATE_BUILDER_MSG": {
+      const ps = expectPage(
+        state,
+        "message-template-edit",
+        "EMAIL_TEMPLATE_BUILDER_MSG",
+      );
+      if (!ps) break;
+      messageTemplateBuilderUpdate(
+        ps.state,
+        msg.msg,
+        (m) => dispatch({ type: "EMAIL_TEMPLATE_BUILDER_MSG", msg: m }),
+        { mainDispatch: dispatch },
+      );
+      break;
+    }
+    case "EMAIL_CAMPAIGNS_MSG": {
+      const ps = expectPage(state, "message-campaigns", "EMAIL_CAMPAIGNS_MSG");
+      if (!ps) break;
+      messageCampaignsUpdate(ps.state, msg.msg, (m) =>
+        dispatch({ type: "EMAIL_CAMPAIGNS_MSG", msg: m }),
+      );
+      break;
+    }
+    case "SURVEY_BUILDER_MSG": {
+      const page = state.pageState;
+      if (page.page !== "survey-edit" && page.page !== "person-custom-fields") {
+        console.warn(
+          `dropped SURVEY_BUILDER_MSG for non-builder page (current: ${page.page})`,
+        );
+        break;
+      }
+      surveyBuilderUpdate(
+        page.state,
+        msg.msg,
+        (m) => dispatch({ type: "SURVEY_BUILDER_MSG", msg: m }),
+        { mainDispatch: dispatch },
+      );
+      break;
+    }
+    case "CALENDAR_MSG": {
+      // The calendar shares the SearchStore; its store actions are applied at
+      // the root so async results re-enter through SEARCH_STORE_MSG. Week
+      // navigation is plain `<a>` links handled by NAVIGATE, so the only store
+      // action here is the debounced query commit / facet toggle.
+      if (msg.msg.type === "STORE" || msg.msg.type === "SEARCH_STORE") {
+        ctx.searchStore.update(msg.msg.msg, (m) =>
+          dispatch({ type: "SEARCH_STORE_MSG", msg: m }),
+        );
+        break;
+      }
+      if (msg.msg.type === "GOTO_WEEK") {
+        // Week navigation from the shared WeekPagerView. Like next-event, it's a
+        // route write that carries the live query + the user's facet filters
+        // (minus the locked type), keeping the calendar's URL-driven model.
+        const params = ctx.searchStore.getState().params;
+        const userFacets = { ...params.facetFilters };
+        delete userFacets.type;
+        const route: Route = {
+          page: "calendar",
+          params: calendarSeedParams(
+            msg.msg.weekStart,
+            params.query,
+            userFacets,
+          ),
+        };
+        applyNavigate(state, route, ctx, dispatch);
+        break;
+      }
+      if (msg.msg.type === "GOTO_NEXT_EVENT") {
+        // The store caches the next event's start time per query-shape, so the
+        // jump is a pure state read — no round-trip on click. Jump the calendar
+        // to that event's week, carrying the live query + the user's facet
+        // filters (minus the locked type).
+        const next = ctx.searchStore.getNextEventStarts();
+        if (next === null) break;
+        const params = ctx.searchStore.getState().params;
+        const userFacets = { ...params.facetFilters };
+        delete userFacets.type;
+        const route: Route = {
+          page: "calendar",
+          params: calendarSeedParams(
+            weekStartMs(new Date(next)),
+            params.query,
+            userFacets,
+          ),
+        };
+        applyNavigate(state, route, ctx, dispatch);
+        break;
+      }
+      const cps = expectPage(state, "calendar", "CALENDAR_MSG");
+      if (!cps) break;
+      calendarUpdate(
+        cps.state,
+        msg.msg,
+        (m) => dispatch({ type: "CALENDAR_MSG", msg: m }),
+        {
+          searchStore: ctx.searchStore,
+          matchPrefs: ctx.matchPrefs,
+          nameStore: ctx.nameStore,
+          eventStore: ctx.eventStore,
+          eventGroupStore: ctx.eventGroupStore,
+          rosterStore: ctx.rosterStore,
+          surveyTemplateStore: ctx.surveyTemplateStore,
+          postRenderBus: ctx.postRenderBus,
+          dismissStack: ctx.dismissStack,
+        },
+      );
+      // Reflect the drawer's open/closed entity in the URL (its own history
+      // entry, like every other structural search-param change), so
+      // back/forward opens and closes it.
+      if (msg.msg.type === "VIEW_DETAIL" || msg.msg.type === "CLOSE_DRAWER") {
+        const params = { ...ctx.searchStore.getState().params };
+        if (cps.state.entityDetail)
+          params.select = refKey(cps.state.entityDetail.ref);
+        else delete params.select;
+        ctx.router.update({
+          type: "NAVIGATE",
+          route: { page: "calendar", params },
+          kind: "push",
+        });
+      }
+      break;
+    }
+    case "SEARCH_MSG": {
+      // Store-bound actions are driven from the root so async results re-enter
+      // through SEARCH_STORE_MSG regardless of which page is mounted.
+      if (msg.msg.type === "SEARCH_STORE") {
+        const inner = msg.msg.msg;
+        ctx.searchStore.update(inner, (m) =>
+          dispatch({ type: "SEARCH_STORE_MSG", msg: m }),
+        );
+        // Reflect meaningful search-param changes in the URL so back/forward
+        // steps through history. Typing (SET_QUERY) is a debounced commit, so
+        // it replaces the current entry; structural changes (facet/sort/dir/
+        // paging) push a new one. RESET originates from navigation/popstate and
+        // the remaining actions don't change params, so neither writes.
+        const writeKind = searchUrlWriteKind(inner.type);
+        if (writeKind) {
+          const params = ctx.searchStore.getState().params;
+          ctx.router.update({
+            type: "NAVIGATE",
+            route: { page: "search", params },
+            kind: writeKind,
+          });
+        }
+        break;
+      }
+      const ps = expectPage(state, "search", "SEARCH_MSG");
+      if (!ps) break;
+      searchUpdate(
+        ps.state,
+        msg.msg,
+        (m) => dispatch({ type: "SEARCH_MSG", msg: m }),
+        {
+          eventStore: ctx.eventStore,
+          eventGroupStore: ctx.eventGroupStore,
+          rosterStore: ctx.rosterStore,
+          personGroupStore: ctx.personGroupStore,
+          nameStore: ctx.nameStore,
+          searchStore: ctx.searchStore,
+          tagStore: ctx.tagStore,
+          surveyTemplateStore: ctx.surveyTemplateStore,
+          matchPrefs: ctx.matchPrefs,
+          mainDispatch: dispatch,
+          postRenderBus: ctx.postRenderBus,
+          dismissStack: ctx.dismissStack,
+        },
+      );
+      // Reflect the drawer's open/closed entity in the URL (its own history
+      // entry, like every other structural search-param change), so
+      // back/forward opens and closes it.
+      if (msg.msg.type === "VIEW_DETAIL" || msg.msg.type === "CLOSE_DRAWER") {
+        const params = { ...ctx.searchStore.getState().params };
+        if (ps.state.entityDetail)
+          params.select = refKey(ps.state.entityDetail.ref);
+        else delete params.select;
+        ctx.router.update({
+          type: "NAVIGATE",
+          route: { page: "search", params },
+          kind: "push",
+        });
+      }
+      break;
+    }
+    case "SEARCH_STORE_MSG":
+      ctx.searchStore.update(msg.msg, (m) =>
+        dispatch({ type: "SEARCH_STORE_MSG", msg: m }),
+      );
+      // A fresh result reaching `loaded` while the calendar is mounted means a
+      // new week's events are about to render; scroll the grid to the earliest
+      // one so evening-only weeks aren't off the bottom of the viewport. Every
+      // filter toggle, query edit, and week navigation funnels through this OK.
+      if (msg.msg.type === "OK" && state.pageState.page === "calendar") {
+        ctx.postRenderBus.emit({ type: "calendar:scroll-to-first" });
+      }
+      break;
+    default:
+      assertNever(msg);
+  }
+}
+function pageSlot(
+  state: MainState,
+  ctx: AppCtx,
+  dispatch: (m: MainMsg) => void,
+): SlotContent {
+  const empty = {};
+  const ps = state.pageState;
+  switch (ps.page) {
+    case "home":
+      return show(HomePage, homeState(), empty, noop);
+    case "marketing":
+      return show(MarketingPage, marketingState(), empty, noop);
+    case "login":
+      return show(LoginPage, loginState(), empty, noop);
+    case "me":
+      return show(MeHomePage, ps.state, empty, noop);
+    case "create-org":
+      return show(CreateOrgPage, ps.state, empty, (m) =>
+        dispatch({ type: "CREATE_ORG_MSG", msg: m }),
+      );
+    case "permission-denied":
+      return show(PermissionDeniedPage, ps.state, empty, noop);
+    case "organization":
+      return show(
+        OrganizationPage,
+        ps.state,
+        { dismissStack: ctx.dismissStack },
+        (m) => dispatch({ type: "ORGANIZATION_MSG", msg: m }),
+      );
+    case "account":
+      return show(AccountPage, ps.state, empty, (m) =>
+        dispatch({ type: "ACCOUNT_MSG", msg: m }),
+      );
+    case "import":
+      return show(
+        ImportPage,
+        ps.state,
+        {
+          dismissStack: ctx.dismissStack,
+          surveyTemplateStore: ctx.surveyTemplateStore,
+        },
+        (m) => dispatch({ type: "IMPORT_MSG", msg: m }),
+      );
+    case "person":
+      return show(
+        PersonDetailPage,
+        ps.state,
+        {
+          surveyTemplateStore: ctx.surveyTemplateStore,
+          dismissStack: ctx.dismissStack,
+        },
+        (m) => dispatch({ type: "PERSON_DETAIL_MSG", msg: m }),
+      );
+    case "search":
+      return show(
+        SearchPage,
+        ps.state,
+        {
+          eventStore: ctx.eventStore,
+          eventGroupStore: ctx.eventGroupStore,
+          rosterStore: ctx.rosterStore,
+          personGroupStore: ctx.personGroupStore,
+          nameStore: ctx.nameStore,
+          searchStore: ctx.searchStore,
+          tagStore: ctx.tagStore,
+          surveyTemplateStore: ctx.surveyTemplateStore,
+          matchPrefs: ctx.matchPrefs,
+          mainDispatch: dispatch,
+          postRenderBus: ctx.postRenderBus,
+          dismissStack: ctx.dismissStack,
+        },
+        (m) => dispatch({ type: "SEARCH_MSG", msg: m }),
+      );
+    case "calendar":
+      return show(
+        CalendarPage,
+        ps.state,
+        {
+          searchStore: ctx.searchStore,
+          nameStore: ctx.nameStore,
+          eventStore: ctx.eventStore,
+          eventGroupStore: ctx.eventGroupStore,
+          rosterStore: ctx.rosterStore,
+          postRenderBus: ctx.postRenderBus,
+          dismissStack: ctx.dismissStack,
+          surveyTemplateStore: ctx.surveyTemplateStore,
+          matchPrefs: ctx.matchPrefs,
+        },
+        (m) => dispatch({ type: "CALENDAR_MSG", msg: m }),
+      );
+    case "message-template-edit":
+      return show(
+        MessageTemplateBuilderPage,
+        ps.state,
+        { mainDispatch: dispatch },
+        (m) => dispatch({ type: "EMAIL_TEMPLATE_BUILDER_MSG", msg: m }),
+      );
+    case "message-campaigns":
+      return show(
+        MessageCampaignsPage,
+        ps.state,
+        { mainDispatch: dispatch },
+        (m) => dispatch({ type: "EMAIL_CAMPAIGNS_MSG", msg: m }),
+      );
+    case "survey-edit":
+      return show(
+        SurveyBuilderPage,
+        ps.state,
+        { mainDispatch: dispatch },
+        (m) => dispatch({ type: "SURVEY_BUILDER_MSG", msg: m }),
+      );
+    case "person-custom-fields":
+      return show(
+        SurveyBuilderPage,
+        ps.state,
+        { mainDispatch: dispatch },
+        (m) => dispatch({ type: "SURVEY_BUILDER_MSG", msg: m }),
+      );
+    case "kiosk":
+      return show(KioskPage, ps.state, empty, (m) =>
+        dispatch({ type: "KIOSK_MSG", msg: m }),
+      );
+    case "public-survey":
+      return show(PublicSurveyPage, ps.state, empty, (m) =>
+        dispatch({ type: "PUBLIC_SURVEY_MSG", msg: m }),
+      );
+    case "public-calendar":
+      return show(
+        PublicCalendarPage,
+        ps.state,
+        { dismissStack: ctx.dismissStack },
+        (m) => dispatch({ type: "PUBLIC_CALENDAR_MSG", msg: m }),
+      );
+    case "reservation-redeem":
+      return show(ReservationRedeemPage, ps.state, empty, (m) =>
+        dispatch({ type: "RESERVATION_REDEEM_MSG", msg: m }),
+      );
+    case "accept-invite":
+      return show(AcceptInvitePage, ps.state, empty, (m) =>
+        dispatch({ type: "ACCEPT_INVITE_MSG", msg: m }),
+      );
+    default:
+      return assertNever(ps);
+  }
+}
+class MainView implements View<MainState, MainMsg, AppCtx> {
+  container: HTMLElement;
+  private b: Binder<MainState>;
+  private ctx: AppCtx;
+  constructor(
+    container: HTMLElement,
+    dispatch: (msg: MainMsg) => void,
+    initialState: MainState,
+    ctx: AppCtx,
+  ) {
+    this.container = container;
+    this.ctx = ctx;
+    const headerRef = ref("header");
+    const crumbsRef = ref("crumbs");
+    const mainRef = ref("main");
+    container.innerHTML = sanitize`
+      <div class="${rootClass}">
+        <div data-ref="${headerRef}"></div>
+        <div data-ref="${crumbsRef}"></div>
+        <main data-ref="${mainRef}"></main>
+      </div>
+    `;
+    this.b = new Binder(container, initialState);
+    this.b.bindSlot(headerRef, (): SlotContent | undefined => {
+      const header = headerStateFor(this.ctx.router.route, this.ctx.auth.get());
+      return header === undefined
+        ? undefined
+        : show(
+            AppHeaderView,
+            header,
+            { dismissStack: this.ctx.dismissStack },
+            (m) => dispatch(m),
+          );
+    });
+    this.b.bindSlot(crumbsRef, (s) =>
+      navHidden(this.ctx.router.route, this.ctx.auth.get())
+        ? undefined
+        : show(
+            BreadcrumbsView,
+            { crumbs: crumbsForPage(s.pageState) },
+            {},
+            noop,
+          ),
+    );
+    this.b.bindStyle(
+      mainRef,
+      (): Record<string, string> =>
+        navHidden(this.ctx.router.route, this.ctx.auth.get())
+          ? { padding: "0" }
+          : {},
+    );
+    // Most pages render inside the centered reading column; full-bleed shells
+    // (the calendar's three-pane layout) and the nav-hidden public pages opt out.
+    this.b.bindClass(mainRef, (s) =>
+      navHidden(this.ctx.router.route, this.ctx.auth.get()) ||
+      s.pageState.page === "calendar" ||
+      s.pageState.page === "search"
+        ? ""
+        : centeredColumn,
+    );
+    this.b.bindSlot(mainRef, (s) => pageSlot(s, this.ctx, dispatch));
+  }
+  sync(state: MainState): void {
+    this.b.sync(state);
+  }
+  destroy(): void {
+    this.b.cleanup();
+    this.container.innerHTML = "";
+  }
+}
+async function startApp(container: HTMLElement) {
+  const initialRoute = currentRoute();
+  const initialAuth = await resolveInitialAuth();
+  // Seed the active back-office org slug. If the URL named an <orgSlug>
+  // (`/org/<orgSlug>/…`), parseRoute already set it; otherwise fall back to the
+  // resolved active org so back-office links/URLs build correctly.
+  if (getCurrentOrgSlug() === null && initialAuth.status === "authed") {
+    const active = resolveActiveOrg(initialAuth.me);
+    if (active) setCurrentOrgSlug(active.slug);
+  }
+  let dispatching = false;
+  function dispatch(msg: MainMsg): void {
+    if (dispatching) throw new Error("dispatch-in-dispatch");
+    dispatching = true;
+    update(state, msg, ctx, dispatch);
+    view.sync(state);
+    routerView.sync();
+    ctx.postRenderBus.flush();
+    dispatching = false;
+  }
+  const ctx = createAppCtx(api, dispatch, initialRoute, initialAuth);
+  const state: MainState = {
+    pageState: { page: "login" },
+  };
+  // Resolve the same auth redirect rules as in-app navigation; the controller
+  // now owns the route, and routerView.sync() below writes any redirect URL.
+  const route = ctx.router.update({ type: "NAVIGATE", route: initialRoute });
+  state.pageState = pageStateFor(route, ctx.auth.get());
+  const view = new MainView(container, dispatch, state, ctx);
+  const routerView = new RouterView(ctx.router, (m) =>
+    dispatch({ type: "NAVIGATE", route: m.route }),
+  );
+  routerView.sync();
+  routerView.mount();
+  if (route.page === "search" || route.page === "calendar") {
+    ctx.searchStore.update({ type: "RESET", params: route.params }, (m) =>
+      dispatch({ type: "SEARCH_STORE_MSG", msg: m }),
+    );
+  }
+}
+function renderBootError(container: HTMLElement): void {
+  container.innerHTML = "";
+  const wrap = document.createElement("div");
+  wrap.className = "boot-error";
+  wrap.setAttribute("role", "alert");
+  const heading = document.createElement("h1");
+  heading.textContent = "Something went wrong";
+  const body = document.createElement("p");
+  body.textContent =
+    "We couldn't reach the server. Please try again in a moment.";
+  const retry = document.createElement("button");
+  retry.type = "button";
+  retry.textContent = "Retry";
+  retry.addEventListener("click", () => {
+    window.location.reload();
+  });
+  wrap.append(heading, body, retry);
+  container.append(wrap);
+}
+const root = document.getElementById("app") ?? document.body;
+startApp(root).catch((e: unknown) => {
+  console.error(e);
+  renderBootError(root);
+});
+exit code 0

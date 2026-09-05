@@ -1,0 +1,4 @@
+$ cd /Users/denis.lantsman/src/edulab && mkdir -p .magenta/skills/vamp && cp ~/src/gatherus/main/.magenta/skills/vamp/skill.md .magenta/skills/vamp/skill.md && grep -rn "vamp.js\|vamp.ts" .magenta/skills/vamp/skill.md | wc -l
+stdout:
+       3
+exit code 0

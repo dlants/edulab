@@ -1,0 +1,4 @@
+$ cd /Users/denis.lantsman/src/edulab && git add -A && git commit -q -m "Add prototype scaffolding plan and vamp skill" && git log --oneline -1
+stdout:
+5473f07 Add prototype scaffolding plan and vamp skill
+exit code 0

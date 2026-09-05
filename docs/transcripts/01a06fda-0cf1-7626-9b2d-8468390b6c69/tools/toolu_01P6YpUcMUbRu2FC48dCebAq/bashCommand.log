@@ -1,0 +1,11 @@
+$ cd /Users/denis.lantsman/src/edulab && npm run typecheck && npm run lint && npm test && git add -A && git commit -q -m "Stage 1: End to end pipe" && git log --oneline -1
+stdout:
+> edulab@0.0.1 typecheck
+> npm -w @edulab/iso exec tsc -- --noEmit && npm -w @edulab/frontend exec tsc -- --noEmit && npm -w @edulab/backend exec tsc -- --noEmit
+> edulab@0.0.1 lint
+> biome check .
+Checked 13 files in 105ms. No fixes applied.
+> edulab@0.0.1 test
+> npm test --workspaces --if-present
+96b0825 Stage 1: End to end pipe
+exit code 0

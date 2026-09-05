@@ -1,0 +1,6 @@
+$ grep -n "registerSheets\|registerSheetSocket" /Users/denis.lantsman/src/gatherus/main/packages/backend/sheets/routes.ts
+stdout:
+4:import { registerSheetSocket } from "./socket.ts";
+16:export async function registerSheets(app: FastifyInstance, pool: pg.Pool) {
+17:  await registerSheetSocket(app, pool, new Bus());
+exit code 0

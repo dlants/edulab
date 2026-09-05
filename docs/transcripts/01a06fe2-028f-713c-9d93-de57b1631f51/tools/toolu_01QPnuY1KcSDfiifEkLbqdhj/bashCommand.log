@@ -1,0 +1,110 @@
+$ cd /Users/denis.lantsman/src/edulab && cat packages/backend/app.ts packages/backend/package.json packages/iso/protocol.ts biome.json tsconfig.base.json 2>/dev/null; ls ~/src/gatherus/main/packages | cat; cat ~/src/gatherus/main/playwright.config.ts 2>/dev/null; npm show @playwright/test version
+stdout:
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import dotenv from "dotenv";
+import Fastify from "fastify";
+import { registerSocket } from "./socket.ts";
+dotenv.config({
+  path: path.join(path.dirname(fileURLToPath(import.meta.url)), "../../.env"),
+});
+async function run() {
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) throw new Error("Missing required env var: ANTHROPIC_API_KEY");
+  const app = Fastify({ logger: true });
+  await registerSocket(app, apiKey);
+  const port = Number(process.env.PORT ?? 3000);
+  await app.listen({ port, host: "0.0.0.0" });
+}
+run().catch((err: unknown) => {
+  console.error(err);
+  process.exit(1);
+});
+{
+  "name": "@edulab/backend",
+  "version": "0.0.1",
+  "license": "UNLICENSED",
+  "type": "module",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.115.0",
+    "@edulab/iso": "*",
+    "@fastify/websocket": "^11.3.0",
+    "dotenv": "^17.4.1",
+    "fastify": "^5.8.4"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/ws": "^8.18.1",
+    "typescript": "^5.9.3"
+  },
+  "scripts": {
+    "dev": "node --watch app.ts"
+  }
+}
+import type Anthropic from "@anthropic-ai/sdk";
+export type ClientMessage = {
+  type: "start";
+  requestId: string;
+  params: Anthropic.MessageCreateParamsStreaming;
+};
+export type ServerFrame =
+  | { type: "event"; requestId: string; event: Anthropic.RawMessageStreamEvent }
+  | { type: "done"; requestId: string }
+  | { type: "error"; requestId: string; message: string };
+{
+  "$schema": "https://biomejs.dev/schemas/2.5.12/schema.json",
+  "assist": {
+    "actions": {
+      "source": {
+        "organizeImports": "on"
+      }
+    }
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "preset": "recommended",
+      "nursery": {
+        "noFloatingPromises": "error"
+      }
+    }
+  },
+  "formatter": {
+    "enabled": true,
+    "indentStyle": "space",
+    "indentWidth": 2
+  },
+  "files": {
+    "includes": [
+      "packages/**",
+      "!**/node_modules",
+      "!**/dist",
+      "!**/*.d.ts",
+      "!**/playwright-report",
+      "!**/test-results"
+    ]
+  }
+}
+{
+  "compilerOptions": {
+    "target": "esnext",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "erasableSyntaxOnly": true,
+    "verbatimModuleSyntax": true,
+    "allowImportingTsExtensions": true,
+    "rewriteRelativeImportExtensions": true,
+    "noEmit": true
+  }
+}
+backend
+e2e
+frontend
+iso
+test
+1.63.0
+exit code 0

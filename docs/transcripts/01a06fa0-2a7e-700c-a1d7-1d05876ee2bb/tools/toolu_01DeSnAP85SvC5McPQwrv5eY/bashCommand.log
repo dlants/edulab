@@ -1,0 +1,4 @@
+$ ls -R ~/src/gatherus/main/.magenta/skills/vamp/
+stdout:
+skill.md
+exit code 0

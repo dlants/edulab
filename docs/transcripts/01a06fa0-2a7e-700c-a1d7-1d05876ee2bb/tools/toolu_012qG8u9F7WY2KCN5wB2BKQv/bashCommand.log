@@ -1,0 +1,18 @@
+$ wc -l ~/src/gatherus/main/.magenta/skills/vamp/skill.md && sed -n '1,20p' ~/src/gatherus/main/.magenta/skills/vamp/skill.md && grep -n "gatherus\|packages/" ~/src/gatherus/main/.magenta/skills/vamp/skill.md
+stdout:
+     613 /Users/denis.lantsman/src/gatherus/main/.magenta/skills/vamp/skill.md
+---
+name: vamp
+description: Vamp frontend coding pattern. Use when writing or modifying frontend views, components, state management, or routing.
+---
+Vamp is a coding pattern — a repeating, predictable structure for organizing frontend code that is transparent, consistent and debuggable.
+# Basic Example
+A complete counter page showing all the parts:
+```typescript
+import { Binder, cls, mountStyle, ref, show, type View } from "./vamp.js";
+// Start by defining the state machine, with explicit transitions.
+interface State {
+  count: number;
+  loading: boolean;
+}
+exit code 1

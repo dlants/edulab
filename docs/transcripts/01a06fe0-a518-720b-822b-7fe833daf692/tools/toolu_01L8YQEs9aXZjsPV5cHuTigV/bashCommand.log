@@ -1,0 +1,4 @@
+$ cd /Users/denis.lantsman/src/edulab && git add -A && git commit -q -m "Stage 2: Conversation" && git log --oneline -1 && git status --short
+stdout:
+dde2fc6 Stage 2: Conversation
+exit code 0

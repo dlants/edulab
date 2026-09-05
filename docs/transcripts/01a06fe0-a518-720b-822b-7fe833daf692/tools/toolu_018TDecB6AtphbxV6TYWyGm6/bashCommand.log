@@ -1,0 +1,17 @@
+$ cd /Users/denis.lantsman/src/edulab && sed -i '' 's|  addEventListener(_type: string, listener: (e: MessageEvent<string>) => void) {|  addEventListener(_type: "message", listener: (e: MessageEvent<string>) => void) {|' packages/frontend/conversation.test.ts && npx vitest run && npm run typecheck && npm run lint:fix && npm run lint
+stdout:
+ RUN  v4.1.11 /Users/denis.lantsman/src/edulab
+ ✓ packages/frontend/conversation.test.ts (5 tests) 12ms
+ Test Files  1 passed (1)
+      Tests  5 passed (5)
+   Start at  21:44:20
+   Duration  146ms (transform 19ms, setup 0ms, import 50ms, tests 12ms, environment 0ms)
+> edulab@0.0.1 typecheck
+> npm -w @edulab/iso exec tsc -- --noEmit && npm -w @edulab/frontend exec tsc -- --noEmit && npm -w @edulab/backend exec tsc -- --noEmit
+> edulab@0.0.1 lint:fix
+> biome check --write .
+Checked 15 files in 89ms. Fixed 1 file.
+> edulab@0.0.1 lint
+> biome check .
+Checked 15 files in 102ms. No fixes applied.
+exit code 0

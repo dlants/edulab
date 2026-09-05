@@ -1,0 +1,36 @@
+$ cd /Users/denis.lantsman/src/edulab && cat package.json && ls docs notes
+stdout:
+{
+  "name": "edulab",
+  "version": "0.0.1",
+  "description": "Learning-mode agent prototypes",
+  "type": "module",
+  "license": "UNLICENSED",
+  "private": true,
+  "engines": { "node": ">=24" },
+  "workspaces": ["packages/*"],
+  "scripts": {
+    "dev:frontend": "vite",
+    "dev:backend": "npm -w @edulab/backend run dev",
+    "dev": "npm run dev:frontend & npm run dev:backend",
+    "build": "vite build",
+    "test": "vitest run",
+    "typecheck": "npm -w @edulab/iso exec tsc -- --noEmit && npm -w @edulab/frontend exec tsc -- --noEmit && npm -w @edulab/backend exec tsc -- --noEmit",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write ."
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.4.11",
+    "typescript": "^5.9.3",
+    "vite": "^6.0.0",
+    "vitest": "^4.1.4"
+  }
+}
+docs:
+assignment.md
+assignment.pdf
+notes:
+exploration.md
+prototype.md
+studies.md
+exit code 0

@@ -1,0 +1,44 @@
+$ cd /Users/denis.lantsman/src/edulab && npx biome migrate --write && npm run lint && cat biome.json && ls -a | grep env; echo "key:${ANTHROPIC_API_KEY:+set}"
+stdout:
+configuration ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  i Migration results:
+  - /Users/denis.lantsman/src/edulab/biome.json: configuration successfully migrated.
+> edulab@0.0.1 lint
+> biome check .
+Checked 13 files in 78ms. No fixes applied.
+{
+  "$schema": "https://biomejs.dev/schemas/2.5.12/schema.json",
+  "assist": {
+    "actions": {
+      "source": {
+        "organizeImports": "on"
+      }
+    }
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "preset": "recommended",
+      "nursery": {
+        "noFloatingPromises": "error"
+      }
+    }
+  },
+  "formatter": {
+    "enabled": true,
+    "indentStyle": "space",
+    "indentWidth": 2
+  },
+  "files": {
+    "includes": [
+      "packages/**",
+      "!**/node_modules",
+      "!**/dist",
+      "!**/*.d.ts",
+      "!**/playwright-report",
+      "!**/test-results"
+    ]
+  }
+}
+key:set
+exit code 0

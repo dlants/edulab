@@ -1,0 +1,2 @@
+$ cd /tmp/magenta/threads; for d in */; do [ -f "$d/meta.json" ] && continue; if grep -lq "src/edulab" "$d/conversation.jsonl" 2>/dev/null; then echo "$d $(stat -f %Sm $d/conversation.jsonl)"; fi; done
+exit code 0

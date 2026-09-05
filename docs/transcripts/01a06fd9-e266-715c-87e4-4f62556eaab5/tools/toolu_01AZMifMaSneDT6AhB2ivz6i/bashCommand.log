@@ -1,0 +1,45 @@
+$ cd /Users/denis.lantsman/src/edulab && cat > scripts/sync-transcripts.sh <<'SCRIPT'
+#!/usr/bin/env bash
+# Copy magenta thread archives for this repo into docs/transcripts/.
+# Threads are selected by meta.json .cwd matching the repo root, which is a
+# superset of "conversation mentions the repo path" and so cannot miss a thread.
+# Re-running only copies threads that are new or have grown since the last sync.
+set -euo pipefail
+
+repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+src_root="${MAGENTA_THREADS_DIR:-/tmp/magenta/threads}"
+dest_root="$repo_root/docs/transcripts"
+
+mkdir -p "$dest_root"
+
+copied=0
+for meta in "$src_root"/*/meta.json; do
+  [ -e "$meta" ] || continue
+  thread_dir="$(dirname "$meta")"
+  cwd="$(node -e 'process.stdout.write(JSON.parse(require("fs").readFileSync(process.argv[1],"utf8")).cwd ?? "")' "$meta")"
+  [ "$cwd" = "$repo_root" ] || continue
+  # -u keeps already-synced threads intact while picking up messages and tool
+  # logs appended after the last sync.
+  rsync -a -u "$thread_dir" "$dest_root/"
+  copied=$((copied + 1))
+done
+
+echo "synced $copied thread(s) into $dest_root"
+SCRIPT
+chmod +x scripts/sync-transcripts.sh && ./scripts/sync-transcripts.sh && ls docs/transcripts && du -sh docs/transcripts
+stdout:
+synced 12 thread(s) into /Users/denis.lantsman/src/edulab/docs/transcripts
+01a06ed7-db07-72f9-a493-ce5b0518444a
+01a06eda-1fbe-74db-890c-0cfd8d8d98a1
+01a06f96-da17-7238-99d6-9499133b50a1
+01a06fa0-2a7e-700c-a1d7-1d05876ee2bb
+01a06fb3-fd08-7079-b31e-d25f98902d2b
+01a06fb3-fd0b-7519-a8e5-a791777c1090
+01a06fd9-e266-715c-87e4-4f62556eaab5
+01a06fd9-f5c3-7160-9c5a-9346e82ba68a
+01a06fda-0cf1-7626-9b2d-8468390b6c69
+01a06fe0-a518-720b-822b-7fe833daf692
+01a06fe2-028f-713c-9d93-de57b1631f51
+01a06fe2-9750-7150-8898-a2438b7ee2e2
+5.9M	docs/transcripts
+exit code 0

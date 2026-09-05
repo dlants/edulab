@@ -1,0 +1,11 @@
+$ cp /tmp/wstest.mjs /Users/denis.lantsman/src/edulab/wstest.mjs && cd /Users/denis.lantsman/src/edulab && node wstest.mjs < /dev/null
+stdout:
+event message_start
+event content_block_start
+event content_block_delta
+event content_block_delta
+event content_block_stop
+event message_delta
+event message_stop
+done 
+exit code 0

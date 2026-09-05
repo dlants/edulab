@@ -1,0 +1,4 @@
+$ cat /tmp/magenta/threads/01a06fd9-e266-715c-87e4-4f62556eaab5/meta.json
+stdout:
+{"title":"Verify full conversation log capture","threadType":"root","cwd":"/Users/denis.lantsman/src/edulab"}
+exit code 0

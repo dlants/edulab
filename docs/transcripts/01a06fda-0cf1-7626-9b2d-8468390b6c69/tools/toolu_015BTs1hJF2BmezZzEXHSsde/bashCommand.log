@@ -1,0 +1,10 @@
+$ cd /Users/denis.lantsman/src/edulab && rm wstest.mjs && kill $(cat /tmp/edulab.pid) $(cat /tmp/edulab-vite.pid) 2>/dev/null; git status --short
+stdout:
+?? .gitignore
+?? biome.json
+?? package-lock.json
+?? package.json
+?? packages/
+?? tsconfig.base.json
+?? vite.config.ts
+exit code 0

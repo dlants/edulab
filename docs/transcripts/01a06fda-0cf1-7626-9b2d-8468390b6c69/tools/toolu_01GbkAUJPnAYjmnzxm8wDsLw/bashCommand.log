@@ -1,0 +1,184 @@
+$ cd ~/src/gatherus/main && cat tsconfig.base.json && for p in iso frontend backend; do echo "=== $p"; cat packages/$p/package.json packages/$p/tsconfig.json; done; ls packages/frontend packages/backend
+stdout:
+{
+  "compilerOptions": {
+    "target": "esnext",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "erasableSyntaxOnly": true,
+    "verbatimModuleSyntax": true,
+    "allowImportingTsExtensions": true,
+    "rewriteRelativeImportExtensions": true,
+    "noEmit": true
+  }
+}
+=== iso
+{
+  "name": "@gatherus/iso",
+  "version": "0.0.1",
+  "license": "UNLICENSED",
+  "type": "module",
+  "scripts": {
+    "test": "vitest run --config vitest.config.ts"
+  },
+  "dependencies": {
+    "prosemirror-model": "^1.25.11"
+  }
+}
+{
+  "extends": "../../tsconfig.base.json",
+  "exclude": ["node_modules"]
+}
+=== frontend
+{
+  "name": "@gatherus/frontend",
+  "version": "0.0.1",
+  "license": "UNLICENSED",
+  "type": "module",
+  "scripts": {
+    "test": "vitest run --config vitest.config.ts"
+  },
+  "dependencies": {
+    "@gatherus/iso": "*",
+    "prosemirror-commands": "^1.7.1",
+    "prosemirror-keymap": "^1.2.3",
+    "prosemirror-state": "^1.4.4",
+    "prosemirror-view": "^1.42.1",
+    "qrcode-generator": "^2.0.4"
+  }
+}
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "strictPropertyInitialization": false,
+    "moduleResolution": "bundler",
+    "lib": ["DOM", "DOM.Iterable", "ESNext"],
+    "types": ["vite/client"]
+  },
+  "include": ["**/*"],
+  "exclude": ["node_modules"]
+}
+=== backend
+{
+  "name": "@gatherus/backend",
+  "version": "0.0.1",
+  "license": "UNLICENSED",
+  "type": "module",
+  "dependencies": {
+    "@fastify/cookie": "^11.0.2",
+    "@fastify/websocket": "^11.3.0",
+    "@gatherus/iso": "*",
+    "@pgtyped/runtime": "^2.4.2",
+    "better-auth": "^1.6.5",
+    "dotenv": "^17.4.1",
+    "fastify": "^5.8.4",
+    "kysely": "^0.29.5",
+    "meilisearch": "^0.58.0",
+    "pg": "^8.20.0",
+    "prosemirror-model": "^1.25.11",
+    "resend": "^6.12.0",
+    "svix": "^1.90.0",
+    "uuid": "^14.0.0"
+  },
+  "devDependencies": {
+    "@gatherus/test": "*",
+    "@pgtyped/cli": "^2.4.3",
+    "@types/node": "^22.0.0",
+    "@types/pg": "^8.0.0",
+    "@types/ws": "^8.18.1",
+    "dbmate": "^2.32.0",
+    "kysely-codegen": "^0.20.0",
+    "typescript": "^7.0.2",
+    "vitest": "^4.1.4",
+    "zx": "^8.8.5"
+  },
+  "scripts": {
+    "dev": "node --watch app.ts",
+    "migrate": "dbmate --url $DATABASE_URL up",
+    "migrate:prod": "dbmate --no-dump-schema --migrations-dir ./db/migrations up",
+    "migrate:new": "dbmate --url $DATABASE_URL new",
+    "populate-db": "node scripts/populate-db.ts",
+    "reset-schema": "node scripts/reset-schema.ts",
+    "reindex": "node scripts/reindex.ts",
+    "kysely-codegen": "node scripts/kysely-codegen.ts",
+    "pgtyped": "pgtyped -c pgtyped.config.json",
+    "pgtyped:watch": "pgtyped -w -c pgtyped.config.json",
+    "test": "vitest --passWithNoTests"
+  }
+}
+{
+  "extends": "../../tsconfig.base.json",
+  "exclude": ["node_modules"]
+}
+packages/backend:
+account
+app.ts
+appointments
+attendance
+auth
+calendars
+create-app.ts
+db
+email
+env.ts
+event-groups
+events
+exports
+fields
+imports
+iso-validators
+message-templates
+messages
+models
+node_modules
+org-invitations
+organizations
+package.json
+permissions
+person-groups
+persons
+pgtyped.config.json
+rate-limit.ts
+rosters
+scripts
+search
+services
+sheets
+survey-instances
+survey-templates
+tags
+test
+tsconfig.json
+tsconfig.tsbuildinfo
+validation
+vitest.config.ts
+packages/frontend:
+api.test.ts
+api.ts
+app-ctx.ts
+auth-controller.ts
+download.ts
+env.ts
+icons.ts
+index.html
+main.ts
+node_modules
+package.json
+pages
+public
+router.ts
+stores
+theme.ts
+tsconfig.json
+tsconfig.tsbuildinfo
+vamp.test.ts
+vamp.ts
+views
+vitest.config.ts
+exit code 0

@@ -1,0 +1,13 @@
+$ cd /Users/denis.lantsman/src/edulab && sed -n '1,12p' scripts/sync-transcripts.sh
+stdout:
+#!/usr/bin/env bash
+# Copy magenta thread archives for this repo into docs/transcripts/.
+# Threads are selected by meta.json .cwd matching the repo root, which is a
+# superset of "conversation mentions the repo path" and so can't miss a thread.
+# Existing destinations are refreshed only when the source is newer.
+set -euo pipefail
+repo_root="\$(cd "\$(dirname "\${BASH_SOURCE[0]}")/.." && pwd)"
+src_root="\${MAGENTA_THREADS_DIR:-/tmp/magenta/threads}"
+dest_root="\$repo_root/docs/transcripts"
+mkdir -p "\$dest_root"
+exit code 0

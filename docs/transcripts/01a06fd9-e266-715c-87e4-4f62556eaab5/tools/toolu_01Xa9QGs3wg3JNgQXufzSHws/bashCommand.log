@@ -1,0 +1,17 @@
+$ cd /tmp/magenta/threads; while read d; do python3 -c "
+import json
+m=json.load(open('$d/meta.json'))
+l=open('$d/conversation.jsonl').readlines()
+f=json.loads(l[0])
+print(f.get('timestamp','?'), len(l), m.get('threadType'), repr(m.get('title')), f.get('parentThreadId','')) "; done < /tmp/b.txt | sort
+stdout:
+2026-09-04T23:53:55.294Z 24 root 'Setup private GitHub repo' 
+2026-09-04T23:56:23.907Z 24 root 'Design feedback and ideas' 
+2026-09-05T03:22:32.461Z 1 root None 
+2026-09-05T03:32:42.794Z 70 root 'Prototype Scaffolding Plan' 
+2026-09-05T03:54:21.889Z 37 subagent 'Extract agentic loop interfaces & providers' 
+2026-09-05T03:54:21.892Z 33 subagent 'gatherus web service scaffolding analysis' 
+2026-09-05T04:35:45.529Z 15 root 'Verify full conversation log capture' 
+2026-09-05T04:35:50.363Z 5 subagent 'Breaking down prototype scaffolding plan' 
+2026-09-05T04:35:56.299Z 30 subagent 'Stage 1: End to end pipe setup' 
+exit code 0

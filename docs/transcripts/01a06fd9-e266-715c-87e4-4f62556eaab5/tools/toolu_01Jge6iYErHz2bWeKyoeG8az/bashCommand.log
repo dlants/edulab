@@ -1,0 +1,4 @@
+$ cd /Users/denis.lantsman/src/edulab && npm run sync:transcripts && git status --short | wc -l
+stdout:
+> edulab@0.0.1 sync:transcripts
+> ./scripts/sync-transcripts.sh

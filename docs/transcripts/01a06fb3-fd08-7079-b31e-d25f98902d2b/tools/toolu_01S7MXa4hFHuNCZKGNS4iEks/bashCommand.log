@@ -1,0 +1,4 @@
+$ ls -la /Users/denis.lantsman/src/gatherus/main/packages/backend/src/
+stderr:
+ls: /Users/denis.lantsman/src/gatherus/main/packages/backend/src/: No such file or directory
+exit code 1

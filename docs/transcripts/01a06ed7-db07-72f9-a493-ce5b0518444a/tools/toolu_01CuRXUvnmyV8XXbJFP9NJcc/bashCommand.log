@@ -1,0 +1,10 @@
+$ cd /Users/denis.lantsman/src/edulab && git add -A && git commit -m "Add assignment PDF and markdown extraction" && git push
+stdout:
+[main 3b9c59a] Add assignment PDF and markdown extraction
+ 2 files changed, 94 insertions(+)
+ create mode 100644 docs/assignment.md
+ create mode 100644 docs/assignment.pdf
+stderr:
+To github.com:dlants/edulab.git
+   1473e3a..3b9c59a  main -> main
+exit code 0

@@ -1,0 +1,5 @@
+$ cd /Users/denis.lantsman/src/edulab && cat -A scripts/sync-transcripts.sh | sed -n '1,10p'
+stderr:
+cat: illegal option -- A
+usage: cat [-belnstuv] [file ...]
+exit code 0

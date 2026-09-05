@@ -1,0 +1,5 @@
+$ cd /Users/denis.lantsman/src/edulab && ls docs && (which pdftotext || echo no-pdftotext)
+stdout:
+assignment.pdf
+no-pdftotext
+exit code 0

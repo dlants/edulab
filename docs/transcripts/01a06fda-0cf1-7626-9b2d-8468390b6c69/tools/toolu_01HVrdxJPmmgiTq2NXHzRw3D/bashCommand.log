@@ -1,0 +1,2 @@
+$ cd ~/src/gatherus/main && grep -n "^import\|from \"" packages/frontend/vamp.ts | grep import
+exit code 1

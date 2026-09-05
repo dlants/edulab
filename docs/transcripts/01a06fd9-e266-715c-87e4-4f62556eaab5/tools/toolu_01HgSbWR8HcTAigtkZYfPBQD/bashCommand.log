@@ -1,0 +1,21 @@
+$ cd /Users/denis.lantsman/src/edulab && ls -a && ls scripts 2>/dev/null
+stdout:
+.
+..
+.env
+.git
+.gitignore
+.magenta
+biome.json
+docs
+node_modules
+notes
+package-lock.json
+package.json
+packages
+plans
+README.md
+tsconfig.base.json
+vite.config.ts
+vitest.config.ts
+exit code 1

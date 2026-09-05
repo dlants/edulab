@@ -1,0 +1,6 @@
+$ cd /Users/denis.lantsman/src/edulab && mkdir -p packages/iso packages/backend packages/frontend && cp ~/src/gatherus/main/packages/frontend/vamp.ts packages/frontend/vamp.ts && cp ~/src/gatherus/main/tsconfig.base.json . && cp ~/src/gatherus/main/packages/frontend/tsconfig.json packages/frontend/tsconfig.json && cp ~/src/gatherus/main/packages/iso/tsconfig.json packages/iso/tsconfig.json && cp packages/iso/tsconfig.json packages/backend/tsconfig.json && npm show @anthropic-ai/sdk version && npm show fastify version && npm show @fastify/websocket version
+stdout:
+0.124.0
+5.12.3
+11.3.0
+exit code 0

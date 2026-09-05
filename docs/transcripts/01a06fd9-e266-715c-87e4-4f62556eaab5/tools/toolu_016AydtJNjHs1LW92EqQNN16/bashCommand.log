@@ -1,0 +1,4 @@
+$ cd /Users/denis.lantsman/src/edulab && chmod +x scripts/sync-transcripts.sh && ./scripts/sync-transcripts.sh && ls docs/transcripts && du -sh docs/transcripts
+stderr:
+./scripts/sync-transcripts.sh: line 8: syntax error near unexpected token `('
+exit code 2

@@ -1,0 +1,160 @@
+$ cd /Users/denis.lantsman/src/edulab && cat package.json vite.config.ts packages/iso/protocol.ts packages/frontend/main.ts packages/frontend/package.json packages/backend/socket.ts tsconfig.json packages/frontend/tsconfig.json
+stdout:
+{
+  "name": "edulab",
+  "version": "0.0.1",
+  "description": "Learning-mode agent prototypes",
+  "type": "module",
+  "license": "UNLICENSED",
+  "private": true,
+  "engines": { "node": ">=24" },
+  "workspaces": ["packages/*"],
+  "scripts": {
+    "dev:frontend": "vite",
+    "dev:backend": "npm -w @edulab/backend run dev",
+    "dev": "npm run dev:frontend & npm run dev:backend",
+    "build": "vite build",
+    "test": "npm test --workspaces --if-present",
+    "typecheck": "npm -w @edulab/iso exec tsc -- --noEmit && npm -w @edulab/frontend exec tsc -- --noEmit && npm -w @edulab/backend exec tsc -- --noEmit",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write ."
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.4.11",
+    "typescript": "^5.9.3",
+    "vite": "^6.0.0",
+    "vitest": "^4.1.4"
+  }
+}
+import { defineConfig } from "vite";
+export default defineConfig({
+  root: "packages/frontend",
+  base: "/",
+  build: {
+    target: "esnext",
+    outDir: "dist",
+    minify: true,
+  },
+  server: {
+    host: "localhost",
+    port: Number(process.env.VITE_PORT ?? 5173),
+    strictPort: true,
+    proxy: {
+      "/api/": {
+        target: process.env.API_TARGET ?? "http://localhost:3000",
+        secure: false,
+        ws: true,
+      },
+    },
+  },
+});
+import type Anthropic from "@anthropic-ai/sdk";
+export type ClientMessage = {
+  type: "start";
+  requestId: string;
+  params: Anthropic.MessageCreateParamsStreaming;
+};
+export type ServerFrame =
+  | { type: "event"; requestId: string; event: Anthropic.RawMessageStreamEvent }
+  | { type: "done"; requestId: string }
+  | { type: "error"; requestId: string; message: string };
+import type { ClientMessage, ServerFrame } from "@edulab/iso/protocol.ts";
+export function connect(): WebSocket {
+  const proto = window.location.protocol === "https:" ? "wss:" : "ws:";
+  return new WebSocket(`${proto}//${window.location.host}/api/socket`);
+}
+/** Scratch driver for the stage-1 manual check: `edulab.ask("hi")` in the
+ * console should log events as they stream in. Replaced by the conversation
+ * module in the next stage. */
+async function ask(text: string): Promise<void> {
+  const socket = connect();
+  await new Promise<void>((resolve) => {
+    socket.addEventListener("open", () => resolve(), { once: true });
+  });
+  socket.addEventListener("message", (e: MessageEvent<string>) => {
+    const frame = JSON.parse(e.data) as ServerFrame;
+    console.log(frame);
+    if (frame.type !== "event") socket.close();
+  });
+  const message: ClientMessage = {
+    type: "start",
+    requestId: crypto.randomUUID(),
+    params: {
+      model: "claude-sonnet-4-5",
+      max_tokens: 1024,
+      stream: true,
+      messages: [{ role: "user", content: text }],
+    },
+  };
+  socket.send(JSON.stringify(message));
+}
+(window as unknown as { edulab: { ask: typeof ask } }).edulab = { ask };
+const root = document.getElementById("app") ?? document.body;
+root.textContent = 'edulab — try edulab.ask("hello") in the console';
+{
+  "name": "@edulab/frontend",
+  "version": "0.0.1",
+  "license": "UNLICENSED",
+  "type": "module",
+  "dependencies": {
+    "@edulab/iso": "*"
+  }
+}
+import Anthropic from "@anthropic-ai/sdk";
+import type { ClientMessage, ServerFrame } from "@edulab/iso/protocol.ts";
+import websocket from "@fastify/websocket";
+import type { FastifyInstance } from "fastify";
+export async function registerSocket(app: FastifyInstance, apiKey: string) {
+  const client = new Anthropic({ apiKey });
+  await app.register(websocket);
+  app.get("/api/socket", { websocket: true }, (socket) => {
+    const send = (frame: ServerFrame) => {
+      if (socket.readyState === socket.OPEN) socket.send(JSON.stringify(frame));
+    };
+    socket.on("message", (data: Buffer) => {
+      let message: ClientMessage;
+      try {
+        message = JSON.parse(data.toString()) as ClientMessage;
+      } catch {
+        socket.close(4400, "bad_request");
+        return;
+      }
+      void run(message);
+    });
+    // The server is a pipe: it forwards every event to the client tagged with
+    // the request id, and always terminates the request with done | error.
+    async function run(message: ClientMessage) {
+      const { requestId } = message;
+      try {
+        const stream = client.messages.stream(message.params);
+        for await (const event of stream) {
+          send({ type: "event", requestId, event });
+        }
+        send({ type: "done", requestId });
+      } catch (err) {
+        send({
+          type: "error",
+          requestId,
+          message: err instanceof Error ? err.message : String(err),
+        });
+      }
+    }
+  });
+}
+stderr:
+cat: tsconfig.json: No such file or directory
+stdout:
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "strictPropertyInitialization": false,
+    "moduleResolution": "bundler",
+    "lib": ["DOM", "DOM.Iterable", "ESNext"],
+    "types": ["vite/client"]
+  },
+  "include": ["**/*"],
+  "exclude": ["node_modules"]
+}
+exit code 1

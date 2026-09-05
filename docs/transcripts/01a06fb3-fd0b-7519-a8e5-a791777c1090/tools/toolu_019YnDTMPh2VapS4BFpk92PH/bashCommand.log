@@ -1,0 +1,2 @@
+$ grep -A 5 "@anthropic-ai/sdk" /Users/denis.lantsman/src/magenta.nvim/node/core/package.json
+exit code 1

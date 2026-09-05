@@ -1,0 +1,20 @@
+$ cd /Users/denis.lantsman/src/edulab && ls -a && cat package.json 2>/dev/null; echo ---; ls ~/src/gatherus
+stdout:
+.
+..
+.git
+docs
+notes
+README.md
+---
+context.md
+custom-fields-to-person-sheet
+example.txt
+export
+main
+new-worktree.sh
+sample-attendee-import.csv
+sheets
+sms-channel
+todo.md
+exit code 0

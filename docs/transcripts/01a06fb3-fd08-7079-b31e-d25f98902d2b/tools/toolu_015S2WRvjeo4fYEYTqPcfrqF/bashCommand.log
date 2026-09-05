@@ -1,0 +1,8 @@
+$ find /Users/denis.lantsman/src/gatherus/main/packages/backend -name "*.ts" -maxdepth 1
+stdout:
+/Users/denis.lantsman/src/gatherus/main/packages/backend/app.ts
+/Users/denis.lantsman/src/gatherus/main/packages/backend/create-app.ts
+/Users/denis.lantsman/src/gatherus/main/packages/backend/env.ts
+/Users/denis.lantsman/src/gatherus/main/packages/backend/vitest.config.ts
+/Users/denis.lantsman/src/gatherus/main/packages/backend/rate-limit.ts
+exit code 0

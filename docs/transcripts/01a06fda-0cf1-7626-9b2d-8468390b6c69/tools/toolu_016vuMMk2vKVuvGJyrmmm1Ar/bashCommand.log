@@ -1,0 +1,6 @@
+$ cd /Users/denis.lantsman/src/edulab && printf 'ANTHROPIC_API_KEY=%s\n' "$ANTHROPIC_API_KEY" > .env && printf '.env\nnode_modules\ndist\n' > .gitignore && (node packages/backend/app.ts > /tmp/edulab-backend.log & echo $! > /tmp/edulab.pid) && (npx vite > /tmp/edulab-vite.log & echo $! > /tmp/edulab-vite.pid) && sleep 5 && curl -s -o /dev/null -w "%{http_code}\n" http://localhost:5173/
+stdout:
+200
+stderr:
+Promise timed out after 300000ms
+exit code 1

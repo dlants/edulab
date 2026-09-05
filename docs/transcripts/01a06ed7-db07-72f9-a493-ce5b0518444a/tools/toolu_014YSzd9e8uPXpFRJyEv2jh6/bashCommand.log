@@ -1,0 +1,15 @@
+$ cd /Users/denis.lantsman/src/edulab && git init -b main && echo "# edulab" > README.md && git add -A && git commit -m "Initial commit" && gh repo create edulab --private --source=. --remote=origin --push && git remote -v
+stdout:
+Initialized empty Git repository in /Users/denis.lantsman/src/edulab/.git/
+[main (root-commit) 1473e3a] Initial commit
+ 1 file changed, 1 insertion(+)
+ create mode 100644 README.md
+https://github.com/dlants/edulab
+stderr:
+To github.com:dlants/edulab.git
+ * [new branch]      HEAD -> main
+stdout:
+branch 'main' set up to track 'origin/main'.
+origin	git@github.com:dlants/edulab.git (fetch)
+origin	git@github.com:dlants/edulab.git (push)
+exit code 0

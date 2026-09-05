@@ -1,0 +1,95 @@
+$ head -100 /Users/denis.lantsman/src/magenta.nvim/node/core/src/thread-api.ts
+stdout:
+import type { OnToolApplied } from "./capabilities/context-tracker.ts";
+import type { StopReason, ToolResults } from "./providers/provider-types.ts";
+import type { PendingMessage } from "./submission/index.ts";
+import type {
+  EndTurnAction,
+  EndTurnContext,
+  RequestAction,
+  RequestContext,
+  SuspendReason,
+  YieldAction,
+} from "./thread-supervisor.ts";
+import type { ActiveToolEntry, ToolRequestId } from "./tool-types.ts";
+/** What a thread hands back when it yields. Which variant a thread produces is
+ * fixed at construction — a thread either has a `yieldSchema` or does not — so
+ * a receiver never has to guess by parsing, and a text result that happens to
+ * be valid JSON is never silently reinterpreted. */
+export type YieldValue =
+  | { type: "text"; text: string }
+  /** conforms to the `yieldSchema` this thread was constructed with */
+  | { type: "structured"; value: unknown };
+/** The display/transport rendering of a yield: what a human reads and what a
+ * `resultPrefix` can be glued onto. Derived, never stored alongside the
+ * value. */
+export function renderYieldValue(value: YieldValue): string {
+  return value.type === "structured" ? JSON.stringify(value.value) : value.text;
+}
+/** Malformed requests never become an `activeTools` entry, so the map can be
+ * smaller than `requested`. */
+export type ToolInvocationState =
+  | { type: "pending" }
+  | {
+      type: "running";
+      activeTools: ReadonlyMap<ToolRequestId, ActiveToolEntry>;
+    }
+  | { type: "settled" };
+export type SendOptions = {
+  /** Issue a request even with no content of our own: a retry re-sends the
+   * log exactly as a failure left it. */
+  force?: true;
+  /** async: run after the current turn. next: run at the next stop.
+   * undefined: abort whatever is running and send now. */
+  queue?: "async" | "next";
+};
+/** How one submission ended. Delivered once, to the actor that submitted it —
+ * never broadcast. Internal continuations (auto-respond, supervisor nudges,
+ * the max_tokens continue-prompt, a compaction handoff) do not produce one:
+ * the promise resolves when the thread finally comes to rest. */
+export type SendResult =
+  /** The agent came to rest. `stopReason` is how the turn that just finished
+   * ended. */
+  | { type: "completed"; stopReason: StopReason }
+  /** The submission settled without ever issuing a request (empty content),
+   * so there was never a turn and there is nothing to continue from. */
+  | { type: "empty" }
+  | { type: "yielded"; value: YieldValue }
+  | { type: "aborted" }
+  /** The runner exhausted its retries. Nothing is discarded: the submission
+   * is still in the log, in a shape the provider will accept, so retrying
+   * re-issues the same request and queued submissions are untouched. */
+  | { type: "failed"; error: Error }
+  /** A supervisor stopped the submission before a request was issued. The log
+   * is coherent and resumable; what to do about it is the owner's business,
+   * and the reason is opaque to core's turn loop. */
+  | { type: "suspended"; reason: SuspendReason };
+/** How a submission ended, as anything outside the thread may see it: a
+ * suspension is a handoff to a supervisor, never an outcome. */
+export type RestResult = Exclude<SendResult, { type: "suspended" }>;
+export type ThreadSendResult = SendResult | { type: "queued" };
+/** The thread's lifecycle outcome, for actors who never submitted: the
+ * subagent tool and the script runner. Settles at most once. */
+export type ThreadResult =
+  | { type: "yielded"; value: YieldValue }
+  /** destroyed before it ever yielded */
+  | { type: "aborted"; reason: string };
+/** A submission waiting for the current turn to come to rest. `when` replaces
+ * the old pendingMessages / pendingNextMessages pair; the view already renders
+ * them as two labelled sections of one list. */
+export type QueuedMessage = {
+  when: "async" | "next";
+  /** unresolved: its commands run when (and if) it is finally delivered */
+  message: PendingMessage;
+};
+/** What the agent tells its owner about the request it is about to issue. */
+export type AgentRequestContext = RequestContext &
+  (
+    | { status: "pending" }
+    /** An earlier hook has already suspended this request, so it will never be
+     * issued. Later hooks are still consulted — a stop is a fact each of them
+     * may need to record — but one whose contribution commits state (draining
+     * a queue, marking a once-per-conversation reminder as sent) must
+     * decline. `reason` is the winning suspension. */
+    | { status: "suspended"; reason: SuspendReason }
+exit code 0

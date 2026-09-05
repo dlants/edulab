@@ -126,7 +126,16 @@ Notes:
   - Frontend vitest over the accumulator against a scripted event array - no socket, no SDK. Feed it a recorded sequence and assert the resulting `messages`.
   - Two sequential turns produce four messages with alternating roles, which is what the API requires and the easiest thing to get wrong.
 
-## chat UI
+## chat UI — DONE
+
+Notes:
+
+- State is `{ messages, inFlight, draft }` in `main.ts`; `update` mirrors `conversation.messages`/`inFlight` after every message, and `conversation.onChange` re-syncs the view as frames arrive.
+- The transcript is a `bindList` keyed by position - the array is append-only and never reorders, so position is stable identity here.
+- Enter submits, shift+enter newlines; the textarea and the send button are both disabled while a turn is in flight (send is also disabled on an empty draft).
+- `packages/e2e/` holds `playwright.config.ts` (fixed ports 5174/3100, overridable via `TEST_FRONTEND_PORT`/`TEST_BACKEND_PORT`) plus `tests/{chat,smoke}.spec.ts`. The backend `webServer` entry is only added when `ANTHROPIC_API_KEY` is set, matching the smoke spec's skip.
+- Specs use `.spec.ts` so vitest's `packages/**/*.test.ts` glob does not pick them up. `npm run test:e2e` runs them; `typecheck` now includes the e2e package.
+- The scripted stream omits `message_start`/`message_delta` - the accumulator ignores them, and the smoke spec is what guards against SDK drift.
 
 - Goal: the deliverable - type in the box, hit enter, watch the response stream in.
 - Work: `view.ts` (transcript + composer as vamp views), wired into a single dispatch loop in `main.ts`.

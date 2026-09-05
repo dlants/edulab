@@ -1,0 +1,58 @@
+$ cd /Users/denis.lantsman/src/edulab && cat > packages/frontend/main.ts <<'EOF'
+import { Conversation } from "./conversation.ts";
+import { AppView, type Msg, type State } from "./view.ts";
+
+function connect(): WebSocket {
+  const proto = window.location.protocol === "https:" ? "wss:" : "ws:";
+  return new WebSocket(`${proto}//${window.location.host}/api/socket`);
+}
+
+const conversation = new Conversation(connect());
+
+const state: State = { messages: [], inFlight: false, draft: "" };
+
+function update(state: State, msg: Msg): void {
+  switch (msg.type) {
+    case "DRAFT_CHANGED":
+      state.draft = msg.draft;
+      break;
+    case "SUBMIT": {
+      const text = state.draft.trim();
+      if (text === "" || conversation.inFlight) break;
+      state.draft = "";
+      conversation.send(text).then(undefined, (e: unknown) => {
+        console.error(e);
+      });
+      break;
+    }
+  }
+  state.messages = conversation.messages;
+  state.inFlight = conversation.inFlight;
+}
+
+let dispatching = false;
+function dispatch(msg: Msg): void {
+  if (dispatching) throw new Error("dispatch-in-dispatch");
+  dispatching = true;
+  update(state, msg);
+  view.sync(state);
+  dispatching = false;
+}
+
+const root = document.getElementById("app") ?? document.body;
+const view = new AppView(root, dispatch, state);
+
+conversation.onChange = () => {
+  state.messages = conversation.messages;
+  state.inFlight = conversation.inFlight;
+  view.sync(state);
+};
+EOF
+npm -w @edulab/frontend exec tsc -- --noEmit
+stdout:
+view.ts(141,30): error TS2345: Argument of type 'typeof MessageView' is not assignable to parameter of type 'ViewCtor<Message, unknown, {}>'.
+  Types of construct signatures are incompatible.
+    Type 'new (container: HTMLElement, _dispatch: () => void, initial: Message) => MessageView' is not assignable to type 'new (container: HTMLElement, dispatch: (msg: unknown) => void, initialState: Message, ctx: {}) => View<Message, unknown, {}>'.
+      Types of parameters '_dispatch' and 'dispatch' are incompatible.
+        Target signature provides too few arguments. Expected 1 or more, but got 0.
+exit code 2

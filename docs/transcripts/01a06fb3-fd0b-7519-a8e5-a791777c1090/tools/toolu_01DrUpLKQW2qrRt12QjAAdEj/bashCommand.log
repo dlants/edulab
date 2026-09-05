@@ -1,0 +1,6 @@
+$ grep -A 2 "@anthropic-ai/sdk" /Users/denis.lantsman/src/magenta.nvim/package.json
+stdout:
+    "@anthropic-ai/sdk": "^0.115.0",
+    "@modelcontextprotocol/sdk": "^1.15.1",
+    "@openauthjs/openauth": "^0.4.3",
+exit code 0

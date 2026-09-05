@@ -1,0 +1,63 @@
+$ cd /Users/denis.lantsman/src/edulab && npm run typecheck; npm run lint
+stdout:
+> edulab@0.0.1 typecheck
+> npm -w @edulab/iso exec tsc -- --noEmit && npm -w @edulab/frontend exec tsc -- --noEmit && npm -w @edulab/backend exec tsc -- --noEmit
+> edulab@0.0.1 lint
+> biome check .
+stderr:
+biome.json:
+2:14 deserialize ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  i The configuration schema version does not match the CLI version 2.5.12
+    1 │ {
+  > 2 │   "$schema": "https://biomejs.dev/schemas/2.4.11/schema.json",
+      │              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    3 │   "assist": {
+    4 │     "actions": {
+  i   Expected:                     2.5.12
+      Found:                        2.4.11
+  i Run the command 
+biome migrate to migrate the configuration file.
+biome.json:10:13 deserialize  DEPRECATED  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  i The use of the recommended field has been deprecated, and will removed in the next major version of Biome. Use preset instead.
+     8 │     }
+     9 │   },
+  > 10 │   "linter": {
+       │             ^
+  > 11 │     "enabled": true,
+        ...
+  > 17 │     }
+  > 18 │   },
+     │   ^
+    19 │   "formatter": {
+    20 │     "enabl
+ed": true,
+  i Migrate the configuration with the proper command
+  $ biome migrate
+packages/frontend/main.ts format 
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  × Formatter would have printed the following content:
+    35 35 │ 
+    36 36 │   const root = docu
+ment.getElementById("app")
+ ?? document.body;
+    37    │ - 
+root.textCon
+tent·=·"edula
+b·—·try·edulab.ask(\"hello
+\")·in·the·conso
+le";
+       37 │ 
++ root.textContent·=·'edulab·—·t
+ry·edulab.ask("hel
+lo")·in·
+the·console';
+    38 38 │ 
+stdout:
+Checked 13 files in 115ms. No fixes applied.
+Found 1 error.
+Found 2 infos.
+stderr:
+check ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  × 
+Some errors were emitted while running checks.
+exit code 1

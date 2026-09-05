@@ -1,0 +1,27 @@
+$ cd /Users/denis.lantsman/src/edulab && npx vitest run && npm run typecheck && npm run lint
+stdout:
+ RUN  v4.1.11 /Users/denis.lantsman/src/edulab
+ ✓ packages/frontend/conversation.test.ts (5 tests) 11ms
+ Test Files  1 passed (1)
+      Tests  5 passed (5)
+   Start at  21:44:06
+   Duration  126ms (transform 19ms, setup 0ms, import 48ms, tests 11ms, environment 0ms)
+> edulab@0.0.1 typecheck
+> npm -w @edulab/iso exec tsc -- --noEmit && npm -w @edulab/frontend exec tsc -- --noEmit && npm -w @edulab/backend exec tsc -- --noEmit
+conversation.test.ts(14,3): error TS2416: Property 'addEventListener' in type 'FakeSocket' is not assignable to the same property in base type 'Socket'.
+  Type '(_type: string, listener: (e: MessageEvent<string>) => void) => void' is not assignable to type '{ <K extends keyof WebSocketEventMap>(type: K, listener: (this: WebSocket, ev: WebSocketEventMap[K]) => any, options?: boolean | AddEventListenerOptions | undefined): void; (type: string, listener: EventListenerOrEventListenerObject, options?: boolean | ... 1 more ... | undefined): void; }'.
+    Types of parameters 'listener' and 'listener' are incompatible.
+      Type 'EventListenerOrEventListenerObject' is not assignable to type '(e: MessageEvent<string>) => void'.
+        Type 'EventListenerObject' is not assignable to type '(e: MessageEvent<string>) => void'.
+          Type 'EventListenerObject' provides no match for the signature '(e: MessageEvent<string>): void'.
+conversation.test.ts(58,51): error TS2345: Argument of type 'FakeSocket' is not assignable to parameter of type 'Socket'.
+  Types of property 'addEventListener' are incompatible.
+    Type '(_type: string, listener: (e: MessageEvent<string>) => void) => void' is not assignable to type '{ <K extends keyof WebSocketEventMap>(type: K, listener: (this: WebSocket, ev: WebSocketEventMap[K]) => any, options?: boolean | AddEventListenerOptions | undefined): void; (type: string, listener: EventListenerOrEventListenerObject, options?: boolean | ... 1 more ... | undefined): void; }'.
+      Types of parameters 'listener' and 'listener' are incompatible.
+        Type 'EventListenerOrEventListenerObject' is not assignable to type '(e: MessageEvent<string>) => void'.
+          Type 'EventListenerObject' is not assignable to type '(e: MessageEvent<string>) => void'.
+            Type 'EventListenerObject' provides no match for the signature '(e: MessageEvent<string>): void'.
+conversation.ts(20,15): error TS1294: This syntax is not allowed when 'erasableSyntaxOnly' is enabled.
+conversation.ts(29,29): error TS2322: Type '"user" | "assistant" | "system"' is not assignable to type '"user" | "assistant"'.
+  Type '"system"' is not assignable to type '"user" | "assistant"'.
+exit code 2

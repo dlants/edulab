@@ -1,0 +1,11 @@
+$ ls -la /Users/denis.lantsman/src/gatherus/main/packages/
+stdout:
+total 0
+drwxr-xr-x@  7 denis.lantsman  staff   224 May 18 13:16 .
+drwxr-xr-x@ 26 denis.lantsman  staff   832 Aug 28 21:52 ..
+drwxr-xr-x@ 44 denis.lantsman  staff  1408 Aug 28 21:52 backend
+drwxr-xr-x@ 10 denis.lantsman  staff   320 Aug 20 12:49 e2e
+drwxr-xr-x@ 24 denis.lantsman  staff   768 Aug 21 09:25 frontend
+drwxr-xr-x@ 33 denis.lantsman  staff  1056 Aug 28 21:52 iso
+drwxr-xr-x@  6 denis.lantsman  staff   192 Aug 15 12:18 test
+exit code 0

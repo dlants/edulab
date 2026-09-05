@@ -1,0 +1,11 @@
+$ cd /tmp/magenta/threads; grep -l "src/edulab" */conversation.jsonl | sed 's|/.*||' | sort -u > /tmp/a.txt; for d in */; do [ -f "$d/meta.json" ] && python3 -c "
+import json;m=json.load(open('$d/meta.json'))
+print('${d%/}') if m.get('cwd')=='/Users/denis.lantsman/src/edulab' else None"; done | sort -u > /tmp/b.txt; diff /tmp/a.txt /tmp/b.txt; echo "diff-exit=$?"; wc -l /tmp/a.txt /tmp/b.txt
+stdout:
+2a3
+> 01a06f96-da17-7238-99d6-9499133b50a1
+diff-exit=1
+       8 /tmp/a.txt
+       9 /tmp/b.txt
+      17 total
+exit code 0

@@ -1,0 +1,8 @@
+$ cd /Users/denis.lantsman/src/edulab && ls -la && find github.com
+stdout:
+total 0
+drwxr-xr-x@  2 denis.lantsman  staff   64 Sep  4 16:53 .
+drwxr-xr-x@ 31 denis.lantsman  staff  992 Sep  4 16:53 ..
+stderr:
+find: github.com: No such file or directory
+exit code 1

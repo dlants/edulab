@@ -1,0 +1,178 @@
+$ cd ~/src/magenta.nvim && wc -l node/core/src/agent.ts node/core/src/providers/*.ts node/core/src/tool-types.ts && sed -n '1,80p' node/core/src/agent.ts && echo ===TYPES=== && grep -n "^export \(type\|interface\|const\|function\|class\)" node/core/src/providers/provider-types.ts
+stdout:
+     307 node/core/src/agent.ts
+      89 node/core/src/providers/anthropic-cache.ts
+     259 node/core/src/providers/anthropic-conversion.ts
+     118 node/core/src/providers/anthropic-helpers.test.ts
+     113 node/core/src/providers/anthropic-inference-auth-refresh.test.ts
+     427 node/core/src/providers/anthropic-inference-retry.test.ts
+      72 node/core/src/providers/anthropic-inference-status.test.ts
+    2121 node/core/src/providers/anthropic-inference.test.ts
+    1240 node/core/src/providers/anthropic-inference.ts
+     139 node/core/src/providers/anthropic-models.ts
+     467 node/core/src/providers/anthropic.ts
+     190 node/core/src/providers/auth-refresh.test.ts
+     162 node/core/src/providers/auth-refresh.ts
+      75 node/core/src/providers/aws-credentials.test.ts
+      60 node/core/src/providers/aws-credentials.ts
+      42 node/core/src/providers/bedrock-sigv4.test.ts
+      57 node/core/src/providers/bedrock-sigv4.ts
+      49 node/core/src/providers/bedrock.ts
+     193 node/core/src/providers/codex-auth.test.ts
+     318 node/core/src/providers/codex-auth.ts
+      51 node/core/src/providers/fake-sso-cache.ts
+     341 node/core/src/providers/inference-parity.test.ts
+      50 node/core/src/providers/inference-shared.ts
+     524 node/core/src/providers/mock-anthropic-client.ts
+     556 node/core/src/providers/mock-openai-client.ts
+     748 node/core/src/providers/openai-capture.ts
+     359 node/core/src/providers/openai-conversion.test.ts
+     287 node/core/src/providers/openai-conversion.ts
+     144 node/core/src/providers/openai-inference-auth-refresh.test.ts
+     371 node/core/src/providers/openai-inference-retry.test.ts
+     876 node/core/src/providers/openai-inference.test.ts
+     768 node/core/src/providers/openai-inference.ts
+     377 node/core/src/providers/openai-wiring.test.ts
+     506 node/core/src/providers/openai.test.ts
+     784 node/core/src/providers/openai.ts
+     396 node/core/src/providers/provider-types.ts
+     120 node/core/src/providers/provider.ts
+     206 node/core/src/providers/skills.test.ts
+     254 node/core/src/providers/skills.ts
+     120 node/core/src/providers/system-prompt.ts
+      93 node/core/src/providers/system-reminders.test.ts
+      88 node/core/src/providers/system-reminders.ts
+      35 node/core/src/providers/tagged-content.ts
+     129 node/core/src/tool-types.ts
+   14681 total
+import type { Logger } from "./logger.ts";
+import {
+  ABORT_MARKER_TEXT,
+  ABORT_TOOL_RESULT_TEXT,
+  UNANSWERED_TOOL_RESULT_TEXT,
+} from "./providers/inference-shared.ts";
+import type {
+  AgentInput,
+  NativeInferenceManager,
+  RequestedTool,
+  RequestUpdate,
+  ToolResults,
+  TurnResult,
+} from "./providers/provider-types.ts";
+import { PLACEHOLDER_NATIVE_MESSAGE_IDX } from "./providers/provider-types.ts";
+import type { AgentHooks, SendResult } from "./thread-api.ts";
+import type { SuspendReason } from "./thread-supervisor.ts";
+import { assertUnreachable } from "./utils/assertUnreachable.ts";
+export type InputMessage =
+  | {
+      type: "user";
+      text: string;
+    }
+  | {
+      type: "system";
+      text: string;
+    };
+export interface AgentContext {
+  logger: Logger;
+}
+export type ToolOutcome =
+  | { type: "continue"; results: ToolResults }
+  /** The owner wants the turn to stop over these results. The reason is opaque
+   * to the agent, exactly as on the before-request path. */
+  | { type: "suspend"; results: ToolResults; reason: SuspendReason }
+  | { type: "aborted"; results: ToolResults };
+export type ToolExecution = {
+  promise: Promise<ToolOutcome>;
+  abort(): void;
+};
+export type ToolExecutor = (
+  requests: ReadonlyArray<RequestedTool>,
+) => ToolExecution;
+export type AgentTurn = {
+  promise: Promise<SendResult>;
+  abort(): void;
+};
+export type AgentLoopDeps = AgentContext & {
+  manager: NativeInferenceManager;
+  onRequestUpdate: (update: RequestUpdate) => void;
+  executeTools: ToolExecutor;
+  getHooks: () => AgentHooks;
+  onPreflightTokenCount: (count: number | undefined) => void;
+};
+/** One full assistant turn - iterating through tool invocations until the agent decides to stop.
+ */
+export function runAgentLoop(
+  deps: AgentLoopDeps,
+  input: AgentInput[] = [],
+): AgentTurn {
+  const { logger, manager } = deps;
+  let aborted = false;
+  /** Whatever the loop is waiting on, so an abort reaches it rather than
+   * letting the current request or tool batch run to completion. */
+  let inFlight: { abort(): void } | undefined;
+  const preflight: { tokenCount: number | undefined } = {
+    tokenCount: undefined,
+  };
+  const runLoop = async (): Promise<TurnResult> => {
+    let initialInputPending = true;
+    while (true) {
+===TYPES===
+8:export const PROVIDER_NAMES = [
+16:export type { ProviderName } from "../provider-options.ts";
+24:export type ProviderSetting = {
+32:export type StopReason =
+41:export type StreamStopReason = StopReason | "tool_use";
+43:export type Usage = {
+50:export type ProviderMessage = {
+59:export type ProviderWebSearchCitation = {
+67:export type ProviderTextContent = {
+74:export type ProviderThinkingContent = {
+80:export type ProviderRedactedThinkingContent = {
+86:export type ProviderSystemReminderContent = {
+92:export type ProviderSystemInfoContent = {
+98:export type ProviderContextUpdateContent = {
+104:export type ProviderCommentUpdateContent = {
+110:export type ProviderForkNotificationContent = {
+116:export type ProviderImageContent = {
+126:export type ProviderDocumentContent = {
+137:export type ProviderToolUseContent = {
+145:export type ProviderServerToolUseContent = {
+155:export type ProviderWebSearchToolResult = {
+162:export type ProviderToolResultContent =
+167:export type ProviderToolResult = {
+179:export type ProviderToolSpec = {
+185:export type ProviderMessageContent =
+201:export interface Provider {
+219:export type ProviderToolUseBlockStart = {
+225:export type ProviderServerToolUseBlockStart = {
+231:export type ProviderContentBlockStart =
+235:export type ProviderBlockStartEvent = {
+241:export type ProviderBlockDeltaEvent = Anthropic.RawContentBlockDeltaEvent;
+243:export type ProviderBlockStopEvent = Anthropic.RawContentBlockStopEvent;
+245:export type ProviderStreamEvent =
+250:export interface ProviderStreamRequest {
+259:export type ProviderToolUseResponse = {
+265:export interface ProviderToolUseRequest {
+271:export type RetryStatus = {
+277:export type NativeMessageIdx = number & { __nativeMessageIdx: true };
+279:export const PLACEHOLDER_NATIVE_MESSAGE_IDX = -1 as NativeMessageIdx;
+281:export type StreamingBlock =
+291:export type AgentInput =
+296:export type RequestedTool = {
+301:export type TurnResult =
+307:export type ToolResults = ReadonlyMap<
+312:export type AgentLog = {
+317:export type RequestResult =
+323:export type RequestUpdate =
+329:export type OnRequestUpdate = (update: RequestUpdate) => void;
+332:export type InferenceRequest = {
+337:export interface NativeInferenceManager {
+351:export type FinalizeReason =
+355:export type ThinkingEffort = "low" | "medium" | "high" | "xhigh" | "max";
+357:export type ThinkingConfig =
+366:export type ReasoningConfig = {
+371:export type ProviderInferenceConfig =
+375:export interface InferenceOptions {
+382:export function thinkingConfig(
+390:export function reasoningConfig(
+exit code 0

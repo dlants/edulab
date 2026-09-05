@@ -1,0 +1,23 @@
+$ cd /Users/denis.lantsman/src/edulab && ls -R packages
+stdout:
+backend
+frontend
+iso
+packages/backend:
+app.ts
+package.json
+socket.ts
+tsconfig.json
+packages/frontend:
+index.html
+main.ts
+node_modules
+package.json
+tsconfig.json
+vamp.ts
+packages/frontend/node_modules:
+packages/iso:
+package.json
+protocol.ts
+tsconfig.json
+exit code 0

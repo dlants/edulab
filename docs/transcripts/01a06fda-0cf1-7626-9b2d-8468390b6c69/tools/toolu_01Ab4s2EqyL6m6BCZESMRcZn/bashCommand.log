@@ -1,0 +1,28 @@
+$ cd /Users/denis.lantsman/src/edulab && cat > /tmp/wstest.mjs <<'EOF'
+import WebSocket from "ws";
+const ws = new WebSocket("ws://localhost:5173/api/socket");
+ws.on("open", () => ws.send(JSON.stringify({type:"start",requestId:"r1",params:{model:"claude-sonnet-4-5",max_tokens:64,stream:true,messages:[{role:"user",content:"say hi in 3 words"}]}})));
+ws.on("message", (d) => { const f = JSON.parse(d.toString()); console.log(f.type, f.event?.type ?? f.message ?? ""); if (f.type !== "event") { ws.close(); process.exit(0);} });
+ws.on("error", e => { console.error("ERR", e.message); process.exit(1); });
+setTimeout(()=>{console.error("timeout");process.exit(1);}, 30000);
+EOF
+node /tmp/wstest.mjs < /dev/null
+stderr:
+node:internal/modules/package_json_reader:301
+  throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);
+        ^
+Error [ERR_MODULE_NOT_FOUND]: Cannot find package 'ws' imported from /private/tmp/wstest.mjs
+    at Object.getPackageJSONURL (node:internal/modules/package_json_reader:301:9)
+    at packageResolve (node:internal/modules/esm/resolve:768:81)
+    at moduleResolve (node:internal/modules/esm/resolve:859:18)
+    at defaultResolve (node:internal/modules/esm/resolve:991:11)
+    at #cachedDefaultResolve (node:internal/modules/esm/loader:719:20)
+    at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:736:38)
+    at ModuleLoader.resolveSync (node:internal/modules/esm/loader:765:52)
+    at #resolve (node:internal/modules/esm/loader:701:17)
+    at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:621:35)
+    at ModuleJob.syncLink (node:internal/modules/esm/module_job:160:33) {
+  code: 'ERR_MODULE_NOT_FOUND'
+}
+Node.js v24.14.0
+exit code 1

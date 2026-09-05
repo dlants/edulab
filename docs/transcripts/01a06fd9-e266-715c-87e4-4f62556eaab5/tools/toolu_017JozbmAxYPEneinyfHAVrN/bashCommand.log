@@ -1,0 +1,6 @@
+$ cd /Users/denis.lantsman/src/edulab && git log --format='%h %ad %s' --date=iso
+stdout:
+5473f07 2026-09-04 21:35:46 -0700 Add prototype scaffolding plan and vamp skill
+3b9c59a 2026-09-04 16:56:15 -0700 Add assignment PDF and markdown extraction
+1473e3a 2026-09-04 16:54:33 -0700 Initial commit
+exit code 0

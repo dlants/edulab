@@ -1,0 +1,232 @@
+$ cd ~/src/magenta.nvim && sed -n '277,400p' node/core/src/providers/provider-types.ts; echo ===; cat ~/src/gatherus/main/vite.config.ts; echo ===; sed -n '1,60p' ~/src/gatherus/main/package.json; echo ===SOCKET; sed -n '1,60p' ~/src/gatherus/main/packages/backend/sheets/socket.ts
+stdout:
+export type NativeMessageIdx = number & { __nativeMessageIdx: true };
+export const PLACEHOLDER_NATIVE_MESSAGE_IDX = -1 as NativeMessageIdx;
+export type StreamingBlock =
+  | { type: "text"; text: string }
+  | { type: "thinking"; thinking: string }
+  | {
+      type: "tool_use";
+      id: ToolManager.ToolRequestId;
+      name: ToolName;
+      inputJson: string;
+    };
+export type AgentInput =
+  | ProviderTextContent
+  | ProviderImageContent
+  | ProviderDocumentContent;
+export type RequestedTool = {
+  id: ToolManager.ToolRequestId;
+  request: Result<ToolRequest, { rawRequest: unknown }>;
+};
+export type TurnResult =
+  | { type: "stopped"; stopReason: StopReason }
+  | { type: "suspended"; reason: SuspendReason }
+  | { type: "aborted" }
+  | { type: "failed"; error: Error };
+export type ToolResults = ReadonlyMap<
+  ToolManager.ToolRequestId,
+  ProviderToolResult["result"]
+>;
+export type AgentLog = {
+  readonly messages: ReadonlyArray<ProviderMessage>;
+  readonly latestUsage: Usage | undefined;
+};
+export type RequestResult =
+  | { type: "tool_use"; requested: RequestedTool[] }
+  | { type: "stopped"; stopReason: StopReason }
+  | { type: "aborted" }
+  | { type: "error"; error: Error };
+export type RequestUpdate =
+  | { type: "streaming-block"; streamingBlock: StreamingBlock }
+  | { type: "block-finished" }
+  | { type: "retry-scheduled"; retry: RetryStatus }
+  | { type: "attempt-started" };
+export type OnRequestUpdate = (update: RequestUpdate) => void;
+/** One in-flight request. Aborting it aborts that request and nothing else. */
+export type InferenceRequest = {
+  promise: Promise<RequestResult>;
+  abort(): void;
+};
+export interface NativeInferenceManager {
+  readonly log: AgentLog;
+  appendUserMessage(content: AgentInput[]): void;
+  appendToolResults(
+    requested: ReadonlyArray<RequestedTool>,
+    results: ToolResults,
+  ): void;
+  getNativeMessageIdx(): NativeMessageIdx;
+  truncateMessages(messageIdx: NativeMessageIdx): void;
+  clone(): NativeInferenceManager;
+  countTokens?(): Promise<number>;
+  sendRequest(onUpdate: OnRequestUpdate): InferenceRequest;
+}
+export type FinalizeReason =
+  | { type: "aborted" }
+  | { type: "error"; error: Error };
+export type ThinkingEffort = "low" | "medium" | "high" | "xhigh" | "max";
+export type ThinkingConfig =
+  | { enabled: false }
+  | {
+      enabled: true;
+      budgetTokens?: number;
+      displayThinking?: boolean;
+      effort?: ThinkingEffort;
+    };
+export type ReasoningConfig = {
+  effort?: ReasoningEffort;
+  summary?: ReasoningSummary;
+};
+export type ProviderInferenceConfig =
+  | { type: "thinking"; thinking: ThinkingConfig }
+  | { type: "reasoning"; reasoning: ReasoningConfig };
+export interface InferenceOptions {
+  model: string;
+  systemPrompt: string;
+  tools: ProviderToolSpec[];
+  config?: ProviderInferenceConfig;
+}
+export function thinkingConfig(
+  options: InferenceOptions,
+): ThinkingConfig | undefined {
+  return options.config?.type === "thinking"
+    ? options.config.thinking
+    : undefined;
+}
+export function reasoningConfig(
+  options: InferenceOptions,
+): ReasoningConfig | undefined {
+  return options.config?.type === "reasoning"
+    ? options.config.reasoning
+    : undefined;
+}
+===
+import { defineConfig, type Plugin } from "vite";
+export default defineConfig({
+  appType: "mpa",
+  plugins: [spaFallback()],
+  base: "/",
+  root: "packages/frontend",
+  build: {
+    target: "esnext",
+    outDir: "dist",
+    minify: true,
+  },
+  server: {
+    host: "localhost",
+    port: Number(process.env.VITE_PORT ?? 5173),
+    strictPort: true,
+    proxy: {
+      "/api/": {
+        target: process.env.API_TARGET ?? "http://localhost:3000",
+        secure: false,
+      },
+    },
+  },
+});
+function spaFallback(): Plugin {
+  return {
+    name: "spa-fallback",
+    configureServer(server) {
+      return () => {
+        server.middlewares.use((req, _res, next) => {
+          if (req.headers.accept?.includes("text/html") && req.url) {
+            req.url = "/index.html";
+          }
+          next();
+        });
+      };
+    },
+  };
+}
+===
+{
+  "name": "gatherus",
+  "version": "0.0.1",
+  "description": "Flexible modern SIS",
+  "type": "module",
+  "license": "UNLICENSED",
+  "private": true,
+  "engines": { "node": ">=24" },
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:frontend": "vite",
+    "dev:backend": "npm -w @gatherus/backend run dev",
+    "dev": "npm run dev:frontend & npm run dev:backend",
+    "build": "vite build",
+    "test": "npm test --workspaces --if-present",
+    "test:backend": "npm -w @gatherus/backend test",
+    "typecheck": "npm -w @gatherus/iso exec tsc -- --noEmit && npm -w @gatherus/frontend exec tsc -- --noEmit && npm -w @gatherus/test exec tsc -- --noEmit && npm -w @gatherus/backend exec tsc -- --noEmit && npm -w @gatherus/e2e exec tsc -- --noEmit",
+    "check:models": "node packages/backend/scripts/check-models.ts",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
+    "test:e2e": "npm -w @gatherus/e2e exec playwright test",
+    "test:e2e:cleanup": "node packages/test/scripts/cleanup-test-runs.ts"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.4.11",
+    "typescript": "^7.0.2",
+    "vite": "^6.0.0",
+    "vitest": "^4.1.4"
+  }
+}
+===SOCKET
+/**
+ * The transport. One socket per tab, carrying both directions: the client's
+ * view changes and commands go up, frames come down. They share one ordered
+ * path to one process, which is what makes sheet-affinity a routing decision
+ * rather than a distributed-systems one — a command that committed anywhere
+ * else would never reach this process's bus.
+ */
+import type { ServerFrame, UserId } from "@gatherus/iso/types.ts";
+import websocket from "@fastify/websocket";
+import type { FastifyInstance } from "fastify";
+import type pg from "pg";
+import type { Auth } from "../auth/setup.ts";
+import { getSession } from "../auth/setup.ts";
+import type { PermissionContext } from "../permissions/context.ts";
+import { ForbiddenError } from "../permissions/errors.ts";
+import { loadPermissionContext } from "../permissions/load.ts";
+import type { Bus } from "./bus.ts";
+import { parseClientMessage } from "./parse.ts";
+import type { SheetTokens } from "./state.ts";
+import { SheetSession } from "./session.ts";
+/** A peer that vanished without a FIN holds a session and its window, so the
+ * interval is the session-leak window. Correctness does not depend on it. */
+const HEARTBEAT_MS = 15_000;
+function sheetTokens(ctx: PermissionContext): SheetTokens {
+  const descriptor = { kind: "sheet", orgId: ctx.orgId } as const;
+  return {
+    read: ctx.require("sheet:read", descriptor),
+    write: ctx.require("sheet:write", descriptor),
+    // schema authority is optional: a data-entry role opens the same socket
+    // and is refused only for the commands that carry a column op.
+    manage: (() => {
+      try {
+        return ctx.require("sheet:manage", descriptor);
+      } catch (err) {
+        if (err instanceof ForbiddenError) return null;
+        throw err;
+      }
+    })(),
+  };
+}
+export async function registerSheetSocket(
+  app: FastifyInstance,
+  pool: pg.Pool,
+  bus: Bus,
+) {
+  const auth: Auth = app.auth;
+  await app.register(websocket);
+  app.get("/api/sheets/socket", { websocket: true }, async (socket, req) => {
+    // the listener is attached before the first await: `ws` discards data
+    // frames that arrive with no `message` listener, and a real client sends
+    // its `setView` the instant the socket opens.
+    const buffered: Buffer[] = [];
+    let deliver = (data: Buffer) => {
+      buffered.push(data);
+    };
+    socket.on("message", (data: Buffer) => deliver(data));
+exit code 0

@@ -1,0 +1,19 @@
+{
+  "name": "@edulab/e2e",
+  "version": "0.0.1",
+  "license": "UNLICENSED",
+  "type": "module",
+  "private": true,
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.115.0",
+    "@edulab/iso": "*"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.63.0",
+    "@types/node": "^22.0.0",
+    "typescript": "^5.9.3"
+  },
+  "scripts": {
+    "test": "playwright test"
+  }
+}

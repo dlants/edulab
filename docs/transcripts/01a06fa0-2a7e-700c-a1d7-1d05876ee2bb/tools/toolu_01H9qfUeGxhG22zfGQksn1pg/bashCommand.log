@@ -1,0 +1,17 @@
+$ ls -d ~/src/gatherus/main/.magenta/skills/*/ && wc -l ~/src/gatherus/main/.magenta/skills/*testing*/skill.md
+stdout:
+/Users/denis.lantsman/src/gatherus/main/.magenta/skills/backend-testing/
+/Users/denis.lantsman/src/gatherus/main/.magenta/skills/db-migrations/
+/Users/denis.lantsman/src/gatherus/main/.magenta/skills/design-system/
+/Users/denis.lantsman/src/gatherus/main/.magenta/skills/form-validation/
+/Users/denis.lantsman/src/gatherus/main/.magenta/skills/frontend-testing/
+/Users/denis.lantsman/src/gatherus/main/.magenta/skills/permissions/
+/Users/denis.lantsman/src/gatherus/main/.magenta/skills/preview-servers/
+/Users/denis.lantsman/src/gatherus/main/.magenta/skills/search-backend/
+/Users/denis.lantsman/src/gatherus/main/.magenta/skills/search/
+/Users/denis.lantsman/src/gatherus/main/.magenta/skills/styling-iteration/
+/Users/denis.lantsman/src/gatherus/main/.magenta/skills/vamp/
+     135 /Users/denis.lantsman/src/gatherus/main/.magenta/skills/backend-testing/skill.md
+      99 /Users/denis.lantsman/src/gatherus/main/.magenta/skills/frontend-testing/skill.md
+     234 total
+exit code 0

@@ -1,0 +1,313 @@
+$ cd ~/src/gatherus/main && cat packages/backend/app.ts packages/backend/create-app.ts packages/backend/env.ts && cat packages/backend/sheets/socket.ts && cat packages/frontend/index.html
+stdout:
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import dotenv from "dotenv";
+import { createApp } from "./create-app.ts";
+import { createPool } from "./db/connect.ts";
+import { createConsoleSender, createResendSender } from "./email/send.ts";
+import { readEnv } from "./env.ts";
+import { createMessageWorker } from "./messages/worker.ts";
+import { createMeili } from "./search/meili.ts";
+import { createIncrementalReindexWorker } from "./search/reindex-worker.ts";
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+dotenv.config({ path: path.join(__dirname, "../../.env") });
+async function run() {
+  const env = readEnv();
+  const pool = createPool(env.DATABASE_URL);
+  const email =
+    env.RELEASE_STAGE === "prod"
+      ? createResendSender(env.RESEND_API_KEY, env.FROM_EMAIL)
+      : createConsoleSender();
+  const meili = createMeili(env);
+  const app = await createApp({ pool, env, email, meili });
+  // The background incremental reindex worker lives ONLY here, in the prod
+  // entry point — deliberately not in `createApp`. Tests (backend vitest +
+  // e2e) build the app via `createApp` and so never start it: search reindexing
+  // in tests is explicit and on-demand via the org-scoped helpers
+  // (`reindexOrg` / `reindexOrgIncremental`). `createApp` only `ensureLiveIndex`
+  // at boot so the app starts with an empty, settings-applied live index.
+  const searchWorker = createIncrementalReindexWorker(
+    pool,
+    meili,
+    env.MEILI_INDEX_NAMESPACE,
+  );
+  // The email send/render worker: forms <=100-member batches from unbatched
+  // pending messages, renders them, and drains them to Resend with backoff. Like
+  // the search worker it lives ONLY in the prod entry point, never in
+  // createApp — tests drive it explicitly via `createMessageWorker(...).drainOnce()`.
+  const messageWorker = createMessageWorker(pool, email, env);
+  messageWorker.start();
+  searchWorker.start();
+  for (const signal of ["SIGINT", "SIGTERM"] as const) {
+    process.once(signal, () => {
+      void Promise.all([searchWorker.stop(), messageWorker.stop()]).then(() =>
+        app.close(),
+      );
+    });
+  }
+  const PORT = parseInt(process.env.PORT || "3000", 10);
+  await app.listen({ port: PORT, host: "0.0.0.0" });
+  console.log(`gatherus running on port ${PORT}`);
+}
+run().catch((err) => {
+  console.error(err);
+  process.exit(1);
+});
+import cookie from "@fastify/cookie";
+import Fastify from "fastify";
+import type { Meilisearch } from "meilisearch";
+import type pg from "pg";
+import { registerAccount } from "./account/routes.ts";
+import { registerAppointments } from "./appointments/routes.ts";
+import { registerAttendance } from "./attendance/routes.ts";
+import { createAuth, registerAuth } from "./auth/setup.ts";
+import {
+  registerCalendars,
+  registerCalendarsPublic,
+} from "./calendars/routes.ts";
+import type { EmailSender } from "./email/send.ts";
+import type { AppEnv } from "./env.ts";
+import { registerEventGroups } from "./event-groups/routes.ts";
+import { registerEvents } from "./events/routes.ts";
+import { registerImports } from "./imports/routes.ts";
+import { registerMessageTemplates } from "./message-templates/routes.ts";
+import { registerMessages } from "./messages/routes.ts";
+import { registerMessageWebhook } from "./messages/webhook.ts";
+import { registerOrgInvitations } from "./org-invitations/routes.ts";
+import { registerOrganizations } from "./organizations/routes.ts";
+import { installPermissionErrorHandler } from "./permissions/plugin.ts";
+import { registerPersonGroups } from "./person-groups/routes.ts";
+import { registerPersons } from "./persons/routes.ts";
+import { registerRosters } from "./rosters/routes.ts";
+import { registerSearch } from "./search/routes.ts";
+import { registerServices } from "./services/routes.ts";
+import { registerSheets } from "./sheets/routes.ts";
+import {
+  registerSurveyInstances,
+  registerSurveyInstancesPublic,
+} from "./survey-instances/routes.ts";
+import { registerSurveyTemplates } from "./survey-templates/routes.ts";
+import { registerTags } from "./tags/routes.ts";
+export async function createApp({
+  pool,
+  env,
+  email,
+  meili,
+}: {
+  pool: pg.Pool;
+  env: AppEnv;
+  email: EmailSender;
+  meili: Meilisearch;
+}) {
+  // 6 MiB leaves headroom above the person-import CSV cap (5 MiB, enforced in
+  // the handler with a clear 400) so oversized imports get a useful error rather
+  // than a bare 413.
+  const app = Fastify({ trustProxy: true, bodyLimit: 6 * 1024 * 1024 });
+  await app.register(cookie);
+  installPermissionErrorHandler(app);
+  app.post("/api/health", async () => ({ ok: true }));
+  const auth = createAuth({ pool, env, email });
+  await registerAuth(app, auth);
+  app.decorate("auth", auth);
+  await registerAccount(app);
+  await registerPersons(app, pool);
+  await registerEvents(app, pool);
+  await registerAppointments(app, pool);
+  await registerAttendance(app, pool);
+  await registerEventGroups(app, pool);
+  await registerRosters(app, pool);
+  await registerPersonGroups(app, pool);
+  await registerOrganizations(app, pool);
+  await registerOrgInvitations(app, pool, email, env);
+  await registerSurveyTemplates(app, pool);
+  await registerMessageTemplates(app, pool);
+  await registerMessages(app, pool);
+  await registerSurveyInstances(
+    app,
+    pool,
+    email,
+    env,
+    meili,
+    env.MEILI_INDEX_NAMESPACE,
+  );
+  await registerSurveyInstancesPublic(app, pool);
+  await registerCalendars(app, pool);
+  await registerCalendarsPublic(app, pool, email, env);
+  await registerMessageWebhook(app, pool, env);
+  await registerSearch(app, pool, meili, env.MEILI_INDEX_NAMESPACE);
+  await registerTags(app, pool);
+  await registerServices(app, pool);
+  await registerImports(app, pool);
+  await registerSheets(app, pool);
+  return app;
+}
+declare module "fastify" {
+  interface FastifyInstance {
+    auth: ReturnType<typeof createAuth>;
+  }
+}
+import type { MeiliNamespace } from "./search/meili.ts";
+export type AppEnv = {
+  RELEASE_STAGE: "prod" | "dev";
+  DATABASE_URL: string;
+  BASE_URL: string;
+  BETTER_AUTH_SECRET: string;
+  BETTER_AUTH_URL: string;
+  GOOGLE_CLIENT_ID: string;
+  GOOGLE_CLIENT_SECRET: string;
+  RESEND_API_KEY: string;
+  FROM_EMAIL: string;
+  RESEND_WEBHOOK_SECRET: string;
+  MEILI_URL: string;
+  MEILI_MASTER_KEY: string;
+  MEILI_INDEX_NAMESPACE: MeiliNamespace;
+};
+export function readEnv(): AppEnv {
+  const RELEASE_STAGE = requireEnv("RELEASE_STAGE");
+  if (RELEASE_STAGE !== "prod" && RELEASE_STAGE !== "dev") {
+    throw new Error(`RELEASE_STAGE must be prod | dev, got ${RELEASE_STAGE}`);
+  }
+  return {
+    RELEASE_STAGE,
+    DATABASE_URL: requireEnv("DATABASE_URL"),
+    BASE_URL: requireEnv("BASE_URL"),
+    BETTER_AUTH_SECRET: requireEnv("BETTER_AUTH_SECRET"),
+    BETTER_AUTH_URL: requireEnv("BETTER_AUTH_URL"),
+    GOOGLE_CLIENT_ID: requireEnv("GOOGLE_CLIENT_ID"),
+    GOOGLE_CLIENT_SECRET: requireEnv("GOOGLE_CLIENT_SECRET"),
+    RESEND_API_KEY: requireEnv("RESEND_API_KEY"),
+    FROM_EMAIL: requireEnv("FROM_EMAIL"),
+    RESEND_WEBHOOK_SECRET: requireEnv("RESEND_WEBHOOK_SECRET"),
+    MEILI_URL: requireEnv("MEILI_URL"),
+    MEILI_MASTER_KEY: requireEnv("MEILI_MASTER_KEY"),
+    MEILI_INDEX_NAMESPACE: (process.env.MEILI_INDEX_NAMESPACE ??
+      "") as MeiliNamespace,
+  };
+}
+function requireEnv(name: string): string {
+  const value = process.env[name];
+  if (!value) throw new Error(`Missing required env var: ${name}`);
+  return value;
+}
+/**
+ * The transport. One socket per tab, carrying both directions: the client's
+ * view changes and commands go up, frames come down. They share one ordered
+ * path to one process, which is what makes sheet-affinity a routing decision
+ * rather than a distributed-systems one — a command that committed anywhere
+ * else would never reach this process's bus.
+ */
+import type { ServerFrame, UserId } from "@gatherus/iso/types.ts";
+import websocket from "@fastify/websocket";
+import type { FastifyInstance } from "fastify";
+import type pg from "pg";
+import type { Auth } from "../auth/setup.ts";
+import { getSession } from "../auth/setup.ts";
+import type { PermissionContext } from "../permissions/context.ts";
+import { ForbiddenError } from "../permissions/errors.ts";
+import { loadPermissionContext } from "../permissions/load.ts";
+import type { Bus } from "./bus.ts";
+import { parseClientMessage } from "./parse.ts";
+import type { SheetTokens } from "./state.ts";
+import { SheetSession } from "./session.ts";
+/** A peer that vanished without a FIN holds a session and its window, so the
+ * interval is the session-leak window. Correctness does not depend on it. */
+const HEARTBEAT_MS = 15_000;
+function sheetTokens(ctx: PermissionContext): SheetTokens {
+  const descriptor = { kind: "sheet", orgId: ctx.orgId } as const;
+  return {
+    read: ctx.require("sheet:read", descriptor),
+    write: ctx.require("sheet:write", descriptor),
+    // schema authority is optional: a data-entry role opens the same socket
+    // and is refused only for the commands that carry a column op.
+    manage: (() => {
+      try {
+        return ctx.require("sheet:manage", descriptor);
+      } catch (err) {
+        if (err instanceof ForbiddenError) return null;
+        throw err;
+      }
+    })(),
+  };
+}
+export async function registerSheetSocket(
+  app: FastifyInstance,
+  pool: pg.Pool,
+  bus: Bus,
+) {
+  const auth: Auth = app.auth;
+  await app.register(websocket);
+  app.get("/api/sheets/socket", { websocket: true }, async (socket, req) => {
+    // the listener is attached before the first await: `ws` discards data
+    // frames that arrive with no `message` listener, and a real client sends
+    // its `setView` the instant the socket opens.
+    const buffered: Buffer[] = [];
+    let deliver = (data: Buffer) => {
+      buffered.push(data);
+    };
+    socket.on("message", (data: Buffer) => deliver(data));
+    const authed = await getSession(req, auth);
+    if (!authed) return socket.close(4401, "unauthorized");
+    const ctx = await loadPermissionContext(pool, authed.user.id as UserId);
+    if (!ctx) return socket.close(4403, "forbidden");
+    let tokens: SheetTokens;
+    try {
+      tokens = sheetTokens(ctx);
+    } catch (err) {
+      if (err instanceof ForbiddenError) return socket.close(4403, "forbidden");
+      throw err;
+    }
+    const session = new SheetSession(
+      pool,
+      {
+        orgId: ctx.orgId,
+        actor: { kind: "user", userId: ctx.userId },
+        tokens,
+        bus,
+      },
+      {
+        send: (frame: ServerFrame) => socket.send(JSON.stringify(frame)),
+        close: (reason) => socket.close(4000, reason),
+      },
+    );
+    let alive = true;
+    const heartbeat = setInterval(() => {
+      if (!alive) {
+        socket.terminate();
+        return;
+      }
+      alive = false;
+      socket.ping();
+    }, HEARTBEAT_MS);
+    socket.on("pong", () => {
+      alive = true;
+    });
+    deliver = (data: Buffer) => {
+      try {
+        session.receive(parseClientMessage(JSON.parse(data.toString())));
+      } catch {
+        socket.close(4400, "bad_request");
+      }
+    };
+    for (const data of buffered.splice(0)) deliver(data);
+    socket.on("close", () => {
+      clearInterval(heartbeat);
+      session.close();
+    });
+  });
+}
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>gatherus</title>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module" src="/main.ts"></script>
+  </body>
+</html>
+exit code 0

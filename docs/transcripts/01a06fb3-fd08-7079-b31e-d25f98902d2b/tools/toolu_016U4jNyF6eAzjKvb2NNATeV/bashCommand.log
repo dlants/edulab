@@ -1,0 +1,6 @@
+$ grep -r "websocket\|@fastify/websocket" /Users/denis.lantsman/src/gatherus/main/packages/backend --include="*.ts"
+stdout:
+/Users/denis.lantsman/src/gatherus/main/packages/backend/sheets/socket.ts:import websocket from "@fastify/websocket";
+/Users/denis.lantsman/src/gatherus/main/packages/backend/sheets/socket.ts:  await app.register(websocket);
+/Users/denis.lantsman/src/gatherus/main/packages/backend/sheets/socket.ts:  app.get("/api/sheets/socket", { websocket: true }, async (socket, req) => {
+exit code 0

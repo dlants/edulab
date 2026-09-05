@@ -1,0 +1,71 @@
+$ cd /Users/denis.lantsman/src/edulab && cat > vitest.config.ts <<'EOF'
+import { defineConfig } from "vitest/config";
+
+export default defineConfig({
+  test: {
+    environment: "node",
+    include: ["packages/**/*.test.ts"],
+  },
+});
+EOF
+sed -i '' 's|"test": "npm test --workspaces --if-present"|"test": "vitest run"|' package.json && npx vitest run
+stdout:
+ RUN  v4.1.11 /Users/denis.lantsman/src/edulab
+ ❯ packages/frontend/conversation.test.ts (5 tests | 2 failed) 13ms
+   × accumulates deltas into the streaming assistant message 4ms
+   ✓ sends the whole conversation with alternating roles on the second turn 8ms
+   × ignores send while a turn is in flight 1ms
+   ✓ commits partial text when a turn ends in error 0ms
+   ✓ drops the assistant turn when no text arrived 0ms
+stderr:
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  packages/frontend/conversation.test.ts > accumulates deltas into the streaming assistant message
+AssertionError: expected [ { role: 'user', text: 'hi' }, …(1) ] to deeply equal [ { role: 'user', text: 'hi' } ]
+- Expected
++ Received
+  [
+    {
+      "role": "user",
+      "text": "hi",
+    },
++   {
++     "role": "assistant",
++     "text": "",
++   },
+  ]
+ ❯ packages/frontend/conversation.test.ts:64:33
+     62|   const { socket, conversation } = setup();
+     63|   const turn = conversation.send("hi");
+     64|   expect(conversation.messages).toEqual([{ role: "user", text: "hi" }]…
+       |                                 ^
+     65|
+     66|   socket.deliver({
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+ FAIL  packages/frontend/conversation.test.ts > ignores send while a turn is in flight
+AssertionError: expected [ { role: 'user', text: 'one' }, …(1) ] to deeply equal [ { role: 'user', text: 'one' } ]
+- Expected
++ Received
+  [
+    {
+      "role": "user",
+      "text": "one",
+    },
++   {
++     "role": "assistant",
++     "text": "",
++   },
+  ]
+ ❯ packages/frontend/conversation.test.ts:121:33
+    119|   void conversation.send("two");
+    120|   expect(socket.sent).toHaveLength(1);
+    121|   expect(conversation.messages).toEqual([{ role: "user", text: "one" }…
+       |                                 ^
+    122| });
+    123|
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+stdout:
+ Test Files  1 failed (1)
+      Tests  2 failed | 3 passed (5)
+   Start at  21:44:00
+   Duration  216ms (transform 20ms, setup 0ms, import 38ms, tests 13ms, environment 0ms)
+exit code 1

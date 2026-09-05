@@ -1,0 +1,103 @@
+$ head -100 /Users/denis.lantsman/src/magenta.nvim/node/core/src/index.ts
+stdout:
+export {
+  type BeforeRequestDecision,
+  type InputMessage,
+  runAgentLoop,
+  type ToolExecutor,
+  type ToolOutcome,
+} from "./agent.ts";
+export type { AgentInfo, AgentsMap } from "./agents/agents.ts";
+export { loadAgents } from "./agents/agents.ts";
+export type { AnthropicAuth, OAuthTokens } from "./anthropic-auth.ts";
+export type { ArchiveEntry, ThreadMeta } from "./archive.ts";
+export {
+  deleteArchivedThread,
+  listArchivedThreadIds,
+  listArchivedThreads,
+  readArchivedThreadLog,
+  readThreadMeta,
+  threadCreatedAt,
+} from "./archive.ts";
+export { renderThreadLogToMarkdown } from "./archive-renderer.ts";
+export type { AuthUI } from "./auth-ui.ts";
+export type {
+  ContextTracker,
+  OnToolApplied,
+  ToolApplied,
+  TrackedFileInfo,
+} from "./capabilities/context-tracker.ts";
+export type { FileIO } from "./capabilities/file-io.ts";
+export { FsFileIO } from "./capabilities/file-io.ts";
+export {
+  formatGitHead,
+  formatGitInfo,
+  type GitClient,
+  type GitCommandRunner,
+  type GitState,
+  parseGitState,
+} from "./capabilities/git-client.ts";
+export type {
+  LspClient,
+  LspDefinitionResponse,
+  LspHoverResponse,
+  LspRange,
+  LspReferencesResponse,
+} from "./capabilities/lsp-client.ts";
+export type { LuaExecutor } from "./capabilities/lua-executor.ts";
+export type {
+  ScriptCatalogEntry,
+  ScriptRunner,
+} from "./capabilities/script-runner.ts";
+export type { OutputLine, Shell, ShellResult } from "./capabilities/shell.ts";
+export type {
+  DockerSpawnConfig,
+  ThreadManager,
+} from "./capabilities/thread-manager.ts";
+export {
+  isThreadId,
+  type MessageIdx,
+  type Role,
+  type SubagentConfig,
+  type ThreadId,
+  type ThreadType,
+} from "./chat-types.ts";
+export {
+  CHARS_PER_TOKEN,
+  chunkMessages,
+  type RenderResult,
+  renderThreadToMarkdown,
+  TARGET_CHUNK_TOKENS,
+  TOLERANCE_TOKENS,
+} from "./compact-renderer.ts";
+export {
+  type CompactionOutcome,
+  type CompactionRunId,
+  type CompactionRunState,
+  type Compactor,
+  type CompactSuspendReason,
+  compactionRunChunkIndex,
+  compactionRunThreadIds,
+  runSubmission,
+  ThreadCompactor,
+  type ThreadCompactorEvents,
+} from "./compaction/index.ts";
+export { provisionContainer } from "./container/provision.ts";
+export { teardownContainer } from "./container/teardown.ts";
+export type {
+  ContainerConfig,
+  ProvisionResult,
+  TeardownResult,
+} from "./container/types.ts";
+export {
+  type BufNr,
+  type Comment,
+  type CommentCloseReason,
+  type CommentId,
+  type CommentLocation,
+  type CommentMessage,
+  CommentStore,
+  type CommentStoreEvents,
+  type CommentUpdateEntry,
+  commentUpdatesToText,
+exit code 0

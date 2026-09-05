@@ -1,0 +1,6 @@
+$ cd /Users/denis.lantsman/src/edulab && ls .magenta/skills/ && node -v && npm -v
+stdout:
+vamp
+v24.14.0
+11.9.0
+exit code 0
