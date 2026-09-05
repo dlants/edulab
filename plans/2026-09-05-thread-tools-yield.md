@@ -255,7 +255,8 @@ Deviations:
   result is not stored on `Thread.result`, which only holds a settled yield.
 - `chat.ts` ignores the new return value, so nothing else changed this stage.
 
-- Goal:- Tests (unit):
+- Goal: a thread constructed with `yieldSchema` offers the yield tool and settles with structured data.
+- Tests (unit):
   - A thread with a `yieldSchema` sends that schema as the yield tool's `input_schema`; without one, the default `{ result: string }` schema.
   - A yield call resolves the turn as `{ type: "yielded", value: { type: "structured", value: <input> } }`, and **no further request is sent**.
   - A yield alongside an ordinary tool call: both execute, both results are written into the message array, and the turn still stops at the yield.
