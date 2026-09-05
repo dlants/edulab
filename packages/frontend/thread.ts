@@ -15,6 +15,20 @@ const SYSTEM = [
   "and do not check whether they are following - just do the work well.",
 ].join(" ");
 
+// Unattended mode: nobody is reading the transcript as it streams, so a
+// question to the user is a dead end. The only exit is the yield tool.
+const AUTONOMOUS_SYSTEM = [
+  "You are a capable engineering assistant running unattended: there is no",
+  "user to answer questions, and nothing you say outside the yield tool will",
+  "be read. Work the problem to completion, making whatever decisions you",
+  "need without asking, and finish by calling the yield tool exactly once",
+  "with your result. Do not stop for confirmation and do not ask questions.",
+].join(" ");
+
+const MAX_RESTARTS = 5;
+const restartNudge = (attempt: number, max: number) =>
+  `You stopped without yielding. Nobody read that message. Complete the task and call the yield tool when you are done. (auto-restart ${attempt}/${max})`;
+
 const YIELD = "yield";
 const DEFAULT_YIELD_SCHEMA: Anthropic.Tool.InputSchema = {
   type: "object",
@@ -100,6 +114,60 @@ export type Socket = {
     listener: (e: MessageEvent<string>) => void,
   ): void;
 };
+
+export type ThreadResult<Value> =
+  | { status: "ok"; result: Value }
+  | { status: "error"; error: string };
+
+export type RunThreadOpts = {
+  prompt: string;
+  tools?: Record<string, Tool>;
+  yieldSchema: Anthropic.Tool.InputSchema | "text";
+  system?: string;
+  /** How many times a turn that ends without a yield is nudged back to work. */
+  maxRestarts?: number;
+};
+
+/** Runs a thread to completion with no user in the loop: the seed prompt goes
+ * in, tools run client side, and the settled yield comes back. A turn that
+ * ends without yielding is restarted rather than accepted. */
+export function runThread(
+  socket: Socket,
+  opts: RunThreadOpts & { yieldSchema: "text" },
+): Promise<ThreadResult<string>>;
+export function runThread<Value extends Record<string, unknown>>(
+  socket: Socket,
+  opts: RunThreadOpts & { yieldSchema: Anthropic.Tool.InputSchema },
+): Promise<ThreadResult<Value>>;
+export async function runThread(
+  socket: Socket,
+  opts: RunThreadOpts,
+): Promise<ThreadResult<string | Record<string, unknown>>> {
+  const maxRestarts = opts.maxRestarts ?? MAX_RESTARTS;
+  const thread = new Thread(socket, {
+    system: opts.system ?? AUTONOMOUS_SYSTEM,
+    seed: opts.prompt,
+    tools: opts.tools,
+    yieldSchema: opts.yieldSchema,
+  });
+  let result = await thread.start();
+  for (let attempt = 1; result.type === "completed"; attempt++) {
+    if (attempt > maxRestarts) {
+      return {
+        status: "error",
+        error: `thread stopped without yielding after ${maxRestarts} restarts`,
+      };
+    }
+    result = await thread.send(restartNudge(attempt, maxRestarts));
+  }
+  return result.type === "yielded"
+    ? {
+        status: "ok",
+        result:
+          result.value.type === "text" ? result.value.text : result.value.value,
+      }
+    : { status: "error", error: result.message };
+}
 
 export class Thread {
   private readonly turns: Anthropic.MessageParam[];
