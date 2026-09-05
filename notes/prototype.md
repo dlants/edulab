@@ -18,6 +18,16 @@ I want to build a progression of prototypes, each iterating on this central moti
 
 - keep all data ephemeral / in memory, discarded on refresh to start. No dbs, no localstorage, etc...
 
+# demo tasks
+
+It would be nice to play around with this in context... which means a task transcript with some ecological validity. Like a user using an agent to perform a work task in a domain that they don't fully understand.
+
+I don't think I have anything like that handy... some ideas:
+
+- I have chat transcripts of myself working on coding projects, or even this project... I am not a novice, but it's something
+- I could have an agent generate these... not sure how useful that will be
+- could search the internet for something... maybe there's public datasets of stuff like this?
+
 # prototype 1 - user-driven review
 
 I think a really interesting interaction is a user being able to highlight some text in the transcript, and get a tool tip of interacting with it, like being able to ask a followup question about it or just say "I don't understand this", "quiz me on this".

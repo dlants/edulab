@@ -1,0 +1,60 @@
+// Fetch long English WildChat conversations via the HF datasets-server filter API
+// (works anonymously; the first call may block for minutes while HF builds the index).
+// Usage: node scripts/fetch-wildchat.mjs [minTurns] [outPath]
+
+import { writeFileSync } from "node:fs";
+
+const MIN_TURNS = Number(process.argv[2] ?? 20);
+const BASE = "https://datasets-server.huggingface.co/filter";
+const OUT = process.argv[3] ?? "/tmp/wildchat.json";
+const PAGE = 100;
+
+async function page(offset) {
+  const url = new URL(BASE);
+  url.search = new URLSearchParams({
+    dataset: "allenai/WildChat-1M",
+    config: "default",
+    split: "train",
+    where: `"turn">=${MIN_TURNS} AND "language"='English'`,
+    columns: "conversation_hash,model,turn,conversation",
+    offset: String(offset),
+    length: String(PAGE),
+  }).toString();
+  const res = await fetch(url);
+  const text = await res.text();
+  let body;
+  try {
+    body = JSON.parse(text);
+  } catch {
+    body = { error: `non-json response (${res.status})` };
+  }
+  if (body.error) {
+    console.error(`retrying offset ${offset}: ${body.error}`);
+    await new Promise((r) => setTimeout(r, 5000));
+    return page(offset);
+  }
+  return body;
+}
+
+const out = [];
+let offset = 0;
+let total = Infinity;
+while (offset < total) {
+  const body = await page(offset);
+  total = body.num_rows_total;
+  for (const { row } of body.rows) {
+    out.push({
+      hash: row.conversation_hash,
+      model: row.model,
+      turns: row.turn,
+      messages: row.conversation.map((m) => ({
+        role: m.role,
+        content: m.content,
+      })),
+    });
+  }
+  offset += PAGE;
+  console.error(`${out.length}/${total}`);
+  writeFileSync(OUT, JSON.stringify(out, null, 2));
+}
+

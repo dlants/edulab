@@ -1,10 +1,19 @@
 import type Anthropic from "@anthropic-ai/sdk";
 import type { ClientMessage, ServerFrame } from "@edulab/iso/protocol.ts";
 
-const MODEL = "claude-sonnet-4-5";
-const MAX_TOKENS = 4096;
-const SYSTEM =
-  "You are a patient tutor. Explain concepts clearly and concisely.";
+const MODEL = "claude-opus-4-5";
+const MAX_TOKENS = 16384;
+// Task mode: the agent is here to get the user's work done. Learning mode is
+// the secondary mode we layer on top of a transcript this produces, so this
+// prompt must not pre-emptively tutor - the whole premise of the prototype is
+// that a user watching a capable agent work becomes a passive observer.
+const SYSTEM = [
+  "You are a capable engineering assistant helping the user complete a task.",
+  "Work the problem directly: make concrete decisions, write real code, and",
+  "state your reasoning as you go rather than asking the user to supply it.",
+  "Be concise. Do not quiz the user, do not pad explanations for a beginner,",
+  "and do not check whether they are following - just do the work well.",
+].join(" ");
 
 export type Message = { role: "user" | "assistant"; text: string };
 
@@ -92,22 +101,26 @@ export class Conversation {
   private handleEvent(event: Anthropic.RawMessageStreamEvent): void {
     const pending = this.pending;
     if (!pending) return;
+    // RawMessageStreamEvent is an open union we forward verbatim from the SDK,
+    // so an unrecognized event warns rather than throwing - a version bump
+    // should not break a stream we can otherwise render.
     switch (event.type) {
       case "content_block_start":
-        pending.blocks[event.index] =
-          event.content_block.type === "text" ? event.content_block.text : "";
+        pending.blocks[event.index] = blockStartText(event.content_block);
         break;
       case "content_block_delta":
-        if (event.delta.type === "text_delta") {
-          pending.blocks[event.index] =
-            (pending.blocks[event.index] ?? "") + event.delta.text;
-        }
+        pending.blocks[event.index] =
+          (pending.blocks[event.index] ?? "") + deltaText(event.delta);
         break;
       case "message_stop":
         this.commit();
         break;
-      default:
+      case "message_start":
+      case "message_delta":
+      case "content_block_stop":
         break;
+      default:
+        console.warn("unhandled stream event", event);
     }
   }
 
@@ -128,4 +141,27 @@ function textOf(turn: Anthropic.MessageParam): string {
   return turn.content
     .map((block) => (block.type === "text" ? block.text : ""))
     .join("");
+}
+
+/** This prototype has no tools and no thinking, so the non-text variants are
+ * listed to be explicitly ignored rather than silently dropped - when we add
+ * them, this is where they surface. */
+function blockStartText(block: Anthropic.ContentBlock): string {
+  switch (block.type) {
+    case "text":
+      return block.text;
+    default:
+      console.warn("unhandled content block", block);
+      return "";
+  }
+}
+
+function deltaText(delta: Anthropic.RawContentBlockDelta): string {
+  switch (delta.type) {
+    case "text_delta":
+      return delta.text;
+    default:
+      console.warn("unhandled content block delta", delta);
+      return "";
+  }
 }
