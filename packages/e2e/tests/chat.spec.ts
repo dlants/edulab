@@ -56,7 +56,7 @@ async function selectRange(
 ) {
   await page.evaluate(
     ({ msg, start, end }) => {
-      const li = document.querySelectorAll("li")[msg];
+      const li = document.querySelectorAll("ul")[0].children[msg];
       const root = li.lastElementChild as HTMLElement;
       const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
       let at = 0;
@@ -80,7 +80,17 @@ async function selectRange(
     },
     { msg, start, end },
   );
-  await page.locator("ul").dispatchEvent("mouseup");
+  await taskTranscript(page).dispatchEvent("mouseup");
+}
+
+/** The right pane's transcript, present only while a thread is open there. */
+function threadTranscript(page: Page) {
+  return page.locator("ul").nth(1);
+}
+
+/** The left pane's transcript. The right pane renders its own <ul>. */
+function taskTranscript(page: Page) {
+  return page.locator("ul").first();
 }
 
 const SENTENCE = "the quick brown fox jumps over the lazy dog";
@@ -92,8 +102,9 @@ async function transcript(page: Page) {
   await page.goto("/");
   await page.getByRole("textbox").fill(SENTENCE);
   await page.getByRole("textbox").press("Enter");
-  await expect(page.locator("li")).toHaveCount(2);
+  await expect(taskTranscript(page).locator("li")).toHaveCount(2);
   await page.getByRole("button", { name: "Switch to learning mode" }).click();
+  return backend;
 }
 
 test("streams a response into the transcript", async ({ page }) => {
@@ -109,7 +120,7 @@ test("streams a response into the transcript", async ({ page }) => {
   await expect(page.locator('[data-role="assistant"]')).toHaveText(
     /Hello, world/,
   );
-  await expect(page.locator("li")).toHaveCount(2);
+  await expect(taskTranscript(page).locator("li")).toHaveCount(2);
 });
 
 test("the composer is disabled while a turn is in flight", async ({ page }) => {
@@ -134,11 +145,11 @@ test("a second turn sends the full conversation", async ({ page }) => {
   const input = page.getByRole("textbox");
   await input.fill("first");
   await input.press("Enter");
-  await expect(page.locator("li")).toHaveCount(2);
+  await expect(taskTranscript(page).locator("li")).toHaveCount(2);
 
   await input.fill("second");
   await input.press("Enter");
-  await expect(page.locator("li")).toHaveCount(4);
+  await expect(taskTranscript(page).locator("li")).toHaveCount(4);
 
   expect(backend.started).toHaveLength(2);
   expect(JSON.parse(backend.started[1])).toHaveLength(3);
@@ -187,6 +198,66 @@ test("two marks in one message are both clickable", async ({ page }) => {
   await expect(quote).toHaveText("the quick");
   await marks.nth(1).click();
   await expect(quote).toHaveText("fox");
+});
+
+test("an action opens a thread seeded with the selected passage", async ({
+  page,
+}) => {
+  const backend = await transcript(page);
+  const sent = backend.started.length;
+
+  await selectRange(page, 0, 4, 19);
+  await page.getByRole("button", { name: "I don't understand this." }).click();
+
+  expect(backend.started).toHaveLength(sent + 1);
+  const messages = JSON.parse(backend.started[sent]) as Array<{
+    role: string;
+    content: string;
+  }>;
+  expect(messages).toHaveLength(1);
+  expect(messages[0].role).toBe("user");
+  expect(messages[0].content).toContain("quick brown fox");
+
+  await expect(threadTranscript(page).locator("li")).toHaveText([/ok/]);
+  await expect(page.locator("[data-mark]")).toHaveText("quick brown fox");
+});
+
+test("a follow-up in the thread pane re-sends the seed", async ({ page }) => {
+  const backend = await transcript(page);
+  await selectRange(page, 0, 0, 9);
+  await page.getByRole("button", { name: "Quiz me on this." }).click();
+  await expect(threadTranscript(page).locator("li")).toHaveCount(1);
+
+  const follow = page.getByPlaceholder("Follow up…");
+  await follow.fill("because?");
+  await follow.press("Enter");
+  await expect(threadTranscript(page).locator("li")).toHaveCount(3);
+
+  const messages = JSON.parse(
+    backend.started[backend.started.length - 1],
+  ) as Array<{ role: string; content: string }>;
+  expect(messages).toHaveLength(3);
+  expect(messages[0].content).toContain("the quick");
+  expect(messages[2].content).toBe("because?");
+});
+
+test("clicking a mark reopens its thread without a new request", async ({
+  page,
+}) => {
+  const backend = await transcript(page);
+  await selectRange(page, 0, 0, 9);
+  await page.getByRole("button", { name: "I don't understand this." }).click();
+  await expect(threadTranscript(page).locator("li")).toHaveCount(1);
+
+  await selectRange(page, 0, 16, 19);
+  await page.getByRole("button", { name: "Quiz me on this." }).click();
+  await expect(threadTranscript(page).locator("li")).toHaveCount(1);
+  const sent = backend.started.length;
+
+  await page.locator("[data-mark]").first().click();
+  await expect(page.locator("blockquote")).toHaveText("the quick");
+  await expect(threadTranscript(page).locator("li")).toHaveCount(1);
+  expect(backend.started).toHaveLength(sent);
 });
 
 test("a new selection leaves committed marks rendered", async ({ page }) => {

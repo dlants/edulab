@@ -1,6 +1,5 @@
 import type { Message } from "./conversation.ts";
 import {
-  type Action,
   type Msg as LearningMsg,
   LearningPane,
   type State as LearningState,
@@ -42,7 +41,8 @@ export type State = {
   activeMark: ThreadId | null;
   anchor: Anchor | null;
   query: string;
-  pending: Action | null;
+  /** The active child thread, shown on the right when nothing is selected. */
+  child: ThreadPaneState | null;
 };
 
 export type Msg =
@@ -51,7 +51,8 @@ export type Msg =
   | { type: "MODE_TOGGLED" }
   | { type: "SELECTION_CHANGED"; anchor: Anchor | null }
   | { type: "MARK_CLICKED"; thread: ThreadId }
-  | { type: "LEARNING_MSG"; msg: LearningMsg };
+  | { type: "LEARNING_MSG"; msg: LearningMsg }
+  | { type: "CHILD_MSG"; msg: ThreadPaneMsg };
 
 const appClass = cls("app");
 const transcriptClass = cls("transcript");
@@ -62,6 +63,8 @@ const paneClass = cls("pane");
 const toggleClass = cls("toggle");
 const markClass = cls("mark");
 const textClass = cls("text");
+const threadPaneClass = cls("thread-pane");
+const threadQuoteClass = cls("thread-quote");
 
 mountStyle(`
 .${appClass} {
@@ -138,6 +141,24 @@ mountStyle(`
 .${composerClass} {
   display: flex;
   gap: 0.5rem;
+}
+.${threadPaneClass} {
+  position: sticky;
+  top: 4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  border-left: 1px solid rgba(0, 0, 0, 0.1);
+  padding-left: 1.5rem;
+}
+.${threadQuoteClass} {
+  white-space: pre-wrap;
+  border-left: 3px solid #f0b429;
+  margin: 0;
+  padding-left: 0.75rem;
+  max-height: 8rem;
+  overflow-y: auto;
+  font-size: 0.9rem;
 }
 .${composerClass} textarea {
   flex: 1;
@@ -255,6 +276,92 @@ class MessageView implements View<MessageState, SegmentMsg> {
   }
 }
 
+export type ThreadPaneState = {
+  /** The passage this thread was opened from. */
+  quote: string;
+  messages: ReadonlyArray<Message>;
+  inFlight: boolean;
+  draft: string;
+};
+
+export type ThreadPaneMsg =
+  | { type: "DRAFT_CHANGED"; draft: string }
+  | { type: "SUBMIT" };
+
+/** A learning thread on the right: the passage it came from, its transcript,
+ * and a composer. Read-only as far as selection goes - only the left pane
+ * captures one. */
+class ThreadPane implements View<ThreadPaneState, ThreadPaneMsg> {
+  container: HTMLElement;
+  private b: Binder<ThreadPaneState>;
+
+  constructor(
+    container: HTMLElement,
+    dispatch: (msg: ThreadPaneMsg) => void,
+    initial: ThreadPaneState,
+  ) {
+    const quoteRef = ref("quote");
+    const transcriptRef = ref("thread-transcript");
+    const inputRef = ref("thread-input");
+    const sendRef = ref("thread-send");
+
+    container.className = threadPaneClass;
+    container.innerHTML = sanitize`
+      <blockquote class="${threadQuoteClass}" data-ref="${quoteRef}"></blockquote>
+      <ul class="${transcriptClass}" data-ref="${transcriptRef}"></ul>
+      <div class="${composerClass}">
+        <textarea data-ref="${inputRef}" rows="2" placeholder="Follow up…"></textarea>
+        <button type="button" data-ref="${sendRef}">Reply</button>
+      </div>
+    `;
+    this.container = container;
+    this.b = new Binder(container, initial);
+
+    const input = this.b.ref<HTMLTextAreaElement>(inputRef);
+    input.addEventListener("input", () => {
+      dispatch({ type: "DRAFT_CHANGED", draft: input.value });
+    });
+    input.addEventListener("keydown", (e: KeyboardEvent) => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        dispatch({ type: "SUBMIT" });
+      }
+    });
+    this.b
+      .ref(sendRef)
+      .addEventListener("click", () => dispatch({ type: "SUBMIT" }));
+
+    this.b.bindText(quoteRef, (s) => s.quote);
+    this.b.bindList(transcriptRef, "li", (s) =>
+      s.messages.map((message, i) =>
+        showKeyed(
+          String(i),
+          MessageView,
+          {
+            message,
+            segments: segments([], null, i, message.text.length),
+            active: null,
+          },
+          {},
+          () => {},
+        ),
+      ),
+    );
+    this.b.bindValue(inputRef, (s) => s.draft);
+    this.b.bindDisabled(inputRef, (s) => s.inFlight);
+    this.b.bindDisabled(sendRef, (s) => s.inFlight || s.draft.trim() === "");
+  }
+
+  sync(state: ThreadPaneState): void {
+    this.b.sync(state);
+  }
+
+  destroy(): void {
+    this.b.cleanup();
+    this.container.innerHTML = "";
+  }
+}
+
 export class AppView implements View<State, Msg> {
   container: HTMLElement;
   private b: Binder<State>;
@@ -342,11 +449,19 @@ export class AppView implements View<State, Msg> {
     this.b.bindVisible(composerRef, (s) => s.mode === "task");
     this.b.bindSlot(learningRef, (s) => {
       if (s.mode !== "learning") return undefined;
+      const child = s.child;
+      // A live selection and an active child compete for this pane; the newer
+      // one wins, and a selection is always the newer of the two here because
+      // opening or clicking a thread clears it.
+      if (child && !s.anchor) {
+        return show(ThreadPane, child, {}, (msg: ThreadPaneMsg) =>
+          dispatch({ type: "CHILD_MSG", msg }),
+        );
+      }
       const learningState: LearningState = {
         selection: paneSelection(s),
         overlapping: s.anchor !== null && overlaps(s.marks, s.anchor),
         query: s.query,
-        pending: s.pending,
       };
       // bindSlot hands this straight to the child as its dispatch, so it must
       // dispatch rather than return a wrapped message.

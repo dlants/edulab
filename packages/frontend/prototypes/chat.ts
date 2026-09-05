@@ -1,8 +1,7 @@
 import { Conversation } from "../conversation.ts";
-import type { Action } from "../prompt.ts";
 import { selectedSample } from "../samples/index.ts";
-import type { Mark, ThreadId } from "../selection.ts";
-import { overlaps } from "../selection.ts";
+import { anchorText, overlaps, type ThreadId } from "../selection.ts";
+import { ThreadTree } from "../threads.ts";
 import { AppView, type Msg, type State } from "../view.ts";
 
 function connect(): WebSocket {
@@ -10,72 +9,104 @@ function connect(): WebSocket {
   return new WebSocket(`${proto}//${window.location.host}/api/socket`);
 }
 
-/** Prototype 1: the plain task-mode transcript. The review affordances get
- * layered on top of this one. */
+/** Prototype 1: the task transcript, with learning threads hanging off the
+ * passages the user picks out of it. */
 export function mount(container: HTMLElement): void {
-  const conversation = new Conversation(connect(), {
-    initialTurns: selectedSample()?.turns,
-  });
-  // Stage 3 replaces this with a ThreadTree; for now a committed mark is just
-  // a passage plus the action taken on it, and the "thread" it opens is a
-  // placeholder id that nothing streams into yet.
-  const commits: Array<Mark & { action: Action }> = [];
-  const root = "root" as ThreadId;
+  // One socket for the whole app: every thread's Conversation adds its own
+  // listener and drops frames whose requestId it does not own, so streams
+  // interleave over the single connection.
+  const socket = connect();
+  const tree = new ThreadTree(
+    socket,
+    new Conversation(socket, { initialTurns: selectedSample()?.turns }),
+    () => {
+      refresh();
+      view.sync(state);
+    },
+  );
+  const focus = tree.root;
 
   const state: State = {
-    messages: conversation.messages,
+    messages: [],
     inFlight: false,
     draft: "",
     mode: "task",
-    thread: root,
-    marks: commits,
+    thread: focus,
+    marks: [],
     activeMark: null,
     anchor: null,
     query: "",
-    pending: null,
+    child: null,
   };
 
+  /** Re-projects the tree onto the view's state. Everything but the fields the
+   * user is editing is derived, so this runs after every dispatch. */
+  function refresh(): void {
+    const thread = tree.get(focus);
+    state.messages = thread.conversation.messages;
+    state.inFlight = thread.conversation.inFlight;
+    state.draft = thread.draft;
+    state.marks = tree.marks(focus);
+    state.activeMark = thread.activeChild;
+    const activeChild = thread.activeChild;
+    if (!activeChild) {
+      state.child = null;
+      return;
+    }
+    const child = tree.get(activeChild);
+    const origin = child.origin;
+    state.child = {
+      quote: origin ? anchorText(origin.anchor, state.messages) : "",
+      messages: child.conversation.messages,
+      inFlight: child.conversation.inFlight,
+      draft: child.draft,
+    };
+  }
+
+  function send(id: ThreadId): void {
+    const thread = tree.get(id);
+    const text = thread.draft.trim();
+    if (text === "" || thread.conversation.inFlight) return;
+    thread.draft = "";
+    thread.conversation.send(text).then(undefined, (e: unknown) => {
+      console.error(e);
+    });
+  }
+
   function update(state: State, msg: Msg): void {
+    const thread = tree.get(focus);
     switch (msg.type) {
       case "DRAFT_CHANGED":
-        state.draft = msg.draft;
+        thread.draft = msg.draft;
         break;
-      case "SUBMIT": {
-        const text = state.draft.trim();
-        if (text === "" || conversation.inFlight) break;
-        state.draft = "";
-        conversation.send(text).then(undefined, (e: unknown) => {
-          console.error(e);
-        });
+      case "SUBMIT":
+        send(focus);
         break;
-      }
       case "MODE_TOGGLED":
         state.mode = state.mode === "task" ? "learning" : "task";
         break;
       case "SELECTION_CHANGED":
         state.anchor = msg.anchor;
-        state.activeMark = null;
-        state.pending = null;
+        thread.activeChild = null;
         break;
-      case "MARK_CLICKED": {
-        const mark = commits.find((c) => c.thread === msg.thread);
-        if (!mark) break;
+      case "MARK_CLICKED":
         state.anchor = null;
-        state.activeMark = mark.thread;
-        state.pending = mark.action;
+        thread.activeChild = msg.thread;
         break;
-      }
       case "LEARNING_MSG":
         switch (msg.msg.type) {
           case "ACTION": {
             const anchor = state.anchor;
-            if (!anchor || overlaps(commits, anchor)) break;
-            const thread = `t${commits.length + 1}` as ThreadId;
-            commits.push({ thread, anchor, action: msg.msg.action });
+            if (!anchor || overlaps(state.marks, anchor)) break;
+            const id = tree.open(anchor, msg.msg.action);
             state.anchor = null;
-            state.activeMark = thread;
-            state.pending = msg.msg.action;
             state.query = "";
+            tree
+              .get(id)
+              .conversation.start()
+              .then(undefined, (e: unknown) => {
+                console.error(e);
+              });
             break;
           }
           case "QUERY_CHANGED":
@@ -83,9 +114,21 @@ export function mount(container: HTMLElement): void {
             break;
         }
         break;
+      case "CHILD_MSG": {
+        const activeChild = thread.activeChild;
+        if (!activeChild) break;
+        switch (msg.msg.type) {
+          case "DRAFT_CHANGED":
+            tree.get(activeChild).draft = msg.msg.draft;
+            break;
+          case "SUBMIT":
+            send(activeChild);
+            break;
+        }
+        break;
+      }
     }
-    state.messages = conversation.messages;
-    state.inFlight = conversation.inFlight;
+    refresh();
   }
 
   let dispatching = false;
@@ -97,11 +140,6 @@ export function mount(container: HTMLElement): void {
     dispatching = false;
   }
 
+  refresh();
   const view = new AppView(container, dispatch, state);
-
-  conversation.onChange = () => {
-    state.messages = conversation.messages;
-    state.inFlight = conversation.inFlight;
-    view.sync(state);
-  };
 }

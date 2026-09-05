@@ -246,12 +246,23 @@ Deviations:
   - [x] Playwright: dragging a new selection over existing text leaves the old marks rendered.
 ## Threads on the right pane
 
+**Status: done** (`packages/frontend/threads.ts`, `view.ts`, `learning.ts`, `prototypes/chat.ts`, `packages/e2e/tests/chat.spec.ts`).
+
+Deviations:
+- `ThreadTree.marks` returns `Mark[]`, not `Anchor[]`: a mark needs the child's id to be clickable, and `anchor.thread` already names the parent (stage 2's deviation).
+- `ThreadTree` takes the shared `Socket` and an `onChange` callback, which it attaches to every conversation it creates - a stream anywhere in the tree re-syncs the app through the one dispatch loop.
+- `Point.msg` indexes a thread's *visible* messages, not its turns. The hidden seed is simply not addressable, so no ±1 fixups exist anywhere; `seedTurn` already takes visible messages. The corresponding invariant above is superseded.
+- The right pane is a new `ThreadPane` (in `view.ts`, so it reuses `MessageView` and the transcript styles): the passage it was opened from, a read-only transcript, and a composer. Selection capture stays bound to the left pane only.
+- `LearningPane` lost `pending` and its own `Action` declaration; `Action` lives in `prompt.ts` and is re-exported from `threads.ts`.
+- `chat.ts` derives all view state from the tree in one `refresh()` after every dispatch; `focus` is fixed at the root until stage 4.
+- The e2e helpers scope to the left pane's `<ul>` now that the right pane renders its own transcript.
+
 - Goal: picking an action opens a child thread, sends the seeded prompt, streams into the right pane, and leaves a permanent highlight. Clicking that highlight reopens the thread with its history intact.
 - Tests (Playwright, against the fake backend that records `start` frames):
-  - Selecting a passage and clicking "I don't understand this" sends exactly one `start` frame whose `messages` is a single user turn containing the passage verbatim.
-  - The reply streams into the right pane and the passage stays marked after the pane is clicked.
-  - Following up in the right pane's composer sends a conversation whose first turn is still the seed.
-  - Selecting a second passage opens a second thread; clicking the first mark restores the first thread's transcript, and no new `start` frame is sent.
+  - [x] Selecting a passage and clicking "I don't understand this" sends exactly one `start` frame whose `messages` is a single user turn containing the passage verbatim.
+  - [x] The reply streams into the right pane and the passage stays marked after the pane is clicked.
+  - [x] Following up in the right pane's composer sends a conversation whose first turn is still the seed.
+  - [x] Selecting a second passage opens a second thread; clicking the first mark restores the first thread's transcript, and no new `start` frame is sent.
 
 ## Nesting and the arrows
 

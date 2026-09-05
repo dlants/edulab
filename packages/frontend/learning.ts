@@ -1,9 +1,7 @@
+import type { Action } from "./prompt.ts";
 import { Binder, cls, mountStyle, ref, sanitize, type View } from "./vamp.ts";
 
-export type Action =
-  | { type: "explain" }
-  | { type: "quiz" }
-  | { type: "query"; text: string };
+export type { Action };
 
 export type State = {
   /** The text the user highlighted, or null when nothing is selected. */
@@ -11,7 +9,6 @@ export type State = {
   /** The live selection intersects a committed mark, so no action is offered. */
   overlapping: boolean;
   query: string;
-  pending: Action | null;
 };
 
 export type Msg =
@@ -22,7 +19,6 @@ const paneClass = cls("learning-pane");
 const emptyClass = cls("learning-empty");
 const quoteClass = cls("learning-quote");
 const actionsClass = cls("learning-actions");
-const pendingClass = cls("learning-pending");
 const warnClass = cls("learning-warn");
 
 mountStyle(`
@@ -67,10 +63,6 @@ mountStyle(`
   padding: 0.5rem;
   resize: vertical;
 }
-.${pendingClass} {
-  font-size: 0.85rem;
-  opacity: 0.6;
-}
 `);
 
 export class LearningPane implements View<State, Msg> {
@@ -88,7 +80,6 @@ export class LearningPane implements View<State, Msg> {
     const explainRef = ref("explain");
     const quizRef = ref("quiz");
     const queryRef = ref("query");
-    const pendingRef = ref("pending");
     const warnRef = ref("warn");
 
     container.className = paneClass;
@@ -100,7 +91,6 @@ export class LearningPane implements View<State, Msg> {
         <button type="button" data-ref="${explainRef}">I don't understand this.</button>
         <button type="button" data-ref="${quizRef}">Quiz me on this.</button>
         <textarea data-ref="${queryRef}" rows="2" placeholder="Ask your own question…"></textarea>
-        <span class="${pendingClass}" data-ref="${pendingRef}"></span>
       </div>
     `;
     this.container = container;
@@ -134,9 +124,6 @@ export class LearningPane implements View<State, Msg> {
     this.b.bindVisible(bodyRef, (s) => s.selection !== null && !s.overlapping);
     this.b.bindText(quoteRef, (s) => s.selection ?? "");
     this.b.bindValue(queryRef, (s) => s.query);
-    this.b.bindText(pendingRef, (s) =>
-      s.pending === null ? "" : `${describe(s.pending)} — not wired up yet.`,
-    );
   }
 
   sync(state: State): void {
@@ -146,16 +133,5 @@ export class LearningPane implements View<State, Msg> {
   destroy(): void {
     this.b.cleanup();
     this.container.innerHTML = "";
-  }
-}
-
-function describe(action: Action): string {
-  switch (action.type) {
-    case "explain":
-      return "Explain this";
-    case "quiz":
-      return "Quiz me";
-    case "query":
-      return action.text;
   }
 }
