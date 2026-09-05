@@ -47,6 +47,11 @@ mountStyle(`
   white-space: pre-wrap;
   line-height: 1.5;
 }
+.${messageClass}[data-role="user"] {
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.75rem;
+}
 .${roleClass} {
   display: block;
   font-size: 0.75rem;
