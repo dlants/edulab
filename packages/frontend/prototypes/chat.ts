@@ -10,7 +10,9 @@ function connect(): WebSocket {
 /** Prototype 1: the plain task-mode transcript. The review affordances get
  * layered on top of this one. */
 export function mount(container: HTMLElement): void {
-  const conversation = new Conversation(connect(), selectedSample()?.turns);
+  const conversation = new Conversation(connect(), {
+    initialTurns: selectedSample()?.turns,
+  });
   const state: State = {
     messages: conversation.messages,
     inFlight: false,

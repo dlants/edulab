@@ -33,10 +33,24 @@ export class Conversation {
   onChange: (() => void) | undefined;
 
   private readonly socket: Socket;
+  private readonly system: string;
+  /** Turn 0 when present: sent like any other turn, never rendered. */
+  readonly seed: string | undefined;
 
-  constructor(socket: Socket, initialTurns: Anthropic.MessageParam[] = []) {
+  constructor(
+    socket: Socket,
+    opts: {
+      system?: string;
+      initialTurns?: Anthropic.MessageParam[];
+      seed?: string;
+    } = {},
+  ) {
     this.socket = socket;
-    this.turns = [...initialTurns];
+    this.system = opts.system ?? SYSTEM;
+    this.seed = opts.seed;
+    this.turns = opts.seed
+      ? [{ role: "user", content: opts.seed }]
+      : [...(opts.initialTurns ?? [])];
     socket.addEventListener("message", (e: MessageEvent<string>) => {
       this.handleFrame(JSON.parse(e.data) as ServerFrame);
     });
@@ -44,7 +58,8 @@ export class Conversation {
 
   /** Committed turns plus the one currently streaming. */
   get messages(): ReadonlyArray<Message> {
-    const committed = this.turns.map(
+    const turns = this.seed ? this.turns.slice(1) : this.turns;
+    const committed = turns.map(
       (turn): Message => ({
         role: turn.role === "assistant" ? "assistant" : "user",
         text: textOf(turn),
@@ -62,6 +77,17 @@ export class Conversation {
   send(text: string): Promise<void> {
     if (this.pending) return Promise.resolve();
     this.turns.push({ role: "user", content: text });
+    return this.request();
+  }
+
+  /** Requests a reply to the turns already present - the seeded first turn of
+   * a learning thread, which the user never typed. */
+  start(): Promise<void> {
+    if (this.pending || this.turns.length === 0) return Promise.resolve();
+    return this.request();
+  }
+
+  private request(): Promise<void> {
     const requestId = crypto.randomUUID();
     this.pending = { requestId, blocks: [] };
     const message: ClientMessage = {
@@ -70,7 +96,7 @@ export class Conversation {
       params: {
         model: MODEL,
         max_tokens: MAX_TOKENS,
-        system: SYSTEM,
+        system: this.system,
         stream: true,
         messages: [...this.turns],
       },

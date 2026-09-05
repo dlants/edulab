@@ -150,6 +150,31 @@ it("commits partial text when a turn ends in error", async () => {
   ]);
 });
 
+it("sends the seed as turn 0 but never renders it", async () => {
+  const socket = new FakeSocket();
+  const conversation = new Conversation(socket, {
+    system: "learning",
+    seed: "the framing",
+  });
+  expect(conversation.messages).toEqual([]);
+
+  const first = conversation.start();
+  socket.stream(["hello"]);
+  await first;
+  expect(conversation.messages).toEqual([{ role: "assistant", text: "hello" }]);
+
+  const second = conversation.send("more");
+  socket.stream(["ok"]);
+  await second;
+  for (const sent of socket.sent) {
+    expect(sent.params.system).toBe("learning");
+    expect(sent.params.messages[0]).toEqual({
+      role: "user",
+      content: "the framing",
+    });
+  }
+});
+
 it("drops the assistant turn when no text arrived", async () => {
   const { socket, conversation } = setup();
   const turn = conversation.send("hi");
