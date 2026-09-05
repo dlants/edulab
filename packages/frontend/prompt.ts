@@ -1,5 +1,6 @@
-import { type Anchor, anchorText } from "./selection.ts";
+import { type Anchor, anchorText, type ThreadId } from "./selection.ts";
 import type { Message } from "./thread.ts";
+import type { ThreadTree } from "./threads.ts";
 
 export type Action =
   | { type: "explain" }
@@ -47,6 +48,57 @@ export function seedTurn(
     `The user then selected: "${anchorText(anchor, visible)}"\n${question(action)}`,
   );
   return sections.join("\n\n");
+}
+
+/** Extraction mode: one detached pass over the whole session, whose only
+ * output is the graph it writes through its tools. Nobody reads its prose. */
+export const EXTRACT_SYSTEM = [
+  "You are reading a session in which an engineering agent did some work for",
+  "a user, together with the follow-up threads the user opened on passages",
+  "they did not understand. Your job is to maintain a knowledge graph of the",
+  "domains this session touched.",
+  "One node per concept - an idea a person can understand or fail to",
+  "understand - never one per file, message or line of code. Add edges for the",
+  "relationships that matter: what builds on what, what is an instance of",
+  "what. Set the level from what the user's own questions and answers reveal,",
+  "on the scale 1 unfamiliar, 2 emerging, 3 working, 4 fluent, defaulting to 1",
+  "for a concept they never engaged with. The scale cannot express a",
+  "misconception - a confidently held wrong belief reads as fluent - so put",
+  "misconceptions, and anything else about how this user holds the idea, in",
+  "`notes`.",
+  "The current graph is shown below. Extend it: update the nodes that already",
+  "exist rather than minting a second node for the same concept. Work in",
+  "batches, and stop when the graph reflects the session. Nothing you say",
+  "outside the tools is read.",
+].join(" ");
+
+/** The whole session as one prompt: every thread depth-first, each child
+ * labelled with what the user asked and the passage they asked it about. The
+ * questions the user asked are the evidence about what they did not
+ * understand, so they have to survive into the seed. */
+export function renderTree(tree: ThreadTree, graph?: string): string {
+  const sections: string[] = [];
+  if (graph) sections.push(`The current knowledge graph:\n${graph}`);
+  walk(tree, tree.root, 0, sections);
+  return sections.join("\n\n");
+}
+
+function walk(
+  tree: ThreadTree,
+  id: ThreadId,
+  depth: number,
+  out: string[],
+): void {
+  const node = tree.get(id);
+  const origin = node.origin;
+  const quote = origin
+    ? anchorText(origin.anchor, tree.get(origin.anchor.thread).thread.messages)
+    : "";
+  const header = origin
+    ? `Follow-up thread (depth ${depth}) on "${quote}" - the user said: ${actionLabel(origin.action)}`
+    : "The task session:";
+  out.push(`${header}\n${transcript(node.thread.messages)}`);
+  for (const child of node.children) walk(tree, child, depth + 1, out);
 }
 
 function transcript(messages: ReadonlyArray<Message>): string {

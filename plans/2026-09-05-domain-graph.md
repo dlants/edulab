@@ -330,7 +330,23 @@ Deviations:
   - Delete removes the node and its edges from the canvas.
   - The sidebar edits are the only writes at this stage, so the tab is exercised against a graph built in the page's own code. The tool -> graph -> canvas path is tested in the next stage, which is where a writer actually exists.
 
-## seeding the graph from the thread tree
+## seeding the graph from the thread tree — DONE
+
+Landed in `prompt.ts` (`EXTRACT_SYSTEM`, `renderTree`), the toolbar and
+`Build` state in `graph-view.ts`, and `runBuild()` in `prototypes/chat.ts`.
+Tests in `prompt.test.ts` and `packages/e2e/tests/graph.spec.ts` are green.
+
+Deviations:
+- `renderTree(tree, graph?)` takes the rendered graph as a second argument
+  rather than reading it, matching how `seedTurn` already receives it — the
+  prompt module stays ignorant of the graph object.
+- The build lives in `GraphView`'s own `State`/`Msg` (`Build`, `{ type:
+  "BUILD" }`) rather than the app's, since the button is part of the tab; the
+  record itself is owned by `chat.ts`, which runs the thread.
+- Status is a line of text next to the button (idle/running/done/error) rather
+  than only a disabled state, so a failed extraction is visible at all.
+- `window.__graph` **stays**: the sidebar specs need a deterministic graph
+  without driving the extraction stub first, and the handle costs nothing.
 
 - Goal: an empty graph tab is not a dead end. It shows a single **"Build from this session"** button that runs a detached extraction thread over the whole thread tree and fills the graph in.
 - The extraction thread is **not** in `ThreadTree`. `open` requires an anchor, and this thread has no origin passage: it is about the session, not about a highlight. `chat.ts` constructs it directly — `new Thread(socket, { system: EXTRACT_SYSTEM, seed: renderTree(tree), tools: writeTools(graph) })` — holds it in `State` as `build: { status: "idle" | "running" | "done"; error?: string }`, and never renders its transcript. The user sees nodes appearing on the canvas, which is the actual output; a second transcript pane would just be noise.

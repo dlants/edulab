@@ -27,8 +27,8 @@ async function backend(page: Page) {
   });
 }
 
-/** Nothing writes to the graph until the extraction thread of the next stage,
- * so the spec seeds it through the handle the prototype exposes. */
+/** The sidebar cases want a known graph without an extraction run first,
+ * so they seed it through the handle the prototype exposes. */
 async function seed(page: Page) {
   await page.evaluate(() => {
     const graph = (
@@ -166,4 +166,129 @@ test("an edge is selectable and editable", async ({ page }) => {
   await page.locator("[data-graph-title]").fill("requires");
   await page.getByRole("button", { name: "Save" }).click();
   await expect(page.locator("[data-edge-label]")).toHaveText("requires");
+});
+
+/** Answers the extraction thread's requests with a `put_nodes` call, then a
+ * `put_edges` call, then prose - the shape of a real extraction pass, so the
+ * spec exercises tools -> graph -> layout -> canvas end to end. */
+async function extractionBackend(page: Page) {
+  await page.routeWebSocket("**/api/socket", (ws) => {
+    let calls = 0;
+    ws.onMessage((raw) => {
+      const message = JSON.parse(String(raw)) as ClientMessage;
+      const send = (frame: ServerFrame) => ws.send(JSON.stringify(frame));
+      const extraction = (message.params.tools ?? []).some(
+        (t) => t.name === "put_nodes",
+      );
+      const step = extraction ? calls++ : -1;
+      const call =
+        step === 0
+          ? {
+              name: "put_nodes",
+              input: {
+                nodes: [
+                  {
+                    title: "closures",
+                    description: "a function plus its environment",
+                    notes: "asked twice",
+                    level: 2,
+                  },
+                  {
+                    title: "scope",
+                    description: "where a binding is visible",
+                    notes: "",
+                    level: 3,
+                  },
+                ],
+              },
+            }
+          : step === 1
+            ? {
+                name: "put_edges",
+                input: {
+                  edges: [
+                    {
+                      from: "n0",
+                      to: "n1",
+                      title: "builds on",
+                      description: "a closure captures a scope",
+                    },
+                  ],
+                },
+              }
+            : null;
+      if (call) {
+        send({
+          type: "event",
+          requestId: message.requestId,
+          event: {
+            type: "content_block_start",
+            index: 0,
+            content_block: {
+              type: "tool_use",
+              id: `call-${step}`,
+              name: call.name,
+              input: {},
+            },
+          } as never,
+        });
+        send({
+          type: "event",
+          requestId: message.requestId,
+          event: {
+            type: "content_block_delta",
+            index: 0,
+            delta: {
+              type: "input_json_delta",
+              partial_json: JSON.stringify(call.input),
+            },
+          },
+        });
+      } else {
+        send({
+          type: "event",
+          requestId: message.requestId,
+          event: {
+            type: "content_block_start",
+            index: 0,
+            content_block: { type: "text", text: "ok", citations: null },
+          },
+        });
+      }
+      send({
+        type: "event",
+        requestId: message.requestId,
+        event: { type: "content_block_stop", index: 0 },
+      });
+      // A `done` without a `message_stop` is a truncated turn, which the
+      // thread treats as an error: a tool call has to be committed properly
+      // for the loop to run it.
+      send({
+        type: "event",
+        requestId: message.requestId,
+        event: { type: "message_stop" } as never,
+      });
+      send({ type: "done", requestId: message.requestId });
+    });
+  });
+}
+
+test("building from the session fills the canvas and leaves the threads alone", async ({
+  page,
+}) => {
+  await extractionBackend(page);
+  await page.goto("/");
+  await page.getByRole("textbox").fill("hello");
+  await page.getByRole("textbox").press("Enter");
+  await expect(page.locator("ul").first().locator("li")).toHaveCount(2);
+
+  await graphTab(page).click();
+  await page.getByRole("button", { name: "Build from this session" }).click();
+
+  await expect(nodes(page)).toHaveText(["closures", "scope"]);
+  await expect(page.locator("[data-edge-label]")).toHaveText("builds on");
+  await expect(page.getByRole("button", { name: "Rebuild" })).toBeVisible();
+
+  await threadsTab(page).click();
+  await expect(page.locator("ul").first().locator("li")).toHaveCount(2);
 });

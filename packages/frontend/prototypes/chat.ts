@@ -4,10 +4,10 @@ import {
   KnowledgeGraph,
   type NodeId,
 } from "../graph.ts";
-import { readTools } from "../graph-tools.ts";
-import type { Msg as GraphMsg, Sidebar } from "../graph-view.ts";
+import { readTools, writeTools } from "../graph-tools.ts";
+import type { Build, Msg as GraphMsg, Sidebar } from "../graph-view.ts";
 import { layout, type Position } from "../layout.ts";
-import { actionLabel } from "../prompt.ts";
+import { actionLabel, EXTRACT_SYSTEM, renderTree } from "../prompt.ts";
 import { selectedSample, selectSample } from "../samples/index.ts";
 import { anchorText, overlaps, type ThreadId } from "../selection.ts";
 import { Thread } from "../thread.ts";
@@ -49,6 +49,10 @@ export function mount(container: HTMLElement): void {
   // The thread on the left. Moved only by the arrows.
   let focus = tree.root;
   let sidebar: Sidebar = { type: "closed" };
+  // The extraction pass. Detached from the tree - it has no anchor and no
+  // pane; the nodes appearing on the canvas are the only thing the user sees
+  // of it.
+  let build: Build = { type: "idle" };
   // The layout is a few hundred iterations, and refresh() runs on every
   // keystroke, so it is recomputed only when the shape of the graph changes.
   let placement = new Map<NodeId, Position>();
@@ -78,7 +82,7 @@ export function mount(container: HTMLElement): void {
     activeMark: null,
     anchor: null,
     tab: "threads",
-    graph: { nodes: [], edges: [], sidebar },
+    graph: { nodes: [], edges: [], sidebar, build },
     query: "",
     origin: null,
     expanded: new Set(),
@@ -106,6 +110,7 @@ export function mount(container: HTMLElement): void {
       nodes: nodes.map((n) => ({ ...n, pos: at(n.id) })),
       edges: edges.map((e) => ({ ...e, from_: at(e.from), to_: at(e.to) })),
       sidebar,
+      build,
     };
   }
 
@@ -157,6 +162,36 @@ export function mount(container: HTMLElement): void {
     });
   }
 
+  /** One detached thread over the whole session, writing straight into the
+   * graph through its tools. Its transcript is never rendered: a second pane
+   * of prose nobody asked for would just be noise. */
+  function runBuild(): void {
+    if (build.type === "running") return;
+    build = { type: "running" };
+    const thread = new Thread(socket, {
+      system: EXTRACT_SYSTEM,
+      seed: renderTree(tree, graph.render()),
+      tools: writeTools(graph),
+    });
+    const sync = () => {
+      refresh();
+      view.sync(state);
+    };
+    thread.onChange = sync;
+    thread.start().then(
+      (result) => {
+        build =
+          result.type === "error"
+            ? { type: "error", error: result.message }
+            : { type: "done" };
+        sync();
+      },
+      (e: unknown) => {
+        build = { type: "error", error: String(e) };
+        sync();
+      },
+    );
+  }
   /** The graph tab's own reducer. It writes to the graph and to `sidebar`;
    * everything the canvas shows is re-derived in refreshGraph(). */
   function updateGraph(msg: GraphMsg): void {
@@ -205,6 +240,9 @@ export function mount(container: HTMLElement): void {
         sidebar.error = result.status === "error" ? result.error : null;
         break;
       }
+      case "BUILD":
+        runBuild();
+        break;
       case "DELETE": {
         if (sidebar.type === "closed") break;
         if (sidebar.type === "node") graph.deleteNode(sidebar.id);
@@ -321,8 +359,8 @@ export function mount(container: HTMLElement): void {
     dispatching = false;
   }
 
-  // The graph has no writer until the extraction thread of the next stage, so
-  // e2e specs seed it through this handle.
+  // e2e specs seed a known graph through this handle rather than driving the
+  // extraction thread first, so the sidebar cases stay deterministic.
   (window as unknown as { __graph?: KnowledgeGraph }).__graph = graph;
 
   refresh();

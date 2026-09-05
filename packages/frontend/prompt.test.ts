@@ -1,7 +1,14 @@
 import { expect, it } from "vitest";
 import { KnowledgeGraph, LEVELS } from "./graph.ts";
-import { LEARNING_SYSTEM, seedTurn } from "./prompt.ts";
+import {
+  EXTRACT_SYSTEM,
+  LEARNING_SYSTEM,
+  renderTree,
+  seedTurn,
+} from "./prompt.ts";
 import type { Anchor, ThreadId } from "./selection.ts";
+import { type Socket, Thread } from "./thread.ts";
+import { ThreadTree } from "./threads.ts";
 
 const messages = [
   { type: "text" as const, role: "user" as const, text: "build a parser" },
@@ -133,4 +140,29 @@ it("renders the graph into a top-level seed, and only there", () => {
     rendered,
   );
   expect(deeper.split(rendered)).toHaveLength(2);
+});
+
+const silentSocket: Socket = { send() {}, addEventListener() {} };
+
+it("renders the whole tree, keeping each child's action and anchor text", () => {
+  const root = new Thread(silentSocket, { initialTurns: [] });
+  const tree = new ThreadTree(silentSocket, root, () => {});
+  void root.send("build a parser");
+  const anchor: Anchor = {
+    thread: tree.root,
+    start: { msg: 0, offset: 6 },
+    end: { msg: 0, offset: 14 },
+  };
+  tree.open(anchor, { type: "quiz" });
+
+  const rendered = renderTree(tree, "the graph");
+  expect(rendered).toContain("build a parser");
+  expect(rendered).toContain("a parser");
+  expect(rendered).toContain("Quiz me on this.");
+  expect(rendered).toContain("the graph");
+});
+
+it("tells the extraction agent what a node is and where misconceptions go", () => {
+  expect(EXTRACT_SYSTEM).toContain("One node per concept");
+  expect(EXTRACT_SYSTEM).toContain("`notes`");
 });
