@@ -1,6 +1,8 @@
 import type Anthropic from "@anthropic-ai/sdk";
 import type { ClientMessage } from "@edulab/iso/protocol.ts";
 import { expect, it } from "vitest";
+import { KnowledgeGraph } from "./graph.ts";
+import { readTools } from "./graph-tools.ts";
 import type { Anchor } from "./selection.ts";
 import { type Socket, Thread } from "./thread.ts";
 import { ThreadTree } from "./threads.ts";
@@ -102,4 +104,21 @@ it("offers no tools to a child opened without any", () => {
   const child = tree.open(anchor, { type: "explain" });
   void tree.get(child).thread.start();
   expect(socket.last.params.tools).toBeUndefined();
+});
+
+it("sends a child's tools on its first request, and none for the root task thread", () => {
+  const { socket, tree, anchor } = setup();
+  expect(socket.last.params.tools).toBeUndefined();
+  const graph = new KnowledgeGraph();
+  const child = tree.open(
+    anchor,
+    { type: "explain" },
+    {
+      tools: readTools(graph),
+      graph: graph.render(),
+    },
+  );
+  void tree.get(child).thread.start();
+  expect(socket.last.params.tools?.map((t) => t.name)).toEqual(["get"]);
+  expect(tree.get(child).thread.seed).toContain(graph.render());
 });

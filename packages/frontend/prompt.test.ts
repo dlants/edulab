@@ -1,5 +1,6 @@
 import { expect, it } from "vitest";
-import { seedTurn } from "./prompt.ts";
+import { KnowledgeGraph, LEVELS } from "./graph.ts";
+import { LEARNING_SYSTEM, seedTurn } from "./prompt.ts";
 import type { Anchor, ThreadId } from "./selection.ts";
 
 const messages = [
@@ -100,4 +101,36 @@ it("composes flat at depth, oldest section first", () => {
   expect(depth3.startsWith(depth2)).toBe(true);
   expect(depth3.split("build a parser")).toHaveLength(2);
   expect(depth3.split("It parses top-down")).toHaveLength(2);
+});
+
+it("names the get tool and the scale in the learning system prompt", () => {
+  expect(LEARNING_SYSTEM).toContain("`get`");
+  for (const label of LEVELS) expect(LEARNING_SYSTEM).toContain(label);
+});
+
+it("renders the graph into a top-level seed, and only there", () => {
+  const graph = new KnowledgeGraph();
+  graph.putNode({
+    title: "recursive descent",
+    description: "top-down parsing",
+    notes: "asked about it",
+    level: 2,
+  });
+  const rendered = graph.render();
+  const top = seedTurn(
+    undefined,
+    messages,
+    at(1, 9, 1, 26),
+    { type: "explain" },
+    rendered,
+  );
+  expect(top).toContain(rendered);
+  const deeper = seedTurn(
+    top,
+    messages,
+    at(1, 9, 1, 26),
+    { type: "explain" },
+    rendered,
+  );
+  expect(deeper.split(rendered)).toHaveLength(2);
 });

@@ -254,7 +254,20 @@ Deviations:
   - Bad input at the call level (not a list, wrong `level`) comes back as an error `ToolResult` and never throws.
   - **The integration that matters**: drive a real `Thread` over the `FakeSocket` from `thread.test.ts`, stream a `put_nodes` tool call, and assert the node landed in the graph and the tool result the model receives says so. This is the seam where a schema/name mismatch would actually bite, so it is checked end to end rather than by calling `execute` directly.
 
-## prompt and wiring
+## prompt and wiring — DONE
+
+Landed in `packages/frontend/prompt.ts` (`LEARNING_SYSTEM`, `seedTurn`),
+`threads.ts` (`ChildOpts.graph`) and `prototypes/chat.ts` (owns the
+`KnowledgeGraph`, passes `readTools(graph)` and `graph.render()` to
+`tree.open`). Tests in `prompt.test.ts` and `threads.test.ts` are green.
+
+Deviations:
+- The rendered graph is a *separate* `seedTurn` argument carried through
+  `ChildOpts.graph` rather than being read from a graph the tree owns: the tree
+  stays ignorant of the graph, and `chat.ts` keeps being the only wiring point.
+- The graph section is emitted only when `seed` is undefined (the topmost
+  learning thread). A deeper thread's seed is its parent's and already carries
+  the overview, so repeating it would show it once per level.
 
 - Goal: learning threads opened from the transcript can read the graph, and use it to pitch their answer.
 - `LEARNING_SYSTEM` gains: below is what we believe this user already understands; pitch your answer to it; call `get` for the full record of anything you are about to lean on. Nothing about writing — these threads do not.

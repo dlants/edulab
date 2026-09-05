@@ -14,6 +14,14 @@ export const LEARNING_SYSTEM = [
   "Answer about that passage specifically, in plain language, and assume the",
   "user has not followed the reasoning that produced it. Be concise, and do",
   "not restate the whole transcript back to them.",
+  "",
+  "You may be shown a knowledge graph: what we believe this user already",
+  "understands, one line per node and edge, each with an id and a level on the",
+  "scale 1 unfamiliar, 2 emerging, 3 working, 4 fluent. Pitch your answer to",
+  "it: build on what they are fluent in and slow down on what they are not.",
+  "The overview is titles only, so call the `get` tool with the ids of",
+  "anything you are about to lean on to read its full description and the",
+  "notes on this user. You cannot change the graph; do not offer to.",
 ].join(" ");
 
 /** The single synthetic user turn seeding a learning thread. `seed` is the
@@ -24,10 +32,16 @@ export function seedTurn(
   messages: ReadonlyArray<Message>,
   anchor: Anchor,
   action: Action,
+  graph?: string,
 ): string {
   const visible = messages.slice(0, anchor.end.msg + 1);
   const sections = [];
+  // Only the topmost learning thread renders the graph: a deeper thread's
+  // `seed` is its parent's, which already carries it, and repeating it would
+  // show the model the same overview once per level.
   if (seed) sections.push(seed);
+  else if (graph)
+    sections.push(`What this user already understands:\n${graph}`);
   sections.push(transcript(visible));
   sections.push(
     `The user then selected: "${anchorText(anchor, visible)}"\n${question(action)}`,

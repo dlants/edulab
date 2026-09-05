@@ -1,3 +1,5 @@
+import { KnowledgeGraph } from "../graph.ts";
+import { readTools } from "../graph-tools.ts";
 import { actionLabel } from "../prompt.ts";
 import { selectedSample, selectSample } from "../samples/index.ts";
 import { anchorText, overlaps, type ThreadId } from "../selection.ts";
@@ -17,6 +19,9 @@ export function mount(container: HTMLElement): void {
   // listener and drops frames whose requestId it does not own, so streams
   // interleave over the single connection.
   const socket = connect();
+  // Scoped to the user, not to a thread: it outlives every thread in the tree
+  // and is discarded only by a page load.
+  const graph = new KnowledgeGraph();
   const tree = new ThreadTree(
     socket,
     new Thread(socket, { initialTurns: selectedSample()?.turns }),
@@ -137,7 +142,10 @@ export function mount(container: HTMLElement): void {
           case "ACTION": {
             const anchor = state.anchor;
             if (!anchor || overlaps(state.marks, anchor)) break;
-            const id = tree.open(anchor, msg.msg.action);
+            const id = tree.open(anchor, msg.msg.action, {
+              tools: readTools(graph),
+              graph: graph.render(),
+            });
             state.anchor = null;
             state.query = "";
             tree

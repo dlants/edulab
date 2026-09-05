@@ -12,6 +12,9 @@ export type Origin = { anchor: Anchor; action: Action };
 /** What a child thread is given beyond its seed. */
 export type ChildOpts = {
   tools?: Record<ToolName, Tool>;
+  /** The rendered knowledge graph, injected into the seed of a top-level
+   * learning thread. */
+  graph?: string;
   yieldSchema?: Anthropic.Tool.InputSchema | "text";
 };
 
@@ -62,6 +65,7 @@ export class ThreadTree {
         parent.thread.messages,
         anchor,
         action,
+        opts.graph,
       ),
       tools: opts.tools,
       yieldSchema: opts.yieldSchema,
