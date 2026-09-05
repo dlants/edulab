@@ -14,7 +14,7 @@ import {
   segments,
   type ThreadId,
 } from "./selection.ts";
-import type { Message } from "./thread.ts";
+import { type Message, messageText } from "./thread.ts";
 import {
   Binder,
   cls,
@@ -302,7 +302,7 @@ class MessageView implements View<MessageState, SegmentMsg> {
           String(seg.start),
           SegmentView,
           {
-            text: s.message.text.slice(seg.start, seg.end),
+            text: messageText(s.message).slice(seg.start, seg.end),
             thread: seg.thread,
             live: seg.live,
             active: seg.thread !== null && seg.thread === s.active,
@@ -388,7 +388,7 @@ class ThreadPane implements View<ThreadPaneState, ThreadPaneMsg> {
           MessageView,
           {
             message,
-            segments: segments([], null, i, message.text.length),
+            segments: segments([], null, i, messageText(message).length),
             active: null,
           },
           {},
@@ -520,7 +520,12 @@ export class AppView implements View<State, Msg> {
           MessageView,
           {
             message,
-            segments: segments(s.marks, s.anchor, i, message.text.length),
+            segments: segments(
+              s.marks,
+              s.anchor,
+              i,
+              messageText(message).length,
+            ),
             active: s.activeMark,
           },
           {},

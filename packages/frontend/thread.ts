@@ -15,7 +15,45 @@ const SYSTEM = [
   "and do not check whether they are following - just do the work well.",
 ].join(" ");
 
-export type Message = { role: "user" | "assistant"; text: string };
+export type ToolCall = {
+  id: string;
+  name: string;
+  /** Parsed from the streamed json; undefined while still streaming or if it
+   * never parsed. */
+  input: Record<string, unknown> | undefined;
+  /** Raw accumulated json, so a partial call is still renderable. */
+  inputJson: string;
+  /** Derived from the paired tool_result block in the next user turn; absent
+   * while the tool is still running. */
+  result: ToolResult | undefined;
+};
+
+export type ToolResult =
+  | { status: "ok"; text: string }
+  | { status: "error"; error: string };
+
+/** One entry of the derived transcript: a block, not a turn. A single agent
+ * turn can produce prose, a tool call, and more prose, and the transcript shows
+ * it that way. */
+export type Message =
+  | { type: "text"; role: "user" | "assistant"; text: string }
+  | { type: "tool_use"; role: "assistant"; call: ToolCall };
+
+/** Anchors index into text entries only, so everything else has no text. */
+export function messageText(message: Message): string {
+  return message.type === "text" ? message.text : "";
+}
+
+/** A block of the assistant turn currently streaming. */
+type PendingBlock =
+  | { type: "text"; text: string }
+  | {
+      type: "tool_use";
+      id: string;
+      name: string;
+      inputJson: string;
+      input: Record<string, unknown> | undefined;
+    };
 
 /** The subset of WebSocket the thread uses, so tests can stand in for it. */
 export type Socket = {
@@ -28,7 +66,19 @@ export type Socket = {
 
 export class Thread {
   private readonly turns: Anthropic.MessageParam[];
-  private pending: { requestId: string; blocks: string[] } | undefined;
+  private pending:
+    | {
+        requestId: string;
+        blocks: PendingBlock[];
+        stopReason: string | null;
+      }
+    | undefined;
+  /** Bumped whenever the log or the streaming block changes, so `messages` can
+   * be recomputed lazily rather than on every delta. */
+  private version = 0;
+  private cache:
+    | { version: number; messages: ReadonlyArray<Message> }
+    | undefined;
   private settle: (() => void) | undefined;
   onChange: (() => void) | undefined;
 
@@ -56,18 +106,17 @@ export class Thread {
     });
   }
 
-  /** Committed turns plus the one currently streaming. */
+  /** The derived transcript: the log flattened into blocks, plus whatever is
+   * currently streaming. The log stays the wire format; nothing is ever
+   * converted back out of `Message`. */
   get messages(): ReadonlyArray<Message> {
-    const turns = this.seed ? this.turns.slice(1) : this.turns;
-    const committed = turns.map(
-      (turn): Message => ({
-        role: turn.role === "assistant" ? "assistant" : "user",
-        text: textOf(turn),
-      }),
+    if (this.cache?.version === this.version) return this.cache.messages;
+    const messages = project(
+      this.seed ? this.turns.slice(1) : this.turns,
+      this.pending?.blocks,
     );
-    const streaming = this.pending?.blocks.join("");
-    if (streaming) committed.push({ role: "assistant", text: streaming });
-    return committed;
+    this.cache = { version: this.version, messages };
+    return messages;
   }
 
   get inFlight(): boolean {
@@ -77,6 +126,7 @@ export class Thread {
   send(text: string): Promise<void> {
     if (this.pending) return Promise.resolve();
     this.turns.push({ role: "user", content: text });
+    this.version++;
     return this.request();
   }
 
@@ -89,7 +139,8 @@ export class Thread {
 
   private request(): Promise<void> {
     const requestId = crypto.randomUUID();
-    this.pending = { requestId, blocks: [] };
+    this.pending = { requestId, blocks: [], stopReason: null };
+    this.version++;
     const message: ClientMessage = {
       type: "start",
       requestId,
@@ -122,6 +173,7 @@ export class Thread {
         this.commit();
         break;
     }
+    this.version++;
     this.onChange?.();
   }
 
@@ -132,19 +184,29 @@ export class Thread {
     // so an unrecognized event warns rather than throwing - a version bump
     // should not break a stream we can otherwise render.
     switch (event.type) {
-      case "content_block_start":
-        pending.blocks[event.index] = blockStartText(event.content_block);
+      case "content_block_start": {
+        const block = startBlock(event.content_block);
+        if (block) pending.blocks[event.index] = block;
         break;
+      }
       case "content_block_delta":
-        pending.blocks[event.index] =
-          (pending.blocks[event.index] ?? "") + deltaText(event.delta);
+        appendDelta(pending.blocks[event.index], event.delta);
+        break;
+      case "content_block_stop": {
+        const block = pending.blocks[event.index];
+        // The model's json only becomes readable once it is complete; a stream
+        // cut short leaves `input` undefined and the partial json in place.
+        if (block?.type === "tool_use")
+          block.input = parseInput(block.inputJson);
+        break;
+      }
+      case "message_delta":
+        pending.stopReason = event.delta.stop_reason;
         break;
       case "message_stop":
         this.commit();
         break;
       case "message_start":
-      case "message_delta":
-      case "content_block_stop":
         break;
       default:
         console.warn("unhandled stream event", event);
@@ -155,40 +217,164 @@ export class Thread {
     const pending = this.pending;
     if (!pending) return;
     this.pending = undefined;
-    const text = pending.blocks.join("");
+    const content = commitBlocks(pending.blocks);
     // MessageParam content must be non-empty, so an empty response is dropped.
-    if (text.length > 0) this.turns.push({ role: "assistant", content: text });
+    if (content.length > 0) this.turns.push({ role: "assistant", content });
     this.settle?.();
     this.settle = undefined;
   }
 }
 
-function textOf(turn: Anthropic.MessageParam): string {
-  if (typeof turn.content === "string") return turn.content;
-  return turn.content
-    .map((block) => (block.type === "text" ? block.text : ""))
-    .join("");
+function commitBlocks(
+  blocks: ReadonlyArray<PendingBlock>,
+): Anthropic.ContentBlockParam[] {
+  const out: Anthropic.ContentBlockParam[] = [];
+  for (const block of blocks) {
+    if (!block) continue;
+    if (block.type === "text") {
+      if (block.text.length > 0) out.push({ type: "text", text: block.text });
+    } else {
+      out.push({
+        type: "tool_use",
+        id: block.id,
+        name: block.name,
+        input: block.input ?? {},
+      });
+    }
+  }
+  return out;
 }
 
-/** This prototype has no tools and no thinking, so the non-text variants are
- * listed to be explicitly ignored rather than silently dropped - when we add
- * them, this is where they surface. */
-function blockStartText(block: Anthropic.ContentBlock): string {
-  switch (block.type) {
-    case "text":
-      return block.text;
-    default:
-      console.warn("unhandled content block", block);
-      return "";
+/** Flattens the log into transcript entries, pairing each tool call with the
+ * result that arrives in the following user turn. */
+function project(
+  turns: ReadonlyArray<Anthropic.MessageParam>,
+  streaming: ReadonlyArray<PendingBlock> | undefined,
+): ReadonlyArray<Message> {
+  const results = new Map<string, ToolResult>();
+  for (const turn of turns) {
+    if (typeof turn.content === "string") continue;
+    for (const block of turn.content) {
+      if (block.type === "tool_result") {
+        results.set(block.tool_use_id, toolResult(block));
+      }
+    }
+  }
+
+  const out: Message[] = [];
+  for (const turn of turns) {
+    const role = turn.role === "assistant" ? "assistant" : "user";
+    if (typeof turn.content === "string") {
+      out.push({ type: "text", role, text: turn.content });
+      continue;
+    }
+    for (const block of turn.content) {
+      switch (block.type) {
+        case "text":
+          out.push({ type: "text", role, text: block.text });
+          break;
+        case "tool_use":
+          out.push({
+            type: "tool_use",
+            role: "assistant",
+            call: {
+              id: block.id,
+              name: block.name,
+              input: block.input as Record<string, unknown> | undefined,
+              inputJson: JSON.stringify(block.input ?? {}),
+              result: results.get(block.id),
+            },
+          });
+          break;
+        default:
+          // tool_result blocks are shown on the call they answer, and the
+          // remaining variants are not produced by this prototype.
+          break;
+      }
+    }
+  }
+
+  for (const block of streaming ?? []) {
+    if (!block) continue;
+    if (block.type === "text") {
+      if (block.text.length > 0) {
+        out.push({ type: "text", role: "assistant", text: block.text });
+      }
+    } else {
+      out.push({
+        type: "tool_use",
+        role: "assistant",
+        call: {
+          id: block.id,
+          name: block.name,
+          input: block.input,
+          inputJson: block.inputJson,
+          result: undefined,
+        },
+      });
+    }
+  }
+  return out;
+}
+
+function toolResult(block: Anthropic.ToolResultBlockParam): ToolResult {
+  const content = block.content;
+  const text =
+    typeof content === "string"
+      ? content
+      : (content ?? [])
+          .map((part) => (part.type === "text" ? part.text : ""))
+          .join("");
+  return block.is_error
+    ? { status: "error", error: text }
+    : { status: "ok", text };
+}
+
+function parseInput(json: string): Record<string, unknown> | undefined {
+  if (json.trim() === "") return {};
+  try {
+    const parsed = JSON.parse(json) as unknown;
+    return typeof parsed === "object" && parsed !== null
+      ? (parsed as Record<string, unknown>)
+      : undefined;
+  } catch {
+    return undefined;
   }
 }
 
-function deltaText(delta: Anthropic.RawContentBlockDelta): string {
+/** Thinking blocks are not requested by this prototype, so they are warned
+ * about rather than silently dropped - when we add them, this is where they
+ * surface. */
+function startBlock(block: Anthropic.ContentBlock): PendingBlock | undefined {
+  switch (block.type) {
+    case "text":
+      return { type: "text", text: block.text };
+    case "tool_use":
+      return {
+        type: "tool_use",
+        id: block.id,
+        name: block.name,
+        inputJson: "",
+        input: undefined,
+      };
+    default:
+      console.warn("unhandled content block", block);
+      return undefined;
+  }
+}
+
+function appendDelta(
+  block: PendingBlock | undefined,
+  delta: Anthropic.RawContentBlockDelta,
+): void {
   switch (delta.type) {
     case "text_delta":
-      return delta.text;
+      if (block?.type === "text") block.text += delta.text;
+      break;
+    case "input_json_delta":
+      if (block?.type === "tool_use") block.inputJson += delta.partial_json;
+      break;
     default:
       console.warn("unhandled content block delta", delta);
-      return "";
   }
 }

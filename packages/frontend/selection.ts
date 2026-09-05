@@ -1,3 +1,5 @@
+import { type Message, messageText } from "./thread.ts";
+
 /** Declared here rather than in threads.ts because an anchor is meaningless
  * without one, and threads.ts will import this module. */
 export type ThreadId = string & { readonly __brand: "ThreadId" };
@@ -102,12 +104,13 @@ function clipToMessage(
 
 export function anchorText(
   anchor: Anchor,
-  messages: ReadonlyArray<{ text: string }>,
+  messages: ReadonlyArray<Message>,
 ): string {
   const parts: string[] = [];
   for (let i = anchor.start.msg; i <= anchor.end.msg; i++) {
-    const clip = clipToMessage(anchor, i, messages[i]?.text.length ?? 0);
-    if (clip) parts.push(messages[i].text.slice(clip.start, clip.end));
+    const text = messages[i] ? messageText(messages[i]) : "";
+    const clip = clipToMessage(anchor, i, text.length);
+    if (clip) parts.push(text.slice(clip.start, clip.end));
   }
   return parts.join("\n\n");
 }

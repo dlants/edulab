@@ -3,9 +3,13 @@ import { seedTurn } from "./prompt.ts";
 import type { Anchor, ThreadId } from "./selection.ts";
 
 const messages = [
-  { role: "user", text: "build a parser" },
-  { role: "assistant", text: "I used a recursive descent approach." },
-  { role: "user", text: "thanks" },
+  { type: "text" as const, role: "user" as const, text: "build a parser" },
+  {
+    type: "text" as const,
+    role: "assistant" as const,
+    text: "I used a recursive descent approach.",
+  },
+  { type: "text" as const, role: "user" as const, text: "thanks" },
 ] as const;
 
 const at = (
@@ -55,7 +59,13 @@ it("composes flat at depth, oldest section first", () => {
   const root = seedTurn(undefined, messages, at(1, 9, 1, 26), {
     type: "explain",
   });
-  const level1 = [{ role: "assistant", text: "It parses top-down." }] as const;
+  const level1 = [
+    {
+      type: "text" as const,
+      role: "assistant" as const,
+      text: "It parses top-down.",
+    },
+  ] as const;
   const depth2 = seedTurn(root, level1, at(0, 10, 0, 18), { type: "quiz" });
 
   expect(depth2).toBe(
@@ -77,7 +87,11 @@ it("composes flat at depth, oldest section first", () => {
   expect(depth2.split("build a parser")).toHaveLength(2);
 
   const level2 = [
-    { role: "assistant", text: "Question: what is a token?" },
+    {
+      type: "text" as const,
+      role: "assistant" as const,
+      text: "Question: what is a token?",
+    },
   ] as const;
   const depth3 = seedTurn(depth2, level2, at(0, 0, 0, 8), {
     type: "query",

@@ -1,4 +1,5 @@
 import { type Anchor, anchorText } from "./selection.ts";
+import type { Message } from "./thread.ts";
 
 export type Action =
   | { type: "explain" }
@@ -20,7 +21,7 @@ export const LEARNING_SYSTEM = [
  * would nest the framing one layer deeper at every level. */
 export function seedTurn(
   seed: string | undefined,
-  messages: ReadonlyArray<{ role: "user" | "assistant"; text: string }>,
+  messages: ReadonlyArray<Message>,
   anchor: Anchor,
   action: Action,
 ): string {
@@ -34,12 +35,16 @@ export function seedTurn(
   return sections.join("\n\n");
 }
 
-function transcript(
-  messages: ReadonlyArray<{ role: "user" | "assistant"; text: string }>,
-): string {
+function transcript(messages: ReadonlyArray<Message>): string {
   return messages
-    .map((m) => `${m.role === "user" ? "User" : "Assistant"}: ${m.text}`)
+    .map((m) => `${m.role === "user" ? "User" : "Assistant"}: ${line(m)}`)
     .join("\n\n");
+}
+
+function line(message: Message): string {
+  return message.type === "text"
+    ? message.text
+    : `[called tool ${message.call.name} with ${message.call.inputJson}]`;
 }
 
 /** How the thread was opened, shown at the top of its pane so the user can see

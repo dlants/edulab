@@ -189,6 +189,15 @@ const DEFAULT_YIELD_SCHEMA = {
 
 ## tool use in the stream accumulator
 
+**Done.** `messages` is now a memoized projection (`project()` in `thread.ts`, invalidated by a `version` counter) over the log; `Message` is the `text` / `tool_use` union and `messageText()` is the accessor `view.ts`, `selection.ts` and `prompt.ts` use. The accumulator holds typed `PendingBlock`s, appends `input_json_delta` into `inputJson`, parses at `content_block_stop`, and records `stop_reason` on `message_delta` (unused until the next stage).
+
+Deviations:
+
+- A committed assistant turn is now always a `ContentBlockParam[]` rather than a bare string, since a turn can mix text and tool calls. `chat.spec.ts` and the e2e suite are unaffected; one unit test's expectation on the sent params changed shape.
+- A tool call whose json never parsed commits as `input: {}` — the log must stay something the API would accept. `input: undefined` and the raw partial `inputJson` are therefore only observable while the block is still streaming, which is what the test asserts.
+- `prompt.ts` renders a `tool_use` entry into the seed as `[called tool <name> with <json>]` rather than dropping it, so a learning thread seeded past a tool call still sees that it happened.
+- Tool calls are not rendered yet: `MessageView` gets an empty text body for them. That is the "rendering and the tree" stage.
+
 - Goal: `messages` becomes a derived projection over the log rather than a per-turn map; the accumulator understands `tool_use` blocks and `stop_reason`. Still no execution: a turn that requests tools stops and reports the calls.
 - Tests (unit, `thread.test.ts` over `FakeSocket`):
   - A `tool_use` block streamed as `content_block_start` + two `input_json_delta`s surfaces on `messages` with the concatenated json parsed into `input`.

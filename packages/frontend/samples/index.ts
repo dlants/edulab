@@ -1,8 +1,14 @@
 import type Anthropic from "@anthropic-ai/sdk";
+import guildToken from "./5b878a60-solidity-guildtoken-audit.json";
 import adhesive from "./44bbcae8-tile-adhesive-formulation.json";
 import django from "./72c7ec37-django-event-app-urls.json";
+import quantumEspresso from "./80e08978-quantum-espresso-burai-relaxation.json";
+import zeroConstraints from "./357dee9a-statsforecast-zero-constraints.json";
+import chiller from "./3890541b-chiller-system-hysys-model.json";
 import heapFile from "./9833484b-c-heap-file-block-storage.json";
+import rag from "./37734816-colbert-raptor-rag-design.json";
 import pontoon from "./74979366-floating-dock-pontoon.json";
+import polarsSeries from "./aa0cb918-statsforecast-polars-series-lengths.json";
 
 /** A canned task transcript, so a prototype can be exercised without spending a
  * turn of real work first. The files are verbatim exports: a flat array of
@@ -34,6 +40,12 @@ export const samples: Sample[] = [
   sample("Tile adhesive formulation", adhesive),
   sample("Django event app URLs", django),
   sample("C heap file block storage", heapFile),
+  sample("Chiller system HYSYS model", chiller),
+  sample("Solidity GuildToken audit", guildToken),
+  sample("Quantum ESPRESSO BURAI relaxation", quantumEspresso),
+  sample("StatsForecast zero constraints", zeroConstraints),
+  sample("StatsForecast polars series lengths", polarsSeries),
+  sample("ColBERT/RAPTOR RAG design", rag),
 ];
 
 export const SAMPLE_PARAM = "sample";
