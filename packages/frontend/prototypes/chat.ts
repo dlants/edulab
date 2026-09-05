@@ -1,4 +1,5 @@
 import { Conversation } from "../conversation.ts";
+import { selectedSample } from "../samples/index.ts";
 import { AppView, type Msg, type State } from "../view.ts";
 
 function connect(): WebSocket {
@@ -9,8 +10,12 @@ function connect(): WebSocket {
 /** Prototype 1: the plain task-mode transcript. The review affordances get
  * layered on top of this one. */
 export function mount(container: HTMLElement): void {
-  const conversation = new Conversation(connect());
-  const state: State = { messages: [], inFlight: false, draft: "" };
+  const conversation = new Conversation(connect(), selectedSample()?.turns);
+  const state: State = {
+    messages: conversation.messages,
+    inFlight: false,
+    draft: "",
+  };
 
   function update(state: State, msg: Msg): void {
     switch (msg.type) {

@@ -27,15 +27,16 @@ export type Socket = {
 };
 
 export class Conversation {
-  private readonly turns: Anthropic.MessageParam[] = [];
+  private readonly turns: Anthropic.MessageParam[];
   private pending: { requestId: string; blocks: string[] } | undefined;
   private settle: (() => void) | undefined;
   onChange: (() => void) | undefined;
 
   private readonly socket: Socket;
 
-  constructor(socket: Socket) {
+  constructor(socket: Socket, initialTurns: Anthropic.MessageParam[] = []) {
     this.socket = socket;
+    this.turns = [...initialTurns];
     socket.addEventListener("message", (e: MessageEvent<string>) => {
       this.handleFrame(JSON.parse(e.data) as ServerFrame);
     });

@@ -1,4 +1,5 @@
 import { routeFor, routes } from "./routes.ts";
+import { samples, selectedSample, selectSample } from "./samples/index.ts";
 import { cls, mountStyle } from "./vamp.ts";
 
 const navClass = cls("nav");
@@ -16,6 +17,7 @@ mountStyle(`
 }
 .${navClass} a { color: inherit; }
 .${navClass} a[aria-current="page"] { font-weight: 600; }
+.${navClass} select { font: inherit; }
 `);
 
 const active = routeFor(window.location.pathname);
@@ -24,11 +26,28 @@ const nav = document.createElement("nav");
 nav.className = navClass;
 for (const route of routes) {
   const link = document.createElement("a");
-  link.href = route.path;
+  link.href = route.path + window.location.search;
   link.textContent = route.label;
   if (route === active) link.setAttribute("aria-current", "page");
   nav.append(link);
 }
+
+const picker = document.createElement("select");
+const own = document.createElement("option");
+own.value = "";
+own.textContent = "Write your own";
+picker.append(own);
+for (const sample of samples) {
+  const option = document.createElement("option");
+  option.value = sample.id;
+  option.textContent = sample.label;
+  picker.append(option);
+}
+picker.value = selectedSample()?.id ?? "";
+picker.addEventListener("change", () => {
+  selectSample(picker.value === "" ? undefined : picker.value);
+});
+nav.append(picker);
 
 const page = document.createElement("div");
 
