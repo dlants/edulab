@@ -187,7 +187,19 @@ export class Binder<State> {
 
   /** Set inline styles on the element via a record. Clears properties removed between syncs. Values containing url( are stripped for safety. */
   bindStyle(ref: Ref, fn: (s: State) => Record<string, string>): void {
-    const el = this.ref(ref);
+    this.styleBinding(this.ref(ref), fn);
+  }
+
+  /** bindStyle over the root container element, for a child whose own position
+   * is decided by its parent (see graph-view.ts). */
+  bindContainerStyle(fn: (s: State) => Record<string, string>): void {
+    this.styleBinding(this.container, fn);
+  }
+
+  private styleBinding(
+    el: HTMLElement,
+    fn: (s: State) => Record<string, string>,
+  ): void {
     let prevKeys = new Set<string>();
     const binding = (s: State) => {
       const styles = fn(s);

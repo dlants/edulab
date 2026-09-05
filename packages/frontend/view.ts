@@ -1,4 +1,9 @@
 import {
+  type Msg as GraphMsg,
+  type State as GraphState,
+  GraphView,
+} from "./graph-view.ts";
+import {
   type Msg as LearningMsg,
   LearningPane,
   type State as LearningState,
@@ -47,8 +52,14 @@ export type State = {
   activeMark: ThreadId | null;
   anchor: Anchor | null;
   query: string;
+  /** Which top-level tab is showing. State, not a route: a page load would
+   * discard the graph. */
+  tab: "threads" | "graph";
+  graph: GraphState;
   /** How the left pane's thread was opened, absent for the task thread. */
   origin: { action: string; quote: string } | null;
+  /** Indices of messages the user has expanded past the collapsed height. */
+  expanded: ReadonlySet<number>;
   /** The active child thread, shown on the right when nothing is selected. */
   child: ThreadPaneState | null;
 };
@@ -62,6 +73,9 @@ export type Msg =
   | { type: "MARK_CLICKED"; thread: ThreadId }
   | { type: "LEARNING_MSG"; msg: LearningMsg }
   | { type: "SAMPLE_CHANGED"; id: string }
+  | { type: "TAB_CHANGED"; tab: "threads" | "graph" }
+  | { type: "GRAPH_MSG"; msg: GraphMsg }
+  | { type: "TOGGLE_EXPANDED"; index: number }
   | { type: "CHILD_MSG"; msg: ThreadPaneMsg };
 
 const appClass = cls("app");
@@ -82,6 +96,14 @@ const bodyClass = cls("body");
 const originQuoteClass = cls("origin-quote");
 const sampleClass = cls("sample");
 const spacerClass = cls("spacer");
+const tabsClass = cls("tabs");
+const graphTabClass = cls("graph-tab");
+
+/** A message collapses to this many lines: about a third of a screen. */
+const MAX_MESSAGE_LINES = 15;
+const clipClass = cls("clip");
+const toggleClass = cls("toggle");
+const moreClass = cls("more");
 
 mountStyle(`
 .${appClass} {
@@ -141,6 +163,15 @@ mountStyle(`
 .${spacerClass} {
   flex: 1;
 }
+.${tabsClass} button[aria-pressed="true"] {
+  background: rgba(0, 0, 0, 0.08);
+  font-weight: 600;
+}
+.${graphTabClass} {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
 .${depthClass} {
   font-size: 0.75rem;
   opacity: 0.6;
@@ -168,8 +199,46 @@ mountStyle(`
   gap: 0.75rem;
 }
 .${messageClass} {
-  white-space: pre-wrap;
   line-height: 1.5;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  column-gap: 0.5rem;
+}
+.${messageClass} > .${roleClass} {
+  grid-column: 1 / -1;
+}
+.${clipClass} {
+  grid-column: 2;
+  white-space: pre-wrap;
+  overflow: hidden;
+}
+.${messageClass}[data-clipped="true"] .${clipClass} {
+  max-height: calc(${MAX_MESSAGE_LINES} * 1.5em);
+  mask-image: linear-gradient(to bottom, #000 70%, transparent 100%);
+}
+.${toggleClass} {
+  grid-column: 1;
+  grid-row: 2;
+  width: 0.6rem;
+  padding: 0;
+  border: none;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.12);
+  cursor: pointer;
+}
+.${toggleClass}:hover {
+  background: rgba(0, 0, 0, 0.3);
+}
+.${messageClass}[data-overflowing="false"] > .${toggleClass},
+.${messageClass}[data-overflowing="false"] > .${moreClass} {
+  display: none;
+}
+.${moreClass} {
+  grid-column: 2;
+  font-size: 0.75rem;
+  opacity: 0.6;
+  cursor: pointer;
+  user-select: none;
 }
 .${messageClass}[data-role="user"] {
   background: rgba(0, 0, 0, 0.05);
@@ -292,17 +361,23 @@ class SegmentView implements View<SegmentState, SegmentMsg> {
 
 type MessageState = {
   message: Message;
+  expanded: boolean;
   segments: ReadonlyArray<Segment>;
   active: ThreadId | null;
 };
 
-class MessageView implements View<MessageState, SegmentMsg> {
+type MessageMsg = SegmentMsg | { type: "TOGGLE_EXPANDED" };
+
+class MessageView implements View<MessageState, MessageMsg> {
   container: HTMLElement;
   private b: Binder<MessageState>;
+  private clip!: HTMLElement;
+  private more!: HTMLElement;
+  private hiddenLines = 0;
 
   constructor(
     container: HTMLElement,
-    dispatch: (msg: SegmentMsg) => void,
+    dispatch: (msg: MessageMsg) => void,
     initial: MessageState,
   ) {
     const roleRef = ref("role");
@@ -311,17 +386,29 @@ class MessageView implements View<MessageState, SegmentMsg> {
     const toolNameRef = ref("tool-name");
     const toolInputRef = ref("tool-input");
     const toolResultRef = ref("tool-result");
+    const clipRef = ref("clip");
+    const toggleRef = ref("toggle");
+    const moreRef = ref("more");
     container.className = messageClass;
     // The tool block sits outside the .text span on purpose: resolvePoint only
     // anchors inside it, so a tool call is rendered but not selectable.
     container.innerHTML = sanitize`
       <span class="${roleClass}" data-ref="${roleRef}"></span>
-      <span class="${textClass}" data-ref="${textRef}"></span>
-      <div class="${toolClass}" data-tool data-ref="${toolRef}">
-        <strong data-tool-name data-ref="${toolNameRef}"></strong>
-        <pre data-tool-input data-ref="${toolInputRef}"></pre>
-        <pre class="${toolResultClass}" data-tool-result data-ref="${toolResultRef}"></pre>
+      <button
+        class="${toggleClass}"
+        type="button"
+        data-ref="${toggleRef}"
+        aria-label="Expand or collapse this message"
+      ></button>
+      <div class="${clipClass}" data-ref="${clipRef}">
+        <span class="${textClass}" data-text data-ref="${textRef}"></span>
+        <div class="${toolClass}" data-tool data-ref="${toolRef}">
+          <strong data-tool-name data-ref="${toolNameRef}"></strong>
+          <pre data-tool-input data-ref="${toolInputRef}"></pre>
+          <pre class="${toolResultClass}" data-tool-result data-ref="${toolResultRef}"></pre>
+        </div>
       </div>
+      <div class="${moreClass}" data-more data-ref="${moreRef}"></div>
     `;
     this.container = container;
     this.b = new Binder(container, initial);
@@ -357,10 +444,39 @@ class MessageView implements View<MessageState, SegmentMsg> {
       s.message.type === "tool_use" ? s.message.call.result?.status : undefined,
     );
     this.b.bindContainerAttr("data-role", (s) => s.message.role);
+    this.clip = this.b.ref(clipRef);
+    this.more = this.b.ref(moreRef);
+    const toggle = () => dispatch({ type: "TOGGLE_EXPANDED" });
+    this.b.ref(toggleRef).addEventListener("click", toggle);
+    this.more.addEventListener("click", toggle);
+    // Not bound: whether the message overflows is a fact about the rendered
+    // box, so it can only be read back after the DOM has been written.
+    this.b.bindContainerAttr("data-clipped", (s) =>
+      s.expanded ? undefined : "true",
+    );
+    this.measure(initial.expanded);
   }
 
   sync(state: MessageState): void {
     this.b.sync(state);
+    this.measure(state.expanded);
+  }
+
+  /** Reads the clipped height back out of the layout to decide whether the
+   * expand affordance is worth showing, and by how many lines. The count is
+   * remembered while expanded, when there is nothing left to measure. */
+  private measure(expanded: boolean): void {
+    if (!expanded) {
+      const lineHeight =
+        Number.parseFloat(getComputedStyle(this.clip).lineHeight) || 1;
+      this.hiddenLines = Math.round(
+        (this.clip.scrollHeight - this.clip.clientHeight) / lineHeight,
+      );
+    }
+    const clipped = this.hiddenLines > 0;
+    this.container.dataset.overflowing = clipped ? "true" : "false";
+    this.more.textContent =
+      clipped && !expanded ? `… ${this.hiddenLines} more lines` : "";
   }
 
   destroy(): void {
@@ -382,11 +498,13 @@ export type ThreadPaneState = {
   messages: ReadonlyArray<Message>;
   inFlight: boolean;
   draft: string;
+  expanded: ReadonlySet<number>;
 };
 
 export type ThreadPaneMsg =
   | { type: "DRAFT_CHANGED"; draft: string }
-  | { type: "SUBMIT" };
+  | { type: "SUBMIT" }
+  | { type: "TOGGLE_EXPANDED"; index: number };
 
 /** A learning thread on the right: the passage it came from, its transcript,
  * and a composer. Read-only as far as selection goes - only the left pane
@@ -439,11 +557,15 @@ class ThreadPane implements View<ThreadPaneState, ThreadPaneMsg> {
           MessageView,
           {
             message,
+            expanded: s.expanded.has(i),
             segments: segments([], null, i, messageText(message).length),
             active: null,
           },
           {},
-          () => {},
+          (msg: MessageMsg) => {
+            if (msg.type === "TOGGLE_EXPANDED")
+              dispatch({ type: "TOGGLE_EXPANDED", index: i });
+          },
         ),
       ),
     );
@@ -485,17 +607,25 @@ export class AppView implements View<State, Msg> {
     const originActionRef: Ref = ref("origin-action");
     const originQuoteRef: Ref = ref("origin-quote");
     const sampleRef: Ref = ref("sample");
+    const threadsTabRef: Ref = ref("threads-tab");
+    const graphTabRef: Ref = ref("graph-tab");
+    const bodyRef: Ref = ref("body");
+    const graphSlotRef: Ref = ref("graph-slot");
 
     container.className = appClass;
     container.innerHTML = sanitize`
       <div class="${navClass}">
         <select class="${sampleClass}" data-ref="${sampleRef}"></select>
+        <span class="${tabsClass}">
+          <button type="button" data-ref="${threadsTabRef}">Threads</button>
+          <button type="button" data-ref="${graphTabRef}">Knowledge graph</button>
+        </span>
         <span class="${spacerClass}"></span>
         <button type="button" data-ref="${backRef}">← Back</button>
         <span class="${depthClass}" data-ref="${depthRef}"></span>
         <button type="button" data-ref="${forwardRef}"></button>
       </div>
-      <div class="${bodyClass}">
+      <div class="${bodyClass}" data-ref="${bodyRef}">
       <div class="${paneClass}">
         <div data-ref="${originRef}">
           <div class="${threadActionClass}" data-focus-action data-ref="${originActionRef}"></div>
@@ -509,6 +639,7 @@ export class AppView implements View<State, Msg> {
       </div>
         <div data-ref="${learningRef}"></div>
       </div>
+      <div class="${graphTabClass}" data-ref="${graphSlotRef}"></div>
     `;
     this.container = container;
     this.current = initialState;
@@ -571,6 +702,7 @@ export class AppView implements View<State, Msg> {
           MessageView,
           {
             message,
+            expanded: s.expanded.has(i),
             segments: segments(
               s.marks,
               s.anchor,
@@ -580,17 +712,49 @@ export class AppView implements View<State, Msg> {
             active: s.activeMark,
           },
           {},
-          (msg: SegmentMsg) =>
-            dispatch({ type: "MARK_CLICKED", thread: msg.thread }),
+          (msg: MessageMsg) =>
+            dispatch(
+              msg.type === "TOGGLE_EXPANDED"
+                ? { type: "TOGGLE_EXPANDED", index: i }
+                : { type: "MARK_CLICKED", thread: msg.thread },
+            ),
         ),
       ),
     );
     this.b.bindValue(sampleRef, (s) => s.sample);
+    this.b
+      .ref(threadsTabRef)
+      .addEventListener("click", () =>
+        dispatch({ type: "TAB_CHANGED", tab: "threads" }),
+      );
+    this.b
+      .ref(graphTabRef)
+      .addEventListener("click", () =>
+        dispatch({ type: "TAB_CHANGED", tab: "graph" }),
+      );
+    this.b.bindAttr(threadsTabRef, "aria-pressed", (s) =>
+      s.tab === "threads" ? "true" : "false",
+    );
+    this.b.bindAttr(graphTabRef, "aria-pressed", (s) =>
+      s.tab === "graph" ? "true" : "false",
+    );
+    // The threads pane is hidden rather than unmounted: the transcript, the
+    // draft and the live selection all survive a trip to the graph tab.
+    this.b.bindVisible(bodyRef, (s) => s.tab === "threads");
+    this.b.bindSlot(graphSlotRef, (s) =>
+      s.tab === "graph"
+        ? show(GraphView, s.graph, {}, (msg: GraphMsg) =>
+            dispatch({ type: "GRAPH_MSG", msg }),
+          )
+        : undefined,
+    );
     this.b.bindContainerAttr("data-split", (s) => (s.split ? "true" : "false"));
     this.b.bindText(forwardRef, (s) => `${descendLabel(s.depth + 1)} →`);
     this.b.bindDisabled(forwardRef, (s) => s.split && !s.canDescend);
     // Not rendered at layer 0: there is nowhere above the task thread.
-    this.b.bindVisible(backRef, (s) => s.split);
+    this.b.bindVisible(backRef, (s) => s.split && s.tab === "threads");
+    this.b.bindVisible(forwardRef, (s) => s.tab === "threads");
+    this.b.bindVisible(depthRef, (s) => s.tab === "threads");
     this.b.bindText(depthRef, (s) => `Layer ${s.depth}`);
     this.b.bindVisible(originRef, (s) => s.origin !== null);
     this.b.bindText(originActionRef, (s) => s.origin?.action ?? "");

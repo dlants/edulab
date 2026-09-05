@@ -1,11 +1,27 @@
-import { KnowledgeGraph } from "../graph.ts";
+import {
+  type GraphEdge,
+  type GraphNode,
+  KnowledgeGraph,
+  type NodeId,
+} from "../graph.ts";
 import { readTools } from "../graph-tools.ts";
+import type { Msg as GraphMsg, Sidebar } from "../graph-view.ts";
+import { layout, type Position } from "../layout.ts";
 import { actionLabel } from "../prompt.ts";
 import { selectedSample, selectSample } from "../samples/index.ts";
 import { anchorText, overlaps, type ThreadId } from "../selection.ts";
 import { Thread } from "../thread.ts";
 import { ThreadTree } from "../threads.ts";
 import { AppView, type Msg, type State } from "../view.ts";
+
+/** The editable fields of a node or edge: the id addresses it, so it is not
+ * part of what the sidebar edits. */
+function draftOf(node: GraphNode): Omit<GraphNode, "id">;
+function draftOf(edge: GraphEdge): Omit<GraphEdge, "id">;
+function draftOf<T extends { id: string }>(item: T): Omit<T, "id"> {
+  const { id: _id, ...rest } = item;
+  return rest;
+}
 
 function connect(): WebSocket {
   const proto = window.location.protocol === "https:" ? "wss:" : "ws:";
@@ -32,6 +48,22 @@ export function mount(container: HTMLElement): void {
   );
   // The thread on the left. Moved only by the arrows.
   let focus = tree.root;
+  let sidebar: Sidebar = { type: "closed" };
+  // The layout is a few hundred iterations, and refresh() runs on every
+  // keystroke, so it is recomputed only when the shape of the graph changes.
+  let placement = new Map<NodeId, Position>();
+  let placedFor = "";
+  // Purely presentational, and per thread: which messages the user has
+  // expanded past the collapsed height.
+  const expanded = new Map<ThreadId, Set<number>>();
+  function expandedFor(id: ThreadId): Set<number> {
+    let set = expanded.get(id);
+    if (!set) {
+      set = new Set();
+      expanded.set(id, set);
+    }
+    return set;
+  }
 
   const state: State = {
     sample: selectedSample()?.id ?? "",
@@ -45,14 +77,40 @@ export function mount(container: HTMLElement): void {
     marks: [],
     activeMark: null,
     anchor: null,
+    tab: "threads",
+    graph: { nodes: [], edges: [], sidebar },
     query: "",
     origin: null,
+    expanded: new Set(),
     child: null,
   };
 
   /** Re-projects the tree onto the view's state. Everything but the fields the
    * user is editing is derived, so this runs after every dispatch. */
+  /** The graph projected onto view state: positions from `layout`, and the
+   * sidebar the user is editing. */
+  function refreshGraph(): void {
+    const nodes = graph.nodes;
+    const edges = graph.edges;
+    const shape = [
+      ...nodes.map((n) => n.id),
+      ...edges.map((e) => `${e.id}:${e.from}->${e.to}`),
+    ].join(",");
+    if (shape !== placedFor) {
+      placement = layout(graph);
+      placedFor = shape;
+    }
+    const at = (id: NodeId): Position =>
+      placement.get(id) ?? { x: 0.5, y: 0.5 };
+    state.graph = {
+      nodes: nodes.map((n) => ({ ...n, pos: at(n.id) })),
+      edges: edges.map((e) => ({ ...e, from_: at(e.from), to_: at(e.to) })),
+      sidebar,
+    };
+  }
+
   function refresh(): void {
+    refreshGraph();
     const node = tree.get(focus);
     state.thread = focus;
     state.depth = state.split ? tree.path(focus).length : 0;
@@ -61,6 +119,7 @@ export function mount(container: HTMLElement): void {
     state.inFlight = node.thread.inFlight;
     state.draft = node.draft;
     state.marks = tree.marks(focus);
+    state.expanded = expandedFor(focus);
     const own = node.origin;
     state.origin = own
       ? {
@@ -84,6 +143,7 @@ export function mount(container: HTMLElement): void {
       messages: child.thread.messages,
       inFlight: child.thread.inFlight,
       draft: child.draft,
+      expanded: expandedFor(activeChild),
     };
   }
 
@@ -97,6 +157,64 @@ export function mount(container: HTMLElement): void {
     });
   }
 
+  /** The graph tab's own reducer. It writes to the graph and to `sidebar`;
+   * everything the canvas shows is re-derived in refreshGraph(). */
+  function updateGraph(msg: GraphMsg): void {
+    switch (msg.type) {
+      case "SELECT_NODE": {
+        const node = graph.node(msg.id);
+        if (!node) break;
+        sidebar = {
+          type: "node",
+          id: node.id,
+          draft: draftOf(node),
+          error: null,
+        };
+        break;
+      }
+      case "SELECT_EDGE": {
+        const edge = graph.edge(msg.id);
+        if (!edge) break;
+        sidebar = {
+          type: "edge",
+          id: edge.id,
+          draft: draftOf(edge),
+          error: null,
+        };
+        break;
+      }
+      case "CLOSE":
+        sidebar = { type: "closed" };
+        break;
+      case "NODE_FIELD":
+        if (sidebar.type === "node") sidebar.draft[msg.field] = msg.value;
+        break;
+      case "LEVEL_CHANGED":
+        if (sidebar.type === "node") sidebar.draft.level = msg.level;
+        break;
+      case "EDGE_FIELD":
+        if (sidebar.type === "edge") sidebar.draft[msg.field] = msg.value;
+        break;
+      case "SAVE": {
+        if (sidebar.type === "closed") break;
+        const result =
+          sidebar.type === "node"
+            ? graph.putNode({ id: sidebar.id, ...sidebar.draft })
+            : graph.putEdge({ id: sidebar.id, ...sidebar.draft });
+        // A rejected save keeps the draft, so the user's typing survives.
+        sidebar.error = result.status === "error" ? result.error : null;
+        break;
+      }
+      case "DELETE": {
+        if (sidebar.type === "closed") break;
+        if (sidebar.type === "node") graph.deleteNode(sidebar.id);
+        else graph.deleteEdge(sidebar.id);
+        sidebar = { type: "closed" };
+        break;
+      }
+    }
+  }
+
   function update(state: State, msg: Msg): void {
     const node = tree.get(focus);
     switch (msg.type) {
@@ -105,6 +223,12 @@ export function mount(container: HTMLElement): void {
         break;
       case "SAMPLE_CHANGED":
         selectSample(msg.id === "" ? undefined : msg.id);
+        break;
+      case "TAB_CHANGED":
+        state.tab = msg.tab;
+        break;
+      case "GRAPH_MSG":
+        updateGraph(msg.msg);
         break;
       case "SUBMIT":
         send(focus);
@@ -127,6 +251,11 @@ export function mount(container: HTMLElement): void {
         else focus = parent;
         state.anchor = null;
         state.query = "";
+        break;
+      }
+      case "TOGGLE_EXPANDED": {
+        const set = expandedFor(focus);
+        if (!set.delete(msg.index)) set.add(msg.index);
         break;
       }
       case "SELECTION_CHANGED":
@@ -171,6 +300,11 @@ export function mount(container: HTMLElement): void {
           case "SUBMIT":
             send(activeChild);
             break;
+          case "TOGGLE_EXPANDED": {
+            const set = expandedFor(activeChild);
+            if (!set.delete(msg.msg.index)) set.add(msg.msg.index);
+            break;
+          }
         }
         break;
       }
@@ -186,6 +320,10 @@ export function mount(container: HTMLElement): void {
     view.sync(state);
     dispatching = false;
   }
+
+  // The graph has no writer until the extraction thread of the next stage, so
+  // e2e specs seed it through this handle.
+  (window as unknown as { __graph?: KnowledgeGraph }).__graph = graph;
 
   refresh();
   const view = new AppView(container, dispatch, state);

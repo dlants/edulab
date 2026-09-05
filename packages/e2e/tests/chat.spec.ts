@@ -100,9 +100,8 @@ async function selectRange(
   await page.evaluate(
     ({ msg, start, end }) => {
       const li = document.querySelectorAll("ul")[0].children[msg];
-      // role span, text span, tool block: the text span is where the offsets
-      // the app anchors into live.
-      const root = li.children[1] as HTMLElement;
+      // The text span is where the offsets the app anchors into live.
+      const root = li.querySelector("[data-text]") as HTMLElement;
       const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
       let at = 0;
       let from: [Node, number] | null = null;

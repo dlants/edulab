@@ -297,7 +297,31 @@ Deviations:
   - Every coordinate is finite and within `[0, 1]`, for: the empty graph, one node, two disconnected nodes, a chain, and a star.
   - Two nodes joined by an edge end up closer than two nodes that are not, in a graph where both pairs exist. This is the only claim the algorithm actually makes; everything else about it is taste.
 
-## the graph tab
+## the graph tab — DONE
+
+Landed in `packages/frontend/graph-view.ts` (canvas, rotated-div edges,
+`Sidebar` state machine), the tab strip and slot in `view.ts`, and the graph
+reducer (`updateGraph`) plus the layout projection in `prototypes/chat.ts`.
+Tests in `packages/e2e/tests/graph.spec.ts` are green.
+
+Deviations:
+- `vamp.ts` gains `bindContainerStyle` (bindStyle over the view's own
+  container), because a node's position is decided by its parent and the
+  container is the element `bindList` creates. `bindStyle` and it now share one
+  private helper.
+- The canvas is sized in **pixels** (900x560) and the view scales the
+  normalized layout into it. A percentage width on a rotated bar shears on a
+  non-square box.
+- The threads tab is **hidden, not unmounted** (`bindVisible` on the body), so
+  the transcript, the draft and the live selection survive a trip to the graph
+  and back; only the graph tab is a `bindSlot`.
+- Nothing writes to the graph until the next stage, so `chat.ts` exposes the
+  graph as `window.__graph` for the spec to seed. This handle goes away once
+  "Build from this session" exists.
+- A successful save leaves the sidebar open (only Close and Delete close it),
+  which is what makes the retitle visible on the canvas while still selected.
+- Layout is memoized on the graph's shape (node ids plus edge endpoints), so a
+  keystroke in the sidebar does not re-run 300 iterations of the simulation.
 
 - Goal: a "Knowledge graph" tab renders the graph, and clicking a node or edge opens an editable sidebar.
 - Tests (`packages/e2e/tests/graph.spec.ts`, socket stubbed as in `chat.spec.ts`):
