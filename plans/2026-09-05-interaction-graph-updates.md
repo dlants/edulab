@@ -290,6 +290,24 @@ requires a claim about the user to cite the addresses it rests on. Deviations:
   - A graph update whose thread errors leaves the transcript and the graph usable, and the next interaction still updates the graph.
   - The graph tab has no build button and shows the nodes the knowledge graph update threads wrote.
 
+**Landed.** `chat.ts` holds `queueGraphUpdate(thread, index)` appending to a
+`updates: Promise<void>` chain, called from `send` (with the index the turn
+lands at, read before `Thread.send`) and from the `ACTION` case (index 0 of the
+new thread). `runBuild`, `Build`, `{ type: "BUILD" }` and the graph toolbar are
+deleted. Deviations:
+
+- `refresh(); view.sync(state)` is now a named `sync()` in `chat.ts`, since the
+  queued step and the tree's `onChange` both want it.
+- Stage 6 reintroduces `Build` on the header, so nothing was left behind for it
+  here; the graph tab has no toolbar at all in the meantime.
+- `chat.spec.ts`'s stubs now recognise a graph update by its `put_nodes` tool
+  and answer it with an immediate `yield`, keeping it out of `started`. Without
+  that every existing request-count assertion would have to account for the
+  update running beside it.
+- The serialization is asserted in `graph.spec.ts` by having the stub record
+  each update's first request and flag any that starts while another is live,
+  rather than by timing.
+
 ## building from a sample transcript
 
 - Goal: loading a sample and clicking "Build knowledge graph from this transcript" fills the graph from the turns that were already there, with visible progress.

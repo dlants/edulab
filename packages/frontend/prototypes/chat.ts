@@ -5,7 +5,7 @@ import {
   type NodeId,
 } from "../graph.ts";
 import { readTools, writeTools } from "../graph-tools.ts";
-import type { Build, Msg as GraphMsg, Sidebar } from "../graph-view.ts";
+import type { Msg as GraphMsg, Sidebar } from "../graph-view.ts";
 import { interactionAt } from "../interactions.ts";
 import { layout, type Position } from "../layout.ts";
 import { GRAPH_UPDATE_SYSTEM, graphUpdatePrompt } from "../prompt.ts";
@@ -50,10 +50,10 @@ export function mount(container: HTMLElement): void {
   // The thread on the left. Moved only by the arrows.
   let focus = tree.root;
   let sidebar: Sidebar = { type: "closed" };
-  // The extraction pass. Detached from the tree - it has no anchor and no
-  // pane; the nodes appearing on the canvas are the only thing the user sees
-  // of it.
-  let build: Build = { type: "idle" };
+  // Graph updates run one at a time: two in flight would each be handed the
+  // pre-update graph and mint rival nodes for the same concept. Appending to
+  // this chain is the whole serialization.
+  let updates: Promise<void> = Promise.resolve();
   // The layout is a few hundred iterations, and refresh() runs on every
   // keystroke, so it is recomputed only when the shape of the graph changes.
   let placement = new Map<NodeId, Position>();
@@ -83,7 +83,7 @@ export function mount(container: HTMLElement): void {
     activeMark: null,
     anchor: null,
     tab: "threads",
-    graph: { nodes: [], edges: [], sidebar, build },
+    graph: { nodes: [], edges: [], sidebar },
     query: "",
     expanded: new Set(),
     child: null,
@@ -110,7 +110,6 @@ export function mount(container: HTMLElement): void {
       nodes: nodes.map((n) => ({ ...n, pos: at(n.id) })),
       edges: edges.map((e) => ({ ...e, from_: at(e.from), to_: at(e.to) })),
       sidebar,
-      build,
     };
   }
 
@@ -140,35 +139,21 @@ export function mount(container: HTMLElement): void {
     };
   }
 
-  function send(id: ThreadId): void {
-    const node = tree.get(id);
-    const text = node.draft.trim();
-    if (text === "" || node.thread.inFlight) return;
-    node.draft = "";
-    node.thread.send(text).then(undefined, (e: unknown) => {
-      console.error(e);
-    });
+  function sync(): void {
+    refresh();
+    view.sync(state);
   }
 
-  /** One detached thread per user interaction in the root thread, each writing
-   * straight into the graph through its tools, run in sequence so that each
-   * one sees the previous one's writes. Their transcripts are never rendered.
-   *
-   * Interim: stage 5 moves this to the header as the sample build and shares
-   * a queue with the live per-interaction updates. */
-  function runBuild(): void {
-    if (build.type === "running") return;
-    build = { type: "running" };
-    const sync = () => {
-      refresh();
-      view.sync(state);
-    };
-    sync();
-    void (async () => {
-      const messages = tree.get(tree.root).thread.messages;
-      for (const [i, message] of messages.entries()) {
-        if (message.role !== "user" || message.type !== "text") continue;
-        const interaction = interactionAt(tree, tree.root, i as MessageIdx);
+  /** One detached thread per user interaction, writing straight into the graph
+   * through its tools. Queued against every other update rather than run
+   * concurrently, and never awaited by the user: the learning thread answers
+   * them regardless, and a failure here is invisible outside the console. */
+  function queueGraphUpdate(thread: ThreadId, index: MessageIdx): void {
+    const interaction = interactionAt(tree, thread, index);
+    updates = updates
+      .then(async () => {
+        // Read inside the queued step, so this update sees the previous one's
+        // writes rather than the graph as it stood when it was enqueued.
         const result = await runThread(socket, {
           system: GRAPH_UPDATE_SYSTEM,
           prompt: graphUpdatePrompt(interaction, graph.render()),
@@ -176,12 +161,27 @@ export function mount(container: HTMLElement): void {
           yieldSchema: "text",
         });
         if (result.status === "error") console.error(result.error);
-        sync();
-      }
-      build = { type: "done" };
-      sync();
-    })();
+      })
+      .catch((e: unknown) => {
+        console.error(e);
+      })
+      .then(sync);
   }
+
+  function send(id: ThreadId): void {
+    const node = tree.get(id);
+    const text = node.draft.trim();
+    if (text === "" || node.thread.inFlight) return;
+    node.draft = "";
+    // Nothing is streaming while the thread is idle, so the turn lands at the
+    // end of `messages` - which is its citable address.
+    const index = node.thread.messages.length as MessageIdx;
+    node.thread.send(text).then(undefined, (e: unknown) => {
+      console.error(e);
+    });
+    queueGraphUpdate(id, index);
+  }
+
   /** The graph tab's own reducer. It writes to the graph and to `sidebar`;
    * everything the canvas shows is re-derived in refreshGraph(). */
   function updateGraph(msg: GraphMsg): void {
@@ -230,9 +230,6 @@ export function mount(container: HTMLElement): void {
         sidebar.error = result.status === "error" ? result.error : null;
         break;
       }
-      case "BUILD":
-        runBuild();
-        break;
       case "DELETE": {
         if (sidebar.type === "closed") break;
         if (sidebar.type === "node") graph.deleteNode(sidebar.id);
@@ -305,6 +302,7 @@ export function mount(container: HTMLElement): void {
             });
             state.anchor = null;
             state.query = "";
+            queueGraphUpdate(id, 0 as MessageIdx);
             tree
               .get(id)
               .thread.start()

@@ -168,83 +168,21 @@ test("an edge is selectable and editable", async ({ page }) => {
   await expect(page.locator("[data-edge-label]")).toHaveText("requires");
 });
 
-/** Answers the extraction thread's requests with a `put_nodes` call, then a
- * `put_edges` call, then prose - the shape of a real extraction pass, so the
- * spec exercises tools -> graph -> layout -> canvas end to end. */
-async function extractionBackend(page: Page) {
+/** Answers every graph update with one `put_nodes` call naming the update by
+ * its ordinal, then a yield. Records each update's prompt and whether two ever
+ * overlapped, which is what the serialization claim comes down to. */
+async function updateBackend(page: Page, failFirst = false) {
+  const prompts: string[] = [];
+  let live = 0;
+  let overlap = false;
   await page.routeWebSocket("**/api/socket", (ws) => {
-    let calls = 0;
     ws.onMessage((raw) => {
       const message = JSON.parse(String(raw)) as ClientMessage;
       const send = (frame: ServerFrame) => ws.send(JSON.stringify(frame));
-      const extraction = (message.params.tools ?? []).some(
+      const update = (message.params.tools ?? []).some(
         (t) => t.name === "put_nodes",
       );
-      const step = extraction ? calls++ : -1;
-      const call =
-        step === 0
-          ? {
-              name: "put_nodes",
-              input: {
-                nodes: [
-                  {
-                    title: "closures",
-                    description: "a function plus its environment",
-                    notes: "asked twice",
-                    level: 2,
-                  },
-                  {
-                    title: "scope",
-                    description: "where a binding is visible",
-                    notes: "",
-                    level: 3,
-                  },
-                ],
-              },
-            }
-          : step === 1
-            ? {
-                name: "put_edges",
-                input: {
-                  edges: [
-                    {
-                      from: "n0",
-                      to: "n1",
-                      title: "builds on",
-                      description: "a closure captures a scope",
-                    },
-                  ],
-                },
-              }
-            : null;
-      if (call) {
-        send({
-          type: "event",
-          requestId: message.requestId,
-          event: {
-            type: "content_block_start",
-            index: 0,
-            content_block: {
-              type: "tool_use",
-              id: `call-${step}`,
-              name: call.name,
-              input: {},
-            },
-          } as never,
-        });
-        send({
-          type: "event",
-          requestId: message.requestId,
-          event: {
-            type: "content_block_delta",
-            index: 0,
-            delta: {
-              type: "input_json_delta",
-              partial_json: JSON.stringify(call.input),
-            },
-          },
-        });
-      } else {
+      if (!update) {
         send({
           type: "event",
           requestId: message.requestId,
@@ -254,15 +192,80 @@ async function extractionBackend(page: Page) {
             content_block: { type: "text", text: "ok", citations: null },
           },
         });
+        send({
+          type: "event",
+          requestId: message.requestId,
+          event: { type: "content_block_stop", index: 0 },
+        });
+        send({
+          type: "event",
+          requestId: message.requestId,
+          event: { type: "message_stop" } as never,
+        });
+        send({ type: "done", requestId: message.requestId });
+        return;
       }
+      const first = message.params.messages.length === 1;
+      if (first) {
+        if (live > 0) overlap = true;
+        live++;
+        prompts.push(JSON.stringify(message.params.messages));
+      }
+      // A `done` without a `message_stop` is a truncated turn, which the
+      // thread reports as an error.
+      if (first && failFirst && prompts.length === 1) {
+        live--;
+        send({ type: "done", requestId: message.requestId });
+        return;
+      }
+      const call = first
+        ? {
+            id: `call-${prompts.length}`,
+            name: "put_nodes",
+            input: {
+              nodes: [
+                {
+                  title: `concept-${prompts.length}`,
+                  description: "written by a graph update",
+                  notes: "",
+                  level: 2,
+                },
+              ],
+            },
+          }
+        : { id: "yield-1", name: "yield", input: { result: "done" } };
+      if (!first) live--;
+      send({
+        type: "event",
+        requestId: message.requestId,
+        event: {
+          type: "content_block_start",
+          index: 0,
+          content_block: {
+            type: "tool_use",
+            id: call.id,
+            name: call.name,
+            input: {},
+          },
+        } as never,
+      });
+      send({
+        type: "event",
+        requestId: message.requestId,
+        event: {
+          type: "content_block_delta",
+          index: 0,
+          delta: {
+            type: "input_json_delta",
+            partial_json: JSON.stringify(call.input),
+          },
+        },
+      });
       send({
         type: "event",
         requestId: message.requestId,
         event: { type: "content_block_stop", index: 0 },
       });
-      // A `done` without a `message_stop` is a truncated turn, which the
-      // thread treats as an error: a tool call has to be committed properly
-      // for the loop to run it.
       send({
         type: "event",
         requestId: message.requestId,
@@ -271,24 +274,83 @@ async function extractionBackend(page: Page) {
       send({ type: "done", requestId: message.requestId });
     });
   });
+  return {
+    prompts,
+    overlapped: () => overlap,
+  };
 }
 
-test("building from the session fills the canvas and leaves the threads alone", async ({
+async function turn(page: Page, text: string) {
+  await page.getByRole("textbox").fill(text);
+  await page.getByRole("textbox").press("Enter");
+}
+
+test("every interaction updates the graph, one update at a time", async ({
   page,
 }) => {
-  await extractionBackend(page);
+  const backend = await updateBackend(page);
   await page.goto("/");
-  await page.getByRole("textbox").fill("hello");
-  await page.getByRole("textbox").press("Enter");
+
+  await turn(page, "how does backpressure work");
+  // The reply streams without waiting on the graph update behind it.
   await expect(page.locator("ul").first().locator("li")).toHaveCount(2);
 
   await graphTab(page).click();
-  await page.getByRole("button", { name: "Build from this session" }).click();
-
-  await expect(nodes(page)).toHaveText(["closures", "scope"]);
-  await expect(page.locator("[data-edge-label]")).toHaveText("builds on");
-  await expect(page.getByRole("button", { name: "Rebuild" })).toBeVisible();
+  await expect(nodes(page)).toHaveText(["concept-1"]);
 
   await threadsTab(page).click();
+  await turn(page, "and framing");
+  await graphTab(page).click();
+  await expect(nodes(page)).toHaveText(["concept-1", "concept-2"]);
+
+  expect(backend.overlapped()).toBe(false);
+  // The second update was handed the graph as the first one left it.
+  expect(backend.prompts[1]).toContain("concept-1");
+  await expect(
+    page.getByRole("button", { name: /Build from this session/ }),
+  ).toHaveCount(0);
+});
+
+test("opening a learning thread updates the graph from its ask", async ({
+  page,
+}) => {
+  const backend = await updateBackend(page);
+  await page.goto("/");
+  await turn(page, "the quick brown fox");
   await expect(page.locator("ul").first().locator("li")).toHaveCount(2);
+  await graphTab(page).click();
+  await expect(nodes(page)).toHaveText(["concept-1"]);
+  await threadsTab(page).click();
+
+  await page.getByRole("button", { name: "Reflect" }).click();
+  await page.evaluate(() => {
+    const root = document
+      .querySelectorAll("ul")[0]
+      .children[0].querySelector("[data-text]") as HTMLElement;
+    const range = document.createRange();
+    range.selectNodeContents(root);
+    const selection = window.getSelection();
+    selection?.removeAllRanges();
+    selection?.addRange(range);
+  });
+  await page.locator("ul").first().dispatchEvent("mouseup");
+  await page.getByRole("button", { name: "I don't understand this." }).click();
+
+  await graphTab(page).click();
+  await expect(nodes(page)).toHaveText(["concept-1", "concept-2"]);
+  expect(backend.prompts[1]).toContain("I don't understand this.");
+  expect(backend.overlapped()).toBe(false);
+});
+
+test("a failed graph update leaves the app usable", async ({ page }) => {
+  await updateBackend(page, true);
+  await page.goto("/");
+
+  await turn(page, "first");
+  await expect(page.locator("ul").first().locator("li")).toHaveCount(2);
+  await turn(page, "second");
+  await expect(page.locator("ul").first().locator("li")).toHaveCount(4);
+
+  await graphTab(page).click();
+  await expect(nodes(page)).toHaveText(["concept-2"]);
 });

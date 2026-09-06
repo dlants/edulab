@@ -21,6 +21,35 @@ function events(chunks: string[]): Anthropic.RawMessageStreamEvent[] {
   ];
 }
 
+/** A graph update runs on every interaction and is not what these specs are
+ * about: they are recognised by their write tools, answered with an immediate
+ * yield, and kept out of `started`. */
+function isGraphUpdate(message: ClientMessage): boolean {
+  return (message.params.tools ?? []).some((t) => t.name === "put_nodes");
+}
+
+function yieldEvents(): Anthropic.RawMessageStreamEvent[] {
+  return [
+    {
+      type: "content_block_start",
+      index: 0,
+      content_block: {
+        type: "tool_use",
+        id: "yield-1",
+        name: "yield",
+        input: {},
+      },
+    } as Anthropic.RawMessageStreamEvent,
+    {
+      type: "content_block_delta",
+      index: 0,
+      delta: { type: "input_json_delta", partial_json: '{"result":"ok"}' },
+    },
+    { type: "content_block_stop", index: 0 },
+    { type: "message_stop" } as Anthropic.RawMessageStreamEvent,
+  ];
+}
+
 /** Stand in for the backend: replay `chunks` one delta at a time, and expose a
  * promise that resolves once the browser has sent its `start` frame. */
 async function fakeBackend(page: Page, chunks: string[]) {
@@ -33,6 +62,18 @@ async function fakeBackend(page: Page, chunks: string[]) {
   await page.routeWebSocket("**/api/socket", (ws) => {
     ws.onMessage(async (raw) => {
       const message = JSON.parse(String(raw)) as ClientMessage;
+      if (isGraphUpdate(message)) {
+        for (const event of yieldEvents()) {
+          ws.send(
+            JSON.stringify({
+              type: "event",
+              requestId: message.requestId,
+              event,
+            } satisfies ServerFrame),
+          );
+        }
+        return;
+      }
       started.push(JSON.stringify(message.params.messages));
       await gate;
       const send = (frame: ServerFrame) => ws.send(JSON.stringify(frame));
@@ -55,6 +96,12 @@ async function toolBackend(page: Page) {
     ws.onMessage((raw) => {
       const message = JSON.parse(String(raw)) as ClientMessage;
       const send = (frame: ServerFrame) => ws.send(JSON.stringify(frame));
+      if (isGraphUpdate(message)) {
+        for (const event of yieldEvents()) {
+          send({ type: "event", requestId: message.requestId, event });
+        }
+        return;
+      }
       const first = requests++ === 0;
       const stream: Anthropic.RawMessageStreamEvent[] = first
         ? [

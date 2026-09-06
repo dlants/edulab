@@ -29,19 +29,10 @@ export type Sidebar =
       error: string | null;
     };
 
-/** The extraction pass over the thread tree. It has no transcript in the UI:
- * the nodes appearing on the canvas are its output. */
-export type Build =
-  | { type: "idle" }
-  | { type: "running" }
-  | { type: "done" }
-  | { type: "error"; error: string };
-
 export type State = {
   nodes: ReadonlyArray<GraphNode & { pos: Position }>;
   edges: ReadonlyArray<GraphEdge & { from_: Position; to_: Position }>;
   sidebar: Sidebar;
-  build: Build;
 };
 
 /** `field` is keyed off what is open, so a message for the wrong kind of
@@ -58,8 +49,7 @@ export type Msg =
   | { type: "LEVEL_CHANGED"; level: Level }
   | { type: "EDGE_FIELD"; field: "title" | "description"; value: string }
   | { type: "SAVE" }
-  | { type: "DELETE" }
-  | { type: "BUILD" };
+  | { type: "DELETE" };
 
 /** The canvas is sized in pixels rather than percentages: an edge is a rotated
  * bar, and a bar whose length is a percentage of the width but whose angle is
@@ -83,7 +73,6 @@ const sidebarClass = cls("graph-sidebar");
 const emptyClass = cls("graph-empty");
 const errorClass = cls("graph-error");
 const actionsClass = cls("graph-actions");
-const toolbarClass = cls("graph-toolbar");
 
 mountStyle(`
 .${graphClass} {
@@ -178,16 +167,6 @@ mountStyle(`
 }
 .${errorClass} {
   color: #b00020;
-}
-.${toolbarClass} {
-  grid-column: 1 / -1;
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  font-size: 0.9rem;
-}
-.${toolbarClass} button {
-  font: inherit;
 }
 `);
 
@@ -321,15 +300,9 @@ export class GraphView implements View<State, Msg> {
     const saveRef = ref("graph-save");
     const deleteRef = ref("graph-delete");
     const closeRef = ref("graph-close");
-    const buildRef = ref("graph-build");
-    const buildStatusRef = ref("graph-build-status");
 
     container.className = graphClass;
     container.innerHTML = sanitize`
-      <div class="${toolbarClass}">
-        <button type="button" data-graph-build data-ref="${buildRef}"></button>
-        <span data-graph-build-status data-ref="${buildStatusRef}"></span>
-      </div>
       <div class="${canvasClass}" data-graph-canvas data-ref="${canvasRef}">
         <p class="${emptyClass}" data-ref="${emptyRef}">Nothing here yet.</p>
         <div data-ref="${edgesRef}"></div>
@@ -428,15 +401,6 @@ export class GraphView implements View<State, Msg> {
       .ref(closeRef)
       .addEventListener("click", () => dispatch({ type: "CLOSE" }));
 
-    this.b
-      .ref(buildRef)
-      .addEventListener("click", () => dispatch({ type: "BUILD" }));
-    this.b.bindText(buildRef, (s) =>
-      s.nodes.length === 0 ? "Build from this session" : "Rebuild",
-    );
-    this.b.bindDisabled(buildRef, (s) => s.build.type === "running");
-    this.b.bindText(buildStatusRef, (s) => buildStatus(s.build));
-
     this.b.bindVisible(emptyRef, (s) => s.nodes.length === 0);
     this.b.bindVisible(closedRef, (s) => s.sidebar.type === "closed");
     this.b.bindVisible(openRef, (s) => s.sidebar.type !== "closed");
@@ -475,19 +439,6 @@ export class GraphView implements View<State, Msg> {
   destroy(): void {
     this.b.cleanup();
     this.container.innerHTML = "";
-  }
-}
-
-function buildStatus(build: Build): string {
-  switch (build.type) {
-    case "idle":
-      return "";
-    case "running":
-      return "Reading the session...";
-    case "done":
-      return "Done.";
-    case "error":
-      return build.error;
   }
 }
 
