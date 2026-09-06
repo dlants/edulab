@@ -34,7 +34,7 @@ import {
 } from "../samples/index.ts";
 import { type Anchor, overlaps, type ThreadId } from "../selection.ts";
 import { type Message, type MessageIdx, runThread, Thread } from "../thread.ts";
-import { ThreadTree } from "../threads.ts";
+import { parentOf, ThreadTree } from "../threads.ts";
 import { PostRenderEventBus } from "../vamp.ts";
 import {
   type AppEvent,
@@ -647,7 +647,7 @@ export function mount(container: HTMLElement): void {
         break;
       }
       case "GO_BACK": {
-        const parent = node.origin?.anchor.thread;
+        const parent = node.origin ? parentOf(node.origin) : undefined;
         if (parent === undefined) state.split = false;
         else focus = parent;
         // Climbing out lands on the passage that was descended through, which

@@ -119,6 +119,13 @@ it("seeds a child with context and sends the ask as its first visible turn", () 
   });
 });
 
+it("reports a passage child as a mark over its parent, and on its path", () => {
+  const { tree, anchor } = setup();
+  const child = tree.open(anchor, { type: "explain" });
+  expect(tree.marks(tree.root)).toEqual([{ thread: child, anchor }]);
+  expect(tree.path(child)).toEqual([tree.root, child]);
+});
+
 it("offers no tools to a child opened without any", () => {
   const { socket, tree, anchor } = setup();
   const child = tree.open(anchor, { type: "explain" });

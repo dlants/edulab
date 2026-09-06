@@ -7,7 +7,7 @@ import { projectLog, trimUnansweredTools } from "./thread.ts";
 import type { Origin, ThreadTree } from "./threads.ts";
 import type { Build } from "./view.ts";
 
-export const VERSION = 2;
+export const VERSION = 3;
 
 export type ThreadSnapshot = {
   id: ThreadId;

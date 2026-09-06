@@ -12,8 +12,16 @@ import { type Socket, Thread } from "./thread.ts";
 
 export type { Action };
 
-/** `anchor.thread` is the parent, so the link upward is the highlight itself. */
-export type Origin = { anchor: Anchor; action: Action };
+/** The two ways a thread can be opened: off a passage of its parent, or off
+ * the parent thread as a whole. Only the passage kind paints a highlight. */
+export type Origin =
+  | { type: "passage"; anchor: Anchor; action: Action }
+  | { type: "thread"; parent: ThreadId; action: Action };
+
+/** The thread this one was opened from. */
+export function parentOf(origin: Origin): ThreadId {
+  return origin.type === "passage" ? origin.anchor.thread : origin.parent;
+}
 
 /** What a child thread is given beyond its seed. */
 export type ChildOpts = {
@@ -29,7 +37,7 @@ export type TreeNode = {
   /** null only for the root task thread. */
   origin: Origin | null;
   thread: Thread;
-  /** Creation order; each child's `origin.anchor` is its highlight. */
+  /** Creation order; a passage child's `origin.anchor` is its highlight. */
   children: ThreadId[];
   activeChild: ThreadId | null;
   draft: string;
@@ -81,7 +89,7 @@ export class ThreadTree {
       tools: opts.tools,
       yieldSchema: opts.yieldSchema,
     });
-    const id = this.add({ anchor, action }, thread);
+    const id = this.add({ type: "passage", anchor, action }, thread);
     parent.children.push(id);
     parent.activeChild = id;
     return id;
@@ -93,13 +101,17 @@ export class ThreadTree {
     return this.get(id).thread.result;
   }
 
-  /** The highlights to draw over `id`'s transcript: one per child. */
+  /** The highlights to draw over `id`'s transcript: one per passage child.
+   * Thread-level children have no passage and so paint nothing. */
   marks(id: ThreadId): Mark[] {
-    return this.get(id).children.map((child) => {
+    const out: Mark[] = [];
+    for (const child of this.get(id).children) {
       const origin = this.get(child).origin;
       if (!origin) throw new Error("child thread without an origin");
-      return { thread: child, anchor: origin.anchor };
-    });
+      if (origin.type === "passage")
+        out.push({ thread: child, anchor: origin.anchor });
+    }
+    return out;
   }
 
   /** root -> id, for the depth indicator. */
@@ -108,7 +120,8 @@ export class ThreadTree {
     let at: ThreadId | undefined = id;
     while (at) {
       out.unshift(at);
-      at = this.get(at).origin?.anchor.thread;
+      const from: Origin | null = this.get(at).origin;
+      at = from ? parentOf(from) : undefined;
     }
     return out;
   }

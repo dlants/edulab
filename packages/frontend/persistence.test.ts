@@ -78,6 +78,37 @@ it("round-trips a tree with its structure, drafts and transcripts", () => {
   }
 });
 
+it("round-trips both origin kinds, and only the passage one is a mark", () => {
+  const { tree, first, second } = setup();
+  const snapshots = JSON.parse(
+    JSON.stringify(threadSnapshots(tree)),
+  ) as ThreadSnapshot[];
+  const deep = "t9" as ThreadId;
+  const [rootSnapshot, firstSnapshot] = snapshots;
+  if (!rootSnapshot || !firstSnapshot) throw new Error("no snapshots");
+  snapshots.push({
+    ...firstSnapshot,
+    id: deep,
+    origin: { type: "thread", parent: tree.root, action: { type: "explain" } },
+    children: [],
+    activeChild: null,
+  });
+  rootSnapshot.children.push(deep);
+  const restored = ThreadTree.restore(
+    socket,
+    snapshots,
+    tree.root,
+    10,
+    () => {},
+    (s) => new Thread(socket, { seed: s.seed, initialTurns: s.log }),
+  );
+  expect(restored.marks(tree.root).map((m) => m.thread)).toEqual([
+    first,
+    second,
+  ]);
+  expect(restored.path(deep)).toEqual([tree.root, deep]);
+});
+
 it("does not re-mint an id over a restored one", () => {
   const { tree } = setup();
   const restored = restore(tree).tree;
