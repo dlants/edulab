@@ -53,6 +53,9 @@ export const MIN_ZOOM = 0.3;
 export const MAX_ZOOM = 3;
 
 export type State = {
+  /** `pending` while the layout simulation is being computed off the render
+   * path; the canvas has no positions to draw until it lands. */
+  status: "pending" | "ready";
   nodes: ReadonlyArray<GraphNode & { pos: Position }>;
   edges: ReadonlyArray<GraphEdge & { from_: Position; to_: Position }>;
   viewport: Viewport;
@@ -116,6 +119,9 @@ const chipClass = cls("graph-chip");
 mountStyle(`
 .${graphClass} {
   display: grid;
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
   grid-template-columns: max-content minmax(0, 1fr);
   gap: 1.5rem;
   padding: 1rem;
@@ -488,6 +494,7 @@ export class GraphView implements View<State, Msg> {
     const resetRef = ref("graph-reset-view");
     const edgesRef = ref("graph-edges");
     const emptyRef = ref("graph-empty");
+    const pendingRef = ref("graph-pending");
     const sidebarRef = ref("graph-sidebar");
     const closedRef = ref("graph-closed");
     const openRef = ref("graph-open");
@@ -509,6 +516,7 @@ export class GraphView implements View<State, Msg> {
     container.innerHTML = sanitize`
       <div class="${canvasClass}" data-graph-canvas data-ref="${canvasRef}">
         <p class="${emptyClass}" data-ref="${emptyRef}">Nothing here yet.</p>
+        <p class="${emptyClass}" data-ref="${pendingRef}">Laying out the graph…</p>
         <div data-ref="${edgesRef}"></div>
         <div class="${controlsClass}" data-ref="${controlsRef}">
           <button type="button" data-graph-zoom-out data-ref="${zoomOutRef}">−</button>
@@ -702,7 +710,11 @@ export class GraphView implements View<State, Msg> {
       (s) => s.citations.description.length > 0,
     );
     this.b.bindVisible(notesChipsRef, (s) => s.citations.notes.length > 0);
-    this.b.bindVisible(emptyRef, (s) => s.nodes.length === 0);
+    this.b.bindVisible(
+      emptyRef,
+      (s) => s.status === "ready" && s.nodes.length === 0,
+    );
+    this.b.bindVisible(pendingRef, (s) => s.status === "pending");
     this.b.bindVisible(closedRef, (s) => s.sidebar.type === "closed");
     this.b.bindVisible(openRef, (s) => s.sidebar.type !== "closed");
     this.b.bindVisible(notesRowRef, (s) => s.sidebar.type === "node");

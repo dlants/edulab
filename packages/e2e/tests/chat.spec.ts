@@ -635,6 +635,29 @@ test("a turn shows its graph update working, then what it changed", async ({
   // Each turn accounts for its own update and no other.
   await expect(changes(page, 0)).toHaveText(['created "concept-1"']);
 });
+test("the update behind a turn opens its own transcript on the right", async ({
+  page,
+}) => {
+  const backend = await chipBackend(page);
+  backend.release();
+  await page.goto("/");
+  await turn(page, "how does backpressure work");
+  await expect(changes(page, 0)).toHaveText(['created "concept-1"']);
+  await taskTranscript(page)
+    .locator("li")
+    .nth(0)
+    .locator("[data-update-thread]")
+    .click();
+  const pane = page.locator("ul").nth(1);
+  await expect(pane.locator("[data-tool-name]:visible")).toHaveText([
+    "put_nodes",
+    "yield",
+  ]);
+  // Review, not descent: there is nothing to reply to here.
+  await expect(page.getByPlaceholder("Follow up…")).toHaveCount(0);
+  await page.getByRole("button", { name: "Close" }).click();
+  await expect(page.locator("[data-update-pane-status]")).toHaveCount(0);
+});
 test("an update that writes nothing says so", async ({ page }) => {
   const backend = await chipBackend(page, false);
   backend.release();

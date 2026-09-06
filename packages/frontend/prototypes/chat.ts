@@ -42,6 +42,7 @@ import {
   type GraphUpdate,
   type Msg,
   type State,
+  type UpdatePaneState,
   type Updates,
 } from "../view.ts";
 
@@ -140,7 +141,7 @@ export function mount(container: HTMLElement): void {
   const graphUpdates = new Map<string, GraphUpdate>(
     (snapshot?.updates ?? []).map((u) => [
       address(u.thread, u.index),
-      { type: "done", changes: u.changes },
+      { type: "done", changes: u.changes, messages: u.messages },
     ]),
   );
 
@@ -158,6 +159,7 @@ export function mount(container: HTMLElement): void {
               thread: thread as ThreadId,
               index: Number(index) as MessageIdx,
               changes: update.changes,
+              messages: update.messages,
             },
           ];
         }),
@@ -177,9 +179,23 @@ export function mount(container: HTMLElement): void {
   // keystroke, so it is recomputed only when the shape of the graph changes.
   let placement = new Map<NodeId, Position>();
   let placedFor = "";
+  // The shape a layout is currently being computed for, if any.
+  let placing: string | null = null;
   // Purely presentational, and per thread: which messages the user has
   // expanded past the collapsed height.
   const expanded = new Map<ThreadId, Set<number>>();
+  // The address of the graph update whose transcript the right pane is
+  // reviewing, and the expansion state of its messages.
+  let updateFocus: string | null = null;
+  const updateExpanded = new Map<string, Set<number>>();
+  function updateExpandedFor(key: string): Set<number> {
+    let set = updateExpanded.get(key);
+    if (!set) {
+      set = new Set();
+      updateExpanded.set(key, set);
+    }
+    return set;
+  }
   function expandedFor(id: ThreadId): Set<number> {
     let set = expanded.get(id);
     if (!set) {
@@ -203,6 +219,7 @@ export function mount(container: HTMLElement): void {
     anchor: null,
     tab: "threads",
     graph: {
+      status: "ready",
       nodes: [],
       edges: [],
       viewport,
@@ -214,6 +231,7 @@ export function mount(container: HTMLElement): void {
     expanded: new Set(),
     updates: new Map(),
     child: null,
+    updatePane: null,
   };
 
   /** Re-projects the tree onto the view's state. Everything but the fields the
@@ -227,15 +245,27 @@ export function mount(container: HTMLElement): void {
       ...nodes.map((n) => n.id),
       ...edges.map((e) => `${e.id}:${e.from}->${e.to}`),
     ].join(",");
-    if (shape !== placedFor) {
-      placement = layout(graph);
-      placedFor = shape;
+    if (shape !== placedFor && shape !== placing) {
+      placing = shape;
+      // Deferred so the browser paints the pending state before the
+      // simulation blocks the main thread. If the graph has moved on by the
+      // time this lands, the next refresh schedules another run.
+      setTimeout(() => {
+        placement = layout(graph);
+        placedFor = shape;
+        placing = null;
+        sync();
+      }, 0);
     }
+    const pending = shape !== placedFor;
     const at = (id: NodeId): Position =>
       placement.get(id) ?? { x: 0.5, y: 0.5 };
     state.graph = {
-      nodes: nodes.map((n) => ({ ...n, pos: at(n.id) })),
-      edges: edges.map((e) => ({ ...e, from_: at(e.from), to_: at(e.to) })),
+      status: pending ? "pending" : "ready",
+      nodes: pending ? [] : nodes.map((n) => ({ ...n, pos: at(n.id) })),
+      edges: pending
+        ? []
+        : edges.map((e) => ({ ...e, from_: at(e.from), to_: at(e.to) })),
       viewport,
       sidebar,
       citations: citationsOf(),
@@ -281,6 +311,7 @@ export function mount(container: HTMLElement): void {
     state.marks = tree.marks(focus);
     state.expanded = expandedFor(focus);
     state.updates = updatesFor(focus);
+    state.updatePane = updatePane();
     state.activeMark = node.activeChild;
     const activeChild = node.activeChild;
     if (!activeChild) {
@@ -297,6 +328,19 @@ export function mount(container: HTMLElement): void {
     };
   }
 
+  /** The update transcript on the right, live while its thread is still
+   * running: it is read straight off the same record the chips come from. */
+  function updatePane(): UpdatePaneState | null {
+    if (updateFocus === null) return null;
+    const update = graphUpdates.get(updateFocus);
+    if (!update) return null;
+    return {
+      messages: update.messages,
+      running: update.type === "running",
+      expanded: updateExpandedFor(updateFocus),
+    };
+  }
+
   function sync(): void {
     refresh();
     view.sync(state);
@@ -310,12 +354,13 @@ export function mount(container: HTMLElement): void {
   function queueGraphUpdate(
     thread: ThreadId,
     index: MessageIdx,
-  ): Promise<boolean> {
+  ): Promise<string | null> {
     const interaction = interactionAt(tree, thread, index);
     const key = address(thread, index);
-    graphUpdates.set(key, { type: "running" });
+    graphUpdates.set(key, { type: "running", messages: [] });
     // The update thread's transcript, as of its last change: the chips are read
-    // off the calls it actually made, not off a side channel.
+    // off the calls it actually made, not off a side channel, and the same
+    // transcript is what the review pane shows.
     let transcript: ReadonlyArray<Message> = [];
     const done = updates
       .then(async () => {
@@ -328,22 +373,28 @@ export function mount(container: HTMLElement): void {
           yieldSchema: "text",
           onChange: (messages) => {
             transcript = messages;
+            graphUpdates.set(key, { type: "running", messages });
+            sync();
           },
         });
         if (result.status === "error") {
           console.error(result.error);
-          return false;
+          return String(result.error);
         }
-        return true;
+        return null;
       })
       .catch((e: unknown) => {
         console.error(e);
-        return false;
+        return String(e);
       })
-      .then((ok) => {
-        graphUpdates.set(key, { type: "done", changes: changesOf(transcript) });
+      .then((error) => {
+        graphUpdates.set(key, {
+          type: "done",
+          changes: changesOf(transcript),
+          messages: transcript,
+        });
         sync();
-        return ok;
+        return error;
       });
     updates = done.then(() => undefined);
     return done;
@@ -363,21 +414,24 @@ export function mount(container: HTMLElement): void {
     )
     .slice(0, sampleTurnCount);
 
-  function advanceBuild(ok: boolean): void {
+  function advanceBuild(key: string, error: string | null): void {
     const build = state.build;
     if (build.type !== "running") return;
     state.build = {
       type: "running",
       done: build.done + 1,
       total: build.total,
-      failed: build.failed + (ok ? 0 : 1),
+      failures:
+        error === null
+          ? build.failures
+          : [...build.failures, { address: key, error }],
     };
   }
 
   function finishBuild(): void {
     const build = state.build;
     if (build.type !== "running") return;
-    state.build = { type: "done", failed: build.failed };
+    state.build = { type: "done", failures: build.failures };
   }
 
   /** Walks the loaded sample's turns through the same queue the live updates
@@ -386,7 +440,7 @@ export function mount(container: HTMLElement): void {
     if (state.build.type !== "idle") return;
     const total = sampleInteractions.length;
     if (total === 0) return;
-    state.build = { type: "running", done: 0, total, failed: 0 };
+    state.build = { type: "running", done: 0, total, failures: [] };
     void drain(
       sampleInteractions.map((index) => ({ thread: tree.root, index })),
     );
@@ -402,8 +456,9 @@ export function mount(container: HTMLElement): void {
     await opened;
     const owned = new Set(sampleInteractions);
     for (const { thread, index } of addresses) {
-      const ok = await queueGraphUpdate(thread, index);
-      if (thread === tree.root && owned.has(index)) advanceBuild(ok);
+      const error = await queueGraphUpdate(thread, index);
+      if (thread === tree.root && owned.has(index))
+        advanceBuild(address(thread, index), error);
       sync();
     }
     finishBuild();
@@ -440,6 +495,7 @@ export function mount(container: HTMLElement): void {
     state.tab = "threads";
     state.anchor = null;
     state.query = "";
+    updateFocus = null;
     bus.emit({ type: "transcript:reveal", index: citation.index });
   }
 
@@ -506,6 +562,17 @@ export function mount(container: HTMLElement): void {
     }
   }
 
+  /** Puts a background update's own transcript on the right. This is review,
+   * not descent: nothing hangs off the pane, and closing it hands the right
+   * column back to whatever was there. */
+  function showUpdate(thread: ThreadId, index: number): void {
+    const key = address(thread, index as MessageIdx);
+    if (!graphUpdates.has(key)) return;
+    updateFocus = key;
+    state.split = true;
+    state.anchor = null;
+  }
+
   function update(state: State, msg: Msg): void {
     const node = tree.get(focus);
     switch (msg.type) {
@@ -551,6 +618,7 @@ export function mount(container: HTMLElement): void {
         focus = child;
         state.anchor = null;
         state.query = "";
+        updateFocus = null;
         break;
       }
       case "GO_BACK": {
@@ -559,6 +627,7 @@ export function mount(container: HTMLElement): void {
         else focus = parent;
         state.anchor = null;
         state.query = "";
+        updateFocus = null;
         break;
       }
       case "TOGGLE_EXPANDED": {
@@ -569,10 +638,28 @@ export function mount(container: HTMLElement): void {
       case "SELECTION_CHANGED":
         state.anchor = msg.anchor;
         node.activeChild = null;
+        updateFocus = null;
         break;
       case "MARK_CLICKED":
         state.anchor = null;
         node.activeChild = msg.thread;
+        updateFocus = null;
+        break;
+      case "SHOW_UPDATE":
+        showUpdate(focus, msg.index);
+        break;
+      case "UPDATE_MSG":
+        switch (msg.msg.type) {
+          case "CLOSE":
+            updateFocus = null;
+            break;
+          case "TOGGLE_EXPANDED": {
+            if (updateFocus === null) break;
+            const set = updateExpandedFor(updateFocus);
+            if (!set.delete(msg.msg.index)) set.add(msg.msg.index);
+            break;
+          }
+        }
         break;
       case "LEARNING_MSG":
         switch (msg.msg.type) {
@@ -616,6 +703,9 @@ export function mount(container: HTMLElement): void {
           }
           case "CHANGE_CLICKED":
             update(state, msg.msg);
+            break;
+          case "SHOW_UPDATE":
+            showUpdate(activeChild, msg.msg.index);
             break;
         }
         break;
@@ -663,7 +753,7 @@ export function mount(container: HTMLElement): void {
           graphUpdates.has(address(tree.root, index)),
         ).length,
         total: sampleInteractions.length,
-        failed: 0,
+        failures: [],
       };
     }
     if (pending.length > 0) void drain(pending);

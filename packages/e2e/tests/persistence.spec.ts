@@ -2,7 +2,7 @@ import type Anthropic from "@anthropic-ai/sdk";
 import type { ClientMessage, ServerFrame } from "@edulab/iso/protocol.ts";
 import { expect, type Page, test } from "@playwright/test";
 
-const KEY = "edulab:v1:own";
+const KEY = "edulab:v2:own";
 
 function events(text: string): Anthropic.RawMessageStreamEvent[] {
   return [
@@ -238,7 +238,7 @@ test("a build interrupted by a refresh resumes where it stopped", async ({
   const turns = await taskTranscript(page).locator("li").count();
   // Nothing is saved until something happens, so nudge one dispatch through.
   await graphTab(page).click();
-  const key = `edulab:v1:${sample}`;
+  const key = `edulab:v2:${sample}`;
   await expect
     .poll(() => page.evaluate((k) => localStorage.getItem(k), key))
     .not.toBeNull();
@@ -251,7 +251,7 @@ test("a build interrupted by a refresh resumes where it stopped", async ({
     const asks = snapshot.threads[0].log.filter(
       (t) => t.role === "user",
     ).length;
-    snapshot.build = { type: "running", done: 0, total: asks, failed: 0 };
+    snapshot.build = { type: "running", done: 0, total: asks, failures: [] };
     localStorage.setItem(k, JSON.stringify(snapshot));
     return asks;
   }, key);

@@ -2,11 +2,12 @@ import type Anthropic from "@anthropic-ai/sdk";
 import type { GraphChange, GraphSnapshot, KnowledgeGraph } from "./graph.ts";
 import type { SampleId } from "./samples/index.ts";
 import type { ThreadId } from "./selection.ts";
-import { type MessageIdx, projectLog, trimUnansweredTools } from "./thread.ts";
+import type { Message, MessageIdx } from "./thread.ts";
+import { projectLog, trimUnansweredTools } from "./thread.ts";
 import type { Origin, ThreadTree } from "./threads.ts";
 import type { Build } from "./view.ts";
 
-export const VERSION = 1;
+export const VERSION = 2;
 
 export type ThreadSnapshot = {
   id: ThreadId;
@@ -29,6 +30,9 @@ export type UpdateSnapshot = {
   thread: ThreadId;
   index: MessageIdx;
   changes: ReadonlyArray<GraphChange>;
+  /** The update thread's own transcript, kept so the prompt and the model's
+   * work can still be reviewed after a reload. */
+  messages: ReadonlyArray<Message>;
 };
 
 export type Snapshot = {
@@ -86,7 +90,8 @@ function wellFormed(value: unknown): value is Snapshot {
     Array.isArray(s.updates) &&
     typeof s.build === "object" &&
     s.build !== null &&
-    typeof s.build.type === "string"
+    typeof s.build.type === "string" &&
+    (s.build.type === "idle" || Array.isArray(s.build.failures))
   );
 }
 

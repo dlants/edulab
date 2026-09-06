@@ -171,6 +171,9 @@ test("an edge is selectable and editable", async ({ page }) => {
 /** The distance between the two seeded nodes: zooming changes the spacing on
  * the canvas, and nothing else about them. */
 async function spread(page: Page): Promise<number> {
+  // The layout runs off the render path, so the nodes appear a beat after the
+  // tab does.
+  await expect(nodes(page)).toHaveCount(2);
   const boxes = await nodes(page).all();
   const [a, b] = await Promise.all(boxes.map((n) => n.boundingBox()));
   if (!a || !b) throw new Error("nodes are not laid out");

@@ -39,15 +39,29 @@ import {
  * same turns updates nodes rather than teaching us anything new. */
 export type Build =
   | { type: "idle" }
-  | { type: "running"; done: number; total: number; failed: number }
-  | { type: "done"; failed: number };
+  | {
+      type: "running";
+      done: number;
+      total: number;
+      failures: ReadonlyArray<BuildFailure>;
+    }
+  | { type: "done"; failures: ReadonlyArray<BuildFailure> };
+
+/** Why one interaction's graph update did not land. Carried on the state rather
+ * than left in the console at the moment it happened, so the `?` next to the
+ * status can dump the whole set after the fact. */
+export type BuildFailure = { address: string; error: string };
 
 /** What the background graph update for one interaction is doing, shown under
  * the turn that triggered it: a system quietly building a model of the user is
  * exactly the thing that should be visible where it happened. */
 export type GraphUpdate =
-  | { type: "running" }
-  | { type: "done"; changes: ReadonlyArray<GraphChange> };
+  | { type: "running"; messages: ReadonlyArray<Message> }
+  | {
+      type: "done";
+      changes: ReadonlyArray<GraphChange>;
+      messages: ReadonlyArray<Message>;
+    };
 
 /** The updates over one thread, keyed by the index of the turn that triggered
  * each. Derived: losing it loses nothing the graph does not already hold. */
@@ -85,6 +99,9 @@ export type State = {
   updates: Updates;
   /** The active child thread, shown on the right when nothing is selected. */
   child: ThreadPaneState | null;
+  /** The transcript of a background graph update, shown on the right while the
+   * user is reviewing it. It is not a learning thread: nothing hangs off it. */
+  updatePane: UpdatePaneState | null;
 };
 
 export type Msg =
@@ -102,6 +119,8 @@ export type Msg =
   | { type: "GRAPH_MSG"; msg: GraphMsg }
   | { type: "TOGGLE_EXPANDED"; index: number }
   | { type: "CHANGE_CLICKED"; id: GraphId }
+  | { type: "SHOW_UPDATE"; index: number }
+  | { type: "UPDATE_MSG"; msg: UpdatePaneMsg }
   | { type: "CHILD_MSG"; msg: ThreadPaneMsg };
 
 const appClass = cls("app");
@@ -120,16 +139,23 @@ const threadPaneClass = cls("thread-pane");
 const bodyClass = cls("body");
 const sampleClass = cls("sample");
 const buildStatusClass = cls("build-status");
+const buildDebugClass = cls("build-debug");
 const spacerClass = cls("spacer");
 const tabsClass = cls("tabs");
-const graphTabClass = cls("graph-tab");
 
 /** A message collapses to this many lines: about a third of a screen. */
 const MAX_MESSAGE_LINES = 15;
+/** Roughly how much fits on one line of a message at the pane's widest, so the
+ * clamp affordance can be decided from the text rather than from the rendered
+ * box: measuring means a forced reflow per message per streamed token, and
+ * being a line or two out here costs nothing. */
+const CHARS_PER_LINE = 80;
 const clipClass = cls("clip");
 const toggleClass = cls("toggle");
 const moreClass = cls("more");
 const updateClass = cls("update");
+const updatePaneClass = cls("update-pane");
+const paneTitleClass = cls("pane-title");
 const changeClass = cls("change");
 const changeListClass = cls("change-list");
 const flashClass = cls("flash");
@@ -200,6 +226,12 @@ mountStyle(`
   font-size: 0.8rem;
   color: #666;
 }
+.${navClass} button.${buildDebugClass} {
+  font-size: 0.7rem;
+  line-height: 1;
+  padding: 0.1rem 0.3rem;
+  color: #666;
+}
 .${sampleClass} {
   font: inherit;
 }
@@ -209,11 +241,6 @@ mountStyle(`
 .${tabsClass} button[aria-pressed="true"] {
   background: rgba(0, 0, 0, 0.08);
   font-weight: 600;
-}
-.${graphTabClass} {
-  flex: 1;
-  min-height: 0;
-  overflow: auto;
 }
 .${depthClass} {
   font-size: 0.75rem;
@@ -347,6 +374,24 @@ mountStyle(`
 .${changeListClass} {
   display: contents;
 }
+.${updatePaneClass} {
+  min-height: 0;
+  overflow-y: auto;
+  padding: 1rem 0 5rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  border-left: 1px solid rgba(0, 0, 0, 0.1);
+}
+.${paneTitleClass} {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  opacity: 0.6;
+}
 .${changeClass} {
   font: inherit;
   color: inherit;
@@ -463,14 +508,28 @@ type MessageState = {
 type MessageMsg =
   | SegmentMsg
   | { type: "TOGGLE_EXPANDED" }
-  | { type: "CHANGE_CLICKED"; id: GraphId };
+  | { type: "CHANGE_CLICKED"; id: GraphId }
+  | { type: "SHOW_UPDATE" };
+
+/** How many lines the clamp hides, estimated from the text that the clipped
+ * box holds: the prose, and the tool call rendered under it. */
+function hiddenLines(message: Message): number {
+  const blocks = [messageText(message), resultText(message)];
+  if (message.type === "tool_use")
+    blocks.push(message.call.name, message.call.inputJson);
+  const lines = blocks
+    .filter((block) => block !== "")
+    .flatMap((block) => block.split("\n"))
+    .reduce(
+      (total, line) => total + Math.ceil(line.length / CHARS_PER_LINE),
+      0,
+    );
+  return lines - MAX_MESSAGE_LINES;
+}
 
 class MessageView implements View<MessageState, MessageMsg> {
   container: HTMLElement;
   private b: Binder<MessageState>;
-  private clip!: HTMLElement;
-  private more!: HTMLElement;
-  private hiddenLines = 0;
 
   constructor(
     container: HTMLElement,
@@ -489,6 +548,7 @@ class MessageView implements View<MessageState, MessageMsg> {
     const updateRef = ref("update");
     const updateStatusRef = ref("update-status");
     const changesRef = ref("changes");
+    const updateThreadRef = ref("update-thread");
     container.className = messageClass;
     // The tool block sits outside the .text span on purpose: resolvePoint only
     // anchors inside it, so a tool call is rendered but not selectable.
@@ -512,6 +572,12 @@ class MessageView implements View<MessageState, MessageMsg> {
       <div class="${updateClass}" data-update data-ref="${updateRef}">
         <span data-update-status data-ref="${updateStatusRef}"></span>
         <span class="${changeListClass}" data-ref="${changesRef}"></span>
+        <button
+          class="${changeClass}"
+          type="button"
+          data-update-thread
+          data-ref="${updateThreadRef}"
+        >transcript</button>
       </div>
     `;
     this.container = container;
@@ -556,49 +622,27 @@ class MessageView implements View<MessageState, MessageMsg> {
         ),
       ),
     );
+    this.b
+      .ref(updateThreadRef)
+      .addEventListener("click", () => dispatch({ type: "SHOW_UPDATE" }));
     this.b.bindContainerAttr("data-role", (s) => s.message.role);
-    this.clip = this.b.ref(clipRef);
-    this.more = this.b.ref(moreRef);
     const toggle = () => dispatch({ type: "TOGGLE_EXPANDED" });
     this.b.ref(toggleRef).addEventListener("click", toggle);
-    this.more.addEventListener("click", toggle);
-    // Not bound: whether the message overflows is a fact about the rendered
-    // box, so it can only be read back after the DOM has been written.
+    this.b.ref(moreRef).addEventListener("click", toggle);
     this.b.bindContainerAttr("data-clipped", (s) =>
       s.expanded ? undefined : "true",
     );
-    this.measure(initial.expanded);
+    this.b.bindContainerAttr("data-overflowing", (s) =>
+      hiddenLines(s.message) > 0 ? "true" : "false",
+    );
+    this.b.bindText(moreRef, (s) => {
+      const hidden = hiddenLines(s.message);
+      return hidden > 0 && !s.expanded ? `… ${hidden} more lines` : "";
+    });
   }
 
   sync(state: MessageState): void {
     this.b.sync(state);
-    this.measure(state.expanded);
-  }
-
-  /** Reads the clipped height back out of the layout to decide whether the
-   * expand affordance is worth showing, and by how many lines. The count is
-   * remembered while expanded, when there is nothing left to measure. */
-  private measure(expanded: boolean): void {
-    // On first render the container is still detached (bindList constructs and
-    // syncs before inserting), so there is no layout to read yet.
-    if (!this.container.isConnected) {
-      requestAnimationFrame(() => {
-        if (this.container.isConnected) this.measure(expanded);
-      });
-      return;
-    }
-    const lineHeight =
-      Number.parseFloat(getComputedStyle(this.clip).lineHeight) || 1;
-    // scrollHeight is the full content height whether or not the box is
-    // clipped, so this reads the same while expanded - which it must, since
-    // an expanded message still needs its collapse affordance.
-    this.hiddenLines = Math.round(
-      this.clip.scrollHeight / lineHeight - MAX_MESSAGE_LINES,
-    );
-    const clipped = this.hiddenLines > 0;
-    this.container.dataset.overflowing = clipped ? "true" : "false";
-    this.more.textContent =
-      clipped && !expanded ? `… ${this.hiddenLines} more lines` : "";
   }
 
   destroy(): void {
@@ -648,7 +692,8 @@ export type ThreadPaneMsg =
   | { type: "DRAFT_CHANGED"; draft: string }
   | { type: "SUBMIT" }
   | { type: "TOGGLE_EXPANDED"; index: number }
-  | { type: "CHANGE_CLICKED"; id: GraphId };
+  | { type: "CHANGE_CLICKED"; id: GraphId }
+  | { type: "SHOW_UPDATE"; index: number };
 
 /** A learning thread on the right: the passage it came from, its transcript,
  * and a composer. Read-only as far as selection goes - only the left pane
@@ -707,6 +752,8 @@ class ThreadPane implements View<ThreadPaneState, ThreadPaneMsg> {
           (msg: MessageMsg) => {
             if (msg.type === "TOGGLE_EXPANDED")
               dispatch({ type: "TOGGLE_EXPANDED", index: i });
+            else if (msg.type === "SHOW_UPDATE")
+              dispatch({ type: "SHOW_UPDATE", index: i });
             else if (msg.type === "CHANGE_CLICKED") dispatch(msg);
           },
         ),
@@ -727,6 +774,81 @@ class ThreadPane implements View<ThreadPaneState, ThreadPaneMsg> {
   }
 }
 
+export type UpdatePaneState = {
+  messages: ReadonlyArray<Message>;
+  running: boolean;
+  expanded: ReadonlySet<number>;
+};
+
+export type UpdatePaneMsg =
+  | { type: "CLOSE" }
+  | { type: "TOGGLE_EXPANDED"; index: number };
+
+/** The transcript of one background graph update, on the right. It has no
+ * composer and captures no selection: this is the prompt and the model's work
+ * put where they can be reviewed, not a thread the user can carry on. */
+class UpdatePane implements View<UpdatePaneState, UpdatePaneMsg> {
+  container: HTMLElement;
+  private b: Binder<UpdatePaneState>;
+
+  constructor(
+    container: HTMLElement,
+    dispatch: (msg: UpdatePaneMsg) => void,
+    initial: UpdatePaneState,
+  ) {
+    const titleRef = ref("update-pane-title");
+    const statusRef = ref("update-pane-status");
+    const closeRef = ref("update-pane-close");
+    const transcriptRef = ref("update-pane-transcript");
+
+    container.className = updatePaneClass;
+    container.innerHTML = sanitize`
+      <div class="${paneTitleClass}" data-ref="${titleRef}">
+        <span>Knowledge graph update</span>
+        <span data-update-pane-status data-ref="${statusRef}"></span>
+        <span class="${spacerClass}"></span>
+        <button type="button" data-ref="${closeRef}">Close</button>
+      </div>
+      <ul class="${transcriptClass}" data-ref="${transcriptRef}"></ul>
+    `;
+    this.container = container;
+    this.b = new Binder(container, initial);
+
+    this.b
+      .ref(closeRef)
+      .addEventListener("click", () => dispatch({ type: "CLOSE" }));
+    this.b.bindText(statusRef, (s) => (s.running ? "running…" : "finished"));
+    this.b.bindList(transcriptRef, "li", (s) =>
+      s.messages.map((message, i) =>
+        showKeyed(
+          String(i),
+          MessageView,
+          {
+            message,
+            expanded: lastExpanded(s.expanded, i, s.messages.length),
+            segments: segments([], null, i, messageText(message).length),
+            active: null,
+            update: null,
+          },
+          {},
+          (msg: MessageMsg) => {
+            if (msg.type === "TOGGLE_EXPANDED")
+              dispatch({ type: "TOGGLE_EXPANDED", index: i });
+          },
+        ),
+      ),
+    );
+  }
+
+  sync(state: UpdatePaneState): void {
+    this.b.sync(state);
+  }
+
+  destroy(): void {
+    this.b.cleanup();
+    this.container.innerHTML = "";
+  }
+}
 /** Work that can only happen once the DOM reflects the new state. Scrolling to
  * a cited message needs the pane to already be showing that thread, which is
  * a reducer's job, so the two phases are bridged by the bus rather than by the
@@ -735,7 +857,10 @@ export type AppEvent = { type: "transcript:reveal"; index: number };
 
 export type AppCtx = { bus: PostRenderEventBus<AppEvent> };
 
-export class AppView implements View<State, Msg, AppCtx> {
+/** The threads tab: the transcript, its composer, and the learning pane beside
+ * them. Mounted only while its tab is showing; the state it renders all lives
+ * in the prototype, so a remount costs nothing but the scroll position. */
+class ThreadsView implements View<State, Msg, AppCtx> {
   container: HTMLElement;
   private b: Binder<State>;
   /** The latest state, for event handlers that need it outside a binding. */
@@ -751,37 +876,11 @@ export class AppView implements View<State, Msg, AppCtx> {
     const transcriptRef: Ref = ref("transcript");
     const inputRef: Ref = ref("input");
     const sendRef: Ref = ref("send");
-    const backRef: Ref = ref("back");
-    const forwardRef: Ref = ref("forward");
-    const depthRef: Ref = ref("depth");
     const composerRef: Ref = ref("composer");
     const learningRef: Ref = ref("learning");
-    const sampleRef: Ref = ref("sample");
-    const buildRef: Ref = ref("build");
-    const resetRef: Ref = ref("reset");
-    const buildStatusRef: Ref = ref("build-status");
-    const threadsTabRef: Ref = ref("threads-tab");
-    const graphTabRef: Ref = ref("graph-tab");
-    const bodyRef: Ref = ref("body");
-    const graphSlotRef: Ref = ref("graph-slot");
 
-    container.className = appClass;
+    container.className = bodyClass;
     container.innerHTML = sanitize`
-      <div class="${navClass}">
-        <select class="${sampleClass}" data-ref="${sampleRef}"></select>
-        <button type="button" data-build data-ref="${buildRef}">Build knowledge graph from this transcript</button>
-        <span class="${buildStatusClass}" data-build-status data-ref="${buildStatusRef}"></span>
-        <span class="${tabsClass}">
-          <button type="button" data-ref="${threadsTabRef}">Threads</button>
-          <button type="button" data-ref="${graphTabRef}">Knowledge graph</button>
-        </span>
-        <span class="${spacerClass}"></span>
-        <button type="button" data-ref="${resetRef}">Reset</button>
-        <button type="button" data-ref="${backRef}">← Back</button>
-        <span class="${depthClass}" data-ref="${depthRef}"></span>
-        <button type="button" data-ref="${forwardRef}"></button>
-      </div>
-      <div class="${bodyClass}" data-ref="${bodyRef}">
       <div class="${paneClass}">
         <ul class="${transcriptClass}" data-ref="${transcriptRef}"></ul>
         <div class="${composerClass}" data-ref="${composerRef}">
@@ -789,14 +888,11 @@ export class AppView implements View<State, Msg, AppCtx> {
           <button type="button" data-ref="${sendRef}">Send</button>
         </div>
       </div>
-        <div data-ref="${learningRef}"></div>
-      </div>
-      <div class="${graphTabClass}" data-ref="${graphSlotRef}"></div>
+      <div data-ref="${learningRef}"></div>
     `;
     this.container = container;
     this.current = initialState;
     this.b = new Binder(container, initialState);
-
     const input = this.b.ref<HTMLTextAreaElement>(inputRef);
     input.addEventListener("input", () => {
       dispatch({ type: "DRAFT_CHANGED", draft: input.value });
@@ -810,30 +906,6 @@ export class AppView implements View<State, Msg, AppCtx> {
     this.b
       .ref(sendRef)
       .addEventListener("click", () => dispatch({ type: "SUBMIT" }));
-    // The option list is a module constant, so it is built once rather than
-    // bound; switching sample is a page navigation anyway.
-    const picker = this.b.ref<HTMLSelectElement>(sampleRef);
-    const own = document.createElement("option");
-    own.value = "";
-    own.textContent = "Write your own";
-    picker.append(own);
-    for (const sample of samples) {
-      const option = document.createElement("option");
-      option.value = sample.id;
-      option.textContent = sample.label;
-      picker.append(option);
-    }
-    picker.addEventListener("change", () => {
-      dispatch({ type: "SAMPLE_CHANGED", id: picker.value });
-    });
-
-    this.b
-      .ref(backRef)
-      .addEventListener("click", () => dispatch({ type: "GO_BACK" }));
-    this.b
-      .ref(forwardRef)
-      .addEventListener("click", () => dispatch({ type: "GO_DEEPER" }));
-
     // Capture on mouseup/keyup rather than `selectionchange`: the browser
     // collapses the selection as soon as the user clicks the learning pane,
     // which is exactly when we need the anchor to survive.
@@ -856,7 +928,6 @@ export class AppView implements View<State, Msg, AppCtx> {
       // Restarting the animation needs a frame with the class off.
       requestAnimationFrame(() => li.classList.add(flashClass));
     });
-
     // The transcript is append-only and never reorders, so the position of a
     // message is a stable identity.
     this.b.bindList(transcriptRef, "li", (s) =>
@@ -885,6 +956,9 @@ export class AppView implements View<State, Msg, AppCtx> {
               case "CHANGE_CLICKED":
                 dispatch(msg);
                 break;
+              case "SHOW_UPDATE":
+                dispatch({ type: "SHOW_UPDATE", index: i });
+                break;
               case "CLICKED":
                 dispatch({ type: "MARK_CLICKED", thread: msg.thread });
                 break;
@@ -893,55 +967,15 @@ export class AppView implements View<State, Msg, AppCtx> {
         ),
       ),
     );
-    this.b
-      .ref(buildRef)
-      .addEventListener("click", () => dispatch({ type: "BUILD" }));
-    this.b.bindDisabled(buildRef, (s) => s.build.type !== "idle");
-    this.b.bindText(buildStatusRef, (s) => buildStatus(s.build));
-
-    this.b
-      .ref(resetRef)
-      .addEventListener("click", () => dispatch({ type: "RESET" }));
-    this.b.bindValue(sampleRef, (s) => s.sample);
-    this.b
-      .ref(threadsTabRef)
-      .addEventListener("click", () =>
-        dispatch({ type: "TAB_CHANGED", tab: "threads" }),
-      );
-    this.b
-      .ref(graphTabRef)
-      .addEventListener("click", () =>
-        dispatch({ type: "TAB_CHANGED", tab: "graph" }),
-      );
-    this.b.bindAttr(threadsTabRef, "aria-pressed", (s) =>
-      s.tab === "threads" ? "true" : "false",
-    );
-    this.b.bindAttr(graphTabRef, "aria-pressed", (s) =>
-      s.tab === "graph" ? "true" : "false",
-    );
-    // The threads pane is hidden rather than unmounted: the transcript, the
-    // draft and the live selection all survive a trip to the graph tab.
-    this.b.bindVisible(bodyRef, (s) => s.tab === "threads");
-    // Otherwise the empty graph slot still claims its flex share of the column
-    // and the transcript only gets part of the viewport.
-    this.b.bindVisible(graphSlotRef, (s) => s.tab === "graph");
-    this.b.bindSlot(graphSlotRef, (s) =>
-      s.tab === "graph"
-        ? show(GraphView, s.graph, {}, (msg: GraphMsg) =>
-            dispatch({ type: "GRAPH_MSG", msg }),
-          )
-        : undefined,
-    );
-    this.b.bindContainerAttr("data-split", (s) => (s.split ? "true" : "false"));
-    this.b.bindText(forwardRef, (s) => `${descendLabel(s.depth + 1)} →`);
-    this.b.bindDisabled(forwardRef, (s) => s.split && !s.canDescend);
-    // Not rendered at layer 0: there is nowhere above the task thread.
-    this.b.bindVisible(backRef, (s) => s.split && s.tab === "threads");
-    this.b.bindVisible(forwardRef, (s) => s.tab === "threads");
-    this.b.bindVisible(depthRef, (s) => s.tab === "threads");
-    this.b.bindText(depthRef, (s) => `Layer ${s.depth}`);
     this.b.bindSlot(learningRef, (s) => {
       if (!s.split) return undefined;
+      // The update transcript is opened explicitly and closed explicitly, so
+      // while it is open it outranks both the active child and a selection.
+      if (s.updatePane) {
+        return show(UpdatePane, s.updatePane, {}, (msg: UpdatePaneMsg) =>
+          dispatch({ type: "UPDATE_MSG", msg }),
+        );
+      }
       const child = s.child;
       // A live selection and an active child compete for this pane; the newer
       // one wins, and a selection is always the newer of the two here because
@@ -979,8 +1013,147 @@ export class AppView implements View<State, Msg, AppCtx> {
   }
 }
 
+export class AppView implements View<State, Msg, AppCtx> {
+  container: HTMLElement;
+  private b: Binder<State>;
+  /** The latest state, for event handlers that need it outside a binding. */
+  private current: State;
+
+  constructor(
+    container: HTMLElement,
+    dispatch: (msg: Msg) => void,
+    initialState: State,
+    ctx: AppCtx,
+  ) {
+    const backRef: Ref = ref("back");
+    const forwardRef: Ref = ref("forward");
+    const depthRef: Ref = ref("depth");
+    const sampleRef: Ref = ref("sample");
+    const buildRef: Ref = ref("build");
+    const resetRef: Ref = ref("reset");
+    const buildStatusRef: Ref = ref("build-status");
+    const buildDebugRef: Ref = ref("build-debug");
+    const threadsTabRef: Ref = ref("threads-tab");
+    const graphTabRef: Ref = ref("graph-tab");
+    const tabSlotRef: Ref = ref("tab-slot");
+
+    container.className = appClass;
+    container.innerHTML = sanitize`
+      <div class="${navClass}">
+        <select class="${sampleClass}" data-ref="${sampleRef}"></select>
+        <button type="button" data-build data-ref="${buildRef}">Build knowledge graph from this transcript</button>
+        <span class="${buildStatusClass}">
+          <span data-build-status data-ref="${buildStatusRef}"></span>
+          <button type="button" class="${buildDebugClass}" title="Dump build diagnostics to the console" data-ref="${buildDebugRef}">?</button>
+        </span>
+        <span class="${tabsClass}">
+          <button type="button" data-ref="${threadsTabRef}">Threads</button>
+          <button type="button" data-ref="${graphTabRef}">Knowledge graph</button>
+        </span>
+        <span class="${spacerClass}"></span>
+        <button type="button" data-ref="${resetRef}">Reset</button>
+        <button type="button" data-ref="${backRef}">← Back</button>
+        <span class="${depthClass}" data-ref="${depthRef}"></span>
+        <button type="button" data-ref="${forwardRef}"></button>
+      </div>
+      <div data-ref="${tabSlotRef}"></div>
+    `;
+    this.container = container;
+    this.current = initialState;
+    this.b = new Binder(container, initialState);
+
+    // The option list is a module constant, so it is built once rather than
+    // bound; switching sample is a page navigation anyway.
+    const picker = this.b.ref<HTMLSelectElement>(sampleRef);
+    const own = document.createElement("option");
+    own.value = "";
+    own.textContent = "Write your own";
+    picker.append(own);
+    for (const sample of samples) {
+      const option = document.createElement("option");
+      option.value = sample.id;
+      option.textContent = sample.label;
+      picker.append(option);
+    }
+    picker.addEventListener("change", () => {
+      dispatch({ type: "SAMPLE_CHANGED", id: picker.value });
+    });
+
+    this.b
+      .ref(backRef)
+      .addEventListener("click", () => dispatch({ type: "GO_BACK" }));
+    this.b
+      .ref(forwardRef)
+      .addEventListener("click", () => dispatch({ type: "GO_DEEPER" }));
+
+    this.b
+      .ref(buildRef)
+      .addEventListener("click", () => dispatch({ type: "BUILD" }));
+    this.b.bindDisabled(buildRef, (s) => s.build.type !== "idle");
+    this.b.bindText(buildStatusRef, (s) => buildStatus(s.build));
+    this.b.bindVisible(buildDebugRef, (s) => buildFailures(s.build).length > 0);
+    this.b.ref(buildDebugRef).addEventListener("click", () => {
+      console.log("build", this.current.build);
+      for (const f of buildFailures(this.current.build))
+        console.log(f.address, f.error);
+    });
+
+    this.b
+      .ref(resetRef)
+      .addEventListener("click", () => dispatch({ type: "RESET" }));
+    this.b.bindValue(sampleRef, (s) => s.sample);
+    this.b
+      .ref(threadsTabRef)
+      .addEventListener("click", () =>
+        dispatch({ type: "TAB_CHANGED", tab: "threads" }),
+      );
+    this.b
+      .ref(graphTabRef)
+      .addEventListener("click", () =>
+        dispatch({ type: "TAB_CHANGED", tab: "graph" }),
+      );
+    this.b.bindAttr(threadsTabRef, "aria-pressed", (s) =>
+      s.tab === "threads" ? "true" : "false",
+    );
+    this.b.bindAttr(graphTabRef, "aria-pressed", (s) =>
+      s.tab === "graph" ? "true" : "false",
+    );
+    // Exactly one tab is mounted: an unmounted pane cannot claim flex space
+    // from the one that is showing.
+    this.b.bindSlot(tabSlotRef, (s) =>
+      s.tab === "graph"
+        ? show(GraphView, s.graph, {}, (msg: GraphMsg) =>
+            dispatch({ type: "GRAPH_MSG", msg }),
+          )
+        : show(ThreadsView, s, ctx, dispatch),
+    );
+    this.b.bindContainerAttr("data-split", (s) => (s.split ? "true" : "false"));
+    this.b.bindText(forwardRef, (s) => `${descendLabel(s.depth + 1)} →`);
+    this.b.bindDisabled(forwardRef, (s) => s.split && !s.canDescend);
+    // Not rendered at layer 0: there is nowhere above the task thread.
+    this.b.bindVisible(backRef, (s) => s.split && s.tab === "threads");
+    this.b.bindVisible(forwardRef, (s) => s.tab === "threads");
+    this.b.bindVisible(depthRef, (s) => s.tab === "threads");
+    this.b.bindText(depthRef, (s) => `Layer ${s.depth}`);
+  }
+
+  sync(state: State): void {
+    this.current = state;
+    this.b.sync(state);
+  }
+
+  destroy(): void {
+    this.b.cleanup();
+    this.container.innerHTML = "";
+  }
+}
+
 /** A count rather than a spinner: this is one model call per turn and it takes
  * as long as it takes. */
+function buildFailures(build: Build): ReadonlyArray<BuildFailure> {
+  return build.type === "idle" ? [] : build.failures;
+}
+
 function buildStatus(build: Build): string {
   switch (build.type) {
     case "idle":
@@ -988,7 +1161,9 @@ function buildStatus(build: Build): string {
     case "running":
       return `${build.done} / ${build.total} interactions`;
     case "done":
-      return build.failed === 0 ? "built" : `built, ${build.failed} failed`;
+      return build.failures.length === 0
+        ? "built"
+        : `built, ${build.failures.length} failed`;
   }
 }
 
