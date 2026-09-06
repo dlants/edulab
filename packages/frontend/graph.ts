@@ -45,6 +45,13 @@ export type GraphResult =
   | { status: "ok"; change: GraphChange }
   | { status: "error"; error: string };
 
+/** The graph, flattened for storage. `next` travels with it so ids minted on a
+ * restored graph cannot collide with restored ones. */
+export type GraphSnapshot = {
+  nodes: GraphNode[];
+  edges: GraphEdge[];
+  next: number;
+};
 export const isNodeId = (id: string): id is NodeId => id.startsWith("n");
 export const isEdgeId = (id: string): id is EdgeId => id.startsWith("e");
 
@@ -61,6 +68,20 @@ export class KnowledgeGraph {
     return [...this.#edges.values()];
   }
 
+  snapshot(): GraphSnapshot {
+    return {
+      nodes: [...this.#nodes.values()],
+      edges: [...this.#edges.values()],
+      next: this.#next,
+    };
+  }
+  static from(snapshot: GraphSnapshot): KnowledgeGraph {
+    const graph = new KnowledgeGraph();
+    for (const node of snapshot.nodes) graph.#nodes.set(node.id, node);
+    for (const edge of snapshot.edges) graph.#edges.set(edge.id, edge);
+    graph.#next = snapshot.next;
+    return graph;
+  }
   node(id: NodeId): GraphNode | undefined {
     return this.#nodes.get(id);
   }

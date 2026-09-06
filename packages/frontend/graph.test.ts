@@ -174,3 +174,22 @@ it("reports incident edges, endpoints and unknown ids from get", () => {
 it("renders an empty graph as something a model can act on", () => {
   expect(new KnowledgeGraph().render()).toContain("empty");
 });
+
+it("round-trips through a snapshot, including the id counter", () => {
+  const graph = new KnowledgeGraph();
+  const a = addNode(graph, "a", 2);
+  const b = addNode(graph, "b");
+  const c = addNode(graph, "c");
+  addEdge(graph, a, b, "leads to");
+  graph.deleteNode(c);
+
+  const restored = KnowledgeGraph.from(
+    JSON.parse(JSON.stringify(graph.snapshot())),
+  );
+  expect(restored.nodes).toEqual(graph.nodes);
+  expect(restored.edges).toEqual(graph.edges);
+
+  const fresh = addNode(restored, "d");
+  expect(graph.nodes.some((n) => n.id === fresh)).toBe(false);
+  expect(restored.node(fresh)?.title).toBe("d");
+});

@@ -10,6 +10,7 @@ import {
   type Tool,
   type ToolResult,
   toolset,
+  trimUnansweredTools,
 } from "./thread.ts";
 
 class FakeSocket implements Socket {
@@ -620,4 +621,65 @@ it("hands a watcher an unattended thread's completed tool calls", async () => {
     input: { path: "a.txt" },
     result: { status: "ok", text: "contents" },
   });
+});
+
+it("round-trips a thread through its log", async () => {
+  const socket = new FakeSocket();
+  const thread = new Thread(socket, {
+    system: "be brief",
+    tools: toolset(tool("read", async () => ({ status: "ok", text: "abc" }))),
+  });
+  const first = thread.send("hi");
+  toolTurn(socket, [{ id: "t1", name: "read", json: '{"path":"a.txt"}' }]);
+  await flush();
+  socket.stream(["done"]);
+  await first;
+
+  const log = JSON.parse(
+    JSON.stringify(thread.log),
+  ) as Anthropic.MessageParam[];
+  const restoredSocket = new FakeSocket();
+  const restored = new Thread(restoredSocket, {
+    system: thread.systemPrompt,
+    initialTurns: log,
+  });
+  expect(restored.messages).toEqual(thread.messages);
+
+  void restored.send("again");
+  expect(restoredSocket.sent[0]?.params.messages).toEqual([
+    ...log,
+    { role: "user", content: "again" },
+  ]);
+  expect(restoredSocket.sent[0]?.params.system).toBe("be brief");
+});
+
+it("keeps the seed out of the log", async () => {
+  const socket = new FakeSocket();
+  const thread = new Thread(socket, { seed: "context", initialTurns: [] });
+  const turn = thread.start();
+  socket.stream(["ok"]);
+  await turn;
+  expect(thread.log).toEqual([
+    { role: "assistant", content: [{ type: "text", text: "ok" }] },
+  ]);
+});
+
+it("trims trailing turns until every tool_use is answered", () => {
+  const call: Anthropic.MessageParam = {
+    role: "assistant",
+    content: [{ type: "tool_use", id: "t1", name: "read", input: {} }],
+  };
+  const ask: Anthropic.MessageParam = { role: "user", content: "hi" };
+  const answer: Anthropic.MessageParam = {
+    role: "user",
+    content: [{ type: "tool_result", tool_use_id: "t1", content: "abc" }],
+  };
+  expect(trimUnansweredTools([ask, call])).toEqual([ask]);
+  expect(trimUnansweredTools([ask, call, answer])).toEqual([ask, call, answer]);
+  expect(trimUnansweredTools([ask, call, answer, ask])).toEqual([
+    ask,
+    call,
+    answer,
+    ask,
+  ]);
 });

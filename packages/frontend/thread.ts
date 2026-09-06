@@ -193,6 +193,31 @@ export async function runThread(
     : { status: "error", error: result.message };
 }
 
+/** Drops trailing turns until every `tool_use` in the log is answered by a
+ * `tool_result`: the API rejects a log with a dangling call, which is exactly
+ * what a refresh mid-tool-call leaves behind. A trailing user turn that simply
+ * never got a reply is well-formed and is kept. */
+export function trimUnansweredTools(
+  log: ReadonlyArray<Anthropic.MessageParam>,
+): Anthropic.MessageParam[] {
+  const out = [...log];
+  while (out.length > 0 && !answered(out)) out.pop();
+  return out;
+}
+function answered(log: ReadonlyArray<Anthropic.MessageParam>): boolean {
+  const results = new Set<string>();
+  for (const turn of log) {
+    if (typeof turn.content === "string") continue;
+    for (const block of turn.content)
+      if (block.type === "tool_result") results.add(block.tool_use_id);
+  }
+  for (const turn of log) {
+    if (typeof turn.content === "string") continue;
+    for (const block of turn.content)
+      if (block.type === "tool_use" && !results.has(block.id)) return false;
+  }
+  return true;
+}
 export class Thread {
   private readonly turns: Anthropic.MessageParam[];
   private pending:
@@ -260,6 +285,14 @@ export class Thread {
     return messages;
   }
 
+  /** The committed wire log minus the seed turn: what a snapshot stores and
+   * what `initialTurns` restores. Turns still streaming are not in it. */
+  get log(): ReadonlyArray<Anthropic.MessageParam> {
+    return this.seed ? this.turns.slice(1) : this.turns;
+  }
+  get systemPrompt(): string {
+    return this.system;
+  }
   get inFlight(): boolean {
     return this.running;
   }
