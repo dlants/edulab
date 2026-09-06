@@ -1,3 +1,4 @@
+import { type Citation, parse, resolve } from "../citation.ts";
 import {
   type GraphChange,
   type GraphEdge,
@@ -7,7 +8,12 @@ import {
   type NodeId,
 } from "../graph.ts";
 import { changesIn, readTools, writeTools } from "../graph-tools.ts";
-import type { Msg as GraphMsg, Sidebar } from "../graph-view.ts";
+import type {
+  Chip,
+  Citations,
+  Msg as GraphMsg,
+  Sidebar,
+} from "../graph-view.ts";
 import { interactionAt } from "../interactions.ts";
 import { layout, type Position } from "../layout.ts";
 import { GRAPH_UPDATE_SYSTEM, graphUpdatePrompt } from "../prompt.ts";
@@ -15,7 +21,9 @@ import { selectedSample, selectSample } from "../samples/index.ts";
 import { overlaps, type ThreadId } from "../selection.ts";
 import { type Message, type MessageIdx, runThread, Thread } from "../thread.ts";
 import { ThreadTree } from "../threads.ts";
+import { PostRenderEventBus } from "../vamp.ts";
 import {
+  type AppEvent,
   AppView,
   type GraphUpdate,
   type Msg,
@@ -117,7 +125,12 @@ export function mount(container: HTMLElement): void {
     activeMark: null,
     anchor: null,
     tab: "threads",
-    graph: { nodes: [], edges: [], sidebar },
+    graph: {
+      nodes: [],
+      edges: [],
+      sidebar,
+      citations: { description: [], notes: [] },
+    },
     build: { type: "idle" },
     query: "",
     expanded: new Set(),
@@ -146,7 +159,35 @@ export function mount(container: HTMLElement): void {
       nodes: nodes.map((n) => ({ ...n, pos: at(n.id) })),
       edges: edges.map((e) => ({ ...e, from_: at(e.from), to_: at(e.to) })),
       sidebar,
+      citations: citationsOf(),
     };
+  }
+
+  /** The citations in the *saved* prose of whatever the sidebar has open. Read
+   * off the graph rather than the draft: a half-typed address is not a
+   * citation, and one that does not resolve against the tree is not either. */
+  function citationsOf(): Citations {
+    const chips = (text: string): Chip[] =>
+      parse(text).flatMap((span) => {
+        if (span.type !== "citation") return [];
+        const quote = resolve(tree, span.citation);
+        return quote === undefined ? [] : [{ citation: span.citation, quote }];
+      });
+    switch (sidebar.type) {
+      case "closed":
+        return { description: [], notes: [] };
+      case "edge": {
+        const edge = graph.edge(sidebar.id);
+        return { description: chips(edge?.description ?? ""), notes: [] };
+      }
+      case "node": {
+        const node = graph.node(sidebar.id);
+        return {
+          description: chips(node?.description ?? ""),
+          notes: chips(node?.notes ?? ""),
+        };
+      }
+    }
   }
 
   function refresh(): void {
@@ -281,6 +322,26 @@ export function mount(container: HTMLElement): void {
     void queueGraphUpdate(id, index);
   }
 
+  /** A citation run forwards: focus the cited thread and put the cited message
+   * in front of the user. Focusing a deep thread is just setting each
+   * ancestor's `activeChild`, which is the same state a mark click sets, so
+   * this introduces no second notion of focus. The scroll cannot happen here -
+   * the pane is not showing that thread until after the sync - so it goes out
+   * on the post-render bus. */
+  function reveal(state: State, citation: Citation): void {
+    const path = tree.path(citation.thread);
+    path.forEach((id, i) => {
+      const next = path[i + 1];
+      if (next) tree.get(id).activeChild = next;
+    });
+    focus = citation.thread;
+    state.split = path.length > 1;
+    state.tab = "threads";
+    state.anchor = null;
+    state.query = "";
+    bus.emit({ type: "transcript:reveal", index: citation.index });
+  }
+
   /** The graph tab's own reducer. It writes to the graph and to `sidebar`;
    * everything the canvas shows is re-derived in refreshGraph(). */
   function updateGraph(msg: GraphMsg): void {
@@ -360,7 +421,9 @@ export function mount(container: HTMLElement): void {
         );
         break;
       case "GRAPH_MSG":
-        updateGraph(msg.msg);
+        if (msg.msg.type === "CITATION_CLICKED")
+          reveal(state, msg.msg.citation);
+        else updateGraph(msg.msg);
         break;
       case "SUBMIT":
         send(focus);
@@ -451,12 +514,17 @@ export function mount(container: HTMLElement): void {
     refresh();
   }
 
+  // Scroll and flash are the one thing that cannot live in a reducer or a
+  // binding: they need the DOM to already reflect the new focus.
+  const bus = new PostRenderEventBus<AppEvent>();
+
   let dispatching = false;
   function dispatch(msg: Msg): void {
     if (dispatching) throw new Error("dispatch-in-dispatch");
     dispatching = true;
     update(state, msg);
     view.sync(state);
+    bus.flush();
     dispatching = false;
   }
 
@@ -465,5 +533,5 @@ export function mount(container: HTMLElement): void {
   (window as unknown as { __graph?: KnowledgeGraph }).__graph = graph;
 
   refresh();
-  const view = new AppView(container, dispatch, state);
+  const view = new AppView(container, dispatch, state, { bus });
 }

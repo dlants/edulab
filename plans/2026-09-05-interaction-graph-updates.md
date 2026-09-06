@@ -383,3 +383,30 @@ Deviations:
   - A node whose notes cite a message in a child thread shows one chip labelled with that message's text; clicking it switches to the threads tab with that thread focused and the cited message scrolled into view and flashed.
   - A node whose notes cite a nonexistent thread shows no chip and leaves the raw text untouched — the degradation path, which is the one that will actually happen as the model invents addresses.
   - **The integration that matters**: stub a graph update that writes a note containing the address of the interaction it was given, then click through the resulting chip. Address into the prompt, address out of the model, address back onto the transcript — the only test that would catch the two ends disagreeing about the format.
+
+**Landed.** `graph-view.ts` gained `Chip`, `Citations`, a `ChipView` and a chip
+row under each of the description and notes textareas, plus
+`{ type: "CITATION_CLICKED" }`. `chat.ts` projects the chips in `refreshGraph`
+from the *saved* node or edge through `parse` + `resolve`, owns a
+`PostRenderEventBus<AppEvent>` flushed at the end of `dispatch`, and handles
+`CITATION_CLICKED` in `reveal()`: walk `tree.path`, set each ancestor's
+`activeChild`, focus the cited thread, `split` when it is not the root, switch
+to the threads tab, and emit `{ type: "transcript:reveal", index }`. `AppView`
+takes an `AppCtx` (`{ bus }`), subscribes in its constructor and unsubscribes in
+`destroy`. Deviations:
+
+- No `focusMessage` on `view.State`. The flash is a class the same post-render
+  subscriber adds after scrolling, so nothing about the reveal is state that
+  would then need clearing on the next action; a second render of the same
+  transcript is not a second reveal.
+- Edges get description chips too. `notes` is a node field, so an edge's chip
+  row for it is simply empty rather than a special case.
+- A chip is labelled with the quote flattened and clipped to 40 characters, with
+  the full text on its `title`: it has to fit one line of a 20rem sidebar.
+- The two ends of the DSL are checked by `citingBackend` in `graph.spec.ts`,
+  which echoes the last `@message:tN:i` it finds in the prompt back out as a
+  node's notes; the test then clicks the resulting chip.
+
+`npm run test:e2e` also runs `smoke.spec.ts` against the real API, which fails
+in this environment for reasons unrelated to the stage; every stubbed spec
+passes.

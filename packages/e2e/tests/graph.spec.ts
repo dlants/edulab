@@ -403,6 +403,196 @@ test("interacting mid-build interleaves rather than races", async ({
   await expect(nodes(page)).toHaveCount(SAMPLE_TURNS + 1);
   expect(backend.overlapped()).toBe(false);
 });
+/** Seeds one node whose notes are the prose under test, and opens it. */
+async function seedNote(page: Page, notes: string) {
+  await page.evaluate((text) => {
+    (
+      window as unknown as {
+        __graph: { putNode(n: Record<string, unknown>): unknown };
+      }
+    ).__graph.putNode({
+      title: "backpressure",
+      description: "",
+      notes: text,
+      level: 2,
+    });
+  }, notes);
+  await graphTab(page).click();
+  await nodes(page).first().click();
+}
+
+/** Opens a learning thread off the first message of the root transcript, which
+ * is what gives the tree a `t1` for a citation to land in. */
+async function openLearningThread(page: Page) {
+  await page.getByRole("button", { name: "Reflect" }).click();
+  await page.evaluate(() => {
+    const root = document
+      .querySelectorAll("ul")[0]
+      .children[0].querySelector("[data-text]") as HTMLElement;
+    const range = document.createRange();
+    range.selectNodeContents(root);
+    const selection = window.getSelection();
+    selection?.removeAllRanges();
+    selection?.addRange(range);
+  });
+  await page.locator("ul").first().dispatchEvent("mouseup");
+  await page.getByRole("button", { name: "I don't understand this." }).click();
+}
+
+test("a cited message is one click away from the note that rests on it", async ({
+  page,
+}) => {
+  await backend(page);
+  await page.goto("/");
+  await turn(page, "the quick brown fox");
+  await expect(page.locator("ul").first().locator("li")).toHaveCount(2);
+  await openLearningThread(page);
+
+  await seedNote(page, "shaky on framing @message:t1:0");
+  const chip = page.locator("[data-citation]");
+  await expect(chip).toHaveCount(1);
+  await expect(chip).toHaveText(/Selected/);
+
+  await chip.click();
+  await expect(threadsTab(page)).toHaveAttribute("aria-pressed", "true");
+  // The cited thread is the one in the left pane, scrolled to its message.
+  const cited = page.locator("ul").first().locator("li").first();
+  await expect(cited).toContainText("I don't understand this.");
+  await expect(cited).toHaveClass(/flash/);
+});
+
+test("a citation that does not resolve is left as text", async ({ page }) => {
+  await backend(page);
+  await page.goto("/");
+  await seedNote(page, "invented @message:t9:4 and malformed @message:t0:");
+
+  await expect(page.locator("[data-citation]")).toHaveCount(0);
+  await expect(page.locator("[data-graph-notes]")).toHaveValue(
+    "invented @message:t9:4 and malformed @message:t0:",
+  );
+});
+
+/** Answers a graph update by writing a node whose notes cite the address the
+ * prompt handed it: address in, address out, address back onto the transcript.
+ * The only test that would catch the two ends disagreeing about the format. */
+async function citingBackend(page: Page) {
+  await page.routeWebSocket("**/api/socket", (ws) => {
+    ws.onMessage((raw) => {
+      const message = JSON.parse(String(raw)) as ClientMessage;
+      const send = (frame: ServerFrame) => ws.send(JSON.stringify(frame));
+      const update = (message.params.tools ?? []).some(
+        (t) => t.name === "put_nodes",
+      );
+      const first = message.params.messages.length === 1;
+      if (!update || !first) {
+        const call = { id: "yield-1", name: "yield", input: { result: "ok" } };
+        if (update) toolCall(send, message.requestId, call);
+        else text(send, message.requestId);
+        return;
+      }
+      const addresses = JSON.stringify(message.params.messages).match(
+        /@message:t\d+:\d+/g,
+      );
+      toolCall(send, message.requestId, {
+        id: "call-1",
+        name: "put_nodes",
+        input: {
+          nodes: [
+            {
+              title: "backpressure",
+              description: "",
+              notes: `said so at ${addresses?.[addresses.length - 1] ?? "nowhere"}`,
+              level: 2,
+            },
+          ],
+        },
+      });
+    });
+  });
+}
+
+function text(send: (frame: ServerFrame) => void, requestId: string) {
+  send({
+    type: "event",
+    requestId,
+    event: {
+      type: "content_block_start",
+      index: 0,
+      content_block: { type: "text", text: "ok", citations: null },
+    },
+  });
+  send({
+    type: "event",
+    requestId,
+    event: { type: "content_block_stop", index: 0 },
+  });
+  send({
+    type: "event",
+    requestId,
+    event: { type: "message_stop" } as never,
+  });
+  send({ type: "done", requestId });
+}
+
+function toolCall(
+  send: (frame: ServerFrame) => void,
+  requestId: string,
+  call: { id: string; name: string; input: unknown },
+) {
+  send({
+    type: "event",
+    requestId,
+    event: {
+      type: "content_block_start",
+      index: 0,
+      content_block: {
+        type: "tool_use",
+        id: call.id,
+        name: call.name,
+        input: {},
+      },
+    } as never,
+  });
+  send({
+    type: "event",
+    requestId,
+    event: {
+      type: "content_block_delta",
+      index: 0,
+      delta: {
+        type: "input_json_delta",
+        partial_json: JSON.stringify(call.input),
+      },
+    },
+  });
+  send({
+    type: "event",
+    requestId,
+    event: { type: "content_block_stop", index: 0 },
+  });
+  send({ type: "event", requestId, event: { type: "message_stop" } as never });
+  send({ type: "done", requestId });
+}
+
+test("an address written by a graph update navigates back to its turn", async ({
+  page,
+}) => {
+  await citingBackend(page);
+  await page.goto("/");
+  await turn(page, "how does backpressure work");
+
+  await graphTab(page).click();
+  await nodes(page).first().click();
+  const chip = page.locator("[data-citation]");
+  await expect(chip).toHaveText(/how does backpressure work/);
+
+  await chip.click();
+  await expect(threadsTab(page)).toHaveAttribute("aria-pressed", "true");
+  await expect(page.locator("ul").first().locator("li").first()).toHaveClass(
+    /flash/,
+  );
+});
+
 test("clicking a change opens the graph tab with that node selected", async ({
   page,
 }) => {

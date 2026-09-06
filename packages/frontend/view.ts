@@ -25,9 +25,11 @@ import {
   Binder,
   cls,
   mountStyle,
+  type PostRenderEventBus,
   type Ref,
   ref,
   sanitize,
+  scrollIntoView,
   show,
   showKeyed,
   type View,
@@ -129,6 +131,7 @@ const moreClass = cls("more");
 const updateClass = cls("update");
 const changeClass = cls("change");
 const changeListClass = cls("change-list");
+const flashClass = cls("flash");
 
 mountStyle(`
 .${appClass} {
@@ -332,6 +335,13 @@ mountStyle(`
   font-size: 0.75rem;
   color: #666;
   margin-top: 0.35rem;
+}
+@keyframes ${flashClass}-pulse {
+  from { background: #ffe8a3; }
+  to { background: transparent; }
+}
+.${flashClass} {
+  animation: ${flashClass}-pulse 1.2s ease-out;
 }
 .${changeListClass} {
   display: contents;
@@ -716,16 +726,26 @@ class ThreadPane implements View<ThreadPaneState, ThreadPaneMsg> {
   }
 }
 
-export class AppView implements View<State, Msg> {
+/** Work that can only happen once the DOM reflects the new state. Scrolling to
+ * a cited message needs the pane to already be showing that thread, which is
+ * a reducer's job, so the two phases are bridged by the bus rather than by the
+ * reducer reaching into the DOM. */
+export type AppEvent = { type: "transcript:reveal"; index: number };
+
+export type AppCtx = { bus: PostRenderEventBus<AppEvent> };
+
+export class AppView implements View<State, Msg, AppCtx> {
   container: HTMLElement;
   private b: Binder<State>;
   /** The latest state, for event handlers that need it outside a binding. */
   private current: State;
+  private readonly unsubscribe: () => void;
 
   constructor(
     container: HTMLElement,
     dispatch: (msg: Msg) => void,
     initialState: State,
+    ctx: AppCtx,
   ) {
     const transcriptRef: Ref = ref("transcript");
     const inputRef: Ref = ref("input");
@@ -821,6 +841,18 @@ export class AppView implements View<State, Msg> {
     };
     transcript.addEventListener("mouseup", capture);
     transcript.addEventListener("keyup", capture);
+
+    // Scroll and flash are facts about the rendered box, so they can only run
+    // once the pane is already showing the cited thread.
+    this.unsubscribe = ctx.bus.subscribe((event) => {
+      if (event.type !== "transcript:reveal") return;
+      const li = transcript.children[event.index];
+      if (!(li instanceof HTMLElement)) return;
+      scrollIntoView(li);
+      li.classList.remove(flashClass);
+      // Restarting the animation needs a frame with the class off.
+      requestAnimationFrame(() => li.classList.add(flashClass));
+    });
 
     // The transcript is append-only and never reorders, so the position of a
     // message is a stable identity.
@@ -935,6 +967,7 @@ export class AppView implements View<State, Msg> {
   }
 
   destroy(): void {
+    this.unsubscribe();
     this.b.cleanup();
     this.container.innerHTML = "";
   }

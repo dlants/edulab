@@ -1,3 +1,4 @@
+import type { Citation } from "./citation.ts";
 import type { EdgeId, GraphEdge, GraphNode, Level, NodeId } from "./graph.ts";
 import { LEVELS } from "./graph.ts";
 import type { Position } from "./layout.ts";
@@ -29,10 +30,24 @@ export type Sidebar =
       error: string | null;
     };
 
+/** A reference from a saved node's prose back into the transcript, together
+ * with the quote it resolves to. A textarea cannot hold a link, so the
+ * references are rendered as a row of chips beneath the field instead - a
+ * bibliography for the claim rather than inline markup. */
+export type Chip = { citation: Citation; quote: string };
+
+/** The chips for the *saved* text of the open selection, not for the draft:
+ * a half-typed address is not a citation. */
+export type Citations = {
+  description: ReadonlyArray<Chip>;
+  notes: ReadonlyArray<Chip>;
+};
+
 export type State = {
   nodes: ReadonlyArray<GraphNode & { pos: Position }>;
   edges: ReadonlyArray<GraphEdge & { from_: Position; to_: Position }>;
   sidebar: Sidebar;
+  citations: Citations;
 };
 
 /** `field` is keyed off what is open, so a message for the wrong kind of
@@ -49,7 +64,8 @@ export type Msg =
   | { type: "LEVEL_CHANGED"; level: Level }
   | { type: "EDGE_FIELD"; field: "title" | "description"; value: string }
   | { type: "SAVE" }
-  | { type: "DELETE" };
+  | { type: "DELETE" }
+  | { type: "CITATION_CLICKED"; citation: Citation };
 
 /** The canvas is sized in pixels rather than percentages: an edge is a rotated
  * bar, and a bar whose length is a percentage of the width but whose angle is
@@ -73,6 +89,8 @@ const sidebarClass = cls("graph-sidebar");
 const emptyClass = cls("graph-empty");
 const errorClass = cls("graph-error");
 const actionsClass = cls("graph-actions");
+const chipsClass = cls("graph-chips");
+const chipClass = cls("graph-chip");
 
 mountStyle(`
 .${graphClass} {
@@ -167,6 +185,26 @@ mountStyle(`
 }
 .${errorClass} {
   color: #b00020;
+}
+.${chipsClass} {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin: 0.2rem 0 0.4rem;
+}
+.${chipClass} {
+  font: inherit;
+  font-size: 0.75rem;
+  text-align: left;
+  max-width: 100%;
+  padding: 0.1rem 0.5rem;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 999px;
+  background: #fff;
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 `);
 
@@ -274,6 +312,51 @@ class EdgeView implements View<EdgeState, { type: "CLICKED" }> {
   }
 }
 
+type ChipState = { chip: Chip };
+type ChipMsg = { type: "CLICKED" };
+
+/** A citation as a chip beneath the field that cites it, labelled with the
+ * quote it points at. A note that says "shaky on framing" is unfalsifiable; one
+ * that points at the turn where the user said so is evidence. */
+class ChipView implements View<ChipState, ChipMsg> {
+  container: HTMLElement;
+  private b: Binder<ChipState>;
+
+  constructor(
+    container: HTMLElement,
+    dispatch: (msg: ChipMsg) => void,
+    initial: ChipState,
+  ) {
+    const labelRef = ref("chip-label");
+    container.className = chipClass;
+    container.setAttribute("type", "button");
+    container.setAttribute("data-citation", "");
+    container.innerHTML = sanitize`<span data-ref="${labelRef}"></span>`;
+    this.container = container;
+    this.b = new Binder(container, initial);
+    container.addEventListener("click", () => dispatch({ type: "CLICKED" }));
+    this.b.bindText(labelRef, (s) => quoteLabel(s.chip.quote));
+    this.b.bindAttr(labelRef, "title", (s) => s.chip.quote);
+  }
+
+  sync(state: ChipState): void {
+    this.b.sync(state);
+  }
+
+  destroy(): void {
+    this.b.cleanup();
+    this.container.innerHTML = "";
+  }
+}
+
+/** A chip is one line in a sidebar column, so the quote is squeezed to a
+ * recognisable fragment; the full text is on the tooltip. */
+const QUOTE_CHARS = 40;
+function quoteLabel(quote: string): string {
+  const flat = quote.replace(/\s+/g, " ").trim();
+  return flat.length > QUOTE_CHARS ? `${flat.slice(0, QUOTE_CHARS)}…` : flat;
+}
+
 export class GraphView implements View<State, Msg> {
   container: HTMLElement;
   private b: Binder<State>;
@@ -292,8 +375,10 @@ export class GraphView implements View<State, Msg> {
     const kindRef = ref("graph-kind");
     const titleRef = ref("graph-title");
     const descriptionRef = ref("graph-description");
+    const descriptionChipsRef = ref("graph-description-chips");
     const notesRowRef = ref("graph-notes-row");
     const notesRef = ref("graph-notes");
+    const notesChipsRef = ref("graph-notes-chips");
     const levelRowRef = ref("graph-level-row");
     const levelRef = ref("graph-level");
     const errorRef = ref("graph-error");
@@ -313,7 +398,9 @@ export class GraphView implements View<State, Msg> {
           <strong data-graph-kind data-ref="${kindRef}"></strong>
           <label>Title<input data-graph-title data-ref="${titleRef}" /></label>
           <label>Description<textarea rows="3" data-graph-description data-ref="${descriptionRef}"></textarea></label>
+          <div class="${chipsClass}" data-description-citations data-ref="${descriptionChipsRef}"></div>
           <label data-ref="${notesRowRef}">Notes<textarea rows="3" data-graph-notes data-ref="${notesRef}"></textarea></label>
+          <div class="${chipsClass}" data-notes-citations data-ref="${notesChipsRef}"></div>
           <label data-ref="${levelRowRef}">Understanding<select data-graph-level data-ref="${levelRef}"></select></label>
           <p class="${errorClass}" data-graph-error data-ref="${errorRef}"></p>
           <div class="${actionsClass}">
@@ -401,6 +488,23 @@ export class GraphView implements View<State, Msg> {
       .ref(closeRef)
       .addEventListener("click", () => dispatch({ type: "CLOSE" }));
 
+    const chips = (field: "description" | "notes") => (s: State) =>
+      s.citations[field].map((chip) =>
+        showKeyed(
+          `${chip.citation.thread}:${chip.citation.index}`,
+          ChipView,
+          { chip },
+          {},
+          () => dispatch({ type: "CITATION_CLICKED", citation: chip.citation }),
+        ),
+      );
+    this.b.bindList(descriptionChipsRef, "button", chips("description"));
+    this.b.bindList(notesChipsRef, "button", chips("notes"));
+    this.b.bindVisible(
+      descriptionChipsRef,
+      (s) => s.citations.description.length > 0,
+    );
+    this.b.bindVisible(notesChipsRef, (s) => s.citations.notes.length > 0);
     this.b.bindVisible(emptyRef, (s) => s.nodes.length === 0);
     this.b.bindVisible(closedRef, (s) => s.sidebar.type === "closed");
     this.b.bindVisible(openRef, (s) => s.sidebar.type !== "closed");
