@@ -285,3 +285,21 @@ test("an unreadable snapshot is dropped and the app comes up bare", async ({
     "{ not json",
   );
 });
+
+test("Reset clears this sample's state for good", async ({ page }) => {
+  await backend(page);
+  await page.goto("/");
+  await page.getByRole("textbox").fill(SENTENCE);
+  await page.getByRole("textbox").press("Enter");
+  await expect(taskTranscript(page).locator("li")).toHaveCount(2);
+  await seedGraph(page);
+  await settled(page);
+  await page.getByRole("button", { name: "Reset", exact: true }).click();
+  await expect(taskTranscript(page).locator("li")).toHaveCount(0);
+  await graphTab(page).click();
+  await expect(page.locator("[data-node]")).toHaveCount(0);
+  await page.reload();
+  await expect(taskTranscript(page).locator("li")).toHaveCount(0);
+  await graphTab(page).click();
+  await expect(page.locator("[data-node]")).toHaveCount(0);
+});

@@ -274,8 +274,16 @@ Deviations:
   - [x] A snapshot with a `running` build (seeded by rewriting the stored JSON in the page) resumes: the sample's interactions are requested and the build indicator reaches "built".
   - [x] Corrupt the stored JSON, load: the app comes up on the bare sample with an empty graph and the bad key is gone.
 
-## reset button
+## reset button — DONE
+
+Landed as the `RESET` `Msg` and a Reset button in the nav (`view.ts`), handled
+in `chat.ts` by `clearSnapshot(sample?.id)` followed by
+`window.location.reload()`.
+
+Deviation: `State.sample` stayed a bare `string` (empty for "write your own")
+rather than widening to `SampleId | undefined` — that only ever feeds the
+`<select>`'s value, and `SAMPLE_CHANGED` already narrows on the way out.
 
 - Goal: a Reset control in the nav clears this sample's stored state and reloads.
 - Tests (e2e):
-  - After a turn and a graph node exist, clicking Reset returns the app to the bare sample transcript with an empty graph, and a further reload does not bring the old state back.
+  - [x] After a turn and a graph node exist, clicking Reset returns the app to the bare sample transcript with an empty graph, and a further reload does not bring the old state back.

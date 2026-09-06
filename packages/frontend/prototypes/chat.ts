@@ -19,6 +19,7 @@ import { IDENTITY_VIEWPORT, panZoom } from "../graph-view.ts";
 import { interactionAt } from "../interactions.ts";
 import { layout, type Position } from "../layout.ts";
 import {
+  clearSnapshot,
   type InteractionAddress,
   interactionAddresses,
   loadSnapshot,
@@ -513,6 +514,10 @@ export function mount(container: HTMLElement): void {
         break;
       case "SAMPLE_CHANGED":
         selectSample(msg.id === "" ? undefined : (msg.id as SampleId));
+        break;
+      case "RESET":
+        clearSnapshot(sample?.id);
+        window.location.reload();
         break;
       case "TAB_CHANGED":
         state.tab = msg.tab;

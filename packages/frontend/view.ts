@@ -97,6 +97,7 @@ export type Msg =
   | { type: "MARK_CLICKED"; thread: ThreadId }
   | { type: "LEARNING_MSG"; msg: LearningMsg }
   | { type: "SAMPLE_CHANGED"; id: string }
+  | { type: "RESET" }
   | { type: "TAB_CHANGED"; tab: "threads" | "graph" }
   | { type: "GRAPH_MSG"; msg: GraphMsg }
   | { type: "TOGGLE_EXPANDED"; index: number }
@@ -757,6 +758,7 @@ export class AppView implements View<State, Msg, AppCtx> {
     const learningRef: Ref = ref("learning");
     const sampleRef: Ref = ref("sample");
     const buildRef: Ref = ref("build");
+    const resetRef: Ref = ref("reset");
     const buildStatusRef: Ref = ref("build-status");
     const threadsTabRef: Ref = ref("threads-tab");
     const graphTabRef: Ref = ref("graph-tab");
@@ -774,6 +776,7 @@ export class AppView implements View<State, Msg, AppCtx> {
           <button type="button" data-ref="${graphTabRef}">Knowledge graph</button>
         </span>
         <span class="${spacerClass}"></span>
+        <button type="button" data-ref="${resetRef}">Reset</button>
         <button type="button" data-ref="${backRef}">← Back</button>
         <span class="${depthClass}" data-ref="${depthRef}"></span>
         <button type="button" data-ref="${forwardRef}"></button>
@@ -896,6 +899,9 @@ export class AppView implements View<State, Msg, AppCtx> {
     this.b.bindDisabled(buildRef, (s) => s.build.type !== "idle");
     this.b.bindText(buildStatusRef, (s) => buildStatus(s.build));
 
+    this.b
+      .ref(resetRef)
+      .addEventListener("click", () => dispatch({ type: "RESET" }));
     this.b.bindValue(sampleRef, (s) => s.sample);
     this.b
       .ref(threadsTabRef)
