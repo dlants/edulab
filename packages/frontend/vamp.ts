@@ -160,7 +160,21 @@ export class Binder<State> {
   bindText(ref: Ref, fn: (s: State) => string): void {
     const el = this.ref(ref);
     const binding = (s: State) => {
-      el.textContent = fn(s);
+      const next = fn(s);
+      const node = el.firstChild;
+      // Assigning textContent always builds a fresh text node, which destroys
+      // any selection anchored in the old one. Streaming only ever appends, so
+      // grow the existing node in place and the user's drag survives the token.
+      if (
+        el.childNodes.length === 1 &&
+        node instanceof Text &&
+        next.startsWith(node.data)
+      ) {
+        if (next.length > node.data.length)
+          node.appendData(next.slice(node.data.length));
+        return;
+      }
+      if (el.textContent !== next) el.textContent = next;
     };
     this.bindings.push(binding);
     binding(this.state);
@@ -169,7 +183,8 @@ export class Binder<State> {
   bindClass(refOrEl: Ref | HTMLElement, fn: (s: State) => string): void {
     const el = refOrEl instanceof HTMLElement ? refOrEl : this.ref(refOrEl);
     const binding = (s: State) => {
-      el.className = fn(s);
+      const next = fn(s);
+      if (el.className !== next) el.className = next;
     };
     this.bindings.push(binding);
     binding(this.state);
@@ -179,7 +194,8 @@ export class Binder<State> {
   bindVisible(ref: Ref, fn: (s: State) => boolean): void {
     const el = this.ref(ref);
     const binding = (s: State) => {
-      el.style.display = fn(s) ? "" : "none";
+      const next = fn(s) ? "" : "none";
+      if (el.style.display !== next) el.style.display = next;
     };
     this.bindings.push(binding);
     binding(this.state);
@@ -205,7 +221,9 @@ export class Binder<State> {
       const styles = fn(s);
       const nextKeys = new Set<string>();
       for (const [prop, val] of Object.entries(styles)) {
-        el.style.setProperty(prop, val.replace(/url\s*\(/gi, ""));
+        const next = val.replace(/url\s*\(/gi, "");
+        if (el.style.getPropertyValue(prop) !== next)
+          el.style.setProperty(prop, next);
         nextKeys.add(prop);
       }
       for (const prop of prevKeys) {
@@ -237,7 +255,8 @@ export class Binder<State> {
   bindChecked(ref: Ref, fn: (s: State) => boolean): void {
     const el = this.ref<HTMLInputElement>(ref);
     const binding = (s: State) => {
-      el.checked = fn(s);
+      const next = fn(s);
+      if (el.checked !== next) el.checked = next;
     };
     this.bindings.push(binding);
     binding(this.state);
@@ -248,7 +267,8 @@ export class Binder<State> {
       HTMLButtonElement | HTMLInputElement | HTMLSelectElement
     >(ref);
     const binding = (s: State) => {
-      el.disabled = fn(s);
+      const next = fn(s);
+      if (el.disabled !== next) el.disabled = next;
     };
     this.bindings.push(binding);
     binding(this.state);
@@ -259,7 +279,7 @@ export class Binder<State> {
     const binding = (s: State) => {
       const val = fn(s);
       if (val === undefined) el.removeAttribute(attr);
-      else el.setAttribute(attr, val);
+      else if (el.getAttribute(attr) !== val) el.setAttribute(attr, val);
     };
     this.bindings.push(binding);
     binding(this.state);
@@ -271,7 +291,7 @@ export class Binder<State> {
     const binding = (s: State) => {
       const val = fn(s);
       if (val === undefined) el.removeAttribute(attr);
-      else el.setAttribute(attr, val);
+      else if (el.getAttribute(attr) !== val) el.setAttribute(attr, val);
     };
     this.bindings.push(binding);
     binding(this.state);
