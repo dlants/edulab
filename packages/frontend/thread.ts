@@ -40,6 +40,31 @@ const DEFAULT_YIELD_SCHEMA: Anthropic.Tool.InputSchema = {
   },
   required: ["result"],
 };
+const VOID_YIELD_SCHEMA: Anthropic.Tool.InputSchema = {
+  type: "object",
+  properties: {},
+};
+
+function yieldInputSchema(
+  schema: Anthropic.Tool.InputSchema | "text" | "void",
+): Anthropic.Tool.InputSchema {
+  if (schema === "text") return DEFAULT_YIELD_SCHEMA;
+  if (schema === "void") return VOID_YIELD_SCHEMA;
+  return schema;
+}
+
+function yieldResult(
+  value: YieldValue,
+): string | Record<string, unknown> | undefined {
+  switch (value.type) {
+    case "void":
+      return;
+    case "text":
+      return value.text;
+    case "structured":
+      return value.value;
+  }
+}
 
 export type ToolCall = {
   id: string;
@@ -55,6 +80,7 @@ export type ToolCall = {
 };
 
 export type YieldValue =
+  | { type: "void" }
   | { type: "text"; text: string }
   | { type: "structured"; value: Record<string, unknown> };
 
@@ -73,9 +99,10 @@ export type ThreadOpts = {
   seed?: string | Anthropic.ContentBlockParam[];
   tools?: Record<ToolName, Tool>;
   /** Present => the yield tool is offered. `"text"` uses the default
-   * `{ result: string }` schema and settles with a text value; a schema
+   * `{ result: string }` schema and settles with a text value; `"void"` takes
+   * no input at all, for a thread whose work is its tool calls; a schema
    * settles with the whole input object. */
-  yieldSchema?: Anthropic.Tool.InputSchema | "text";
+  yieldSchema?: Anthropic.Tool.InputSchema | "text" | "void";
 };
 
 /** The key of a tool in the record handed to a thread; also what the model
@@ -141,7 +168,7 @@ export type ThreadResult<Value> =
 export type RunThreadOpts = {
   prompt: string | Anthropic.ContentBlockParam[];
   tools?: Record<ToolName, Tool>;
-  yieldSchema: Anthropic.Tool.InputSchema | "text";
+  yieldSchema: Anthropic.Tool.InputSchema | "text" | "void";
   system?: string;
   /** How many times a turn that ends without a yield is nudged back to work. */
   maxRestarts?: number;
@@ -157,6 +184,10 @@ export function runThread(
   socket: Socket,
   opts: RunThreadOpts & { yieldSchema: "text" },
 ): Promise<ThreadResult<string>>;
+export function runThread(
+  socket: Socket,
+  opts: RunThreadOpts & { yieldSchema: "void" },
+): Promise<ThreadResult<undefined>>;
 export function runThread<Value extends Record<string, unknown>>(
   socket: Socket,
   opts: RunThreadOpts & { yieldSchema: Anthropic.Tool.InputSchema },
@@ -164,7 +195,7 @@ export function runThread<Value extends Record<string, unknown>>(
 export async function runThread(
   socket: Socket,
   opts: RunThreadOpts,
-): Promise<ThreadResult<string | Record<string, unknown>>> {
+): Promise<ThreadResult<string | Record<string, unknown> | undefined>> {
   const maxRestarts = opts.maxRestarts ?? MAX_RESTARTS;
   const thread = new Thread(socket, {
     system: opts.system ?? AUTONOMOUS_SYSTEM,
@@ -187,8 +218,7 @@ export async function runThread(
   return result.type === "yielded"
     ? {
         status: "ok",
-        result:
-          result.value.type === "text" ? result.value.text : result.value.value,
+        result: yieldResult(result.value),
       }
     : { status: "error", error: result.message };
 }
@@ -261,7 +291,11 @@ export class Thread {
   private readonly system: string;
   private readonly tools: Record<ToolName, Tool>;
   /** Present => the yield tool is offered and the turn can settle with data. */
-  private readonly yieldSchema: Anthropic.Tool.InputSchema | "text" | undefined;
+  private readonly yieldSchema:
+    | Anthropic.Tool.InputSchema
+    | "text"
+    | "void"
+    | undefined;
   private settled: TurnResult | undefined;
   /** Turn 0 when present: sent like any other turn, never rendered. */
   readonly seed: string | Anthropic.ContentBlockParam[] | undefined;
@@ -374,6 +408,7 @@ export class Thread {
   }
 
   private yieldValue(input: Record<string, unknown>): YieldValue {
+    if (this.yieldSchema === "void") return { type: "void" };
     return this.yieldSchema === "text"
       ? { type: "text", text: String(input.result ?? "") }
       : { type: "structured", value: input };
@@ -385,9 +420,10 @@ export class Thread {
       specs.push({
         name: YIELD,
         description:
-          "Finish this thread and return your result to whoever spawned it. Call this exactly once, when you are done; do not call it before you have finished the work.",
-        input_schema:
-          this.yieldSchema === "text" ? DEFAULT_YIELD_SCHEMA : this.yieldSchema,
+          this.yieldSchema === "void"
+            ? "Finish this thread. Call this exactly once, when you are done; it takes no input, and nothing you write is read."
+            : "Finish this thread and return your result to whoever spawned it. Call this exactly once, when you are done; do not call it before you have finished the work.",
+        input_schema: yieldInputSchema(this.yieldSchema),
       });
     }
     return specs;

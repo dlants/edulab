@@ -99,8 +99,10 @@ export const GRAPH_UPDATE_SYSTEM = [
   "the note; do not assert anything you cannot point at.",
   "",
   "Most interactions reveal nothing. If this one does not, change nothing and",
-  "yield: doing nothing is the expected outcome, not a failure. Nothing you",
-  "say outside the tools is read.",
+  "yield: doing nothing is the expected outcome, not a failure. The yield tool",
+  "takes no input, and nothing you say outside the tools is read: the graph",
+  "writes are the whole output of this thread, so do not narrate or summarize",
+  "them.",
 ].join(" ");
 
 /** Two blocks: the cacheable prefix - the base prompt, the thread's seed and

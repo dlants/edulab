@@ -32,7 +32,7 @@ import {
   selectedSample,
   selectSample,
 } from "../samples/index.ts";
-import { overlaps, type ThreadId } from "../selection.ts";
+import { type Anchor, overlaps, type ThreadId } from "../selection.ts";
 import { type Message, type MessageIdx, runThread, Thread } from "../thread.ts";
 import { ThreadTree } from "../threads.ts";
 import { PostRenderEventBus } from "../vamp.ts";
@@ -124,6 +124,11 @@ export function mount(container: HTMLElement): void {
       );
   // The thread on the left. Moved only by the arrows.
   let focus = tree.root;
+  // The live selection, and where on screen it ended. It carries the thread it
+  // is over, so it is one variable whether the user dragged in the left pane or
+  // in the reflect thread; which pane shows it is derived in refresh().
+  let anchor: Anchor | null = null;
+  let anchorAt: { x: number; y: number } | null = null;
   let sidebar: Sidebar = { type: "closed" };
   // Pan and zoom live beside the sidebar rather than in the view: the view
   // holds no state of its own, and a rebuild of the graph must not recentre it.
@@ -217,6 +222,7 @@ export function mount(container: HTMLElement): void {
     marks: [],
     activeMark: null,
     anchor: null,
+    popup: null,
     tab: "threads",
     graph: {
       status: "ready",
@@ -313,6 +319,8 @@ export function mount(container: HTMLElement): void {
     state.updates = updatesFor(focus);
     state.updatePane = updatePane();
     state.activeMark = node.activeChild;
+    state.anchor = anchor?.thread === focus ? anchor : null;
+    state.popup = popupAt();
     const activeChild = node.activeChild;
     if (!activeChild) {
       state.child = null;
@@ -320,12 +328,26 @@ export function mount(container: HTMLElement): void {
     }
     const child = tree.get(activeChild);
     state.child = {
+      thread: activeChild,
       messages: child.thread.messages,
       inFlight: child.thread.inFlight,
       draft: child.draft,
       expanded: expandedFor(activeChild),
       updates: updatesFor(activeChild),
+      marks: tree.marks(activeChild),
+      anchor: anchor?.thread === activeChild ? anchor : null,
     };
+  }
+
+  /** Where the floating actions go, or null for no popup. They stand in for the
+   * reflect pane wherever it is not on screen: at layer 0, and beside a
+   * selection made in the reflect thread itself, which has no pane of its own.
+   * A passage that already owns a thread offers nothing. */
+  function popupAt(): { x: number; y: number } | null {
+    if (!anchor || !anchorAt) return null;
+    if (overlaps(tree.marks(anchor.thread), anchor)) return null;
+    if (anchor.thread === focus) return state.split ? null : anchorAt;
+    return anchor.thread === tree.get(focus).activeChild ? anchorAt : null;
   }
 
   /** The update transcript on the right, live while its thread is still
@@ -370,7 +392,7 @@ export function mount(container: HTMLElement): void {
           system: GRAPH_UPDATE_SYSTEM,
           prompt: graphUpdatePrompt(interaction, graph.render()),
           tools: writeTools(graph),
-          yieldSchema: "text",
+          yieldSchema: "void",
           onChange: (messages) => {
             transcript = messages;
             graphUpdates.set(key, { type: "running", messages });
@@ -493,7 +515,8 @@ export function mount(container: HTMLElement): void {
     focus = citation.thread;
     state.split = path.length > 1;
     state.tab = "threads";
-    state.anchor = null;
+    anchor = null;
+    anchorAt = null;
     state.query = "";
     updateFocus = null;
     bus.emit({ type: "transcript:reveal", index: citation.index });
@@ -570,7 +593,8 @@ export function mount(container: HTMLElement): void {
     if (!graphUpdates.has(key)) return;
     updateFocus = key;
     state.split = true;
-    state.anchor = null;
+    anchor = null;
+    anchorAt = null;
   }
 
   function update(state: State, msg: Msg): void {
@@ -616,7 +640,8 @@ export function mount(container: HTMLElement): void {
         const child = node.activeChild;
         if (!child) break;
         focus = child;
-        state.anchor = null;
+        anchor = null;
+        anchorAt = null;
         state.query = "";
         updateFocus = null;
         break;
@@ -625,7 +650,8 @@ export function mount(container: HTMLElement): void {
         const parent = node.origin?.anchor.thread;
         if (parent === undefined) state.split = false;
         else focus = parent;
-        state.anchor = null;
+        anchor = null;
+        anchorAt = null;
         state.query = "";
         updateFocus = null;
         break;
@@ -636,12 +662,18 @@ export function mount(container: HTMLElement): void {
         break;
       }
       case "SELECTION_CHANGED":
-        state.anchor = msg.anchor;
-        node.activeChild = null;
+        anchor = msg.anchor;
+        anchorAt = msg.at;
+        // The right column is where this selection's actions go, so whatever
+        // was there gives way - but only while the split is showing; at layer 0
+        // the popup carries them and the active child must survive, since it is
+        // what `→` descends into.
+        if (state.split) node.activeChild = null;
         updateFocus = null;
         break;
       case "MARK_CLICKED":
-        state.anchor = null;
+        anchor = null;
+        anchorAt = null;
         node.activeChild = msg.thread;
         updateFocus = null;
         break;
@@ -664,13 +696,19 @@ export function mount(container: HTMLElement): void {
       case "LEARNING_MSG":
         switch (msg.msg.type) {
           case "ACTION": {
-            const anchor = state.anchor;
-            if (!anchor || overlaps(state.marks, anchor)) break;
-            const id = tree.open(anchor, msg.msg.action, {
+            const from = anchor;
+            if (!from || overlaps(tree.marks(from.thread), from)) break;
+            // Opening from the reflect thread hangs the new thread off it, so
+            // the left pane moves down to the thread that was selected in.
+            if (from.thread !== focus) focus = from.thread;
+            state.split = true;
+            updateFocus = null;
+            const id = tree.open(from, msg.msg.action, {
               tools: readTools(graph),
               graph: graph.render(),
             });
-            state.anchor = null;
+            anchor = null;
+            anchorAt = null;
             state.query = "";
             void queueGraphUpdate(id, 0 as MessageIdx);
             tree
@@ -679,6 +717,17 @@ export function mount(container: HTMLElement): void {
               .then(undefined, (e: unknown) => {
                 console.error(e);
               });
+            break;
+          }
+          case "ASK": {
+            // Not an action: it opens the pane on this passage and leaves the
+            // ask to the user, so no thread exists yet.
+            const from = anchor;
+            if (!from || overlaps(tree.marks(from.thread), from)) break;
+            focus = from.thread;
+            state.split = true;
+            updateFocus = null;
+            bus.emit({ type: "learning:focus-query" });
             break;
           }
           case "QUERY_CHANGED":
@@ -706,6 +755,21 @@ export function mount(container: HTMLElement): void {
             break;
           case "SHOW_UPDATE":
             showUpdate(activeChild, msg.msg.index);
+            break;
+          case "SELECTION_CHANGED":
+            // No pane clearing: the actions for this one are the popup, and
+            // the thread it was made in has to stay on screen under it.
+            anchor = msg.msg.anchor;
+            anchorAt = msg.msg.at;
+            break;
+          case "MARK_CLICKED":
+            // A mark in the reflect thread names a thread one layer further
+            // down, so showing it is a descent.
+            anchor = null;
+            anchorAt = null;
+            focus = activeChild;
+            tree.get(activeChild).activeChild = msg.msg.thread;
+            updateFocus = null;
             break;
         }
         break;

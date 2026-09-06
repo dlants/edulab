@@ -21,7 +21,7 @@ export type ChildOpts = {
   /** The rendered knowledge graph, injected into the seed of a top-level
    * learning thread. */
   graph?: string;
-  yieldSchema?: Anthropic.Tool.InputSchema | "text";
+  yieldSchema?: Anthropic.Tool.InputSchema | "text" | "void";
 };
 
 export type TreeNode = {

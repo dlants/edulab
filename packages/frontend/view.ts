@@ -8,6 +8,8 @@ import {
   type Msg as LearningMsg,
   LearningPane,
   type State as LearningState,
+  type PopupState,
+  SelectionPopup,
 } from "./learning.ts";
 import { samples } from "./samples/index.ts";
 import {
@@ -99,6 +101,9 @@ export type State = {
   updates: Updates;
   /** The active child thread, shown on the right when nothing is selected. */
   child: ThreadPaneState | null;
+  /** Where to float the selection popup, when the passage the user just
+   * dragged has no actions on screen: at layer 0, and in the reflect thread. */
+  popup: { x: number; y: number } | null;
   /** The transcript of a background graph update, shown on the right while the
    * user is reviewing it. It is not a learning thread: nothing hangs off it. */
   updatePane: UpdatePaneState | null;
@@ -110,7 +115,11 @@ export type Msg =
   | { type: "BUILD" }
   | { type: "GO_DEEPER" }
   | { type: "GO_BACK" }
-  | { type: "SELECTION_CHANGED"; anchor: Anchor | null }
+  | {
+      type: "SELECTION_CHANGED";
+      anchor: Anchor | null;
+      at: { x: number; y: number } | null;
+    }
   | { type: "MARK_CLICKED"; thread: ThreadId }
   | { type: "LEARNING_MSG"; msg: LearningMsg }
   | { type: "SAMPLE_CHANGED"; id: string }
@@ -682,6 +691,12 @@ function resultText(message: Message): string {
 
 export type ThreadPaneState = {
   messages: ReadonlyArray<Message>;
+  /** The thread this pane shows: a selection over it anchors to it. */
+  thread: ThreadId;
+  /** Highlights over this transcript, one per thread opened from it. */
+  marks: ReadonlyArray<Mark>;
+  /** The live selection, when it is over this pane rather than the left one. */
+  anchor: Anchor | null;
   inFlight: boolean;
   draft: string;
   expanded: ReadonlySet<number>;
@@ -693,14 +708,22 @@ export type ThreadPaneMsg =
   | { type: "SUBMIT" }
   | { type: "TOGGLE_EXPANDED"; index: number }
   | { type: "CHANGE_CLICKED"; id: GraphId }
-  | { type: "SHOW_UPDATE"; index: number };
+  | { type: "SHOW_UPDATE"; index: number }
+  | {
+      type: "SELECTION_CHANGED";
+      anchor: Anchor | null;
+      at: { x: number; y: number } | null;
+    }
+  | { type: "MARK_CLICKED"; thread: ThreadId };
 
-/** A learning thread on the right: the passage it came from, its transcript,
- * and a composer. Read-only as far as selection goes - only the left pane
- * captures one. */
+/** A learning thread on the right: its transcript and a composer. It captures
+ * a selection of its own, which is how the next layer down is opened without
+ * first descending into this one. */
 class ThreadPane implements View<ThreadPaneState, ThreadPaneMsg> {
   container: HTMLElement;
   private b: Binder<ThreadPaneState>;
+  /** The latest state, for the selection handler, which runs outside a binding. */
+  private current: ThreadPaneState;
 
   constructor(
     container: HTMLElement,
@@ -720,7 +743,17 @@ class ThreadPane implements View<ThreadPaneState, ThreadPaneMsg> {
       </div>
     `;
     this.container = container;
+    this.current = initial;
     this.b = new Binder(container, initial);
+
+    const transcript = this.b.ref(transcriptRef);
+    const capture = () => {
+      const anchor = readAnchor(transcript, this.current.thread);
+      if (anchor === undefined) return;
+      dispatch({ type: "SELECTION_CHANGED", anchor, at: pointOfSelection() });
+    };
+    transcript.addEventListener("mouseup", capture);
+    transcript.addEventListener("keyup", capture);
 
     const input = this.b.ref<HTMLTextAreaElement>(inputRef);
     input.addEventListener("input", () => {
@@ -744,7 +777,12 @@ class ThreadPane implements View<ThreadPaneState, ThreadPaneMsg> {
           {
             message,
             expanded: lastExpanded(s.expanded, i, s.messages.length),
-            segments: segments([], null, i, messageText(message).length),
+            segments: segments(
+              s.marks,
+              s.anchor,
+              i,
+              messageText(message).length,
+            ),
             active: null,
             update: s.updates.get(i) ?? null,
           },
@@ -754,6 +792,8 @@ class ThreadPane implements View<ThreadPaneState, ThreadPaneMsg> {
               dispatch({ type: "TOGGLE_EXPANDED", index: i });
             else if (msg.type === "SHOW_UPDATE")
               dispatch({ type: "SHOW_UPDATE", index: i });
+            else if (msg.type === "CLICKED")
+              dispatch({ type: "MARK_CLICKED", thread: msg.thread });
             else if (msg.type === "CHANGE_CLICKED") dispatch(msg);
           },
         ),
@@ -765,6 +805,7 @@ class ThreadPane implements View<ThreadPaneState, ThreadPaneMsg> {
   }
 
   sync(state: ThreadPaneState): void {
+    this.current = state;
     this.b.sync(state);
   }
 
@@ -853,7 +894,11 @@ class UpdatePane implements View<UpdatePaneState, UpdatePaneMsg> {
  * a cited message needs the pane to already be showing that thread, which is
  * a reducer's job, so the two phases are bridged by the bus rather than by the
  * reducer reaching into the DOM. */
-export type AppEvent = { type: "transcript:reveal"; index: number };
+export type AppEvent =
+  | { type: "transcript:reveal"; index: number }
+  /** The popup handed a question off to the pane's composer, which only exists
+   * once the pane has mounted. */
+  | { type: "learning:focus-query" };
 
 export type AppCtx = { bus: PostRenderEventBus<AppEvent> };
 
@@ -912,7 +957,8 @@ class ThreadsView implements View<State, Msg, AppCtx> {
     const transcript = this.b.ref(transcriptRef);
     const capture = () => {
       const anchor = readAnchor(transcript, this.current.thread);
-      if (anchor !== undefined) dispatch({ type: "SELECTION_CHANGED", anchor });
+      if (anchor === undefined) return;
+      dispatch({ type: "SELECTION_CHANGED", anchor, at: pointOfSelection() });
     };
     transcript.addEventListener("mouseup", capture);
     transcript.addEventListener("keyup", capture);
@@ -992,7 +1038,7 @@ class ThreadsView implements View<State, Msg, AppCtx> {
       };
       // bindSlot hands this straight to the child as its dispatch, so it must
       // dispatch rather than return a wrapped message.
-      return show(LearningPane, learningState, {}, (msg: LearningMsg) =>
+      return show(LearningPane, learningState, ctx, (msg: LearningMsg) =>
         dispatch({ type: "LEARNING_MSG", msg }),
       );
     });
@@ -1036,6 +1082,7 @@ export class AppView implements View<State, Msg, AppCtx> {
     const threadsTabRef: Ref = ref("threads-tab");
     const graphTabRef: Ref = ref("graph-tab");
     const tabSlotRef: Ref = ref("tab-slot");
+    const popupRef: Ref = ref("popup");
 
     container.className = appClass;
     container.innerHTML = sanitize`
@@ -1057,6 +1104,7 @@ export class AppView implements View<State, Msg, AppCtx> {
         <button type="button" data-ref="${forwardRef}"></button>
       </div>
       <div data-ref="${tabSlotRef}"></div>
+      <div data-ref="${popupRef}"></div>
     `;
     this.container = container;
     this.current = initialState;
@@ -1127,6 +1175,17 @@ export class AppView implements View<State, Msg, AppCtx> {
           )
         : show(ThreadsView, s, ctx, dispatch),
     );
+    // Mounted here rather than beside the transcript because it belongs to no
+    // column: the view it mounts portals itself to the body, and this slot is
+    // only what governs its lifetime.
+    this.b.bindSlot(popupRef, (s) => {
+      const at = s.tab === "threads" ? s.popup : null;
+      if (!at) return undefined;
+      const popup: PopupState = { at };
+      return show(SelectionPopup, popup, {}, (msg: LearningMsg) =>
+        dispatch({ type: "LEARNING_MSG", msg }),
+      );
+    });
     this.b.bindContainerAttr("data-split", (s) => (s.split ? "true" : "false"));
     this.b.bindText(forwardRef, (s) => `${descendLabel(s.depth + 1)} →`);
     this.b.bindDisabled(forwardRef, (s) => s.split && !s.canDescend);
@@ -1188,6 +1247,17 @@ function paneSelection(s: State): string | null {
   const active = s.marks.find((m) => m.thread === s.activeMark);
   return active ? anchorText(active.anchor, s.messages) : null;
 }
+/** Where a popup over the live selection belongs: the bottom centre of the
+ * dragged range, in viewport coordinates, which is why the popup is fixed -
+ * neither pane's scroll offset comes into it. Null when nothing is selected. */
+function pointOfSelection(): { x: number; y: number } | null {
+  const selection = window.getSelection();
+  if (!selection || selection.rangeCount === 0) return null;
+  const rect = selection.getRangeAt(0).getBoundingClientRect();
+  if (rect.width === 0 && rect.height === 0) return null;
+  return { x: rect.left + rect.width / 2, y: rect.bottom };
+}
+
 /** Reads the live browser selection as an Anchor. Returns `undefined` when the
  * selection has nothing to do with the transcript, which must not clobber a
  * previously captured anchor. */
