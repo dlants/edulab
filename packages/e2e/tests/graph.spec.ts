@@ -168,6 +168,57 @@ test("an edge is selectable and editable", async ({ page }) => {
   await expect(page.locator("[data-edge-label]")).toHaveText("requires");
 });
 
+/** The distance between the two seeded nodes: zooming changes the spacing on
+ * the canvas, and nothing else about them. */
+async function spread(page: Page): Promise<number> {
+  const boxes = await nodes(page).all();
+  const [a, b] = await Promise.all(boxes.map((n) => n.boundingBox()));
+  if (!a || !b) throw new Error("nodes are not laid out");
+  return Math.hypot(a.x - b.x, a.y - b.y);
+}
+
+test("zooming spreads the nodes without resizing them, and reset restores", async ({
+  page,
+}) => {
+  await open(page);
+  const before = await spread(page);
+  const size = await nodes(page).first().boundingBox();
+
+  await page.locator("[data-graph-zoom-in]").click();
+  await expect.poll(() => spread(page)).toBeGreaterThan(before * 1.2);
+  expect((await nodes(page).first().boundingBox())?.height).toBe(size?.height);
+
+  await page.locator("[data-graph-zoom-out]").click();
+  await page.locator("[data-graph-zoom-out]").click();
+  await expect.poll(() => spread(page)).toBeLessThan(before);
+
+  await page.locator("[data-graph-reset-view]").click();
+  await expect.poll(() => spread(page)).toBeCloseTo(before, 1);
+});
+
+test("dragging the canvas pans the graph but still selects on a click", async ({
+  page,
+}) => {
+  await open(page);
+  const node = nodes(page).filter({ hasText: "closures" });
+  const from = await node.boundingBox();
+  if (!from) throw new Error("node is not laid out");
+
+  const canvas = page.locator("[data-graph-canvas]");
+  const box = await canvas.boundingBox();
+  if (!box) throw new Error("canvas is not laid out");
+  await page.mouse.move(box.x + 20, box.y + 20);
+  await page.mouse.down();
+  await page.mouse.move(box.x + 80, box.y + 60, { steps: 5 });
+  await page.mouse.up();
+
+  await expect
+    .poll(async () => (await node.boundingBox())?.x)
+    .toBeCloseTo(from.x + 60, 0);
+  await node.click();
+  await expect(page.locator("[data-graph-title]")).toHaveValue("closures");
+});
+
 /** Answers every graph update with one `put_nodes` call naming the update by
  * its ordinal, then a yield. Records each update's prompt and whether two ever
  * overlapped, which is what the serialization claim comes down to. */

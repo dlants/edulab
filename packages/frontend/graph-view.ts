@@ -43,9 +43,19 @@ export type Citations = {
   notes: ReadonlyArray<Chip>;
 };
 
+/** Pan in canvas pixels, zoom as a multiplier on the *spacing* between nodes:
+ * the node itself is unscaled DOM, so text stays legible at every zoom and
+ * zooming out is a way to fit more of the graph rather than to shrink it. */
+export type Viewport = { zoom: number; x: number; y: number };
+
+export const IDENTITY_VIEWPORT: Viewport = { zoom: 1, x: 0, y: 0 };
+export const MIN_ZOOM = 0.3;
+export const MAX_ZOOM = 3;
+
 export type State = {
   nodes: ReadonlyArray<GraphNode & { pos: Position }>;
   edges: ReadonlyArray<GraphEdge & { from_: Position; to_: Position }>;
+  viewport: Viewport;
   sidebar: Sidebar;
   citations: Citations;
 };
@@ -65,7 +75,11 @@ export type Msg =
   | { type: "EDGE_FIELD"; field: "title" | "description"; value: string }
   | { type: "SAVE" }
   | { type: "DELETE" }
-  | { type: "CITATION_CLICKED"; citation: Citation };
+  | { type: "CITATION_CLICKED"; citation: Citation }
+  | { type: "PAN"; dx: number; dy: number }
+  /** `at` is in canvas pixels, so the point under the cursor stays put. */
+  | { type: "ZOOM"; factor: number; at: { x: number; y: number } }
+  | { type: "RESET_VIEW" };
 
 /** The canvas is sized in pixels rather than percentages: an edge is a rotated
  * bar, and a bar whose length is a percentage of the width but whose angle is
@@ -74,9 +88,14 @@ const WIDTH = 900;
 const HEIGHT = 560;
 const PAD = 60;
 
-const px = (pos: Position) => ({
-  x: PAD + pos.x * (WIDTH - 2 * PAD),
-  y: PAD + pos.y * (HEIGHT - 2 * PAD),
+/** How far short of the target's centre an edge stops, so the arrowhead lands
+ * on the rim of the pill rather than under it. Constant in screen pixels
+ * because the pill does not scale with zoom. */
+const BACKOFF = 52;
+
+const px = (pos: Position, vp: Viewport) => ({
+  x: vp.x + vp.zoom * (PAD + pos.x * (WIDTH - 2 * PAD)),
+  y: vp.y + vp.zoom * (PAD + pos.y * (HEIGHT - 2 * PAD)),
 });
 
 const graphClass = cls("graph");
@@ -85,6 +104,8 @@ const nodeClass = cls("graph-node");
 const edgeClass = cls("graph-edge");
 const edgeBarClass = cls("graph-edge-bar");
 const edgeLabelClass = cls("graph-edge-label");
+const edgeHeadClass = cls("graph-edge-head");
+const controlsClass = cls("graph-controls");
 const sidebarClass = cls("graph-sidebar");
 const emptyClass = cls("graph-empty");
 const errorClass = cls("graph-error");
@@ -95,19 +116,50 @@ const chipClass = cls("graph-chip");
 mountStyle(`
 .${graphClass} {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 20rem;
+  grid-template-columns: max-content minmax(0, 1fr);
   gap: 1.5rem;
   padding: 1rem;
   align-items: start;
 }
+/* The canvas keeps its pixel size, so below the width that fits both columns
+ * the sidebar drops underneath it rather than squeezing it. */
+@media (max-width: ${WIDTH + 340}px) {
+  .${graphClass} {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
 .${canvasClass} {
   position: relative;
   width: ${WIDTH}px;
+  max-width: 100%;
+  touch-action: none;
+  cursor: grab;
   height: ${HEIGHT}px;
   border: 1px solid rgba(0, 0, 0, 0.12);
   border-radius: 0.5rem;
   background: #fcfcfc;
   overflow: hidden;
+}
+.${canvasClass}:active {
+  cursor: grabbing;
+}
+.${controlsClass} {
+  position: absolute;
+  right: 0.5rem;
+  bottom: 0.5rem;
+  display: flex;
+  gap: 0.25rem;
+  z-index: 2;
+}
+.${controlsClass} button {
+  font: inherit;
+  font-size: 0.8rem;
+  min-width: 1.9rem;
+  padding: 0.1rem 0.4rem;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 0.3rem;
+  background: rgba(255, 255, 255, 0.9);
+  cursor: pointer;
 }
 .${emptyClass} {
   position: absolute;
@@ -134,19 +186,50 @@ mountStyle(`
 .${nodeClass}[data-selected="true"] {
   box-shadow: 0 0 0 2px #f0b429;
 }
-.${nodeClass}[data-level="1"] { background: #f4f4f4; }
-.${nodeClass}[data-level="2"] { background: #e8f0fb; }
-.${nodeClass}[data-level="3"] { background: #d3e5fb; }
-.${nodeClass}[data-level="4"] { background: #b8d8f8; }
+/* Level is the one thing the canvas is meant to show at a glance, so it is
+ * carried by four channels at once - fill, border colour, border style and
+ * weight - rather than by four shades of the same blue. */
+.${nodeClass}[data-level="1"] {
+  background: #fbfbfb;
+  border: 1px dashed rgba(0, 0, 0, 0.3);
+  color: #6b6b6b;
+}
+.${nodeClass}[data-level="2"] {
+  background: #fdf1d8;
+  border: 1px solid #d9a441;
+}
+.${nodeClass}[data-level="3"] {
+  background: #dbeafe;
+  border: 2px solid #3b74c4;
+}
+.${nodeClass}[data-level="4"] {
+  background: #cdeccd;
+  border: 3px double #2f7d32;
+  font-weight: 700;
+}
 .${edgeClass} {
   position: absolute;
 }
 .${edgeBarClass} {
   position: absolute;
   height: 2px;
+  border-radius: 1px;
   transform-origin: 0 50%;
   background: rgba(0, 0, 0, 0.3);
   cursor: pointer;
+}
+/* A CSS triangle rather than an SVG marker: the edge is already a rotated
+ * div, so the head is the same transform with a different shape. */
+.${edgeHeadClass} {
+  position: absolute;
+  width: 0;
+  height: 0;
+  transform-origin: 0 50%;
+  border-left: 9px solid rgba(0, 0, 0, 0.45);
+  border-top: 5px solid transparent;
+  border-bottom: 5px solid transparent;
+  margin-top: -5px;
+  pointer-events: none;
 }
 .${edgeLabelClass} {
   position: absolute;
@@ -160,9 +243,17 @@ mountStyle(`
 .${edgeClass}[data-selected="true"] .${edgeBarClass} {
   background: #f0b429;
 }
+.${edgeClass}[data-selected="true"] .${edgeHeadClass} {
+  border-left-color: #f0b429;
+}
 .${sidebarClass} {
   position: sticky;
   top: 1rem;
+  min-width: 18rem;
+  padding: 0.75rem;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 0.5rem;
+  background: #fff;
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
@@ -208,7 +299,12 @@ mountStyle(`
 }
 `);
 
-type NodeState = { node: GraphNode; pos: Position; selected: boolean };
+type NodeState = {
+  node: GraphNode;
+  pos: Position;
+  viewport: Viewport;
+  selected: boolean;
+};
 
 class NodeView implements View<NodeState, { type: "CLICKED" }> {
   container: HTMLElement;
@@ -226,7 +322,7 @@ class NodeView implements View<NodeState, { type: "CLICKED" }> {
     this.b = new Binder(container, initial);
     container.addEventListener("click", () => dispatch({ type: "CLICKED" }));
     this.b.bindContainerStyle((s) => {
-      const at = px(s.pos);
+      const at = px(s.pos, s.viewport);
       return { left: `${at.x}px`, top: `${at.y}px` };
     });
     this.b.bindContainerAttr("data-node", (s) => s.node.id);
@@ -251,6 +347,7 @@ type EdgeState = {
   edge: GraphEdge;
   from_: Position;
   to_: Position;
+  viewport: Viewport;
   selected: boolean;
 };
 
@@ -267,10 +364,12 @@ class EdgeView implements View<EdgeState, { type: "CLICKED" }> {
     initial: EdgeState,
   ) {
     const barRef = ref("edge-bar");
+    const headRef = ref("edge-head");
     const labelRef = ref("edge-label");
     container.className = edgeClass;
     container.innerHTML = sanitize`
       <div class="${edgeBarClass}" data-ref="${barRef}"></div>
+      <div class="${edgeHeadClass}" data-edge-head data-ref="${headRef}"></div>
       <div class="${edgeLabelClass}" data-edge-label data-ref="${labelRef}"></div>
     `;
     this.container = container;
@@ -280,20 +379,36 @@ class EdgeView implements View<EdgeState, { type: "CLICKED" }> {
     this.b.bindContainerAttr("data-selected", (s) =>
       s.selected ? "true" : undefined,
     );
-    this.b.bindStyle(barRef, (s) => {
-      const from = px(s.from_);
-      const to = px(s.to_);
+    /** Centre to centre, stopped short of the target so the head is visible
+     * against the rim of the pill. A pair closer together than the backoff
+     * collapses to a stub rather than reversing. */
+    const geometry = (s: EdgeState) => {
+      const from = px(s.from_, s.viewport);
+      const to = px(s.to_, s.viewport);
       const angle = Math.atan2(to.y - from.y, to.x - from.x);
+      const span = Math.hypot(to.x - from.x, to.y - from.y);
+      const length = Math.max(span - BACKOFF, span * 0.2);
+      return { from, to, angle, length };
+    };
+    this.b.bindStyle(barRef, (s) => {
+      const { from, angle, length } = geometry(s);
       return {
         left: `${from.x}px`,
         top: `${from.y}px`,
-        width: `${Math.hypot(to.x - from.x, to.y - from.y)}px`,
+        width: `${length}px`,
+        transform: `rotate(${angle}rad)`,
+      };
+    });
+    this.b.bindStyle(headRef, (s) => {
+      const { from, angle, length } = geometry(s);
+      return {
+        left: `${from.x + Math.cos(angle) * length}px`,
+        top: `${from.y + Math.sin(angle) * length}px`,
         transform: `rotate(${angle}rad)`,
       };
     });
     this.b.bindStyle(labelRef, (s) => {
-      const from = px(s.from_);
-      const to = px(s.to_);
+      const { from, to } = geometry(s);
       return {
         left: `${(from.x + to.x) / 2}px`,
         top: `${(from.y + to.y) / 2}px`,
@@ -367,6 +482,10 @@ export class GraphView implements View<State, Msg> {
     initial: State,
   ) {
     const canvasRef = ref("graph-canvas");
+    const controlsRef = ref("graph-controls");
+    const zoomInRef = ref("graph-zoom-in");
+    const zoomOutRef = ref("graph-zoom-out");
+    const resetRef = ref("graph-reset-view");
     const edgesRef = ref("graph-edges");
     const emptyRef = ref("graph-empty");
     const sidebarRef = ref("graph-sidebar");
@@ -391,6 +510,11 @@ export class GraphView implements View<State, Msg> {
       <div class="${canvasClass}" data-graph-canvas data-ref="${canvasRef}">
         <p class="${emptyClass}" data-ref="${emptyRef}">Nothing here yet.</p>
         <div data-ref="${edgesRef}"></div>
+        <div class="${controlsClass}" data-ref="${controlsRef}">
+          <button type="button" data-graph-zoom-out data-ref="${zoomOutRef}">−</button>
+          <button type="button" data-graph-zoom-in data-ref="${zoomInRef}">+</button>
+          <button type="button" data-graph-reset-view data-ref="${resetRef}">reset</button>
+        </div>
       </div>
       <div class="${sidebarClass}" data-ref="${sidebarRef}">
         <p data-ref="${closedRef}">Click a node or an edge to edit it.</p>
@@ -419,7 +543,12 @@ export class GraphView implements View<State, Msg> {
         showKeyed(
           node.id,
           NodeView,
-          { node, pos: node.pos, selected: selectedId(s) === node.id },
+          {
+            node,
+            pos: node.pos,
+            viewport: s.viewport,
+            selected: selectedId(s) === node.id,
+          },
           {},
           () => dispatch({ type: "SELECT_NODE", id: node.id }),
         ),
@@ -434,6 +563,7 @@ export class GraphView implements View<State, Msg> {
             edge,
             from_: edge.from_,
             to_: edge.to_,
+            viewport: s.viewport,
             selected: selectedId(s) === edge.id,
           },
           {},
@@ -442,6 +572,73 @@ export class GraphView implements View<State, Msg> {
       ),
     );
 
+    const canvas = this.b.ref(canvasRef);
+    const controls = this.b.ref(controlsRef);
+    /** Zoom is about the cursor, so the concept under the pointer stays under
+     * it; the buttons aim at the middle of the canvas instead. */
+    const zoomAt = (factor: number, at: { x: number; y: number }) =>
+      dispatch({ type: "ZOOM", factor, at });
+    const middle = () => ({ x: canvas.clientWidth / 2, y: HEIGHT / 2 });
+    canvas.addEventListener(
+      "wheel",
+      (e) => {
+        e.preventDefault();
+        const box = canvas.getBoundingClientRect();
+        zoomAt(Math.exp(-e.deltaY * 0.0015), {
+          x: e.clientX - box.left,
+          y: e.clientY - box.top,
+        });
+      },
+      { passive: false },
+    );
+    this.b
+      .ref(zoomInRef)
+      .addEventListener("click", () => zoomAt(1.25, middle()));
+    this.b
+      .ref(zoomOutRef)
+      .addEventListener("click", () => zoomAt(1 / 1.25, middle()));
+    this.b
+      .ref(resetRef)
+      .addEventListener("click", () => dispatch({ type: "RESET_VIEW" }));
+
+    // Dragging anywhere on the canvas pans, including across a node: a node is
+    // opened by a click, and a click is not a drag. The pointer is captured
+    // only once the drag passes the threshold, because capturing retargets the
+    // click that follows onto the canvas and would eat the selection.
+    const THRESHOLD = 4;
+    let pointer: number | null = null;
+    let captured = false;
+    let last = { x: 0, y: 0 };
+    let origin = { x: 0, y: 0 };
+    canvas.addEventListener("pointerdown", (e) => {
+      if (controls.contains(e.target as Node)) return;
+      pointer = e.pointerId;
+      captured = false;
+      last = { x: e.clientX, y: e.clientY };
+      origin = last;
+    });
+    canvas.addEventListener("pointermove", (e) => {
+      if (pointer !== e.pointerId) return;
+      if (
+        !captured &&
+        Math.hypot(e.clientX - origin.x, e.clientY - origin.y) < THRESHOLD
+      )
+        return;
+      if (!captured) {
+        captured = true;
+        canvas.setPointerCapture(e.pointerId);
+      }
+      dispatch({ type: "PAN", dx: e.clientX - last.x, dy: e.clientY - last.y });
+      last = { x: e.clientX, y: e.clientY };
+    });
+    const endPan = (e: PointerEvent) => {
+      if (pointer !== e.pointerId) return;
+      pointer = null;
+      if (captured) canvas.releasePointerCapture(e.pointerId);
+      captured = false;
+    };
+    canvas.addEventListener("pointerup", endPan);
+    canvas.addEventListener("pointercancel", endPan);
     const level = this.b.ref<HTMLSelectElement>(levelRef);
     LEVELS.forEach((label, i) => {
       const option = document.createElement("option");
@@ -543,6 +740,29 @@ export class GraphView implements View<State, Msg> {
   destroy(): void {
     this.b.cleanup();
     this.container.innerHTML = "";
+  }
+}
+
+/** The viewport reducer, exported so the prototype's dispatch owns the state
+ * and the view stays stateless. Zoom is clamped, and the pan is corrected so
+ * that the clamped factor still keeps `at` fixed. */
+export function panZoom(vp: Viewport, msg: Msg): Viewport {
+  switch (msg.type) {
+    case "PAN":
+      return { ...vp, x: vp.x + msg.dx, y: vp.y + msg.dy };
+    case "ZOOM": {
+      const zoom = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, vp.zoom * msg.factor));
+      const factor = zoom / vp.zoom;
+      return {
+        zoom,
+        x: msg.at.x - factor * (msg.at.x - vp.x),
+        y: msg.at.y - factor * (msg.at.y - vp.y),
+      };
+    }
+    case "RESET_VIEW":
+      return IDENTITY_VIEWPORT;
+    default:
+      return vp;
   }
 }
 

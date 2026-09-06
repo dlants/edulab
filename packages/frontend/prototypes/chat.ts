@@ -13,7 +13,9 @@ import type {
   Citations,
   Msg as GraphMsg,
   Sidebar,
+  Viewport,
 } from "../graph-view.ts";
+import { IDENTITY_VIEWPORT, panZoom } from "../graph-view.ts";
 import { interactionAt } from "../interactions.ts";
 import { layout, type Position } from "../layout.ts";
 import { GRAPH_UPDATE_SYSTEM, graphUpdatePrompt } from "../prompt.ts";
@@ -79,6 +81,9 @@ export function mount(container: HTMLElement): void {
   // The thread on the left. Moved only by the arrows.
   let focus = tree.root;
   let sidebar: Sidebar = { type: "closed" };
+  // Pan and zoom live beside the sidebar rather than in the view: the view
+  // holds no state of its own, and a rebuild of the graph must not recentre it.
+  let viewport: Viewport = IDENTITY_VIEWPORT;
   // Graph updates run one at a time: two in flight would each be handed the
   // pre-update graph and mint rival nodes for the same concept. Appending to
   // this chain is the whole serialization.
@@ -128,6 +133,7 @@ export function mount(container: HTMLElement): void {
     graph: {
       nodes: [],
       edges: [],
+      viewport,
       sidebar,
       citations: { description: [], notes: [] },
     },
@@ -158,6 +164,7 @@ export function mount(container: HTMLElement): void {
     state.graph = {
       nodes: nodes.map((n) => ({ ...n, pos: at(n.id) })),
       edges: edges.map((e) => ({ ...e, from_: at(e.from), to_: at(e.to) })),
+      viewport,
       sidebar,
       citations: citationsOf(),
     };
@@ -397,6 +404,11 @@ export function mount(container: HTMLElement): void {
         sidebar = { type: "closed" };
         break;
       }
+      case "PAN":
+      case "ZOOM":
+      case "RESET_VIEW":
+        viewport = panZoom(viewport, msg);
+        break;
     }
   }
 
