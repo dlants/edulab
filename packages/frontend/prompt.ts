@@ -7,16 +7,19 @@ import type { Message, MessageIdx } from "./thread.ts";
 export type Action =
   | { type: "explain" }
   | { type: "quiz" }
+  | { type: "review" }
+  | { type: "ideas" }
   | { type: "query"; text: string };
 
 /** Learning mode: the agent is explaining work that already happened, to a
  * user who chose the passage they are stuck on. */
 export const LEARNING_SYSTEM = [
   "You are helping a user understand engineering work that was done for them.",
-  "They will show you a transcript and point at a passage they picked out.",
-  "Answer about that passage specifically, in plain language, and assume the",
-  "user has not followed the reasoning that produced it. Be concise, and do",
-  "not restate the whole transcript back to them.",
+  "They will show you a transcript, and either point at a passage they picked",
+  "out or ask about the thread as a whole. Answer about whatever they scoped",
+  "it to specifically, in plain language, and assume the user has not followed",
+  "the reasoning that produced it. Be concise, and do not restate the whole",
+  "transcript back to them.",
   "",
   "You may be shown a knowledge graph: what we believe this user already",
   "understands, one line per node and edge, each with an id and a level on the",
@@ -47,6 +50,27 @@ export function contextSeed(
     sections.push(`What this user already understands:\n${graph}`);
   sections.push(transcript(visibleTo(messages, anchor)));
   return sections.join("\n\n");
+}
+
+/** The seed for a thread-level child: the parent's whole transcript, with the
+ * graph carried the same way. The anchor-truncating sibling of `contextSeed`. */
+export function threadSeed(
+  seed: string | undefined,
+  messages: ReadonlyArray<Message>,
+  graph?: string,
+): string {
+  const sections = [];
+  if (seed) sections.push(seed);
+  else if (graph)
+    sections.push(`What this user already understands:\n${graph}`);
+  sections.push(transcript(messages));
+  return sections.join("\n\n");
+}
+
+/** The opening turn for a thread-level child: the ask alone, with no quote,
+ * because the scope is the whole thread. */
+export function threadAskTurn(action: Action): string {
+  return ask(action);
 }
 
 /** The user's opening turn: the passage they highlighted and what they asked
@@ -179,6 +203,10 @@ export function actionLabel(action: Action): string {
       return "I don't understand this.";
     case "quiz":
       return "Quiz me on this.";
+    case "review":
+      return "Let's review what happened in this task.";
+    case "ideas":
+      return "Give me some ideas about what I can explore.";
     case "query":
       return action.text;
   }
@@ -192,6 +220,10 @@ function ask(action: Action): string {
       return "I don't understand this. Explain what it means and why it is there.";
     case "quiz":
       return "Quiz me on this. Ask one question that checks whether I understand it, and wait for my answer.";
+    case "review":
+      return "Let's review what happened in this task. Name the handful of decisions and moments that actually mattered, and for each one say why it is worth my digging into, given what you know about what I already understand.";
+    case "ideas":
+      return "Give me some ideas about what I can explore. Suggest a few things in this task worth exploring or learning more about, pitched at what you know about what I do and do not understand.";
     case "query":
       return action.text;
   }

@@ -10,6 +10,8 @@ import {
   GRAPH_UPDATE_SYSTEM,
   graphUpdatePrompt,
   LEARNING_SYSTEM,
+  threadAskTurn,
+  threadSeed,
 } from "./prompt.ts";
 import type { Anchor, ThreadId } from "./selection.ts";
 import type { Message, MessageIdx } from "./thread.ts";
@@ -53,6 +55,32 @@ it("truncates the transcript after the message containing the selection end", ()
   const seed = contextSeed(undefined, messages, at(1, 0, 1, 5));
   expect(seed).toContain("build a parser");
   expect(seed).not.toContain("thanks");
+});
+
+it("keeps the whole parent transcript in a thread-level seed", () => {
+  const seed = threadSeed(undefined, messages);
+  expect(seed).toContain("build a parser");
+  expect(seed).toContain("thanks");
+});
+
+it("renders the graph into a top-level thread seed, and only there", () => {
+  const top = threadSeed(undefined, messages, "the graph");
+  expect(top).toContain("the graph");
+  expect(
+    threadSeed(top, messages, "the graph").split("the graph"),
+  ).toHaveLength(2);
+});
+
+it("asks without a quote, and differently per action", () => {
+  const review = threadAskTurn({ type: "review" });
+  const ideas = threadAskTurn({ type: "ideas" });
+  const query = threadAskTurn({ type: "query", text: "why a parser?" });
+  expect(review).not.toContain("Selected:");
+  expect(ideas).not.toContain("Selected:");
+  expect(new Set([review, ideas, query]).size).toBe(3);
+  expect(query).toBe("why a parser?");
+  expect(review).toContain(actionLabel({ type: "review" }));
+  expect(ideas).toContain(actionLabel({ type: "ideas" }));
 });
 
 it("distinguishes the three actions and carries a query through", () => {

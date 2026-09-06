@@ -5,6 +5,8 @@ import {
   askTurn,
   contextSeed,
   LEARNING_SYSTEM,
+  threadAskTurn,
+  threadSeed,
 } from "./prompt.ts";
 import type { Anchor, Mark, ThreadId } from "./selection.ts";
 import type { Tool, ToolName, TurnResult } from "./thread.ts";
@@ -43,9 +45,10 @@ export type TreeNode = {
   draft: string;
 };
 
-/** The tree of threads. Every thread but the root was opened from a
- * passage of its parent, so a thread and the highlight over its parent are the
- * same edge seen from either end. Threads are never destroyed or reparented. */
+/** The tree of threads. Every thread but the root was opened from its parent,
+ * either off a passage of it - so a thread and the highlight over its parent
+ * are the same edge seen from either end - or off the thread as a whole.
+ * Threads are never destroyed or reparented. */
 export class ThreadTree {
   private readonly threads = new Map<ThreadId, TreeNode>();
   private nextId = 0;
@@ -95,6 +98,27 @@ export class ThreadTree {
     return id;
   }
 
+  /** Seeds a child from the whole of `parent`'s transcript, with no passage:
+   * it paints no highlight, and any number of them can hang off one parent. */
+  openThread(parent: ThreadId, action: Action, opts: ChildOpts = {}): ThreadId {
+    const node = this.get(parent);
+    const thread = new Thread(this.socket, {
+      system: LEARNING_SYSTEM,
+      seed: threadSeed(
+        typeof node.thread.seed === "string" ? node.thread.seed : undefined,
+        node.thread.messages,
+        opts.graph,
+      ),
+      initialTurns: [{ role: "user", content: threadAskTurn(action) }],
+      tools: opts.tools,
+      yieldSchema: opts.yieldSchema,
+    });
+    const id = this.add({ type: "thread", parent, action }, thread);
+    node.children.push(id);
+    node.activeChild = id;
+    return id;
+  }
+
   /** What a child thread settled with, once it has yielded. The parent renders
    * threads it never awaited, so the settled value has to be readable here. */
   result(id: ThreadId): TurnResult | undefined {
@@ -110,6 +134,20 @@ export class ThreadTree {
       if (!origin) throw new Error("child thread without an origin");
       if (origin.type === "passage")
         out.push({ thread: child, anchor: origin.anchor });
+    }
+    return out;
+  }
+
+  /** The thread-level children of `id`, in creation order. */
+  threadChildren(
+    id: ThreadId,
+  ): ReadonlyArray<{ thread: ThreadId; action: Action }> {
+    const out: { thread: ThreadId; action: Action }[] = [];
+    for (const child of this.get(id).children) {
+      const origin = this.get(child).origin;
+      if (!origin) throw new Error("child thread without an origin");
+      if (origin.type === "thread")
+        out.push({ thread: child, action: origin.action });
     }
     return out;
   }

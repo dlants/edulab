@@ -126,6 +126,29 @@ it("reports a passage child as a mark over its parent, and on its path", () => {
   expect(tree.path(child)).toEqual([tree.root, child]);
 });
 
+it("lets any number of thread-level children hang off one parent, unmarked", () => {
+  const { tree, anchor } = setup();
+  const passage = tree.open(anchor, { type: "explain" });
+  const review = tree.openThread(tree.root, { type: "review" });
+  const ideas = tree.openThread(tree.root, { type: "ideas" });
+  expect(tree.threadChildren(tree.root)).toEqual([
+    { thread: review, action: { type: "review" } },
+    { thread: ideas, action: { type: "ideas" } },
+  ]);
+  expect(tree.marks(tree.root)).toEqual([{ thread: passage, anchor }]);
+  expect(tree.path(ideas)).toEqual([tree.root, ideas]);
+});
+
+it("seeds a thread-level child with the whole parent transcript and a quoteless ask", () => {
+  const { socket, tree } = setup();
+  const child = tree.openThread(tree.root, { type: "review" });
+  void tree.get(child).thread.start();
+  const turns = socket.last.params.messages;
+  expect(turns[0]?.content).toContain("the quick brown fox");
+  expect(turns[1]?.content).not.toContain("Selected:");
+  expect(turns[1]?.content).toContain("review what happened");
+});
+
 it("offers no tools to a child opened without any", () => {
   const { socket, tree, anchor } = setup();
   const child = tree.open(anchor, { type: "explain" });

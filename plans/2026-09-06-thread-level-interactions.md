@@ -136,7 +136,14 @@ storage key, so `edulab:v2:` there became `edulab:v3:`.
   - `threads.test.ts`: a tree with a passage child still reports it from `marks()` and `path()`.
   - `persistence.test.ts`: round-tripping a tree preserves both origin kinds (the thread-level one constructed directly, since `openThread` lands in the next stage) — in particular `marks()` after restore lists only the passage child.
 
-## Opening a thread-level child
+## Opening a thread-level child — DONE
+
+Landed as designed. `threadSeed` / `threadAskTurn` sit beside `contextSeed` /
+`askTurn` in `prompt.ts`; `threadAskTurn` takes only the action, since a
+thread-level ask carries no quote and so needs neither anchor nor messages.
+`LEARNING_SYSTEM` now says the user either points at a passage or asks about
+the thread as a whole. `openThread` / `threadChildren` mirror `open` / `marks`
+on `ThreadTree`. Nothing calls them yet — the pane wiring is stage 3.
 
 - Goal: `ThreadTree.openThread` exists; `threadSeed`, `threadAskTurn` and the `review` / `ideas` actions exist; `LEARNING_SYSTEM` covers whole-thread scope.
 - Tests:
