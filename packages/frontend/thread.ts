@@ -68,7 +68,9 @@ export type ThreadOpts = {
   /** Sent after the seed, and rendered: a learning thread's opening ask is
    * one of these, not part of the seed. */
   initialTurns?: Anthropic.MessageParam[];
-  seed?: string;
+  /** Content blocks rather than a string when the caller needs `cache_control`
+   * on part of it - a graph update marks its stable prefix. */
+  seed?: string | Anthropic.ContentBlockParam[];
   tools?: Record<ToolName, Tool>;
   /** Present => the yield tool is offered. `"text"` uses the default
    * `{ result: string }` schema and settles with a text value; a schema
@@ -137,7 +139,7 @@ export type ThreadResult<Value> =
   | { status: "error"; error: string };
 
 export type RunThreadOpts = {
-  prompt: string;
+  prompt: string | Anthropic.ContentBlockParam[];
   tools?: Record<ToolName, Tool>;
   yieldSchema: Anthropic.Tool.InputSchema | "text";
   system?: string;
@@ -223,7 +225,7 @@ export class Thread {
   private readonly yieldSchema: Anthropic.Tool.InputSchema | "text" | undefined;
   private settled: TurnResult | undefined;
   /** Turn 0 when present: sent like any other turn, never rendered. */
-  readonly seed: string | undefined;
+  readonly seed: string | Anthropic.ContentBlockParam[] | undefined;
 
   constructor(socket: Socket, opts: ThreadOpts = {}) {
     this.socket = socket;

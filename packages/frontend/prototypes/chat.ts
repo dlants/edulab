@@ -6,11 +6,12 @@ import {
 } from "../graph.ts";
 import { readTools, writeTools } from "../graph-tools.ts";
 import type { Build, Msg as GraphMsg, Sidebar } from "../graph-view.ts";
+import { interactionAt } from "../interactions.ts";
 import { layout, type Position } from "../layout.ts";
-import { EXTRACT_SYSTEM, renderTree } from "../prompt.ts";
+import { GRAPH_UPDATE_SYSTEM, graphUpdatePrompt } from "../prompt.ts";
 import { selectedSample, selectSample } from "../samples/index.ts";
 import { overlaps, type ThreadId } from "../selection.ts";
-import { Thread } from "../thread.ts";
+import { type MessageIdx, runThread, Thread } from "../thread.ts";
 import { ThreadTree } from "../threads.ts";
 import { AppView, type Msg, type State } from "../view.ts";
 
@@ -149,35 +150,37 @@ export function mount(container: HTMLElement): void {
     });
   }
 
-  /** One detached thread over the whole session, writing straight into the
-   * graph through its tools. Its transcript is never rendered: a second pane
-   * of prose nobody asked for would just be noise. */
+  /** One detached thread per user interaction in the root thread, each writing
+   * straight into the graph through its tools, run in sequence so that each
+   * one sees the previous one's writes. Their transcripts are never rendered.
+   *
+   * Interim: stage 5 moves this to the header as the sample build and shares
+   * a queue with the live per-interaction updates. */
   function runBuild(): void {
     if (build.type === "running") return;
     build = { type: "running" };
-    const thread = new Thread(socket, {
-      system: EXTRACT_SYSTEM,
-      seed: renderTree(tree, graph.render()),
-      tools: writeTools(graph),
-    });
     const sync = () => {
       refresh();
       view.sync(state);
     };
-    thread.onChange = sync;
-    thread.start().then(
-      (result) => {
-        build =
-          result.type === "error"
-            ? { type: "error", error: result.message }
-            : { type: "done" };
+    sync();
+    void (async () => {
+      const messages = tree.get(tree.root).thread.messages;
+      for (const [i, message] of messages.entries()) {
+        if (message.role !== "user" || message.type !== "text") continue;
+        const interaction = interactionAt(tree, tree.root, i as MessageIdx);
+        const result = await runThread(socket, {
+          system: GRAPH_UPDATE_SYSTEM,
+          prompt: graphUpdatePrompt(interaction, graph.render()),
+          tools: writeTools(graph),
+          yieldSchema: "text",
+        });
+        if (result.status === "error") console.error(result.error);
         sync();
-      },
-      (e: unknown) => {
-        build = { type: "error", error: String(e) };
-        sync();
-      },
-    );
+      }
+      build = { type: "done" };
+      sync();
+    })();
   }
   /** The graph tab's own reducer. It writes to the graph and to `sidebar`;
    * everything the canvas shows is re-derived in refreshGraph(). */

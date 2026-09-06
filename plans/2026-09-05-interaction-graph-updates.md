@@ -251,6 +251,12 @@ export type Chip = { citation: Citation; quote: string };
   - A root-thread interaction, whose thread has no seed, renders without an empty framing section.
   - `GRAPH_UPDATE_SYSTEM` states the scope restriction, the coarseness rule and the licence to change nothing — the clauses the whole design rests on, so their absence should fail a test rather than quietly degrade every graph.
 
+**Landed.** `EXTRACT_SYSTEM`/`renderTree`/`walk` are gone, replaced by `GRAPH_UPDATE_SYSTEM` and `graphUpdatePrompt(interaction, graph)` returning a cached prefix block (preamble, seed, transcript prefix) and a volatile block (graph, the turn, the questions). `ThreadOpts.seed`, `Thread.seed` and `RunThreadOpts.prompt` widened to `string | Anthropic.ContentBlockParam[]`. Deviations:
+
+- Widening `Thread.seed` means the two readers of it that want prose - `threads.open`'s parent seed and `interactionAt`'s prefix - narrow with `typeof seed === "string"`. Only a graph update's seed is blocks, and those threads have no interactions and no children.
+- `chat.ts`'s `runBuild` was rewritten in place rather than deleted, since stage 3 removes the prompt it used but stage 5 owns its replacement: it now walks the root thread's user turns and runs one sequential `runThread` graph update each, with the existing `Build` state. Stages 4/5 replace it with the queue and move it to the header.
+- `prompt.test.ts` builds `Interaction` literals directly rather than through a tree; `interactions.test.ts` already covers `interactionAt`.
+
 ## citations
 
 - Goal: `citation.ts` parses and resolves the DSL, and the prompt both renders addresses and demands their use.

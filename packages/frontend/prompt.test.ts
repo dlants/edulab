@@ -1,16 +1,17 @@
+import type Anthropic from "@anthropic-ai/sdk";
 import { expect, it } from "vitest";
 import { KnowledgeGraph, LEVELS } from "./graph.ts";
+import type { Interaction } from "./interactions.ts";
 import {
   actionLabel,
   askTurn,
   contextSeed,
-  EXTRACT_SYSTEM,
+  GRAPH_UPDATE_SYSTEM,
+  graphUpdatePrompt,
   LEARNING_SYSTEM,
-  renderTree,
 } from "./prompt.ts";
 import type { Anchor, ThreadId } from "./selection.ts";
-import { type Socket, Thread } from "./thread.ts";
-import { ThreadTree } from "./threads.ts";
+import type { Message, MessageIdx } from "./thread.ts";
 
 const messages = [
   { type: "text" as const, role: "user" as const, text: "build a parser" },
@@ -118,6 +119,65 @@ it("composes flat at depth, oldest section first", () => {
   expect(depth3.split("It parses top-down")).toHaveLength(2);
 });
 
+const interaction = (
+  index: number,
+  text: string,
+  seed?: string,
+): Interaction => ({
+  thread: "root" as ThreadId,
+  index: index as MessageIdx,
+  prefix: { seed, messages: messages.slice(0, index) as Message[] },
+  text,
+});
+
+const blockText = (block: Anthropic.ContentBlockParam | undefined): string =>
+  block?.type === "text" ? block.text : "";
+
+it("puts the prefix in the cached block and the turn, graph and questions in the volatile one", () => {
+  const [cached, volatile] = graphUpdatePrompt(
+    interaction(2, "thanks", "the framing"),
+    "the graph",
+  );
+  const front = blockText(cached);
+  const back = blockText(volatile);
+  expect(front).toContain("the framing");
+  expect(front).toContain("build a parser");
+  expect(front).not.toContain("the graph");
+  expect(back).toContain("the graph");
+  expect(back).toContain("thanks");
+  expect(back).toContain("yield");
+});
+
+it("marks exactly one block for caching, and it is identical across a thread", () => {
+  const blocks = graphUpdatePrompt(interaction(2, "thanks", "seed"), "graph a");
+  expect(
+    blocks.filter((b) => "cache_control" in b && b.cache_control).length,
+  ).toBe(1);
+  expect(blocks[0]?.type === "text" && blocks[0].cache_control).toEqual({
+    type: "ephemeral",
+  });
+});
+
+it("renders a seedless root interaction without an empty framing section", () => {
+  const [cached] = graphUpdatePrompt(
+    interaction(0, "build a parser"),
+    "the graph",
+  );
+  const front = blockText(cached);
+  expect(front).not.toContain("framing");
+  expect(front).not.toContain("\n\n\n");
+  expect(front.trim()).toBe(front);
+});
+
+it("states the scope restriction, the coarseness rule and the licence to change nothing", () => {
+  expect(GRAPH_UPDATE_SYSTEM).toContain(
+    "Touch only what this interaction is about",
+  );
+  expect(GRAPH_UPDATE_SYSTEM).toContain("small and coarse");
+  expect(GRAPH_UPDATE_SYSTEM).toContain("change nothing");
+  expect(GRAPH_UPDATE_SYSTEM).toContain("`notes`");
+});
+
 it("names the get tool and the scale in the learning system prompt", () => {
   expect(LEARNING_SYSTEM).toContain("`get`");
   for (const label of LEVELS) expect(LEARNING_SYSTEM).toContain(label);
@@ -136,29 +196,4 @@ it("renders the graph into a top-level seed, and only there", () => {
   expect(top).toContain(rendered);
   const deeper = contextSeed(top, messages, at(1, 9, 1, 26), rendered);
   expect(deeper.split(rendered)).toHaveLength(2);
-});
-
-const silentSocket: Socket = { send() {}, addEventListener() {} };
-
-it("renders the whole tree, keeping each child's action and anchor text", () => {
-  const root = new Thread(silentSocket, { initialTurns: [] });
-  const tree = new ThreadTree(silentSocket, root, () => {});
-  void root.send("build a parser");
-  const anchor: Anchor = {
-    thread: tree.root,
-    start: { msg: 0, offset: 6 },
-    end: { msg: 0, offset: 14 },
-  };
-  tree.open(anchor, { type: "quiz" });
-
-  const rendered = renderTree(tree, "the graph");
-  expect(rendered).toContain("build a parser");
-  expect(rendered).toContain("a parser");
-  expect(rendered).toContain("Quiz me on this.");
-  expect(rendered).toContain("the graph");
-});
-
-it("tells the extraction agent what a node is and where misconceptions go", () => {
-  expect(EXTRACT_SYSTEM).toContain("One node per concept");
-  expect(EXTRACT_SYSTEM).toContain("`notes`");
 });

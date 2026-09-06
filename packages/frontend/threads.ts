@@ -66,7 +66,7 @@ export class ThreadTree {
     const thread = new Thread(this.socket, {
       system: LEARNING_SYSTEM,
       seed: contextSeed(
-        parent.thread.seed,
+        typeof parent.thread.seed === "string" ? parent.thread.seed : undefined,
         parent.thread.messages,
         anchor,
         opts.graph,

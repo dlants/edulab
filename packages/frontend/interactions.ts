@@ -40,7 +40,12 @@ export function interactionAt(
   return {
     thread,
     index,
-    prefix: { seed: node.thread.seed, messages: messages.slice(0, index) },
+    prefix: {
+      // Only a learning thread's seed is prose; a graph update's seed is
+      // content blocks, and those threads have no interactions in them.
+      seed: typeof node.thread.seed === "string" ? node.thread.seed : undefined,
+      messages: messages.slice(0, index),
+    },
     text: messageText(message),
   };
 }

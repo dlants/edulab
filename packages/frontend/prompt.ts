@@ -1,6 +1,7 @@
-import { type Anchor, anchorText, type ThreadId } from "./selection.ts";
+import type Anthropic from "@anthropic-ai/sdk";
+import type { Interaction } from "./interactions.ts";
+import { type Anchor, anchorText } from "./selection.ts";
 import type { Message } from "./thread.ts";
-import type { ThreadTree } from "./threads.ts";
 
 export type Action =
   | { type: "explain" }
@@ -67,56 +68,75 @@ function visibleTo(
   return messages.slice(0, anchor.end.msg + 1);
 }
 
-/** Extraction mode: one detached pass over the whole session, whose only
- * output is the graph it writes through its tools. Nobody reads its prose. */
-export const EXTRACT_SYSTEM = [
-  "You are reading a session in which an engineering agent did some work for",
-  "a user, together with the follow-up threads the user opened on passages",
-  "they did not understand. Your job is to maintain a knowledge graph of the",
-  "domains this session touched.",
-  "One node per concept - an idea a person can understand or fail to",
-  "understand - never one per file, message or line of code. Add edges for the",
-  "relationships that matter: what builds on what, what is an instance of",
-  "what. Set the level from what the user's own questions and answers reveal,",
-  "on the scale 1 unfamiliar, 2 emerging, 3 working, 4 fluent, defaulting to 1",
-  "for a concept they never engaged with. The scale cannot express a",
-  "misconception - a confidently held wrong belief reads as fluent - so put",
-  "misconceptions, and anything else about how this user holds the idea, in",
-  "`notes`.",
-  "The current graph is shown below. Extend it: update the nodes that already",
-  "exist rather than minting a second node for the same concept. Work in",
-  "batches, and stop when the graph reflects the session. Nothing you say",
-  "outside the tools is read.",
+/** Graph update mode: one detached pass over a single user interaction, whose
+ * only output is whatever it writes to the graph through its tools. */
+export const GRAPH_UPDATE_SYSTEM = [
+  "You maintain a knowledge graph of what one user understands. You are shown",
+  "a single interaction that user just made, in the context of the thread it",
+  "happened in and the graph as it stands.",
+  "",
+  "Ask: what domain concepts is this interaction about, are they in the graph",
+  "already, what understanding does the user demonstrate here, and does",
+  "anything here read as a gap or a misconception. A node is a concept - an",
+  "idea a person can understand or fail to understand - never a file, a",
+  "message or a line of code. Set `level` from what the interaction reveals,",
+  "on the scale 1 unfamiliar, 2 emerging, 3 working, 4 fluent. The scale",
+  "cannot express a misconception - a confidently held wrong belief reads as",
+  "fluent - so put misconceptions, and anything else about how this user holds",
+  "the idea, in `notes`.",
+  "",
+  "Touch only what this interaction is about; leave the rest of the graph",
+  "alone. Keep the graph small and coarse: update the node that already covers",
+  "a concept rather than minting a second one for it, and split a concept only",
+  "when the split expresses something real about this user's understanding. A",
+  "concept the user merely brushed past does not need a node.",
+  "",
+  "Most interactions reveal nothing. If this one does not, change nothing and",
+  "yield: doing nothing is the expected outcome, not a failure. Nothing you",
+  "say outside the tools is read.",
 ].join(" ");
 
-/** The whole session as one prompt: every thread depth-first, each child
- * labelled with what the user asked and the passage they asked it about. The
- * questions the user asked are the evidence about what they did not
- * understand, so they have to survive into the seed. */
-export function renderTree(tree: ThreadTree, graph?: string): string {
-  const sections: string[] = [];
-  if (graph) sections.push(`The current knowledge graph:\n${graph}`);
-  walk(tree, tree.root, 0, sections);
-  return sections.join("\n\n");
+/** Two blocks: the cacheable prefix - the base prompt, the thread's seed and
+ * the transcript before the turn, all of which every earlier interaction in
+ * this thread shares - then the volatile tail, which starts with the graph
+ * because the previous update just rewrote it. */
+export function graphUpdatePrompt(
+  interaction: Interaction,
+  graph: string,
+): Anthropic.ContentBlockParam[] {
+  const prefix = [GRAPH_UPDATE_PREAMBLE];
+  if (interaction.prefix.seed)
+    prefix.push(`How this thread was framed:\n${interaction.prefix.seed}`);
+  if (interaction.prefix.messages.length > 0)
+    prefix.push(
+      `The thread up to this interaction:\n${transcript(interaction.prefix.messages)}`,
+    );
+  return [
+    {
+      type: "text",
+      text: prefix.join("\n\n"),
+      cache_control: { type: "ephemeral" },
+    },
+    {
+      type: "text",
+      text: [
+        `The knowledge graph as it stands:\n${graph}`,
+        `The interaction:\nUser: ${interaction.text}`,
+        GRAPH_UPDATE_QUESTIONS,
+      ].join("\n\n"),
+    },
+  ];
 }
 
-function walk(
-  tree: ThreadTree,
-  id: ThreadId,
-  depth: number,
-  out: string[],
-): void {
-  const node = tree.get(id);
-  const origin = node.origin;
-  const quote = origin
-    ? anchorText(origin.anchor, tree.get(origin.anchor.thread).thread.messages)
-    : "";
-  const header = origin
-    ? `Follow-up thread (depth ${depth}) on "${quote}" - the user said: ${actionLabel(origin.action)}`
-    : "The task session:";
-  out.push(`${header}\n${transcript(node.thread.messages)}`);
-  for (const child of node.children) walk(tree, child, depth + 1, out);
-}
+const GRAPH_UPDATE_PREAMBLE =
+  "Below is one interaction a user made while an engineering agent worked on a task for them, and the context it happened in.";
+
+const GRAPH_UPDATE_QUESTIONS = [
+  "What domain concepts does this interaction touch, and are they in the",
+  "graph? What understanding does it demonstrate, and what does it suggest",
+  "the user is missing? Update the graph so it reflects that, and nothing",
+  "else - then yield.",
+].join(" ");
 
 function transcript(messages: ReadonlyArray<Message>): string {
   return messages
