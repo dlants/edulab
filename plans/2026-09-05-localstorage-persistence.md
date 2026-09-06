@@ -244,14 +244,35 @@ Deviations:
   - [x] `interactionAddresses` returns the root's user turns in index order before any child's, and a child's seeded ask is address 0.
   - [x] With `includeSampleTurns: false`, addresses below `sampleTurnCount` in the root are excluded.
 
-## wiring into the prototype
+## wiring into the prototype — DONE
+
+Landed as `storageKey` / `loadSnapshot` / `saveSnapshot` / `clearSnapshot` /
+`toSnapshot` in `persistence.ts`, and the load-restore-save-re-enqueue wiring in
+`prototypes/chat.ts`.
+
+Deviations:
+
+- `runBuild`'s loop became `drain(addresses)`, shared by the build and by the
+  load-time backlog, with `advanceBuild` / `finishBuild` split out. The build
+  indicator only advances for addresses the build owns (`sampleInteractions`).
+- `drain` awaits the socket's `open` event first. Every other send is behind a
+  user action, but a backlog is drained straight out of mount, and sending then
+  throws `Still in CONNECTING state`.
+- `sampleInteractions` is now the *first* `sampleTurnCount` user turns of the
+  root rather than all of them: after a restore the root also holds the user's
+  own turns, which the build does not own.
+- A thread's tools are not persisted. `restore` gives `readTools(graph)` to any
+  thread with an origin and none to the root, which is the only distinction the
+  app makes.
+- `clearSnapshot` exists but is unused until the reset button (stage 4).
 
 - Goal: a refresh keeps the transcript, the graph, and the per-turn change chips; an interrupted build resumes.
 - Tests (`packages/e2e/tests/persistence.spec.ts`, stubbed socket):
-  - Send a turn, wait for the graph update chip, reload: the transcript, the graph tab's nodes, and the chip are all still there, and no new API request goes out for the already-processed turn.
-  - Open a learning thread from a highlight, reload: the mark is still drawn over the parent and clicking it reopens the child with its transcript.
-  - Save a snapshot with a `running` build and one processed sample turn (seeded via `page.addInitScript` writing localStorage directly), load: the remaining sample turns are requested, in order, and the build indicator finishes.
-  - Corrupt the stored JSON, load: the app comes up on the bare sample with an empty graph and the bad key is gone.
+  - [x] Send a turn, wait for the graph update chip, reload: the transcript, the graph tab's nodes, and the chip are all still there, and no new API request goes out for the already-processed turn.
+  - [x] Open a learning thread from a highlight, reload: the mark is still drawn over the parent and clicking it reopens the child with its transcript.
+  - [x] An interaction whose update record is missing is re-enqueued on load, and the turn itself is not re-sent.
+  - [x] A snapshot with a `running` build (seeded by rewriting the stored JSON in the page) resumes: the sample's interactions are requested and the build indicator reaches "built".
+  - [x] Corrupt the stored JSON, load: the app comes up on the bare sample with an empty graph and the bad key is gone.
 
 ## reset button
 

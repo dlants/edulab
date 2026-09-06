@@ -18,6 +18,13 @@ import type {
 import { IDENTITY_VIEWPORT, panZoom } from "../graph-view.ts";
 import { interactionAt } from "../interactions.ts";
 import { layout, type Position } from "../layout.ts";
+import {
+  type InteractionAddress,
+  interactionAddresses,
+  loadSnapshot,
+  saveSnapshot,
+  toSnapshot,
+} from "../persistence.ts";
 import { GRAPH_UPDATE_SYSTEM, graphUpdatePrompt } from "../prompt.ts";
 import {
   type SampleId,
@@ -71,17 +78,48 @@ export function mount(container: HTMLElement): void {
   // listener and drops frames whose requestId it does not own, so streams
   // interleave over the single connection.
   const socket = connect();
+  const opened =
+    socket.readyState === WebSocket.OPEN
+      ? Promise.resolve()
+      : new Promise<void>((resolve) => {
+          socket.addEventListener("open", () => {
+            resolve();
+          });
+        });
+  const sample = selectedSample();
+  const snapshot = loadSnapshot(sample?.id);
   // Scoped to the user, not to a thread: it outlives every thread in the tree
   // and is discarded only by a page load.
-  const graph = new KnowledgeGraph();
-  const tree = new ThreadTree(
-    socket,
-    new Thread(socket, { initialTurns: selectedSample()?.turns }),
-    () => {
-      refresh();
-      view.sync(state);
-    },
-  );
+  const graph = snapshot
+    ? KnowledgeGraph.from(snapshot.graph)
+    : new KnowledgeGraph();
+  const onChange = () => {
+    refresh();
+    view.sync(state);
+    save();
+  };
+  const tree = snapshot
+    ? ThreadTree.restore(
+        socket,
+        snapshot.threads,
+        snapshot.root,
+        snapshot.nextThreadId,
+        onChange,
+        (s) =>
+          new Thread(socket, {
+            system: s.system,
+            seed: s.seed,
+            initialTurns: [...s.log],
+            // Not persisted: a thread's tools are a fact about what kind of
+            // thread it is, and the root has none.
+            tools: s.origin ? readTools(graph) : undefined,
+          }),
+      )
+    : new ThreadTree(
+        socket,
+        new Thread(socket, { initialTurns: sample?.turns }),
+        onChange,
+      );
   // The thread on the left. Moved only by the arrows.
   let focus = tree.root;
   let sidebar: Sidebar = { type: "closed" };
@@ -95,8 +133,37 @@ export function mount(container: HTMLElement): void {
   // What each interaction's update is doing, keyed by its address. Derived from
   // the update thread's own tool calls, so it cannot disagree with what the
   // model actually did.
-  const graphUpdates = new Map<string, GraphUpdate>();
   const address = (thread: ThreadId, index: MessageIdx) => `${thread}:${index}`;
+  // Only finished updates are persisted: one that was still running when the
+  // page went away comes back missing, which is what re-enqueues it.
+  const graphUpdates = new Map<string, GraphUpdate>(
+    (snapshot?.updates ?? []).map((u) => [
+      address(u.thread, u.index),
+      { type: "done", changes: u.changes },
+    ]),
+  );
+
+  function save(): void {
+    saveSnapshot(
+      toSnapshot({
+        sample: sample?.id,
+        tree,
+        graph,
+        updates: [...graphUpdates].flatMap(([key, update]) => {
+          if (update.type !== "done") return [];
+          const [thread, index] = key.split(":");
+          return [
+            {
+              thread: thread as ThreadId,
+              index: Number(index) as MessageIdx,
+              changes: update.changes,
+            },
+          ];
+        }),
+        build: state.build,
+      }),
+    );
+  }
   function updatesFor(thread: ThreadId): Updates {
     const out = new Map<number, GraphUpdate>();
     for (const [key, update] of graphUpdates) {
@@ -122,7 +189,7 @@ export function mount(container: HTMLElement): void {
   }
 
   const state: State = {
-    sample: selectedSample()?.id ?? "",
+    sample: sample?.id ?? "",
     messages: [],
     inFlight: false,
     draft: "",
@@ -141,7 +208,7 @@ export function mount(container: HTMLElement): void {
       sidebar,
       citations: { description: [], notes: [] },
     },
-    build: { type: "idle" },
+    build: snapshot?.build ?? { type: "idle" },
     query: "",
     expanded: new Set(),
     updates: new Map(),
@@ -232,6 +299,7 @@ export function mount(container: HTMLElement): void {
   function sync(): void {
     refresh();
     view.sync(state);
+    save();
   }
 
   /** One detached thread per user interaction, writing straight into the graph
@@ -284,11 +352,32 @@ export function mount(container: HTMLElement): void {
    * before this page existed, so no live update ever ran over it. Every turn
    * after these came from an interaction that updated the graph itself, so
    * enumerating once at mount is what keeps the build from double-counting. */
+  const sampleTurnCount = (sample?.turns ?? []).filter(
+    (t) => t.role === "user",
+  ).length;
   const sampleInteractions: MessageIdx[] = tree
     .get(tree.root)
     .thread.messages.flatMap((m, i) =>
       m.role === "user" && m.type === "text" ? [i as MessageIdx] : [],
-    );
+    )
+    .slice(0, sampleTurnCount);
+
+  function advanceBuild(ok: boolean): void {
+    const build = state.build;
+    if (build.type !== "running") return;
+    state.build = {
+      type: "running",
+      done: build.done + 1,
+      total: build.total,
+      failed: build.failed + (ok ? 0 : 1),
+    };
+  }
+
+  function finishBuild(): void {
+    const build = state.build;
+    if (build.type !== "running") return;
+    state.build = { type: "done", failed: build.failed };
+  }
 
   /** Walks the loaded sample's turns through the same queue the live updates
    * use, so an interaction mid-build interleaves rather than races. */
@@ -297,28 +386,28 @@ export function mount(container: HTMLElement): void {
     const total = sampleInteractions.length;
     if (total === 0) return;
     state.build = { type: "running", done: 0, total, failed: 0 };
-    void (async () => {
-      for (const index of sampleInteractions) {
-        const ok = await queueGraphUpdate(tree.root, index);
-        const build = state.build;
-        if (build.type !== "running") return;
-        state.build = {
-          type: "running",
-          done: build.done + 1,
-          total: build.total,
-          failed: build.failed + (ok ? 0 : 1),
-        };
-        sync();
-      }
-      const build = state.build;
-      state.build = {
-        type: "done",
-        failed: build.type === "running" ? build.failed : 0,
-      };
-      sync();
-    })();
+    void drain(
+      sampleInteractions.map((index) => ({ thread: tree.root, index })),
+    );
   }
 
+  /** Pushes a backlog of interactions through the update queue, one at a time,
+   * advancing the build indicator for the ones the build owns. */
+  async function drain(
+    addresses: ReadonlyArray<InteractionAddress>,
+  ): Promise<void> {
+    // A backlog is drained straight out of mount, before the socket has
+    // finished connecting; every other send is behind a user action.
+    await opened;
+    const owned = new Set(sampleInteractions);
+    for (const { thread, index } of addresses) {
+      const ok = await queueGraphUpdate(thread, index);
+      if (thread === tree.root && owned.has(index)) advanceBuild(ok);
+      sync();
+    }
+    finishBuild();
+    sync();
+  }
   function send(id: ThreadId): void {
     const node = tree.get(id);
     const text = node.draft.trim();
@@ -540,6 +629,7 @@ export function mount(container: HTMLElement): void {
     dispatching = true;
     update(state, msg);
     view.sync(state);
+    save();
     bus.flush();
     dispatching = false;
   }
@@ -550,4 +640,31 @@ export function mount(container: HTMLElement): void {
 
   refresh();
   const view = new AppView(container, dispatch, state, { bus });
+
+  // An interaction with no `done` update in the snapshot is one whose update
+  // never landed - the page went away while it was running - so it is replayed
+  // in the order it was first asked in.
+  if (snapshot) {
+    const pending = interactionAddresses(
+      snapshot.threads,
+      snapshot.root,
+      snapshot.build.type !== "idle",
+      sampleTurnCount,
+    ).filter(({ thread, index }) => !graphUpdates.has(address(thread, index)));
+    if (state.build.type === "running") {
+      state.build = {
+        type: "running",
+        done: sampleInteractions.filter((index) =>
+          graphUpdates.has(address(tree.root, index)),
+        ).length,
+        total: sampleInteractions.length,
+        failed: 0,
+      };
+    }
+    if (pending.length > 0) void drain(pending);
+    else {
+      finishBuild();
+      sync();
+    }
+  }
 }

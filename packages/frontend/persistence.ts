@@ -1,5 +1,5 @@
 import type Anthropic from "@anthropic-ai/sdk";
-import type { GraphChange, GraphSnapshot } from "./graph.ts";
+import type { GraphChange, GraphSnapshot, KnowledgeGraph } from "./graph.ts";
 import type { SampleId } from "./samples/index.ts";
 import type { ThreadId } from "./selection.ts";
 import { type MessageIdx, projectLog, trimUnansweredTools } from "./thread.ts";
@@ -42,6 +42,81 @@ export type Snapshot = {
   build: Build;
 };
 
+/** The localStorage key, so nothing else can pass a bare string to the store. */
+export type StorageKey = string & { readonly __brand: "StorageKey" };
+
+/** One key per sample - switching sample is already a page load, so it picks
+ * up that sample's state and nothing else. The version is part of the key, so
+ * a bump orphans old data rather than having to migrate it. */
+export function storageKey(sample: SampleId | undefined): StorageKey {
+  return `edulab:v${VERSION}:${sample ?? "own"}` as StorageKey;
+}
+
+/** All-or-nothing: a parse failure, a version mismatch or a shape mismatch
+ * drops the whole key and the caller starts fresh. */
+export function loadSnapshot(sample: SampleId | undefined): Snapshot | null {
+  const key = storageKey(sample);
+  const raw = window.localStorage.getItem(key);
+  if (raw === null) return null;
+  try {
+    const parsed: unknown = JSON.parse(raw);
+    if (!wellFormed(parsed)) throw new Error("shape mismatch");
+    return parsed;
+  } catch (e) {
+    console.warn("dropping unreadable snapshot", e);
+    window.localStorage.removeItem(key);
+    return null;
+  }
+}
+
+function wellFormed(value: unknown): value is Snapshot {
+  if (typeof value !== "object" || value === null) return false;
+  const s = value as Partial<Snapshot>;
+  return (
+    s.version === VERSION &&
+    Array.isArray(s.threads) &&
+    s.threads.every((t) => typeof t?.id === "string" && Array.isArray(t.log)) &&
+    typeof s.nextThreadId === "number" &&
+    typeof s.root === "string" &&
+    typeof s.graph === "object" &&
+    s.graph !== null &&
+    Array.isArray(s.graph.nodes) &&
+    Array.isArray(s.graph.edges) &&
+    typeof s.graph.next === "number" &&
+    Array.isArray(s.updates) &&
+    typeof s.build === "object" &&
+    s.build !== null &&
+    typeof s.build.type === "string"
+  );
+}
+
+let pending: ReturnType<typeof setTimeout> | undefined;
+
+/** Trailing-debounced: `sync()` runs on every streamed token, and serializing
+ * the tree per token is pure waste. */
+export function saveSnapshot(snapshot: Snapshot): void {
+  if (pending !== undefined) clearTimeout(pending);
+  pending = setTimeout(() => {
+    pending = undefined;
+    const key = storageKey(snapshot.sample);
+    try {
+      window.localStorage.setItem(key, JSON.stringify(snapshot));
+    } catch (e) {
+      // The prototype keeps running, it just stops persisting.
+      console.warn("could not persist", e);
+      window.localStorage.removeItem(key);
+    }
+  }, SAVE_DELAY_MS);
+}
+
+const SAVE_DELAY_MS = 500;
+
+export function clearSnapshot(sample: SampleId | undefined): void {
+  if (pending !== undefined) clearTimeout(pending);
+  pending = undefined;
+  window.localStorage.removeItem(storageKey(sample));
+}
+
 /** The tree, flattened. Logs are trimmed to stay API-valid, so a refresh
  * mid-tool-call cannot persist a call the model can never answer. */
 export function threadSnapshots(tree: ThreadTree): ThreadSnapshot[] {
@@ -55,6 +130,25 @@ export function threadSnapshots(tree: ThreadTree): ThreadSnapshot[] {
     activeChild: node.activeChild,
     draft: node.draft,
   }));
+}
+
+export function toSnapshot(args: {
+  sample: SampleId | undefined;
+  tree: ThreadTree;
+  graph: KnowledgeGraph;
+  updates: ReadonlyArray<UpdateSnapshot>;
+  build: Build;
+}): Snapshot {
+  return {
+    version: VERSION,
+    sample: args.sample,
+    threads: threadSnapshots(args.tree),
+    nextThreadId: args.tree.nextThreadId,
+    root: args.tree.root,
+    graph: args.graph.snapshot(),
+    updates: [...args.updates],
+    build: args.build,
+  };
 }
 
 export type InteractionAddress = { thread: ThreadId; index: MessageIdx };
