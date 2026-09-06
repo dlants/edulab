@@ -62,6 +62,14 @@ Maybe in some settings this is manageable. Perhaps the user is also having human
 
 As a design note though, I really think it would be good to keep an eye out for opportunities for human connection. Can this system bring in mentors and coworkers? Can we create a learning community? Can we encourage and facilitate discussions with other people?
 
+## consent
+
+A system that watches everything a person types and maintains a model of what they do and do not understand is not something you may switch on for someone. Participation in the domain map has to be elective and explicit: the user opts in, can see that the map exists, can read every note the agent holds about them and the interaction each note is drawn from, and can turn it off or delete it. The citations in the map are load-bearing here and not just a UI nicety - a claim about a person that they can trace back to the thing they actually said is a claim they can argue with.
+
+There is a second-order cost to getting this wrong. A user who suspects they are being silently assessed will perform for the assessor, and then the map is measuring the performance rather than the understanding.
+
+The prototypes ignore all of this and update the map on every interaction unconditionally. That is a scaffolding shortcut of the same kind as "no auth, no database" - a consent gate in front of the interesting behaviour would make the demo worse and teach us nothing - and it should be stated as a constraint rather than left to be discovered.
+
 # Prototype exploration
 
 ## domain map

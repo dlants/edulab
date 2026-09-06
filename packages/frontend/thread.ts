@@ -65,6 +65,8 @@ export type TurnResult =
 
 export type ThreadOpts = {
   system?: string;
+  /** Sent after the seed, and rendered: a learning thread's opening ask is
+   * one of these, not part of the seed. */
   initialTurns?: Anthropic.MessageParam[];
   seed?: string;
   tools?: Record<ToolName, Tool>;
@@ -224,9 +226,10 @@ export class Thread {
     this.tools = opts.tools ?? {};
     this.yieldSchema = opts.yieldSchema;
     this.seed = opts.seed;
-    this.turns = opts.seed
-      ? [{ role: "user", content: opts.seed }]
-      : [...(opts.initialTurns ?? [])];
+    this.turns = [
+      ...(opts.seed ? [{ role: "user" as const, content: opts.seed }] : []),
+      ...(opts.initialTurns ?? []),
+    ];
     socket.addEventListener("message", (e: MessageEvent<string>) => {
       this.handleFrame(JSON.parse(e.data) as ServerFrame);
     });

@@ -25,17 +25,17 @@ export const LEARNING_SYSTEM = [
   "notes on this user. You cannot change the graph; do not offer to.",
 ].join(" ");
 
-/** The single synthetic user turn seeding a learning thread. `seed` is the
- * parent's own seed and is emitted verbatim - wrapping or re-labelling it
- * would nest the framing one layer deeper at every level. */
-export function seedTurn(
+/** The context a learning thread is seeded with: its parent's own seed plus
+ * the parent's transcript up to the anchor. `seed` is emitted verbatim -
+ * wrapping or re-labelling it would nest the framing one layer deeper at
+ * every level. The passage and the ask are not here: they are the thread's
+ * first visible turn. */
+export function contextSeed(
   seed: string | undefined,
   messages: ReadonlyArray<Message>,
   anchor: Anchor,
-  action: Action,
   graph?: string,
 ): string {
-  const visible = messages.slice(0, anchor.end.msg + 1);
   const sections = [];
   // Only the topmost learning thread renders the graph: a deeper thread's
   // `seed` is its parent's, which already carries it, and repeating it would
@@ -43,11 +43,28 @@ export function seedTurn(
   if (seed) sections.push(seed);
   else if (graph)
     sections.push(`What this user already understands:\n${graph}`);
-  sections.push(transcript(visible));
-  sections.push(
-    `The user then selected: "${anchorText(anchor, visible)}"\n${question(action)}`,
-  );
+  sections.push(transcript(visibleTo(messages, anchor)));
   return sections.join("\n\n");
+}
+
+/** The user's opening turn: the passage they highlighted and what they asked
+ * of it. Visible, because it is an interaction like any other. */
+export function askTurn(
+  anchor: Anchor,
+  messages: ReadonlyArray<Message>,
+  action: Action,
+): string {
+  const quote = anchorText(anchor, visibleTo(messages, anchor));
+  return `Selected: "${quote}"\n\n${ask(action)}`;
+}
+
+/** The parent's transcript truncated after the message the selection ends in:
+ * nothing later than the passage is context for asking about it. */
+function visibleTo(
+  messages: ReadonlyArray<Message>,
+  anchor: Anchor,
+): ReadonlyArray<Message> {
+  return messages.slice(0, anchor.end.msg + 1);
 }
 
 /** Extraction mode: one detached pass over the whole session, whose only
@@ -126,13 +143,15 @@ export function actionLabel(action: Action): string {
   }
 }
 
-function question(action: Action): string {
+/** What the user is asking for, in their own voice: this is a user turn now,
+ * not a briefing written about them. */
+function ask(action: Action): string {
   switch (action.type) {
     case "explain":
-      return "They said they don't understand this. Explain what it means and why it is there.";
+      return "I don't understand this. Explain what it means and why it is there.";
     case "quiz":
-      return "They asked to be quizzed on this. Ask one question that checks whether they understand it, and wait for their answer.";
+      return "Quiz me on this. Ask one question that checks whether I understand it, and wait for my answer.";
     case "query":
-      return `They asked: ${action.text}`;
+      return action.text;
   }
 }

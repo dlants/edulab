@@ -226,7 +226,7 @@ test("two marks in one message are both clickable", async ({ page }) => {
   const explain = page.getByRole("button", {
     name: "I don't understand this.",
   });
-  const openedWith = page.locator("[data-thread-action]");
+  const opening = threadTranscript(page).locator("li").first();
 
   await selectRange(page, 0, 0, 9);
   await explain.click();
@@ -239,9 +239,9 @@ test("two marks in one message are both clickable", async ({ page }) => {
   await expect(marks.nth(1)).toHaveText("fox");
 
   await marks.nth(0).click();
-  await expect(openedWith).toHaveText("I don't understand this.");
+  await expect(opening).toContainText("I don't understand this.");
   await marks.nth(1).click();
-  await expect(openedWith).toHaveText("Quiz me on this.");
+  await expect(opening).toContainText("Quiz me on this.");
 });
 
 test("an action opens a thread seeded with the selected passage", async ({
@@ -258,11 +258,16 @@ test("an action opens a thread seeded with the selected passage", async ({
     role: string;
     content: string;
   }>;
-  expect(messages).toHaveLength(1);
+  expect(messages).toHaveLength(2);
   expect(messages[0].role).toBe("user");
-  expect(messages[0].content).toContain("quick brown fox");
+  expect(messages[0].content).not.toContain("Selected:");
+  expect(messages[1].content).toContain("quick brown fox");
 
-  await expect(threadTranscript(page).locator("li")).toHaveText([/ok/]);
+  // The ask is the thread's own first message; the seed stays hidden.
+  await expect(threadTranscript(page).locator("li")).toHaveText([
+    /quick brown fox/,
+    /ok/,
+  ]);
   await expect(page.locator("[data-mark]")).toHaveText("quick brown fox");
 });
 
@@ -270,19 +275,19 @@ test("a follow-up in the thread pane re-sends the seed", async ({ page }) => {
   const backend = await transcript(page);
   await selectRange(page, 0, 0, 9);
   await page.getByRole("button", { name: "Quiz me on this." }).click();
-  await expect(threadTranscript(page).locator("li")).toHaveCount(1);
+  await expect(threadTranscript(page).locator("li")).toHaveCount(2);
 
   const follow = page.getByPlaceholder("Follow up…");
   await follow.fill("because?");
   await follow.press("Enter");
-  await expect(threadTranscript(page).locator("li")).toHaveCount(3);
+  await expect(threadTranscript(page).locator("li")).toHaveCount(4);
 
   const messages = JSON.parse(
     backend.started[backend.started.length - 1],
   ) as Array<{ role: string; content: string }>;
-  expect(messages).toHaveLength(3);
+  expect(messages).toHaveLength(4);
   expect(messages[0].content).toContain("the quick");
-  expect(messages[2].content).toBe("because?");
+  expect(messages[3].content).toBe("because?");
 });
 
 test("clicking a mark reopens its thread without a new request", async ({
@@ -291,18 +296,18 @@ test("clicking a mark reopens its thread without a new request", async ({
   const backend = await transcript(page);
   await selectRange(page, 0, 0, 9);
   await page.getByRole("button", { name: "I don't understand this." }).click();
-  await expect(threadTranscript(page).locator("li")).toHaveCount(1);
+  await expect(threadTranscript(page).locator("li")).toHaveCount(2);
 
   await selectRange(page, 0, 16, 19);
   await page.getByRole("button", { name: "Quiz me on this." }).click();
-  await expect(threadTranscript(page).locator("li")).toHaveCount(1);
+  await expect(threadTranscript(page).locator("li")).toHaveCount(2);
   const sent = backend.started.length;
 
   await page.locator("[data-mark]").first().click();
-  await expect(page.locator("[data-thread-action]")).toHaveText(
+  await expect(threadTranscript(page).locator("li").first()).toContainText(
     "I don't understand this.",
   );
-  await expect(threadTranscript(page).locator("li")).toHaveCount(1);
+  await expect(threadTranscript(page).locator("li")).toHaveCount(2);
   expect(backend.started).toHaveLength(sent);
 });
 
@@ -324,12 +329,12 @@ function back(page: Page) {
   return page.getByRole("button", { name: "Back" });
 }
 
-/** The last `start` frame's single seed turn. */
+/** A `start` frame's seed turn - the context, without the ask that follows it. */
 function seedOf(backend: { started: string[] }, i: number): string {
   const messages = JSON.parse(backend.started[i]) as Array<{
     content: string;
   }>;
-  expect(messages).toHaveLength(1);
+  expect(messages).toHaveLength(2);
   return messages[0].content;
 }
 
@@ -360,15 +365,16 @@ test("a thread opened at depth carries both selections once", async ({
   const backend = await transcript(page, [REPLY]);
   await selectRange(page, 0, 0, 9);
   await explainButton(page).click();
-  await expect(threadTranscript(page).locator("li")).toHaveCount(1);
+  await expect(threadTranscript(page).locator("li")).toHaveCount(2);
 
   await deeper(page).click();
   await expect(taskTranscript(page).locator("li")).toHaveText([
+    /Selected: "the quick"/,
     new RegExp(REPLY),
   ]);
 
   const sent = backend.started.length;
-  await selectRange(page, 0, 0, 5);
+  await selectRange(page, 1, 0, 5);
   await quizButton(page).click();
 
   const seed = seedOf(backend, sent);
@@ -379,45 +385,51 @@ test("a thread opened at depth carries both selections once", async ({
 
   // Taking the action does not move the panes: the quiz lands on the right.
   await expect(taskTranscript(page).locator("li")).toHaveText([
+    /Selected: "the quick"/,
     new RegExp(REPLY),
   ]);
-  await expect(threadTranscript(page).locator("li")).toHaveCount(1);
+  await expect(threadTranscript(page).locator("li")).toHaveCount(2);
 
   await deeper(page).click();
-  await expect(taskTranscript(page).locator("li")).toHaveCount(1);
+  await expect(taskTranscript(page).locator("li")).toHaveCount(2);
   await expect(page.getByText("Layer 3")).toBeVisible();
 });
 
-test("a descended thread shows what it was opened from", async ({ page }) => {
+test("a descended thread shows what it was opened from, in its transcript", async ({
+  page,
+}) => {
   await transcript(page, [REPLY]);
   await selectRange(page, 0, 0, 9);
   await explainButton(page).click();
-  await expect(threadTranscript(page).locator("li")).toHaveCount(1);
+  await expect(threadTranscript(page).locator("li")).toHaveCount(2);
 
-  await expect(page.locator("[data-focus-action]")).toBeHidden();
   await deeper(page).click();
-  await expect(page.locator("[data-focus-action]")).toHaveText(
+  // Descending makes the learning thread the left pane: its opening ask is a
+  // message like any other, so it needs no header of its own.
+  await expect(taskTranscript(page).locator("li").first()).toContainText(
+    'Selected: "the quick"',
+  );
+  await expect(taskTranscript(page).locator("li").first()).toContainText(
     "I don't understand this.",
   );
-  await expect(page.locator("[data-focus-quote]")).toHaveText("the quick");
 });
 
 test("← climbs back without losing threads or highlights", async ({ page }) => {
   const backend = await transcript(page, [REPLY]);
   await selectRange(page, 0, 0, 9);
   await explainButton(page).click();
-  await expect(threadTranscript(page).locator("li")).toHaveCount(1);
+  await expect(threadTranscript(page).locator("li")).toHaveCount(2);
 
   await deeper(page).click();
-  await selectRange(page, 0, 0, 5);
+  await selectRange(page, 1, 0, 5);
   await quizButton(page).click();
-  await expect(threadTranscript(page).locator("li")).toHaveCount(1);
+  await expect(threadTranscript(page).locator("li")).toHaveCount(2);
   const sent = backend.started.length;
 
   await back(page).click();
   await expect(page.getByText("Layer 1")).toBeVisible();
   await expect(page.locator("[data-mark]")).toHaveText("the quick");
-  await expect(threadTranscript(page).locator("li")).toHaveCount(1);
+  await expect(threadTranscript(page).locator("li")).toHaveCount(2);
 
   await deeper(page).click();
   await expect(page.locator("[data-mark]")).toHaveText("alpha");
@@ -430,16 +442,16 @@ test("nesting goes three deep", async ({ page }) => {
   const backend = await transcript(page, [REPLY]);
   await selectRange(page, 0, 0, 9);
   await explainButton(page).click();
-  await expect(threadTranscript(page).locator("li")).toHaveCount(1);
+  await expect(threadTranscript(page).locator("li")).toHaveCount(2);
 
   await deeper(page).click();
-  await selectRange(page, 0, 0, 5);
+  await selectRange(page, 1, 0, 5);
   await quizButton(page).click();
-  await expect(threadTranscript(page).locator("li")).toHaveCount(1);
+  await expect(threadTranscript(page).locator("li")).toHaveCount(2);
 
   await deeper(page).click();
   const sent = backend.started.length;
-  await selectRange(page, 0, 6, 10);
+  await selectRange(page, 1, 6, 10);
   await explainButton(page).click();
 
   const seed = seedOf(backend, sent);

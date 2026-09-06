@@ -7,9 +7,9 @@ import {
 import { readTools, writeTools } from "../graph-tools.ts";
 import type { Build, Msg as GraphMsg, Sidebar } from "../graph-view.ts";
 import { layout, type Position } from "../layout.ts";
-import { actionLabel, EXTRACT_SYSTEM, renderTree } from "../prompt.ts";
+import { EXTRACT_SYSTEM, renderTree } from "../prompt.ts";
 import { selectedSample, selectSample } from "../samples/index.ts";
-import { anchorText, overlaps, type ThreadId } from "../selection.ts";
+import { overlaps, type ThreadId } from "../selection.ts";
 import { Thread } from "../thread.ts";
 import { ThreadTree } from "../threads.ts";
 import { AppView, type Msg, type State } from "../view.ts";
@@ -84,7 +84,6 @@ export function mount(container: HTMLElement): void {
     tab: "threads",
     graph: { nodes: [], edges: [], sidebar, build },
     query: "",
-    origin: null,
     expanded: new Set(),
     child: null,
   };
@@ -125,16 +124,6 @@ export function mount(container: HTMLElement): void {
     state.draft = node.draft;
     state.marks = tree.marks(focus);
     state.expanded = expandedFor(focus);
-    const own = node.origin;
-    state.origin = own
-      ? {
-          action: actionLabel(own.action),
-          quote: anchorText(
-            own.anchor,
-            tree.get(own.anchor.thread).thread.messages,
-          ),
-        }
-      : null;
     state.activeMark = node.activeChild;
     const activeChild = node.activeChild;
     if (!activeChild) {
@@ -142,9 +131,7 @@ export function mount(container: HTMLElement): void {
       return;
     }
     const child = tree.get(activeChild);
-    const origin = child.origin;
     state.child = {
-      action: origin ? actionLabel(origin.action) : "",
       messages: child.thread.messages,
       inFlight: child.thread.inFlight,
       draft: child.draft,

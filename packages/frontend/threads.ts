@@ -1,5 +1,10 @@
 import type Anthropic from "@anthropic-ai/sdk";
-import { type Action, LEARNING_SYSTEM, seedTurn } from "./prompt.ts";
+import {
+  type Action,
+  askTurn,
+  contextSeed,
+  LEARNING_SYSTEM,
+} from "./prompt.ts";
 import type { Anchor, Mark, ThreadId } from "./selection.ts";
 import type { Tool, ToolName, TurnResult } from "./thread.ts";
 import { type Socket, Thread } from "./thread.ts";
@@ -60,13 +65,18 @@ export class ThreadTree {
     const parent = this.get(anchor.thread);
     const thread = new Thread(this.socket, {
       system: LEARNING_SYSTEM,
-      seed: seedTurn(
+      seed: contextSeed(
         parent.thread.seed,
         parent.thread.messages,
         anchor,
-        action,
         opts.graph,
       ),
+      initialTurns: [
+        {
+          role: "user",
+          content: askTurn(anchor, parent.thread.messages, action),
+        },
+      ],
       tools: opts.tools,
       yieldSchema: opts.yieldSchema,
     });

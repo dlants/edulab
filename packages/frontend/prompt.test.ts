@@ -1,10 +1,12 @@
 import { expect, it } from "vitest";
 import { KnowledgeGraph, LEVELS } from "./graph.ts";
 import {
+  actionLabel,
+  askTurn,
+  contextSeed,
   EXTRACT_SYSTEM,
   LEARNING_SYSTEM,
   renderTree,
-  seedTurn,
 } from "./prompt.ts";
 import type { Anchor, ThreadId } from "./selection.ts";
 import { type Socket, Thread } from "./thread.ts";
@@ -31,31 +33,31 @@ const at = (
   end: { msg: endMsg, offset: end },
 });
 
-it("quotes the selection verbatim", () => {
-  const seed = seedTurn(undefined, messages, at(1, 9, 1, 26), {
-    type: "explain",
-  });
-  expect(seed).toContain('The user then selected: "recursive descent"');
+it("quotes the selection verbatim in the ask, not in the seed", () => {
+  const anchor = at(1, 9, 1, 26);
+  expect(askTurn(anchor, messages, { type: "explain" })).toContain(
+    'Selected: "recursive descent"',
+  );
+  expect(contextSeed(undefined, messages, anchor)).not.toContain("Selected:");
 });
 
 it("quotes a selection spanning two messages", () => {
-  const seed = seedTurn(undefined, messages, at(0, 6, 1, 6), { type: "quiz" });
-  expect(seed).toContain('selected: "a parser\n\nI used"');
+  expect(askTurn(at(0, 6, 1, 6), messages, { type: "quiz" })).toContain(
+    'Selected: "a parser\n\nI used"',
+  );
 });
 
 it("truncates the transcript after the message containing the selection end", () => {
-  const seed = seedTurn(undefined, messages, at(1, 0, 1, 5), {
-    type: "explain",
-  });
+  const seed = contextSeed(undefined, messages, at(1, 0, 1, 5));
   expect(seed).toContain("build a parser");
   expect(seed).not.toContain("thanks");
 });
 
 it("distinguishes the three actions and carries a query through", () => {
   const anchor = at(1, 9, 1, 26);
-  const explain = seedTurn(undefined, messages, anchor, { type: "explain" });
-  const quiz = seedTurn(undefined, messages, anchor, { type: "quiz" });
-  const query = seedTurn(undefined, messages, anchor, {
+  const explain = askTurn(anchor, messages, { type: "explain" });
+  const quiz = askTurn(anchor, messages, { type: "quiz" });
+  const query = askTurn(anchor, messages, {
     type: "query",
     text: "why not a parser generator?",
   });
@@ -63,18 +65,31 @@ it("distinguishes the three actions and carries a query through", () => {
   expect(query).toContain("why not a parser generator?");
 });
 
+it("speaks the ask in the user's own voice, so the transcript reads as theirs", () => {
+  const anchor = at(1, 9, 1, 26);
+  expect(askTurn(anchor, messages, { type: "explain" })).toContain(
+    actionLabel({ type: "explain" }),
+  );
+  expect(askTurn(anchor, messages, { type: "quiz" })).toContain(
+    actionLabel({ type: "quiz" }),
+  );
+});
+
 it("composes flat at depth, oldest section first", () => {
-  const root = seedTurn(undefined, messages, at(1, 9, 1, 26), {
-    type: "explain",
-  });
+  const root = contextSeed(undefined, messages, at(1, 9, 1, 26));
   const level1 = [
+    {
+      type: "text" as const,
+      role: "user" as const,
+      text: 'Selected: "recursive descent"',
+    },
     {
       type: "text" as const,
       role: "assistant" as const,
       text: "It parses top-down.",
     },
   ] as const;
-  const depth2 = seedTurn(root, level1, at(0, 10, 0, 18), { type: "quiz" });
+  const depth2 = contextSeed(root, level1, at(1, 10, 1, 18));
 
   expect(depth2).toBe(
     [
@@ -82,13 +97,9 @@ it("composes flat at depth, oldest section first", () => {
       "",
       "Assistant: I used a recursive descent approach.",
       "",
-      'The user then selected: "recursive descent"',
-      "They said they don't understand this. Explain what it means and why it is there.",
+      'User: Selected: "recursive descent"',
       "",
       "Assistant: It parses top-down.",
-      "",
-      'The user then selected: "top-down"',
-      "They asked to be quizzed on this. Ask one question that checks whether they understand it, and wait for their answer.",
     ].join("\n"),
   );
   expect(depth2.startsWith(root)).toBe(true);
@@ -101,10 +112,7 @@ it("composes flat at depth, oldest section first", () => {
       text: "Question: what is a token?",
     },
   ] as const;
-  const depth3 = seedTurn(depth2, level2, at(0, 0, 0, 8), {
-    type: "query",
-    text: "what?",
-  });
+  const depth3 = contextSeed(depth2, level2, at(0, 0, 0, 8));
   expect(depth3.startsWith(depth2)).toBe(true);
   expect(depth3.split("build a parser")).toHaveLength(2);
   expect(depth3.split("It parses top-down")).toHaveLength(2);
@@ -124,21 +132,9 @@ it("renders the graph into a top-level seed, and only there", () => {
     level: 2,
   });
   const rendered = graph.render();
-  const top = seedTurn(
-    undefined,
-    messages,
-    at(1, 9, 1, 26),
-    { type: "explain" },
-    rendered,
-  );
+  const top = contextSeed(undefined, messages, at(1, 9, 1, 26), rendered);
   expect(top).toContain(rendered);
-  const deeper = seedTurn(
-    top,
-    messages,
-    at(1, 9, 1, 26),
-    { type: "explain" },
-    rendered,
-  );
+  const deeper = contextSeed(top, messages, at(1, 9, 1, 26), rendered);
   expect(deeper.split(rendered)).toHaveLength(2);
 });
 

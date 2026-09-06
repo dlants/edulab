@@ -99,6 +99,26 @@ it("passes a yield schema to a child and surfaces its settled value", async () =
   });
 });
 
+it("seeds a child with context and sends the ask as its first visible turn", () => {
+  const { socket, tree, anchor } = setup();
+  const child = tree.open(anchor, { type: "explain" });
+  const node = tree.get(child);
+  void node.thread.start();
+
+  const turns = socket.last.params.messages;
+  expect(turns).toHaveLength(2);
+  expect(turns[0]?.content).toBe(node.thread.seed);
+  expect(turns[0]?.content).not.toContain("Selected:");
+  expect(turns[1]?.content).toContain('Selected: "the quick"');
+
+  // The seed stays hidden; the ask is the thread's own message 0.
+  expect(node.thread.messages).toHaveLength(1);
+  expect(node.thread.messages[0]).toMatchObject({
+    role: "user",
+    text: turns[1]?.content,
+  });
+});
+
 it("offers no tools to a child opened without any", () => {
   const { socket, tree, anchor } = setup();
   const child = tree.open(anchor, { type: "explain" });
