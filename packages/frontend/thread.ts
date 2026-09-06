@@ -102,6 +102,11 @@ export type Message =
   | { type: "text"; role: "user" | "assistant"; text: string }
   | { type: "tool_use"; role: "assistant"; call: ToolCall };
 
+/** A position in a thread's `messages`. Branded because it is an identifier -
+ * half of the `(thread, index)` address an interaction and a citation are
+ * written as - and only ever produced by reading a real position. */
+export type MessageIdx = number & { readonly __brand: "MessageIdx" };
+
 /** Anchors index into text entries only, so everything else has no text. */
 export function messageText(message: Message): string {
   return message.type === "text" ? message.text : "";

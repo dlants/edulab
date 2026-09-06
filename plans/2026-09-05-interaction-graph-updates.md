@@ -235,6 +235,13 @@ export type Chip = { citation: Citation; quote: string };
   - The second interaction in a thread has the first one's prefix as a prefix of its own; this is the property the prompt cache rides on.
   - `prefix.messages` is exactly messages 0 to index-1, so rendering it with its positions as addresses round-trips back to the same blocks.
 
+**Landed.** `interactions.ts` holds `Interaction` and `interactionAt`; `MessageIdx` is branded in `thread.ts`. Deviations:
+
+- `interactionAt` throws when the address is missing or is not a user turn, rather than returning `undefined`: the callers to come read an address they just observed, so a miss is a bug and not a case to handle.
+- No batch helper (`userInteractions`) yet - the sample build owns enumeration, so it lands with that stage.
+- `selection.ts`'s `Point.msg` stays `number` for now; branding it ripples through `view.ts`'s DOM-to-`Point` resolution and buys nothing until citations exist.
+- `interactions.test.ts` carries its own `FakeSocket` (a trimmed copy of `threads.test.ts`'s, plus a `streams` helper that leaves a turn mid-flight) rather than exporting one, since a shared fixture module is more machinery than two small copies.
+
 ## the graph update prompt
 
 - Goal: `GRAPH_UPDATE_SYSTEM` and `graphUpdatePrompt` replace `EXTRACT_SYSTEM` and `renderTree`, which are deleted along with their tests.
