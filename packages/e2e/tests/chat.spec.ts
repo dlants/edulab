@@ -387,6 +387,82 @@ test("a mark clicked with the reflect column closed reopens it", async ({
   await expect(threadTranscript(page).locator("li")).toHaveCount(2);
 });
 
+function reviewButton(page: Page) {
+  return page.getByRole("button", {
+    name: "Let's review what happened in this task.",
+  });
+}
+function ideasButton(page: Page) {
+  return page.getByRole("button", {
+    name: "Give me some ideas about what I can explore.",
+  });
+}
+/** The list of thread-level children, which paint no highlight. */
+function threadList(page: Page) {
+  return page.locator("[data-ref^='thread-list'] button");
+}
+test("with nothing selected, review opens a thread anchored to the thread", async ({
+  page,
+}) => {
+  const backend = await transcript(page, [REPLY]);
+  await reviewButton(page).click();
+  await expect(threadTranscript(page).locator("li")).toHaveCount(2);
+  const sent = backend.started.at(-1) ?? "";
+  // The whole parent transcript is the context, and the ask carries no quote.
+  expect(sent).toContain(REPLY);
+  expect(sent).not.toContain("Selected:");
+  await expect(threadTranscript(page).locator("li").first()).toContainText(
+    "Let's review what happened in this task.",
+  );
+});
+test("two thread-level children can coexist", async ({ page }) => {
+  await transcript(page, [REPLY]);
+  await reviewButton(page).click();
+  await expect(threadTranscript(page).locator("li")).toHaveCount(2);
+  // A collapsed selection drops the open thread, which puts the pane back.
+  await selectRange(page, 0, 20, 20);
+  await ideasButton(page).click();
+  await expect(threadTranscript(page).locator("li")).toHaveCount(2);
+  await selectRange(page, 0, 20, 20);
+  await expect(threadList(page)).toHaveText([
+    "Let's review what happened in this task.",
+    "Give me some ideas about what I can explore.",
+  ]);
+  await threadList(page).first().click();
+  await expect(threadTranscript(page).locator("li").first()).toContainText(
+    "Let's review what happened in this task.",
+  );
+});
+test("the general question box opens a thread-level child", async ({
+  page,
+}) => {
+  await transcript(page, [REPLY]);
+  const box = page.getByPlaceholder("Ask a question about this task…");
+  await box.fill("what mattered here?");
+  await box.press("Enter");
+  await expect(threadTranscript(page).locator("li").first()).toContainText(
+    "what mattered here?",
+  );
+  await expect(threadTranscript(page).locator("li").first()).not.toContainText(
+    "Selected:",
+  );
+});
+test("climbing out of a thread-level child leaves the passage marks alone", async ({
+  page,
+}) => {
+  await transcript(page, [REPLY]);
+  await selectRange(page, 0, 0, 9);
+  await explainButton(page).click();
+  await expect(threadTranscript(page).locator("li")).toHaveCount(2);
+  await selectRange(page, 0, 20, 20);
+  await reviewButton(page).click();
+  await expect(threadTranscript(page).locator("li")).toHaveCount(2);
+  await deeper(page).click();
+  await back(page).click();
+  await expect(taskTranscript(page).locator("[data-mark]")).toHaveText(
+    SENTENCE.slice(0, 9),
+  );
+});
 test("with nothing selected the pane lists the passages already opened", async ({
   page,
 }) => {

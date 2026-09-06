@@ -26,7 +26,11 @@ import {
   saveSnapshot,
   toSnapshot,
 } from "../persistence.ts";
-import { GRAPH_UPDATE_SYSTEM, graphUpdatePrompt } from "../prompt.ts";
+import {
+  actionLabel,
+  GRAPH_UPDATE_SYSTEM,
+  graphUpdatePrompt,
+} from "../prompt.ts";
 import {
   type SampleId,
   selectedSample,
@@ -220,6 +224,7 @@ export function mount(container: HTMLElement): void {
     canDescend: false,
     thread: focus,
     marks: [],
+    threads: [],
     activeMark: null,
     anchor: null,
     popup: null,
@@ -315,6 +320,10 @@ export function mount(container: HTMLElement): void {
     state.inFlight = node.thread.inFlight;
     state.draft = node.draft;
     state.marks = tree.marks(focus);
+    state.threads = tree.threadChildren(focus).map((child) => ({
+      thread: child.thread,
+      label: actionLabel(child.action),
+    }));
     state.expanded = expandedFor(focus);
     state.updates = updatesFor(focus);
     state.updatePane = updatePane();
@@ -652,8 +661,11 @@ export function mount(container: HTMLElement): void {
         else focus = parent;
         // Climbing out lands on the passage that was descended through, which
         // may be far up a long transcript.
+        // A thread-level child has no highlight to land on, so there is
+        // nothing to bring back into view.
         const active = tree.get(focus).activeChild;
-        if (active) bus.emit({ type: "mark:reveal", thread: active });
+        if (active && tree.get(active).origin?.type === "passage")
+          bus.emit({ type: "mark:reveal", thread: active });
         anchor = null;
         anchorAt = null;
         state.query = "";
@@ -706,16 +718,18 @@ export function mount(container: HTMLElement): void {
         switch (msg.msg.type) {
           case "ACTION": {
             const from = anchor;
-            if (!from || overlaps(tree.marks(from.thread), from)) break;
+            if (from && overlaps(tree.marks(from.thread), from)) break;
             // Opening from the reflect thread hangs the new thread off it, so
             // the left pane moves down to the thread that was selected in.
-            if (from.thread !== focus) focus = from.thread;
+            if (from && from.thread !== focus) focus = from.thread;
             state.split = true;
             updateFocus = null;
-            const id = tree.open(from, msg.msg.action, {
-              tools: readTools(graph),
-              graph: graph.render(),
-            });
+            const opts = { tools: readTools(graph), graph: graph.render() };
+            // With no live passage the ask is about the thread as a whole, so
+            // it hangs off the focused thread with no highlight.
+            const id = from
+              ? tree.open(from, msg.msg.action, opts)
+              : tree.openThread(focus, msg.msg.action, opts);
             anchor = null;
             anchorAt = null;
             state.query = "";

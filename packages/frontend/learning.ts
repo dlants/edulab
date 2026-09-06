@@ -23,6 +23,9 @@ export type State = {
   /** The passages in this thread that already own a thread, offered as a way
    * back into them when nothing is selected. */
   marks: ReadonlyArray<{ thread: ThreadId; text: string }>;
+  /** Thread-level children of the focused thread, offered as a way back in:
+   * they paint no highlight, so the list is the only way to reach them. */
+  threads: ReadonlyArray<{ thread: ThreadId; label: string }>;
 };
 
 /** Where the live selection ended, in viewport coordinates: the popup is
@@ -241,6 +244,10 @@ export class LearningPane implements View<State, Msg, PaneCtx> {
     ctx: PaneCtx,
   ) {
     const emptyRef = ref("empty");
+    const reviewRef = ref("review");
+    const ideasRef = ref("ideas");
+    const threadQueryRef = ref("thread-query");
+    const threadListRef = ref("thread-list");
     const bodyRef = ref("body");
     const quoteRef = ref("quote");
     const explainRef = ref("explain");
@@ -251,8 +258,14 @@ export class LearningPane implements View<State, Msg, PaneCtx> {
 
     container.className = paneClass;
     container.innerHTML = sanitize`
-      <p class="${emptyClass}" data-ref="${emptyRef}">Select some text to get started.</p>
-      <ul class="${markListClass}" data-ref="${markListRef}"></ul>
+      <div class="${actionsClass}" data-ref="${emptyRef}">
+        <button type="button" data-ref="${reviewRef}">${actionLabel({ type: "review" })}</button>
+        <button type="button" data-ref="${ideasRef}">${actionLabel({ type: "ideas" })}</button>
+        <p class="${emptyClass}">Select some text to ask a question about a specific part of this task.</p>
+        <textarea data-ref="${threadQueryRef}" rows="2" placeholder="Ask a question about this task…"></textarea>
+        <ul class="${markListClass}" data-ref="${threadListRef}"></ul>
+        <ul class="${markListClass}" data-ref="${markListRef}"></ul>
+      </div>
       <p class="${warnClass}" data-ref="${warnRef}">Select a non-overlapping section.</p>
       <div class="${actionsClass}" data-ref="${bodyRef}">
         <blockquote class="${quoteClass}" data-ref="${quoteRef}"></blockquote>
@@ -275,17 +288,35 @@ export class LearningPane implements View<State, Msg, PaneCtx> {
         dispatch({ type: "ACTION", action: { type: "quiz" } }),
       );
 
+    this.b
+      .ref(reviewRef)
+      .addEventListener("click", () =>
+        dispatch({ type: "ACTION", action: { type: "review" } }),
+      );
+    this.b
+      .ref(ideasRef)
+      .addEventListener("click", () =>
+        dispatch({ type: "ACTION", action: { type: "ideas" } }),
+      );
+
+    // Two boxes rather than one shared with the passage branch: they sit in a
+    // different place in each branch's stack, and the scope of what is typed is
+    // decided by whether there is a live selection, not by which box it was.
+    const composer = (el: HTMLTextAreaElement) => {
+      el.addEventListener("input", () => {
+        dispatch({ type: "QUERY_CHANGED", query: el.value });
+      });
+      el.addEventListener("keydown", (e: KeyboardEvent) => {
+        if (e.key !== "Enter" || e.shiftKey) return;
+        e.preventDefault();
+        const text = el.value.trim();
+        if (text === "") return;
+        dispatch({ type: "ACTION", action: { type: "query", text } });
+      });
+    };
     const query = this.b.ref<HTMLTextAreaElement>(queryRef);
-    query.addEventListener("input", () => {
-      dispatch({ type: "QUERY_CHANGED", query: query.value });
-    });
-    query.addEventListener("keydown", (e: KeyboardEvent) => {
-      if (e.key !== "Enter" || e.shiftKey) return;
-      e.preventDefault();
-      const text = query.value.trim();
-      if (text === "") return;
-      dispatch({ type: "ACTION", action: { type: "query", text } });
-    });
+    composer(query);
+    composer(this.b.ref<HTMLTextAreaElement>(threadQueryRef));
 
     // The popup hands the question over to this box: it cannot take focus
     // itself without dropping the selection, so the pane takes it here, once
@@ -295,9 +326,14 @@ export class LearningPane implements View<State, Msg, PaneCtx> {
     });
 
     this.b.bindVisible(emptyRef, (s) => s.selection === null && !s.overlapping);
-    this.b.bindVisible(
-      markListRef,
-      (s) => s.selection === null && !s.overlapping && s.marks.length > 0,
+    this.b.bindVisible(markListRef, (s) => s.marks.length > 0);
+    this.b.bindVisible(threadListRef, (s) => s.threads.length > 0);
+    this.b.bindList(threadListRef, "li", (s) =>
+      s.threads.map((child) =>
+        showKeyed(child.thread, MarkItem, { text: child.label }, {}, () =>
+          dispatch({ type: "MARK_CLICKED", thread: child.thread }),
+        ),
+      ),
     );
     this.b.bindList(markListRef, "li", (s) =>
       s.marks.map((mark) =>
@@ -310,6 +346,7 @@ export class LearningPane implements View<State, Msg, PaneCtx> {
     this.b.bindVisible(bodyRef, (s) => s.selection !== null && !s.overlapping);
     this.b.bindText(quoteRef, (s) => s.selection ?? "");
     this.b.bindValue(queryRef, (s) => s.query);
+    this.b.bindValue(threadQueryRef, (s) => s.query);
   }
 
   sync(state: State): void {

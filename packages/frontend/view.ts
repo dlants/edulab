@@ -87,6 +87,9 @@ export type State = {
   marks: ReadonlyArray<Mark>;
   /** The mark whose thread the right pane is showing, drawn emphasized. */
   activeMark: ThreadId | null;
+  /** Children opened off this thread as a whole: they paint no highlight, so
+   * the pane lists them instead. */
+  threads: ReadonlyArray<{ thread: ThreadId; label: string }>;
   anchor: Anchor | null;
   query: string;
   /** Which top-level tab is showing. State, not a route: a page load would
@@ -1102,6 +1105,7 @@ class ThreadsView implements View<State, Msg, AppCtx> {
           thread: mark.thread,
           text: anchorText(mark.anchor, s.messages),
         })),
+        threads: s.threads,
       };
       // bindSlot hands this straight to the child as its dispatch, so it must
       // dispatch rather than return a wrapped message.

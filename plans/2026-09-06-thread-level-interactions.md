@@ -151,7 +151,24 @@ on `ThreadTree`. Nothing calls them yet — the pane wiring is stage 3.
   - `prompt.test.ts`: `threadAskTurn` contains no `Selected:` block, and differs per action.
   - `threads.test.ts`: two `openThread` calls on the same parent both succeed, both appear in `threadChildren`, and neither appears in `marks()`.
 
-## The pane and the dispatch loop
+## The pane and the dispatch loop — DONE
+
+Landed as designed, with three notes:
+
+- The empty branch got its **own** textarea rather than sharing the passage
+  branch's: the two sit at different points in their stacks, and the scope of
+  what is typed is decided by whether an anchor is live, not by which box it
+  came from. Both bind the same `query` and dispatch the same messages; the
+  new one is placeholdered "Ask a question about this task…" so the popup
+  hand-off spec's `getByPlaceholder("Ask your own question…")` stays
+  unambiguous.
+- The passage list is now visible whenever `marks` is non-empty rather than
+  gated on "no selection": the whole empty branch is already hidden when there
+  is one, so the second condition was dead.
+- `ACTION` with an anchor that overlaps a committed mark still breaks rather
+  than falling through to a thread-level open - an overlapping selection
+  offers no actions in either the pane or the popup, so the fall-through would
+  only ever fire on a bug.
 
 - Goal: with nothing selected, "Go deeper" shows the two suggestion buttons, the prompt to select text, the general-question box, and the two lists. Clicking one opens a thread-level child, which streams into the right pane and can be returned to from the list. `GO_BACK` no longer emits `mark:reveal` for a thread-level child.
 - Tests (e2e, stubbed socket):
