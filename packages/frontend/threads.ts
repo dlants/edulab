@@ -1,4 +1,5 @@
 import type Anthropic from "@anthropic-ai/sdk";
+import type { ThreadSnapshot } from "./persistence.ts";
 import {
   type Action,
   askTurn,
@@ -40,7 +41,7 @@ export type TreeNode = {
 export class ThreadTree {
   private readonly threads = new Map<ThreadId, TreeNode>();
   private nextId = 0;
-  readonly root: ThreadId;
+  root: ThreadId;
   private readonly socket: Socket;
   /** Attached to every thread the tree owns, so a stream anywhere in the
    * tree re-syncs the app. */
@@ -110,6 +111,53 @@ export class ThreadTree {
       at = this.get(at).origin?.anchor.thread;
     }
     return out;
+  }
+
+  /** The id counter, persisted so a restored tree cannot re-mint an id. */
+  get nextThreadId(): number {
+    return this.nextId;
+  }
+
+  /** Every node, in creation order. */
+  nodes(): ReadonlyArray<TreeNode> {
+    return [...this.threads.values()];
+  }
+
+  /** Rebuilds a tree from persisted snapshots rather than from a root thread.
+   * `threadOf` mints the `Thread` for each snapshot, so the caller owns tool
+   * wiring, which the snapshot deliberately does not carry. */
+  static restore(
+    socket: Socket,
+    snapshots: ReadonlyArray<ThreadSnapshot>,
+    root: ThreadId,
+    nextId: number,
+    onChange: () => void,
+    threadOf: (snapshot: ThreadSnapshot) => Thread,
+  ): ThreadTree {
+    const rootSnapshot = snapshots.find((s) => s.id === root);
+    if (!rootSnapshot) throw new Error(`no snapshot for root ${root}`);
+    const tree = new ThreadTree(socket, threadOf(rootSnapshot), onChange);
+    const rootThread = tree.get(tree.root).thread;
+    tree.threads.clear();
+    for (const snapshot of snapshots) {
+      const thread = snapshot.id === root ? rootThread : threadOf(snapshot);
+      tree.threads.set(snapshot.id, tree.node(snapshot, thread));
+    }
+    tree.root = root;
+    tree.nextId = nextId;
+    return tree;
+  }
+
+  private node(snapshot: ThreadSnapshot, thread: Thread): TreeNode {
+    thread.onChange = this.onChange;
+    return {
+      id: snapshot.id,
+      origin: snapshot.origin,
+      thread,
+      children: [...snapshot.children],
+      activeChild: snapshot.activeChild,
+      draft: snapshot.draft,
+    };
   }
 
   private add(origin: Origin | null, thread: Thread): ThreadId {

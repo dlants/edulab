@@ -19,7 +19,11 @@ import { IDENTITY_VIEWPORT, panZoom } from "../graph-view.ts";
 import { interactionAt } from "../interactions.ts";
 import { layout, type Position } from "../layout.ts";
 import { GRAPH_UPDATE_SYSTEM, graphUpdatePrompt } from "../prompt.ts";
-import { selectedSample, selectSample } from "../samples/index.ts";
+import {
+  type SampleId,
+  selectedSample,
+  selectSample,
+} from "../samples/index.ts";
 import { overlaps, type ThreadId } from "../selection.ts";
 import { type Message, type MessageIdx, runThread, Thread } from "../thread.ts";
 import { ThreadTree } from "../threads.ts";
@@ -419,7 +423,7 @@ export function mount(container: HTMLElement): void {
         node.draft = msg.draft;
         break;
       case "SAMPLE_CHANGED":
-        selectSample(msg.id === "" ? undefined : msg.id);
+        selectSample(msg.id === "" ? undefined : (msg.id as SampleId));
         break;
       case "TAB_CHANGED":
         state.tab = msg.tab;

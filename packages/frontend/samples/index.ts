@@ -13,8 +13,12 @@ import polarsSeries from "./aa0cb918-statsforecast-polars-series-lengths.json";
 /** A canned task transcript, so a prototype can be exercised without spending a
  * turn of real work first. The files are verbatim exports: a flat array of
  * strictly alternating string-content turns, which is exactly MessageParam. */
+/** A sample id: a query param today and a storage key from here on, so it is
+ * branded rather than a bare string. */
+export type SampleId = string & { readonly __brand: "SampleId" };
+
 export type Sample = {
-  id: string;
+  id: SampleId;
   label: string;
   turns: Anthropic.MessageParam[];
 };
@@ -26,7 +30,7 @@ type SampleFile = {
 
 function sample(label: string, file: SampleFile): Sample {
   return {
-    id: file.hash.slice(0, 8),
+    id: file.hash.slice(0, 8) as SampleId,
     label,
     turns: file.messages.map((m) => ({
       role: m.role === "assistant" ? "assistant" : "user",
@@ -57,7 +61,7 @@ export function selectedSample(): Sample | undefined {
 
 /** Switching samples has to discard every scrap of prototype state, so it is a
  * real navigation rather than a re-mount. */
-export function selectSample(id: string | undefined): void {
+export function selectSample(id: SampleId | undefined): void {
   const url = new URL(window.location.href);
   if (id === undefined) url.searchParams.delete(SAMPLE_PARAM);
   else url.searchParams.set(SAMPLE_PARAM, id);

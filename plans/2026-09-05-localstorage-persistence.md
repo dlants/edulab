@@ -217,13 +217,32 @@ does not exist yet. `toSnapshot` will call it.
   - A `Thread` driven through a text turn and a tool call (via the existing `FakeSocket`) round-trips through `log` + `initialTurns`: the restored thread's `messages` deep-equal the original's, and the next request it sends carries the full restored log.
   - A log whose last assistant turn has an unanswered `tool_use` is trimmed by `toSnapshot`; one whose trailing turn is a bare user turn is not.
 
-## tree snapshot and restore
+## tree snapshot and restore — DONE
+
+Landed as `ThreadTree.nodes()`, `ThreadTree.nextThreadId`, `ThreadTree.restore()`
+(`threads.ts`), and the new `persistence.ts` holding `ThreadSnapshot`,
+`UpdateSnapshot`, `Snapshot`, `threadSnapshots()` and `interactionAddresses()`.
+`SampleId` is branded in `samples/index.ts`.
+
+Deviations:
+
+- `restore` builds through the ordinary constructor (minting the root thread
+  once) and then replaces the node map, rather than bypassing the constructor.
+  `root` is therefore an assignable field instead of `readonly`.
+- `interactionAddresses` needs message indices, not turn indices, so `thread.ts`
+  exports `projectLog(turns)` — `project` with nothing streaming.
+- `threadSnapshots(tree)` lives in `persistence.ts` and is where
+  `trimUnansweredTools` is applied; the full `toSnapshot` / `restore` pair and
+  the localStorage read/write are stage 3.
+- `sampleTurnCount` is counted in *interactions* (user turns), not turns, since
+  that is the unit an address is in.
 
 - Goal: `ThreadTree` round-trips, including a child thread with an origin anchor.
-- Tests:
-  - A tree with a root and two learning children, one of them active, round-trips: `path`, `marks`, `activeChild` and each thread's `messages` all match the original.
-  - `interactionAddresses` returns the root's user turns in index order before any child's, and a child's seeded ask is address 0.
-  - With `includeSampleTurns: false`, addresses below `sampleTurnCount` in the root are excluded.
+- Tests (`persistence.test.ts`):
+  - [x] A tree with a root and two learning children, one of them active, round-trips: `path`, `marks`, `activeChild`, drafts, seeds and each thread's `messages` all match the original.
+  - [x] A restored tree does not re-mint an id: the next child is `t3`.
+  - [x] `interactionAddresses` returns the root's user turns in index order before any child's, and a child's seeded ask is address 0.
+  - [x] With `includeSampleTurns: false`, addresses below `sampleTurnCount` in the root are excluded.
 
 ## wiring into the prototype
 

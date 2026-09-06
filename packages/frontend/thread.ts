@@ -197,6 +197,15 @@ export async function runThread(
  * `tool_result`: the API rejects a log with a dangling call, which is exactly
  * what a refresh mid-tool-call leaves behind. A trailing user turn that simply
  * never got a reply is well-formed and is kept. */
+/** The transcript a committed log projects to, for callers that hold a log
+ * without a live `Thread` (persistence addresses interactions by message
+ * index, and the index has to mean the same thing on both sides). */
+export function projectLog(
+  turns: ReadonlyArray<Anthropic.MessageParam>,
+): ReadonlyArray<Message> {
+  return project(turns, undefined);
+}
+
 export function trimUnansweredTools(
   log: ReadonlyArray<Anthropic.MessageParam>,
 ): Anthropic.MessageParam[] {
