@@ -71,7 +71,7 @@ async function seed(page: Page) {
 }
 
 function graphTab(page: Page) {
-  return page.getByRole("button", { name: "Knowledge graph" });
+  return page.getByRole("button", { name: "Knowledge graph", exact: true });
 }
 
 function threadsTab(page: Page) {
@@ -353,4 +353,53 @@ test("a failed graph update leaves the app usable", async ({ page }) => {
 
   await graphTab(page).click();
   await expect(nodes(page)).toHaveText(["concept-2"]);
+});
+
+function buildButton(page: Page) {
+  return page.getByRole("button", { name: /Build knowledge graph/ });
+}
+/** The smallest canned transcript, and the count of user turns in it: the
+ * build covers exactly the turns the sample was loaded with. */
+const SAMPLE = "9833484b";
+const SAMPLE_TURNS = 20;
+test("building from a sample transcript walks its turns once", async ({
+  page,
+}) => {
+  const backend = await updateBackend(page);
+  await page.goto(`/?sample=${SAMPLE}`);
+  await buildButton(page).click();
+  await expect(buildButton(page)).toBeDisabled();
+  await expect(page.locator("[data-build-status]")).toHaveText(
+    new RegExp(`^\\d+ / ${SAMPLE_TURNS} interactions$`),
+  );
+  await expect(page.locator("[data-build-status]")).toHaveText("built");
+  // Terminal: a second pass over the same turns buys nothing.
+  await expect(buildButton(page)).toBeDisabled();
+  await graphTab(page).click();
+  await expect(nodes(page)).toHaveCount(SAMPLE_TURNS);
+  expect(backend.overlapped()).toBe(false);
+});
+test("a failed update mid-build does not stop the ones after it", async ({
+  page,
+}) => {
+  await updateBackend(page, true);
+  await page.goto(`/?sample=${SAMPLE}`);
+  await buildButton(page).click();
+  await expect(page.locator("[data-build-status]")).toHaveText(
+    "built, 1 failed",
+  );
+  await graphTab(page).click();
+  await expect(nodes(page)).toHaveCount(SAMPLE_TURNS - 1);
+});
+test("interacting mid-build interleaves rather than races", async ({
+  page,
+}) => {
+  const backend = await updateBackend(page);
+  await page.goto(`/?sample=${SAMPLE}`);
+  await buildButton(page).click();
+  await turn(page, "and what about fragmentation");
+  await expect(page.locator("[data-build-status]")).toHaveText("built");
+  await graphTab(page).click();
+  await expect(nodes(page)).toHaveCount(SAMPLE_TURNS + 1);
+  expect(backend.overlapped()).toBe(false);
 });

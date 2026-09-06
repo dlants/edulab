@@ -84,6 +84,7 @@ export function mount(container: HTMLElement): void {
     anchor: null,
     tab: "threads",
     graph: { nodes: [], edges: [], sidebar },
+    build: { type: "idle" },
     query: "",
     expanded: new Set(),
     child: null,
@@ -148,9 +149,12 @@ export function mount(container: HTMLElement): void {
    * through its tools. Queued against every other update rather than run
    * concurrently, and never awaited by the user: the learning thread answers
    * them regardless, and a failure here is invisible outside the console. */
-  function queueGraphUpdate(thread: ThreadId, index: MessageIdx): void {
+  function queueGraphUpdate(
+    thread: ThreadId,
+    index: MessageIdx,
+  ): Promise<boolean> {
     const interaction = interactionAt(tree, thread, index);
-    updates = updates
+    const done = updates
       .then(async () => {
         // Read inside the queued step, so this update sees the previous one's
         // writes rather than the graph as it stood when it was enqueued.
@@ -160,12 +164,61 @@ export function mount(container: HTMLElement): void {
           tools: writeTools(graph),
           yieldSchema: "text",
         });
-        if (result.status === "error") console.error(result.error);
+        if (result.status === "error") {
+          console.error(result.error);
+          return false;
+        }
+        return true;
       })
       .catch((e: unknown) => {
         console.error(e);
+        return false;
       })
-      .then(sync);
+      .then((ok) => {
+        sync();
+        return ok;
+      });
+    updates = done.then(() => undefined);
+    return done;
+  }
+
+  /** The sample's own turns: a loaded transcript is a session that happened
+   * before this page existed, so no live update ever ran over it. Every turn
+   * after these came from an interaction that updated the graph itself, so
+   * enumerating once at mount is what keeps the build from double-counting. */
+  const sampleInteractions: MessageIdx[] = tree
+    .get(tree.root)
+    .thread.messages.flatMap((m, i) =>
+      m.role === "user" && m.type === "text" ? [i as MessageIdx] : [],
+    );
+
+  /** Walks the loaded sample's turns through the same queue the live updates
+   * use, so an interaction mid-build interleaves rather than races. */
+  function runBuild(): void {
+    if (state.build.type !== "idle") return;
+    const total = sampleInteractions.length;
+    if (total === 0) return;
+    state.build = { type: "running", done: 0, total, failed: 0 };
+    void (async () => {
+      for (const index of sampleInteractions) {
+        const ok = await queueGraphUpdate(tree.root, index);
+        const build = state.build;
+        if (build.type !== "running") return;
+        state.build = {
+          type: "running",
+          done: build.done + 1,
+          total: build.total,
+          failed: build.failed + (ok ? 0 : 1),
+        };
+        sync();
+      }
+      const build = state.build;
+      state.build = {
+        type: "done",
+        failed: build.type === "running" ? build.failed : 0,
+      };
+      sync();
+    })();
   }
 
   function send(id: ThreadId): void {
@@ -179,7 +232,7 @@ export function mount(container: HTMLElement): void {
     node.thread.send(text).then(undefined, (e: unknown) => {
       console.error(e);
     });
-    queueGraphUpdate(id, index);
+    void queueGraphUpdate(id, index);
   }
 
   /** The graph tab's own reducer. It writes to the graph and to `sidebar`;
@@ -258,6 +311,9 @@ export function mount(container: HTMLElement): void {
       case "SUBMIT":
         send(focus);
         break;
+      case "BUILD":
+        runBuild();
+        break;
       case "GO_DEEPER": {
         if (!state.split) {
           state.split = true;
@@ -302,7 +358,7 @@ export function mount(container: HTMLElement): void {
             });
             state.anchor = null;
             state.query = "";
-            queueGraphUpdate(id, 0 as MessageIdx);
+            void queueGraphUpdate(id, 0 as MessageIdx);
             tree
               .get(id)
               .thread.start()

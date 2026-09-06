@@ -316,6 +316,24 @@ deleted. Deviations:
   - Clicking the button over a sample with three user turns issues three graph updates in sequence, the counter advances, and the nodes land on the canvas. The button is disabled while running and afterwards.
   - A graph update that errors mid-build does not stop the ones after it, and the count reflects it.
   - Sending a turn while a build is running does not produce overlapping updates — the interaction's update runs after the queued build steps. This is the seam between the two triggers and the only place they can collide.
+
+**Landed.** `Build` and `{ type: "BUILD" }` live in `view.ts`; the button and a
+`N / M interactions` status sit in the nav beside the sample picker.
+`chat.ts` enumerates the loaded root thread's user turns once at mount
+(`sampleInteractions`) and `runBuild()` awaits one `queueGraphUpdate` each, so
+the build shares the live queue. Deviations:
+
+- `queueGraphUpdate` now returns `Promise<boolean>` (did the update succeed) so
+  the build can count failures; the callers that do not care `void` it.
+- The button is disabled once `build.type !== "idle"`, i.e. while running and
+  afterwards, and does nothing when the transcript has no loaded turns; it is
+  still rendered there rather than hidden, since the header is fixed chrome.
+- The e2e specs use the smallest canned sample (`9833484b`, 20 user turns)
+  rather than a three-turn fixture: samples are selected by URL param and there
+  is no way to inject a synthetic one. The counter is asserted with a regex
+  mid-build, since the exact final count flashes past.
+- `graphTab()` in `graph.spec.ts` needed `exact: true`, since the build
+  button's label also contains "Knowledge graph".
 ## surfacing the update in the transcript
 
 - Goal: a turn shows its graph update working, and then what it changed.

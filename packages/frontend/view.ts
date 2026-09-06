@@ -32,6 +32,13 @@ import {
   type View,
 } from "./vamp.ts";
 
+/** The sample-transcript batch. `done` is terminal: a second pass over the
+ * same turns updates nodes rather than teaching us anything new. */
+export type Build =
+  | { type: "idle" }
+  | { type: "running"; done: number; total: number; failed: number }
+  | { type: "done"; failed: number };
+
 export type State = {
   messages: ReadonlyArray<Message>;
   /** The id of the canned transcript in play, empty for a hand-written one. */
@@ -56,6 +63,8 @@ export type State = {
    * discard the graph. */
   tab: "threads" | "graph";
   graph: GraphState;
+  /** The sample-transcript batch: one graph update per loaded user turn. */
+  build: Build;
   /** Indices of messages the user has expanded past the collapsed height. */
   expanded: ReadonlySet<number>;
   /** The active child thread, shown on the right when nothing is selected. */
@@ -65,6 +74,7 @@ export type State = {
 export type Msg =
   | { type: "DRAFT_CHANGED"; draft: string }
   | { type: "SUBMIT" }
+  | { type: "BUILD" }
   | { type: "GO_DEEPER" }
   | { type: "GO_BACK" }
   | { type: "SELECTION_CHANGED"; anchor: Anchor | null }
@@ -91,6 +101,7 @@ const toolResultClass = cls("tool-result");
 const threadPaneClass = cls("thread-pane");
 const bodyClass = cls("body");
 const sampleClass = cls("sample");
+const buildStatusClass = cls("build-status");
 const spacerClass = cls("spacer");
 const tabsClass = cls("tabs");
 const graphTabClass = cls("graph-tab");
@@ -162,6 +173,10 @@ mountStyle(`
 .${navClass} button:disabled {
   opacity: 0.4;
   cursor: default;
+}
+.${buildStatusClass} {
+  font-size: 0.8rem;
+  color: #666;
 }
 .${sampleClass} {
   font: inherit;
@@ -610,6 +625,8 @@ export class AppView implements View<State, Msg> {
     const composerRef: Ref = ref("composer");
     const learningRef: Ref = ref("learning");
     const sampleRef: Ref = ref("sample");
+    const buildRef: Ref = ref("build");
+    const buildStatusRef: Ref = ref("build-status");
     const threadsTabRef: Ref = ref("threads-tab");
     const graphTabRef: Ref = ref("graph-tab");
     const bodyRef: Ref = ref("body");
@@ -619,6 +636,8 @@ export class AppView implements View<State, Msg> {
     container.innerHTML = sanitize`
       <div class="${navClass}">
         <select class="${sampleClass}" data-ref="${sampleRef}"></select>
+        <button type="button" data-build data-ref="${buildRef}">Build knowledge graph from this transcript</button>
+        <span class="${buildStatusClass}" data-build-status data-ref="${buildStatusRef}"></span>
         <span class="${tabsClass}">
           <button type="button" data-ref="${threadsTabRef}">Threads</button>
           <button type="button" data-ref="${graphTabRef}">Knowledge graph</button>
@@ -720,6 +739,12 @@ export class AppView implements View<State, Msg> {
         ),
       ),
     );
+    this.b
+      .ref(buildRef)
+      .addEventListener("click", () => dispatch({ type: "BUILD" }));
+    this.b.bindDisabled(buildRef, (s) => s.build.type !== "idle");
+    this.b.bindText(buildStatusRef, (s) => buildStatus(s.build));
+
     this.b.bindValue(sampleRef, (s) => s.sample);
     this.b
       .ref(threadsTabRef)
@@ -793,6 +818,19 @@ export class AppView implements View<State, Msg> {
   destroy(): void {
     this.b.cleanup();
     this.container.innerHTML = "";
+  }
+}
+
+/** A count rather than a spinner: this is one model call per turn and it takes
+ * as long as it takes. */
+function buildStatus(build: Build): string {
+  switch (build.type) {
+    case "idle":
+      return "";
+    case "running":
+      return `${build.done} / ${build.total} interactions`;
+    case "done":
+      return build.failed === 0 ? "built" : `built, ${build.failed} failed`;
   }
 }
 
