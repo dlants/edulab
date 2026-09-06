@@ -1,7 +1,8 @@
 import type Anthropic from "@anthropic-ai/sdk";
+import { citationText } from "./citation.ts";
 import type { Interaction } from "./interactions.ts";
-import { type Anchor, anchorText } from "./selection.ts";
-import type { Message } from "./thread.ts";
+import { type Anchor, anchorText, type ThreadId } from "./selection.ts";
+import type { Message, MessageIdx } from "./thread.ts";
 
 export type Action =
   | { type: "explain" }
@@ -91,6 +92,12 @@ export const GRAPH_UPDATE_SYSTEM = [
   "when the split expresses something real about this user's understanding. A",
   "concept the user merely brushed past does not need a node.",
   "",
+  "Ground every note about this user in what they actually did. Each block of",
+  "the transcript is labelled with its address, `@message:<thread>:<index>`,",
+  "including the interaction itself. A claim about what this user understands",
+  "or misunderstands must cite the addresses it rests on, written verbatim in",
+  "the note; do not assert anything you cannot point at.",
+  "",
   "Most interactions reveal nothing. If this one does not, change nothing and",
   "yield: doing nothing is the expected outcome, not a failure. Nothing you",
   "say outside the tools is read.",
@@ -109,7 +116,7 @@ export function graphUpdatePrompt(
     prefix.push(`How this thread was framed:\n${interaction.prefix.seed}`);
   if (interaction.prefix.messages.length > 0)
     prefix.push(
-      `The thread up to this interaction:\n${transcript(interaction.prefix.messages)}`,
+      `The thread up to this interaction:\n${transcript(interaction.prefix.messages, interaction.thread)}`,
     );
   return [
     {
@@ -121,7 +128,7 @@ export function graphUpdatePrompt(
       type: "text",
       text: [
         `The knowledge graph as it stands:\n${graph}`,
-        `The interaction:\nUser: ${interaction.text}`,
+        `The interaction, at ${citationText({ thread: interaction.thread, index: interaction.index })}:\nUser: ${interaction.text}`,
         GRAPH_UPDATE_QUESTIONS,
       ].join("\n\n"),
     },
@@ -138,9 +145,21 @@ const GRAPH_UPDATE_QUESTIONS = [
   "else - then yield.",
 ].join(" ");
 
-function transcript(messages: ReadonlyArray<Message>): string {
+/** With `thread`, every block is labelled with its address, so the model can
+ * cite it back. Indices are positions in that thread's `messages`, which is
+ * append-only, so an address stays valid for the life of the page. */
+function transcript(
+  messages: ReadonlyArray<Message>,
+  thread?: ThreadId,
+): string {
   return messages
-    .map((m) => `${m.role === "user" ? "User" : "Assistant"}: ${line(m)}`)
+    .map((m, i) => {
+      const who = m.role === "user" ? "User" : "Assistant";
+      const at = thread
+        ? ` (${citationText({ thread, index: i as MessageIdx })})`
+        : "";
+      return `${who}${at}: ${line(m)}`;
+    })
     .join("\n\n");
 }
 

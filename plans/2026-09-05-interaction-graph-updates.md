@@ -267,6 +267,18 @@ export type Chip = { citation: Citation; quote: string };
   - `resolve` returns the message text for a live address and `undefined` for an unknown thread or an out-of-range index.
   - `graphUpdatePrompt` renders the interaction's own address and those of its prefix blocks, and they resolve back to those blocks through `resolve`.
 
+**Landed.** `citation.ts` holds `Citation`, `citationText`, `Span`, `parse` and
+`resolve`; `graphUpdatePrompt` labels every prefix block `User (@message:tN:i):`
+and the interaction itself with its own address; `GRAPH_UPDATE_SYSTEM` now
+requires a claim about the user to cite the addresses it rests on. Deviations:
+
+- `transcript()` takes an optional `thread`: only the graph update labels
+  blocks. A learning thread's seed stays unaddressed, since nothing cites it.
+- `resolve` catches `ThreadTree.get`'s throw for an unknown thread rather than
+  the tree gaining a lookup that returns `undefined`.
+- `citation.test.ts` carries its own trimmed `FakeSocket`, matching what
+  `interactions.test.ts` already does.
+
 ## update the graph on every interaction
 
 - Goal: submitting a turn or opening a learning thread updates the graph in the background, and the build button is gone.

@@ -1,5 +1,6 @@
 import type Anthropic from "@anthropic-ai/sdk";
 import { expect, it } from "vitest";
+import { parse } from "./citation.ts";
 import { KnowledgeGraph, LEVELS } from "./graph.ts";
 import type { Interaction } from "./interactions.ts";
 import {
@@ -176,6 +177,24 @@ it("states the scope restriction, the coarseness rule and the licence to change 
   expect(GRAPH_UPDATE_SYSTEM).toContain("small and coarse");
   expect(GRAPH_UPDATE_SYSTEM).toContain("change nothing");
   expect(GRAPH_UPDATE_SYSTEM).toContain("`notes`");
+});
+
+it("labels the interaction and its prefix with addresses that resolve back", () => {
+  const [cached, volatile] = graphUpdatePrompt(
+    interaction(2, "thanks", "the framing"),
+    "the graph",
+  );
+  expect(blockText(cached)).toContain("User (@message:root:0): build a parser");
+  expect(blockText(cached)).toContain("Assistant (@message:root:1):");
+  expect(blockText(volatile)).toContain("@message:root:2");
+  for (const span of parse(blockText(cached) + blockText(volatile))) {
+    if (span.type === "citation") expect(span.citation.thread).toBe("root");
+  }
+});
+
+it("requires notes to cite the interactions they rest on", () => {
+  expect(GRAPH_UPDATE_SYSTEM).toContain("@message:<thread>:<index>");
+  expect(GRAPH_UPDATE_SYSTEM).toContain("cite");
 });
 
 it("names the get tool and the scale in the learning system prompt", () => {
