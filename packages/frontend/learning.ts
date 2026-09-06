@@ -1,4 +1,5 @@
 import { type Action, actionLabel } from "./prompt.ts";
+import type { ThreadId } from "./selection.ts";
 import {
   Binder,
   cls,
@@ -6,6 +7,7 @@ import {
   type PostRenderEventBus,
   ref,
   sanitize,
+  showKeyed,
   type View,
 } from "./vamp.ts";
 import type { AppEvent } from "./view.ts";
@@ -18,6 +20,9 @@ export type State = {
   /** The live selection intersects a committed mark, so no action is offered. */
   overlapping: boolean;
   query: string;
+  /** The passages in this thread that already own a thread, offered as a way
+   * back into them when nothing is selected. */
+  marks: ReadonlyArray<{ thread: ThreadId; text: string }>;
 };
 
 /** Where the live selection ended, in viewport coordinates: the popup is
@@ -29,7 +34,9 @@ export type Msg =
   /** Open the reflect layer on this passage without an action, so the user can
    * type their own question into the pane's composer. */
   | { type: "ASK" }
-  | { type: "QUERY_CHANGED"; query: string };
+  | { type: "QUERY_CHANGED"; query: string }
+  /** One of the existing passages was picked out of the list. */
+  | { type: "MARK_CLICKED"; thread: ThreadId };
 
 const paneClass = cls("learning-pane");
 const popupClass = cls("selection-popup");
@@ -37,6 +44,7 @@ const emptyClass = cls("learning-empty");
 const quoteClass = cls("learning-quote");
 const actionsClass = cls("learning-actions");
 const warnClass = cls("learning-warn");
+const markListClass = cls("learning-mark-list");
 
 mountStyle(`
 .${paneClass} {
@@ -51,6 +59,31 @@ mountStyle(`
 .${emptyClass} {
   opacity: 0.5;
   font-style: italic;
+}
+.${markListClass} {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.${markListClass} button {
+  font: inherit;
+  font-size: 0.85rem;
+  text-align: left;
+  width: 100%;
+  padding: 0.35rem 0.5rem;
+  border: none;
+  border-left: 3px solid #f0b429;
+  background: rgba(0, 0, 0, 0.03);
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.${markListClass} button:hover {
+  background: rgba(0, 0, 0, 0.08);
 }
 .${warnClass} {
   font-style: italic;
@@ -165,6 +198,37 @@ export class SelectionPopup implements View<PopupState, Msg> {
 
 export type PaneCtx = { bus: PostRenderEventBus<AppEvent> };
 
+/** One already-opened passage in the list. Its own view so the list can be
+ * keyed by thread rather than rebuilt on every sync. */
+class MarkItem implements View<{ text: string }, { type: "CLICK" }> {
+  container: HTMLElement;
+  private b: Binder<{ text: string }>;
+
+  constructor(
+    container: HTMLElement,
+    dispatch: (msg: { type: "CLICK" }) => void,
+    initialState: { text: string },
+  ) {
+    const buttonRef = ref("mark-item");
+    container.innerHTML = sanitize`<button type="button" data-ref="${buttonRef}"></button>`;
+    this.container = container;
+    this.b = new Binder(container, initialState);
+    this.b
+      .ref(buttonRef)
+      .addEventListener("click", () => dispatch({ type: "CLICK" }));
+    this.b.bindText(buttonRef, (s) => s.text);
+  }
+
+  sync(state: { text: string }): void {
+    this.b.sync(state);
+  }
+
+  destroy(): void {
+    this.b.cleanup();
+    this.container.innerHTML = "";
+  }
+}
+
 export class LearningPane implements View<State, Msg, PaneCtx> {
   container: HTMLElement;
   private b: Binder<State>;
@@ -183,10 +247,12 @@ export class LearningPane implements View<State, Msg, PaneCtx> {
     const quizRef = ref("quiz");
     const queryRef = ref("query");
     const warnRef = ref("warn");
+    const markListRef = ref("mark-list");
 
     container.className = paneClass;
     container.innerHTML = sanitize`
       <p class="${emptyClass}" data-ref="${emptyRef}">Select some text to get started.</p>
+      <ul class="${markListClass}" data-ref="${markListRef}"></ul>
       <p class="${warnClass}" data-ref="${warnRef}">Select a non-overlapping section.</p>
       <div class="${actionsClass}" data-ref="${bodyRef}">
         <blockquote class="${quoteClass}" data-ref="${quoteRef}"></blockquote>
@@ -229,6 +295,17 @@ export class LearningPane implements View<State, Msg, PaneCtx> {
     });
 
     this.b.bindVisible(emptyRef, (s) => s.selection === null && !s.overlapping);
+    this.b.bindVisible(
+      markListRef,
+      (s) => s.selection === null && !s.overlapping && s.marks.length > 0,
+    );
+    this.b.bindList(markListRef, "li", (s) =>
+      s.marks.map((mark) =>
+        showKeyed(mark.thread, MarkItem, { text: mark.text }, {}, () =>
+          dispatch({ type: "MARK_CLICKED", thread: mark.thread }),
+        ),
+      ),
+    );
     this.b.bindVisible(warnRef, (s) => s.overlapping);
     this.b.bindVisible(bodyRef, (s) => s.selection !== null && !s.overlapping);
     this.b.bindText(quoteRef, (s) => s.selection ?? "");

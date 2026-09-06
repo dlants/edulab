@@ -650,6 +650,10 @@ export function mount(container: HTMLElement): void {
         const parent = node.origin?.anchor.thread;
         if (parent === undefined) state.split = false;
         else focus = parent;
+        // Climbing out lands on the passage that was descended through, which
+        // may be far up a long transcript.
+        const active = tree.get(focus).activeChild;
+        if (active) bus.emit({ type: "mark:reveal", thread: active });
         anchor = null;
         anchorAt = null;
         state.query = "";
@@ -675,6 +679,11 @@ export function mount(container: HTMLElement): void {
         anchor = null;
         anchorAt = null;
         node.activeChild = msg.thread;
+        // Clicking a mark at layer 0 is how the reflect column is opened onto
+        // the thread behind it: this thread stays on the left, its thread
+        // appears beside it.
+        state.split = true;
+        bus.emit({ type: "mark:reveal", thread: msg.thread });
         updateFocus = null;
         break;
       case "SHOW_UPDATE":
@@ -730,6 +739,13 @@ export function mount(container: HTMLElement): void {
             bus.emit({ type: "learning:focus-query" });
             break;
           }
+          case "MARK_CLICKED":
+            anchor = null;
+            anchorAt = null;
+            node.activeChild = msg.msg.thread;
+            updateFocus = null;
+            bus.emit({ type: "mark:reveal", thread: msg.msg.thread });
+            break;
           case "QUERY_CHANGED":
             state.query = msg.msg.query;
             break;

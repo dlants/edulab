@@ -294,6 +294,7 @@ test("Reset clears this sample's state for good", async ({ page }) => {
   await expect(taskTranscript(page).locator("li")).toHaveCount(2);
   await seedGraph(page);
   await settled(page);
+  await page.locator("summary").click();
   await page.getByRole("button", { name: "Reset", exact: true }).click();
   await expect(taskTranscript(page).locator("li")).toHaveCount(0);
   await graphTab(page).click();

@@ -374,6 +374,35 @@ test("clicking a mark reopens its thread without a new request", async ({
   expect(backend.started).toHaveLength(sent);
 });
 
+test("a mark clicked with the reflect column closed reopens it", async ({
+  page,
+}) => {
+  await transcript(page);
+  await selectRange(page, 0, 0, 9);
+  await page.getByRole("button", { name: "I don't understand this." }).click();
+  await expect(threadTranscript(page).locator("li")).toHaveCount(2);
+  await page.getByRole("button", { name: "← Back" }).click();
+  await expect(threadTranscript(page)).toHaveCount(0);
+  await page.locator("[data-mark]").first().click();
+  await expect(threadTranscript(page).locator("li")).toHaveCount(2);
+});
+
+test("with nothing selected the pane lists the passages already opened", async ({
+  page,
+}) => {
+  await transcript(page);
+  await selectRange(page, 0, 0, 9);
+  await page.getByRole("button", { name: "I don't understand this." }).click();
+  await expect(threadTranscript(page).locator("li")).toHaveCount(2);
+  // A collapsed selection drops both the anchor and the open thread, which
+  // leaves the pane on its empty state.
+  await selectRange(page, 0, 20, 20);
+  const list = page.locator("[data-ref^='mark-list'] button");
+  await expect(list).toHaveText([SENTENCE.slice(0, 9)]);
+  await list.click();
+  await expect(threadTranscript(page).locator("li")).toHaveCount(2);
+});
+
 const REPLY = "alpha beta gamma delta";
 
 function explainButton(page: Page) {

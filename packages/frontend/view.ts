@@ -137,6 +137,7 @@ const transcriptClass = cls("transcript");
 const messageClass = cls("message");
 const roleClass = cls("role");
 const composerClass = cls("composer");
+const scrollbackClass = cls("scrollback");
 const paneClass = cls("pane");
 const navClass = cls("nav");
 const depthClass = cls("depth");
@@ -151,6 +152,7 @@ const buildStatusClass = cls("build-status");
 const buildDebugClass = cls("build-debug");
 const spacerClass = cls("spacer");
 const tabsClass = cls("tabs");
+const menuClass = cls("menu");
 
 /** A message collapses to this many lines: about a third of a screen. */
 const MAX_MESSAGE_LINES = 15;
@@ -194,21 +196,23 @@ mountStyle(`
   max-width: 88rem;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
 }
-/* Each layer column scrolls on its own: a long transcript on the left must not
- * drag the thread on the right out of view. */
+/* Each layer column is a fixed-height box: the scrollback takes the slack and
+ * scrolls on its own, so the composer stays pinned to the bottom of the
+ * viewport and a long transcript on the left never drags the thread on the
+ * right out of view. */
 .${paneClass} {
   display: flex;
   flex-direction: column;
   gap: 1rem;
   min-width: 0;
   min-height: 0;
-  overflow-y: auto;
-  padding: 1rem 0 5rem;
+  overflow: hidden;
 }
-/* The transcript takes the slack so the composer sits at the bottom of the
- * viewport rather than floating under the header on a short thread. */
-.${paneClass} > .${transcriptClass} {
+.${scrollbackClass} {
   flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 1rem 0;
 }
 .${navClass} {
   flex: none;
@@ -244,12 +248,57 @@ mountStyle(`
 .${sampleClass} {
   font: inherit;
 }
+.${menuClass} {
+  position: relative;
+  flex: none;
+}
+.${menuClass} > summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 0.2rem 0.4rem;
+  border-radius: 999px;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  line-height: 1;
+}
+.${menuClass} > summary::-webkit-details-marker {
+  display: none;
+}
+.${menuClass}[open] > summary {
+  background: rgba(0, 0, 0, 0.08);
+}
+.${menuClass} > div {
+  position: absolute;
+  z-index: 10;
+  top: calc(100% + 0.4rem);
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.5rem;
+  padding: 0.6rem;
+  background: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  white-space: nowrap;
+}
 .${spacerClass} {
   flex: 1;
 }
+.${tabsClass} {
+  display: flex;
+  gap: 1rem;
+}
+.${navClass} .${tabsClass} button {
+  border: none;
+  border-radius: 0;
+  background: none;
+  padding: 0.2rem 0;
+}
 .${tabsClass} button[aria-pressed="true"] {
-  background: rgba(0, 0, 0, 0.08);
-  font-weight: 600;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 0.3em;
 }
 .${depthClass} {
   font-size: 0.75rem;
@@ -351,13 +400,15 @@ mountStyle(`
   opacity: 0.6;
 }
 .${composerClass} {
+  flex: none;
   display: flex;
   gap: 0.5rem;
+  padding-bottom: 1rem;
 }
 .${threadPaneClass} {
   min-height: 0;
-  overflow-y: auto;
-  padding: 1rem 0 5rem 1.5rem;
+  overflow: hidden;
+  padding-left: 1.5rem;
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
@@ -736,7 +787,9 @@ class ThreadPane implements View<ThreadPaneState, ThreadPaneMsg> {
 
     container.className = threadPaneClass;
     container.innerHTML = sanitize`
-      <ul class="${transcriptClass}" data-ref="${transcriptRef}"></ul>
+      <div class="${scrollbackClass}">
+        <ul class="${transcriptClass}" data-ref="${transcriptRef}"></ul>
+      </div>
       <div class="${composerClass}">
         <textarea data-ref="${inputRef}" rows="2" placeholder="Follow up…"></textarea>
         <button type="button" data-ref="${sendRef}">Reply</button>
@@ -896,6 +949,9 @@ class UpdatePane implements View<UpdatePaneState, UpdatePaneMsg> {
  * reducer reaching into the DOM. */
 export type AppEvent =
   | { type: "transcript:reveal"; index: number }
+  /** Bring the highlight that opens this thread back into view, so the pane on
+   * the right is always beside the passage it is about. */
+  | { type: "mark:reveal"; thread: ThreadId }
   /** The popup handed a question off to the pane's composer, which only exists
    * once the pane has mounted. */
   | { type: "learning:focus-query" };
@@ -927,7 +983,9 @@ class ThreadsView implements View<State, Msg, AppCtx> {
     container.className = bodyClass;
     container.innerHTML = sanitize`
       <div class="${paneClass}">
-        <ul class="${transcriptClass}" data-ref="${transcriptRef}"></ul>
+        <div class="${scrollbackClass}">
+          <ul class="${transcriptClass}" data-ref="${transcriptRef}"></ul>
+        </div>
         <div class="${composerClass}" data-ref="${composerRef}">
           <textarea data-ref="${inputRef}" rows="2" placeholder="Ask something…"></textarea>
           <button type="button" data-ref="${sendRef}">Send</button>
@@ -966,6 +1024,11 @@ class ThreadsView implements View<State, Msg, AppCtx> {
     // Scroll and flash are facts about the rendered box, so they can only run
     // once the pane is already showing the cited thread.
     this.unsubscribe = ctx.bus.subscribe((event) => {
+      if (event.type === "mark:reveal") {
+        const mark = transcript.querySelector(`[data-mark="${event.thread}"]`);
+        if (mark instanceof HTMLElement) scrollIntoView(mark);
+        return;
+      }
       if (event.type !== "transcript:reveal") return;
       const li = transcript.children[event.index];
       if (!(li instanceof HTMLElement)) return;
@@ -1035,6 +1098,10 @@ class ThreadsView implements View<State, Msg, AppCtx> {
         selection: paneSelection(s),
         overlapping: s.anchor !== null && overlaps(s.marks, s.anchor),
         query: s.query,
+        marks: s.marks.map((mark) => ({
+          thread: mark.thread,
+          text: anchorText(mark.anchor, s.messages),
+        })),
       };
       // bindSlot hands this straight to the child as its dispatch, so it must
       // dispatch rather than return a wrapped message.
@@ -1064,6 +1131,7 @@ export class AppView implements View<State, Msg, AppCtx> {
   private b: Binder<State>;
   /** The latest state, for event handlers that need it outside a binding. */
   private current: State;
+  private onDocumentClick: (e: MouseEvent) => void;
 
   constructor(
     container: HTMLElement,
@@ -1082,23 +1150,30 @@ export class AppView implements View<State, Msg, AppCtx> {
     const threadsTabRef: Ref = ref("threads-tab");
     const graphTabRef: Ref = ref("graph-tab");
     const tabSlotRef: Ref = ref("tab-slot");
+    const menuRef: Ref = ref("menu");
     const popupRef: Ref = ref("popup");
 
     container.className = appClass;
     container.innerHTML = sanitize`
       <div class="${navClass}">
-        <select class="${sampleClass}" data-ref="${sampleRef}"></select>
-        <button type="button" data-build data-ref="${buildRef}">Build knowledge graph from this transcript</button>
+        <details class="${menuClass}" data-ref="${menuRef}">
+          <summary title="Settings" aria-label="Settings">⚙</summary>
+          <div>
+            <select class="${sampleClass}" data-ref="${sampleRef}"></select>
+            <button type="button" data-build data-ref="${buildRef}">Build knowledge graph from this transcript</button>
+            <button type="button" data-ref="${resetRef}">Reset</button>
+          </div>
+        </details>
         <span class="${buildStatusClass}">
           <span data-build-status data-ref="${buildStatusRef}"></span>
           <button type="button" class="${buildDebugClass}" title="Dump build diagnostics to the console" data-ref="${buildDebugRef}">?</button>
         </span>
+        <span class="${spacerClass}"></span>
         <span class="${tabsClass}">
           <button type="button" data-ref="${threadsTabRef}">Threads</button>
           <button type="button" data-ref="${graphTabRef}">Knowledge graph</button>
         </span>
         <span class="${spacerClass}"></span>
-        <button type="button" data-ref="${resetRef}">Reset</button>
         <button type="button" data-ref="${backRef}">← Back</button>
         <span class="${depthClass}" data-ref="${depthRef}"></span>
         <button type="button" data-ref="${forwardRef}"></button>
@@ -1126,6 +1201,17 @@ export class AppView implements View<State, Msg, AppCtx> {
     picker.addEventListener("change", () => {
       dispatch({ type: "SAMPLE_CHANGED", id: picker.value });
     });
+
+    // The menu is a plain <details>, so it only knows how to close itself when
+    // its own summary is clicked. Both of the other ways out are ours.
+    const menu = this.b.ref<HTMLDetailsElement>(menuRef);
+    menu.addEventListener("click", (e) => {
+      if ((e.target as HTMLElement).closest("button")) menu.open = false;
+    });
+    this.onDocumentClick = (e: MouseEvent) => {
+      if (!menu.contains(e.target as Node)) menu.open = false;
+    };
+    document.addEventListener("click", this.onDocumentClick);
 
     this.b
       .ref(backRef)
@@ -1202,6 +1288,7 @@ export class AppView implements View<State, Msg, AppCtx> {
   }
 
   destroy(): void {
+    document.removeEventListener("click", this.onDocumentClick);
     this.b.cleanup();
     this.container.innerHTML = "";
   }

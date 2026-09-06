@@ -409,8 +409,14 @@ test("a failed graph update leaves the app usable", async ({ page }) => {
   await expect(nodes(page)).toHaveText(["concept-2"]);
 });
 
+/** The sample picker, the build button and Reset live behind the gear menu. */
+async function openMenu(page: Page) {
+  await page.locator("summary").click();
+}
 function buildButton(page: Page) {
-  return page.getByRole("button", { name: /Build knowledge graph/ });
+  // By attribute rather than by role: clicking it closes the gear menu, and a
+  // role query does not see a hidden button.
+  return page.locator("[data-build]");
 }
 /** The smallest canned transcript, and the count of user turns in it: the
  * build covers exactly the turns the sample was loaded with. */
@@ -421,6 +427,7 @@ test("building from a sample transcript walks its turns once", async ({
 }) => {
   const backend = await updateBackend(page);
   await page.goto(`/?sample=${SAMPLE}`);
+  await openMenu(page);
   await buildButton(page).click();
   await expect(buildButton(page)).toBeDisabled();
   await expect(page.locator("[data-build-status]")).toHaveText(
@@ -438,6 +445,7 @@ test("a failed update mid-build does not stop the ones after it", async ({
 }) => {
   await updateBackend(page, true);
   await page.goto(`/?sample=${SAMPLE}`);
+  await openMenu(page);
   await buildButton(page).click();
   await expect(page.locator("[data-build-status]")).toHaveText(
     "built, 1 failed",
@@ -450,6 +458,7 @@ test("interacting mid-build interleaves rather than races", async ({
 }) => {
   const backend = await updateBackend(page);
   await page.goto(`/?sample=${SAMPLE}`);
+  await openMenu(page);
   await buildButton(page).click();
   await turn(page, "and what about fragmentation");
   await expect(page.locator("[data-build-status]")).toHaveText("built");
