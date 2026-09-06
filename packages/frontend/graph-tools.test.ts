@@ -2,7 +2,7 @@ import type Anthropic from "@anthropic-ai/sdk";
 import type { ClientMessage } from "@edulab/iso/protocol.ts";
 import { expect, it } from "vitest";
 import { KnowledgeGraph, type NodeId } from "./graph.ts";
-import { readTools, writeTools } from "./graph-tools.ts";
+import { changesIn, readTools, writeTools } from "./graph-tools.ts";
 import {
   type Socket,
   Thread,
@@ -71,11 +71,29 @@ it("edges, get over a mixed list, and delete", async () => {
 
   const deleted = await run("delete", { ids: ["n0"] });
   expect(deleted.status).toBe("ok");
-  expect(text(deleted)).toContain("1 incident edge");
+  expect(changesIn(text(deleted))).toEqual([
+    { op: "deleted", kind: "node", id: "n0", title: "a" },
+  ]);
   expect(graph.nodes).toHaveLength(1);
   expect(graph.edges).toHaveLength(0);
 });
 
+it("reports each applied entry as a JSON line the chip can parse", async () => {
+  const { run } = setup();
+  await run("put_nodes", {
+    nodes: [{ title: "a", description: "d", notes: "n", level: 1 }],
+  });
+  const result = await run("put_nodes", {
+    nodes: [
+      { id: "n0", title: "a", description: "d", notes: "n2", level: 2 },
+      { title: "b", description: "d", notes: "n", level: 1 },
+    ],
+  });
+  expect(changesIn(text(result))).toEqual([
+    { op: "updated", kind: "node", id: "n0", title: "a" },
+    { op: "created", kind: "node", id: "n1", title: "b" },
+  ]);
+});
 it("updates in place when an id is given", async () => {
   const { graph, run } = setup();
   await run("put_nodes", {
@@ -103,7 +121,11 @@ it("a bad entry does not stop its neighbours, and the call is still ok", async (
   expect(result.status).toBe("ok");
   expect(text(result)).toContain("entry 0: error:");
   expect(text(result)).toContain("entry 1: error:");
-  expect(text(result)).toContain("entry 2: created");
+  // Only the entry that landed produces a JSON line: a change that never
+  // happened must be impossible for a chip to report.
+  expect(changesIn(text(result))).toEqual([
+    { op: "created", kind: "node", id: "n1", title: "b" },
+  ]);
   expect(graph.nodes.map((n) => n.title)).toEqual(["a", "b"]);
 
   const bad = await run("put_edges", {
@@ -192,7 +214,7 @@ it("a real thread streaming a put_nodes call writes to the graph", async () => {
   const call = thread.messages.find((m) => m.type === "tool_use");
   expect(call?.type === "tool_use" && call.call.result).toEqual({
     status: "ok",
-    text: 'entry 0: created node n0 "closures"',
+    text: '{"op":"created","kind":"node","id":"n0","title":"closures"}',
   });
   const names =
     socket.sent[0]?.type === "start"

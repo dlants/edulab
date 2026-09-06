@@ -541,3 +541,105 @@ test("a new selection leaves committed marks rendered", async ({ page }) => {
   await expect(page.locator("[data-mark]")).toHaveCount(1);
   await expect(page.locator("[data-live]")).toHaveText("jumps");
 });
+
+function putNodesEvents(title: string): Anthropic.RawMessageStreamEvent[] {
+  return [
+    {
+      type: "content_block_start",
+      index: 0,
+      content_block: {
+        type: "tool_use",
+        id: `put-${title}`,
+        name: "put_nodes",
+        input: {},
+      },
+    } as Anthropic.RawMessageStreamEvent,
+    {
+      type: "content_block_delta",
+      index: 0,
+      delta: {
+        type: "input_json_delta",
+        partial_json: JSON.stringify({
+          nodes: [{ title, description: "d", notes: "n", level: 2 }],
+        }),
+      },
+    },
+    { type: "content_block_stop", index: 0 },
+    { type: "message_stop" } as Anthropic.RawMessageStreamEvent,
+  ];
+}
+/** Answers every graph update with one `put_nodes` call naming the node by its
+ * ordinal, then a yield; `write: false` yields straight away, which is the
+ * common case the chip still has to say something about. The first update is
+ * gated, so the "working" chip is observable. */
+async function chipBackend(page: Page, write = true) {
+  let release!: () => void;
+  const gate = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  let updates = 0;
+  await page.routeWebSocket("**/api/socket", (ws) => {
+    ws.onMessage(async (raw) => {
+      const message = JSON.parse(String(raw)) as ClientMessage;
+      const send = (frame: ServerFrame) => ws.send(JSON.stringify(frame));
+      const replay = (stream: Anthropic.RawMessageStreamEvent[]) => {
+        for (const event of stream)
+          send({ type: "event", requestId: message.requestId, event });
+        send({ type: "done", requestId: message.requestId });
+      };
+      if (!isGraphUpdate(message)) {
+        replay(events(["ok"]));
+        return;
+      }
+      // The second request of an update answers the tool result we just sent.
+      const answered = JSON.stringify(message.params.messages).includes(
+        "tool_result",
+      );
+      if (!write || answered) {
+        replay(yieldEvents());
+        return;
+      }
+      const ordinal = ++updates;
+      if (ordinal === 1) await gate;
+      replay(putNodesEvents(`concept-${ordinal}`));
+    });
+  });
+  return { release };
+}
+function updateStatus(page: Page, index: number) {
+  return taskTranscript(page)
+    .locator("li")
+    .nth(index)
+    .locator("[data-update-status]");
+}
+function changes(page: Page, index: number) {
+  return taskTranscript(page).locator("li").nth(index).locator("[data-change]");
+}
+async function turn(page: Page, text: string) {
+  await page.getByRole("textbox").fill(text);
+  await page.getByRole("textbox").press("Enter");
+}
+test("a turn shows its graph update working, then what it changed", async ({
+  page,
+}) => {
+  const backend = await chipBackend(page);
+  await page.goto("/");
+  await turn(page, "how does backpressure work");
+  await expect(updateStatus(page, 0)).toHaveText(
+    "updating the knowledge graph…",
+  );
+  backend.release();
+  await expect(changes(page, 0)).toHaveText(['created "concept-1"']);
+  await turn(page, "and framing");
+  await expect(changes(page, 2)).toHaveText(['created "concept-2"']);
+  // Each turn accounts for its own update and no other.
+  await expect(changes(page, 0)).toHaveText(['created "concept-1"']);
+});
+test("an update that writes nothing says so", async ({ page }) => {
+  const backend = await chipBackend(page, false);
+  backend.release();
+  await page.goto("/");
+  await turn(page, "sure, keep going");
+  await expect(updateStatus(page, 0)).toHaveText("no knowledge graph changes");
+  await expect(changes(page, 0)).toHaveCount(0);
+});

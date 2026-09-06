@@ -44,7 +44,7 @@ it("cascades a node delete to the edges on both sides of it", () => {
   const result = graph.deleteNode(b);
   expect(result).toEqual({
     status: "ok",
-    message: expect.stringContaining("2 incident edge(s)"),
+    change: { op: "deleted", kind: "node", id: b, title: "b" },
   });
   expect(graph.edges).toEqual([]);
   expect(graph.nodes.map((n) => n.id)).toEqual([a, c]);

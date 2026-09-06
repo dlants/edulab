@@ -1,3 +1,4 @@
+import type { GraphChange, GraphId } from "./graph.ts";
 import {
   type Msg as GraphMsg,
   type State as GraphState,
@@ -39,6 +40,17 @@ export type Build =
   | { type: "running"; done: number; total: number; failed: number }
   | { type: "done"; failed: number };
 
+/** What the background graph update for one interaction is doing, shown under
+ * the turn that triggered it: a system quietly building a model of the user is
+ * exactly the thing that should be visible where it happened. */
+export type GraphUpdate =
+  | { type: "running" }
+  | { type: "done"; changes: ReadonlyArray<GraphChange> };
+
+/** The updates over one thread, keyed by the index of the turn that triggered
+ * each. Derived: losing it loses nothing the graph does not already hold. */
+export type Updates = ReadonlyMap<number, GraphUpdate>;
+
 export type State = {
   messages: ReadonlyArray<Message>;
   /** The id of the canned transcript in play, empty for a hand-written one. */
@@ -67,6 +79,8 @@ export type State = {
   build: Build;
   /** Indices of messages the user has expanded past the collapsed height. */
   expanded: ReadonlySet<number>;
+  /** The background graph updates over this transcript. */
+  updates: Updates;
   /** The active child thread, shown on the right when nothing is selected. */
   child: ThreadPaneState | null;
 };
@@ -84,6 +98,7 @@ export type Msg =
   | { type: "TAB_CHANGED"; tab: "threads" | "graph" }
   | { type: "GRAPH_MSG"; msg: GraphMsg }
   | { type: "TOGGLE_EXPANDED"; index: number }
+  | { type: "CHANGE_CLICKED"; id: GraphId }
   | { type: "CHILD_MSG"; msg: ThreadPaneMsg };
 
 const appClass = cls("app");
@@ -111,6 +126,9 @@ const MAX_MESSAGE_LINES = 15;
 const clipClass = cls("clip");
 const toggleClass = cls("toggle");
 const moreClass = cls("more");
+const updateClass = cls("update");
+const changeClass = cls("change");
+const changeListClass = cls("change-list");
 
 mountStyle(`
 .${appClass} {
@@ -305,6 +323,28 @@ mountStyle(`
   gap: 0.75rem;
   border-left: 1px solid rgba(0, 0, 0, 0.1);
 }
+.${updateClass} {
+  grid-column: 2;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.75rem;
+  color: #666;
+  margin-top: 0.35rem;
+}
+.${changeListClass} {
+  display: contents;
+}
+.${changeClass} {
+  font: inherit;
+  color: inherit;
+  padding: 0.1rem 0.5rem;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 999px;
+  background: #fff;
+  cursor: pointer;
+}
 .${composerClass} textarea {
   flex: 1;
   font: inherit;
@@ -365,14 +405,54 @@ class SegmentView implements View<SegmentState, SegmentMsg> {
   }
 }
 
+type ChangeState = { change: GraphChange };
+type ChangeMsg = { type: "CLICKED" };
+
+/** One mutation a background graph update applied, as a chip: the citation link
+ * run backwards, so a claim about the user is one click from the node. */
+class ChangeView implements View<ChangeState, ChangeMsg> {
+  container: HTMLElement;
+  private b: Binder<ChangeState>;
+
+  constructor(
+    container: HTMLElement,
+    dispatch: (msg: ChangeMsg) => void,
+    initial: ChangeState,
+  ) {
+    const labelRef = ref("change-label");
+    container.className = changeClass;
+    container.setAttribute("type", "button");
+    container.setAttribute("data-change", "");
+    container.innerHTML = sanitize`<span data-ref="${labelRef}"></span>`;
+    this.container = container;
+    this.b = new Binder(container, initial);
+    container.addEventListener("click", () => dispatch({ type: "CLICKED" }));
+    this.b.bindText(labelRef, (s) => `${s.change.op} "${s.change.title}"`);
+  }
+
+  sync(state: ChangeState): void {
+    this.b.sync(state);
+  }
+
+  destroy(): void {
+    this.b.cleanup();
+    this.container.innerHTML = "";
+  }
+}
+
 type MessageState = {
   message: Message;
   expanded: boolean;
   segments: ReadonlyArray<Segment>;
   active: ThreadId | null;
+  /** The background graph update this turn triggered, if it triggered one. */
+  update: GraphUpdate | null;
 };
 
-type MessageMsg = SegmentMsg | { type: "TOGGLE_EXPANDED" };
+type MessageMsg =
+  | SegmentMsg
+  | { type: "TOGGLE_EXPANDED" }
+  | { type: "CHANGE_CLICKED"; id: GraphId };
 
 class MessageView implements View<MessageState, MessageMsg> {
   container: HTMLElement;
@@ -395,6 +475,9 @@ class MessageView implements View<MessageState, MessageMsg> {
     const clipRef = ref("clip");
     const toggleRef = ref("toggle");
     const moreRef = ref("more");
+    const updateRef = ref("update");
+    const updateStatusRef = ref("update-status");
+    const changesRef = ref("changes");
     container.className = messageClass;
     // The tool block sits outside the .text span on purpose: resolvePoint only
     // anchors inside it, so a tool call is rendered but not selectable.
@@ -415,6 +498,10 @@ class MessageView implements View<MessageState, MessageMsg> {
         </div>
       </div>
       <div class="${moreClass}" data-more data-ref="${moreRef}"></div>
+      <div class="${updateClass}" data-update data-ref="${updateRef}">
+        <span data-update-status data-ref="${updateStatusRef}"></span>
+        <span class="${changeListClass}" data-ref="${changesRef}"></span>
+      </div>
     `;
     this.container = container;
     this.b = new Binder(container, initial);
@@ -448,6 +535,15 @@ class MessageView implements View<MessageState, MessageMsg> {
     this.b.bindVisible(toolResultRef, (s) => resultText(s.message) !== "");
     this.b.bindAttr(toolResultRef, "data-status", (s) =>
       s.message.type === "tool_use" ? s.message.call.result?.status : undefined,
+    );
+    this.b.bindVisible(updateRef, (s) => s.update !== null);
+    this.b.bindText(updateStatusRef, (s) => updateStatus(s.update));
+    this.b.bindList(changesRef, "button", (s) =>
+      (s.update?.type === "done" ? s.update.changes : []).map((change, i) =>
+        showKeyed(`${change.id}:${i}`, ChangeView, { change }, {}, () =>
+          dispatch({ type: "CHANGE_CLICKED", id: change.id }),
+        ),
+      ),
     );
     this.b.bindContainerAttr("data-role", (s) => s.message.role);
     this.clip = this.b.ref(clipRef);
@@ -511,6 +607,17 @@ function lastExpanded(
   return expanded.has(index) !== (index === count - 1);
 }
 
+/** The account, next to the turn that caused it, of what the system just
+ * concluded about the user. "No changes" is the common case and is worth saying
+ * out loud rather than leaving a chip to vanish. */
+function updateStatus(update: GraphUpdate | null): string {
+  if (!update) return "";
+  if (update.type === "running") return "updating the knowledge graph…";
+  return update.changes.length === 0
+    ? "no knowledge graph changes"
+    : "knowledge graph:";
+}
+
 function resultText(message: Message): string {
   if (message.type !== "tool_use") return "";
   const result = message.call.result;
@@ -523,12 +630,14 @@ export type ThreadPaneState = {
   inFlight: boolean;
   draft: string;
   expanded: ReadonlySet<number>;
+  updates: Updates;
 };
 
 export type ThreadPaneMsg =
   | { type: "DRAFT_CHANGED"; draft: string }
   | { type: "SUBMIT" }
-  | { type: "TOGGLE_EXPANDED"; index: number };
+  | { type: "TOGGLE_EXPANDED"; index: number }
+  | { type: "CHANGE_CLICKED"; id: GraphId };
 
 /** A learning thread on the right: the passage it came from, its transcript,
  * and a composer. Read-only as far as selection goes - only the left pane
@@ -581,11 +690,13 @@ class ThreadPane implements View<ThreadPaneState, ThreadPaneMsg> {
             expanded: lastExpanded(s.expanded, i, s.messages.length),
             segments: segments([], null, i, messageText(message).length),
             active: null,
+            update: s.updates.get(i) ?? null,
           },
           {},
           (msg: MessageMsg) => {
             if (msg.type === "TOGGLE_EXPANDED")
               dispatch({ type: "TOGGLE_EXPANDED", index: i });
+            else if (msg.type === "CHANGE_CLICKED") dispatch(msg);
           },
         ),
       ),
@@ -728,14 +839,22 @@ export class AppView implements View<State, Msg> {
               messageText(message).length,
             ),
             active: s.activeMark,
+            update: s.updates.get(i) ?? null,
           },
           {},
-          (msg: MessageMsg) =>
-            dispatch(
-              msg.type === "TOGGLE_EXPANDED"
-                ? { type: "TOGGLE_EXPANDED", index: i }
-                : { type: "MARK_CLICKED", thread: msg.thread },
-            ),
+          (msg: MessageMsg) => {
+            switch (msg.type) {
+              case "TOGGLE_EXPANDED":
+                dispatch({ type: "TOGGLE_EXPANDED", index: i });
+                break;
+              case "CHANGE_CLICKED":
+                dispatch(msg);
+                break;
+              case "CLICKED":
+                dispatch({ type: "MARK_CLICKED", thread: msg.thread });
+                break;
+            }
+          },
         ),
       ),
     );

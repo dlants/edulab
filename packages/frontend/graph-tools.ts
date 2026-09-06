@@ -1,6 +1,7 @@
 import type Anthropic from "@anthropic-ai/sdk";
 import {
   type EdgeId,
+  type GraphChange,
   type GraphId,
   type GraphResult,
   isEdgeId,
@@ -105,10 +106,31 @@ function level(value: unknown): Level | undefined {
     : undefined;
 }
 
+/** An applied entry is a JSON line, so the transcript chip that reports what an
+ * update did parses exactly what the tool returned rather than re-reading prose
+ * nobody thinks of as a format. A rejected entry stays a sentence: it is
+ * addressed at the model, which has to fix it. */
 const line = (index: number, result: GraphResult): string =>
   result.status === "ok"
-    ? `entry ${index}: ${result.message}`
+    ? JSON.stringify(result.change)
     : `entry ${index}: error: ${result.error}`;
+
+/** The changes a tool result reports, for a caller watching a graph update
+ * work. Anything that is not one of our JSON lines is prose for the model. */
+export function changesIn(text: string): ReadonlyArray<GraphChange> {
+  const out: GraphChange[] = [];
+  for (const raw of text.split("\n")) {
+    if (!raw.startsWith("{")) continue;
+    try {
+      const parsed = JSON.parse(raw) as GraphChange;
+      if (typeof parsed.title === "string" && typeof parsed.id === "string")
+        out.push(parsed);
+    } catch {
+      // Not ours; the model reads it, we do not.
+    }
+  }
+  return out;
+}
 
 function getTool(graph: KnowledgeGraph): Tool {
   return {

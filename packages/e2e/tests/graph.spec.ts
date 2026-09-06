@@ -403,3 +403,15 @@ test("interacting mid-build interleaves rather than races", async ({
   await expect(nodes(page)).toHaveCount(SAMPLE_TURNS + 1);
   expect(backend.overlapped()).toBe(false);
 });
+test("clicking a change opens the graph tab with that node selected", async ({
+  page,
+}) => {
+  await updateBackend(page);
+  await page.goto("/");
+  await turn(page, "how does backpressure work");
+  const change = page.locator("[data-change]");
+  await expect(change).toHaveText(['created "concept-1"']);
+  await change.click();
+  await expect(graphTab(page)).toHaveAttribute("aria-pressed", "true");
+  await expect(page.locator("[data-graph-title]")).toHaveValue("concept-1");
+});

@@ -345,6 +345,36 @@ the build shares the live queue. Deviations:
   - `packages/e2e/tests/chat.spec.ts`: an update that writes nothing says so rather than leaving a spinner or vanishing.
   - `packages/e2e/tests/graph.spec.ts`: clicking a change chip opens the graph tab with that node selected.
 
+**Landed.** `GraphResult`'s ok case now carries a `GraphChange`
+(`{ op, kind, id, title }`) instead of a prose `message`; `graph-tools.ts`
+serializes an applied entry as one JSON line and exports `changesIn(text)`.
+`RunThreadOpts.onChange` is forwarded to the thread `runThread` builds.
+`chat.ts` keeps `graphUpdates: Map<"threadId:index", GraphUpdate>`, records the
+update thread's transcript through `onChange`, and on settle stores
+`{ type: "done", changes: changesOf(transcript) }`; `refresh` projects the map
+onto the focused pane and the child pane as `Updates` (`Map<number,
+GraphUpdate>`). `view.ts` renders the chip under the message at that address -
+a status line plus one `ChangeView` button per change - in both panes.
+Deviations:
+
+- `GraphUpdate` is `running | done` only: a failed update thread settles as
+  `done` with whatever changes actually landed, which is normally none, so a
+  failure reads as "no knowledge graph changes" rather than as an error the
+  user cannot act on. That matches the invariant that a graph update never
+  intrudes on the user.
+- The chips are only projected on settle, not per `onChange`: mid-run the chip
+  says "updating the knowledge graph…" and nothing more, so streaming partial
+  calls into the view buys a re-render per delta for no information.
+- `deleteNode` no longer reports its cascaded edge count - the change carries
+  the node, and `get` is how the model inspects the rest. `graph.test.ts` and
+  `graph-tools.test.ts` assert the structured change instead of the sentence.
+- `CHANGE_CLICKED` carries a `GraphId` and selects either a node or an edge,
+  since `delete` and `put_edges` also report changes; the graph tab's existing
+  `SELECT_NODE`/`SELECT_EDGE` do the work.
+- e2e: `chipBackend` in `chat.spec.ts` gates the first update so the working
+  chip is observable, and answers the second request of an update (the one
+  carrying the tool result) with a yield.
+
 ## citation chips and navigation
 
 - Goal: a note that cites an interaction shows a clickable chip, and clicking it lands on that message in the threads tab.

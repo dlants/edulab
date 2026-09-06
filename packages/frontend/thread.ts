@@ -145,6 +145,9 @@ export type RunThreadOpts = {
   system?: string;
   /** How many times a turn that ends without a yield is nudged back to work. */
   maxRestarts?: number;
+  /** Fires whenever the thread's transcript changes, so a caller can watch an
+   * unattended thread work rather than only awaiting its result. */
+  onChange?: (messages: ReadonlyArray<Message>) => void;
 };
 
 /** Runs a thread to completion with no user in the loop: the seed prompt goes
@@ -169,6 +172,8 @@ export async function runThread(
     tools: opts.tools,
     yieldSchema: opts.yieldSchema,
   });
+  const onChange = opts.onChange;
+  if (onChange) thread.onChange = () => onChange(thread.messages);
   let result = await thread.start();
   for (let attempt = 1; result.type === "completed"; attempt++) {
     if (attempt > maxRestarts) {

@@ -3,6 +3,8 @@ import type { ClientMessage } from "@edulab/iso/protocol.ts";
 import { expect, it } from "vitest";
 import { anchorText, type ThreadId } from "./selection.ts";
 import {
+  type Message,
+  runThread,
   type Socket,
   Thread,
   type Tool,
@@ -592,5 +594,30 @@ it("does not offer yield when no schema was given", async () => {
         is_error: true,
       },
     ],
+  });
+});
+it("hands a watcher an unattended thread's completed tool calls", async () => {
+  const socket = new FakeSocket();
+  const seen: ReadonlyArray<Message>[] = [];
+  const run = runThread(socket, {
+    prompt: "go",
+    tools: toolset(
+      tool("read", async () => ({ status: "ok", text: "contents" })),
+    ),
+    yieldSchema: "text",
+    onChange: (messages) => seen.push(messages),
+  });
+  toolTurn(socket, [{ id: "t1", name: "read", json: '{"path":"a.txt"}' }]);
+  await flush();
+  toolTurn(socket, [{ id: "t2", name: "yield", json: '{"result":"done"}' }]);
+  await flush();
+  expect(await run).toEqual({ status: "ok", result: "done" });
+  // Fired during the run, not only at the end.
+  expect(seen.length).toBeGreaterThan(2);
+  const call = seen.at(-1)?.find((m) => m.type === "tool_use");
+  expect(call?.type === "tool_use" && call.call).toMatchObject({
+    name: "read",
+    input: { path: "a.txt" },
+    result: { status: "ok", text: "contents" },
   });
 });

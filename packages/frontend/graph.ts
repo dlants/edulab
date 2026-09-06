@@ -32,8 +32,17 @@ export type GraphEdge = {
   description: string;
 };
 
+/** One applied mutation. Structured rather than prose because it is read twice:
+ * by the model, off the tool result, and by the transcript chip that reports
+ * what a background graph update just did. */
+export type GraphChange = {
+  op: "created" | "updated" | "deleted";
+  kind: "node" | "edge";
+  id: GraphId;
+  title: string;
+};
 export type GraphResult =
-  | { status: "ok"; message: string }
+  | { status: "ok"; change: GraphChange }
   | { status: "error"; error: string };
 
 export const isNodeId = (id: string): id is NodeId => id.startsWith("n");
@@ -84,7 +93,12 @@ export class KnowledgeGraph {
     });
     return {
       status: "ok",
-      message: `${node.id === undefined ? "created" : "updated"} node ${id} "${title}"`,
+      change: {
+        op: node.id === undefined ? "created" : "updated",
+        kind: "node",
+        id,
+        title,
+      },
     };
   }
 
@@ -92,16 +106,12 @@ export class KnowledgeGraph {
   deleteNode(id: NodeId): GraphResult {
     const node = this.#nodes.get(id);
     if (!node) return { status: "error", error: `no node with id ${id}` };
-    let removed = 0;
     for (const edge of [...this.#edges.values()])
-      if (edge.from === id || edge.to === id) {
-        this.#edges.delete(edge.id);
-        removed++;
-      }
+      if (edge.from === id || edge.to === id) this.#edges.delete(edge.id);
     this.#nodes.delete(id);
     return {
       status: "ok",
-      message: `deleted node ${id} "${node.title}" and ${removed} incident edge(s)`,
+      change: { op: "deleted", kind: "node", id, title: node.title },
     };
   }
 
@@ -130,7 +140,12 @@ export class KnowledgeGraph {
     });
     return {
       status: "ok",
-      message: `${edge.id === undefined ? "created" : "updated"} edge ${id} "${title}" (${edge.from} -> ${edge.to})`,
+      change: {
+        op: edge.id === undefined ? "created" : "updated",
+        kind: "edge",
+        id,
+        title,
+      },
     };
   }
 
@@ -138,7 +153,10 @@ export class KnowledgeGraph {
     const edge = this.#edges.get(id);
     if (!edge) return { status: "error", error: `no edge with id ${id}` };
     this.#edges.delete(id);
-    return { status: "ok", message: `deleted edge ${id} "${edge.title}"` };
+    return {
+      status: "ok",
+      change: { op: "deleted", kind: "edge", id, title: edge.title },
+    };
   }
 
   /** Everything about each id: a node with its incident edges in both

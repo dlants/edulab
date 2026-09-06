@@ -1,19 +1,27 @@
 import {
+  type GraphChange,
   type GraphEdge,
   type GraphNode,
+  isNodeId,
   KnowledgeGraph,
   type NodeId,
 } from "../graph.ts";
-import { readTools, writeTools } from "../graph-tools.ts";
+import { changesIn, readTools, writeTools } from "../graph-tools.ts";
 import type { Msg as GraphMsg, Sidebar } from "../graph-view.ts";
 import { interactionAt } from "../interactions.ts";
 import { layout, type Position } from "../layout.ts";
 import { GRAPH_UPDATE_SYSTEM, graphUpdatePrompt } from "../prompt.ts";
 import { selectedSample, selectSample } from "../samples/index.ts";
 import { overlaps, type ThreadId } from "../selection.ts";
-import { type MessageIdx, runThread, Thread } from "../thread.ts";
+import { type Message, type MessageIdx, runThread, Thread } from "../thread.ts";
 import { ThreadTree } from "../threads.ts";
-import { AppView, type Msg, type State } from "../view.ts";
+import {
+  AppView,
+  type GraphUpdate,
+  type Msg,
+  type State,
+  type Updates,
+} from "../view.ts";
 
 /** The editable fields of a node or edge: the id addresses it, so it is not
  * part of what the sidebar edits. */
@@ -22,6 +30,19 @@ function draftOf(edge: GraphEdge): Omit<GraphEdge, "id">;
 function draftOf<T extends { id: string }>(item: T): Omit<T, "id"> {
   const { id: _id, ...rest } = item;
   return rest;
+}
+
+/** What an update thread did, read off its own transcript: a call that never
+ * finished parsing or came back an error changed nothing, so it reports
+ * nothing. */
+function changesOf(
+  messages: ReadonlyArray<Message>,
+): ReadonlyArray<GraphChange> {
+  return messages.flatMap((m) =>
+    m.type === "tool_use" && m.call.input && m.call.result?.status === "ok"
+      ? [...changesIn(m.call.result.text)]
+      : [],
+  );
 }
 
 function connect(): WebSocket {
@@ -54,6 +75,19 @@ export function mount(container: HTMLElement): void {
   // pre-update graph and mint rival nodes for the same concept. Appending to
   // this chain is the whole serialization.
   let updates: Promise<void> = Promise.resolve();
+  // What each interaction's update is doing, keyed by its address. Derived from
+  // the update thread's own tool calls, so it cannot disagree with what the
+  // model actually did.
+  const graphUpdates = new Map<string, GraphUpdate>();
+  const address = (thread: ThreadId, index: MessageIdx) => `${thread}:${index}`;
+  function updatesFor(thread: ThreadId): Updates {
+    const out = new Map<number, GraphUpdate>();
+    for (const [key, update] of graphUpdates) {
+      const [id, index] = key.split(":");
+      if (id === thread) out.set(Number(index), update);
+    }
+    return out;
+  }
   // The layout is a few hundred iterations, and refresh() runs on every
   // keystroke, so it is recomputed only when the shape of the graph changes.
   let placement = new Map<NodeId, Position>();
@@ -87,6 +121,7 @@ export function mount(container: HTMLElement): void {
     build: { type: "idle" },
     query: "",
     expanded: new Set(),
+    updates: new Map(),
     child: null,
   };
 
@@ -125,6 +160,7 @@ export function mount(container: HTMLElement): void {
     state.draft = node.draft;
     state.marks = tree.marks(focus);
     state.expanded = expandedFor(focus);
+    state.updates = updatesFor(focus);
     state.activeMark = node.activeChild;
     const activeChild = node.activeChild;
     if (!activeChild) {
@@ -137,6 +173,7 @@ export function mount(container: HTMLElement): void {
       inFlight: child.thread.inFlight,
       draft: child.draft,
       expanded: expandedFor(activeChild),
+      updates: updatesFor(activeChild),
     };
   }
 
@@ -154,6 +191,11 @@ export function mount(container: HTMLElement): void {
     index: MessageIdx,
   ): Promise<boolean> {
     const interaction = interactionAt(tree, thread, index);
+    const key = address(thread, index);
+    graphUpdates.set(key, { type: "running" });
+    // The update thread's transcript, as of its last change: the chips are read
+    // off the calls it actually made, not off a side channel.
+    let transcript: ReadonlyArray<Message> = [];
     const done = updates
       .then(async () => {
         // Read inside the queued step, so this update sees the previous one's
@@ -163,6 +205,9 @@ export function mount(container: HTMLElement): void {
           prompt: graphUpdatePrompt(interaction, graph.render()),
           tools: writeTools(graph),
           yieldSchema: "text",
+          onChange: (messages) => {
+            transcript = messages;
+          },
         });
         if (result.status === "error") {
           console.error(result.error);
@@ -175,6 +220,7 @@ export function mount(container: HTMLElement): void {
         return false;
       })
       .then((ok) => {
+        graphUpdates.set(key, { type: "done", changes: changesOf(transcript) });
         sync();
         return ok;
       });
@@ -305,6 +351,14 @@ export function mount(container: HTMLElement): void {
       case "TAB_CHANGED":
         state.tab = msg.tab;
         break;
+      case "CHANGE_CLICKED":
+        state.tab = "graph";
+        updateGraph(
+          isNodeId(msg.id)
+            ? { type: "SELECT_NODE", id: msg.id }
+            : { type: "SELECT_EDGE", id: msg.id },
+        );
+        break;
       case "GRAPH_MSG":
         updateGraph(msg.msg);
         break;
@@ -387,6 +441,9 @@ export function mount(container: HTMLElement): void {
             if (!set.delete(msg.msg.index)) set.add(msg.msg.index);
             break;
           }
+          case "CHANGE_CLICKED":
+            update(state, msg.msg);
+            break;
         }
         break;
       }
