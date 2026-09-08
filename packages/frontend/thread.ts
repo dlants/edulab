@@ -1,7 +1,7 @@
 import type Anthropic from "@anthropic-ai/sdk";
 import type { ClientMessage, ServerFrame } from "@edulab/iso/protocol.ts";
 
-const MODEL = "claude-opus-4-5";
+const MODEL = "claude-haiku-4-5";
 const MAX_TOKENS = 16384;
 // Task mode: the agent is here to get the user's work done. Learning mode is
 // the secondary mode we layer on top of a transcript this produces, so this
