@@ -1,0 +1,26 @@
+version: "1"
+projects:
+  - name: edulab
+    environments:
+      - name: Production
+        services:
+          # One service, not the static-site-plus-api split gatherus uses: the
+          # only thing the backend exposes is a websocket, and a static site's
+          # rewrite is not a websocket proxy. So the socket and the built
+          # frontend are same-origin (see packages/backend/static.ts).
+          - type: web
+            name: edulab
+            runtime: node
+            repo: https://github.com/dlants/edulab
+            plan: starter
+            region: oregon
+            buildCommand: npm ci && npm run build
+            startCommand: node packages/backend/app.ts
+            envVars:
+              - key: NODE_VERSION
+                value: "24"
+              - key: ANTHROPIC_API_KEY
+                sync: false
+              - key: APP_PASSWORD
+                sync: false
+            autoDeployTrigger: commit

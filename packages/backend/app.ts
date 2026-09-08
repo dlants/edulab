@@ -3,6 +3,7 @@ import { fileURLToPath } from "node:url";
 import dotenv from "dotenv";
 import Fastify from "fastify";
 import { registerSocket } from "./socket.ts";
+import { registerStatic } from "./static.ts";
 
 dotenv.config({
   path: path.join(path.dirname(fileURLToPath(import.meta.url)), "../../.env"),
@@ -16,6 +17,7 @@ async function run() {
 
   const app = Fastify({ logger: true });
   await registerSocket(app, apiKey, password);
+  await registerStatic(app);
 
   const port = Number(process.env.PORT ?? 3000);
   await app.listen({ port, host: "0.0.0.0" });
