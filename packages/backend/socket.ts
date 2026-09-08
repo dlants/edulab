@@ -3,11 +3,23 @@ import type { ClientMessage, ServerFrame } from "@edulab/iso/protocol.ts";
 import websocket from "@fastify/websocket";
 import type { FastifyInstance } from "fastify";
 
-export async function registerSocket(app: FastifyInstance, apiKey: string) {
+export async function registerSocket(
+  app: FastifyInstance,
+  apiKey: string,
+  password: string,
+) {
   const client = new Anthropic({ apiKey });
+
   await app.register(websocket);
 
-  app.get("/api/socket", { websocket: true }, (socket) => {
+  // The gate for the backend's API key: the deployment is public, inference is
+  // not. Checked once, at the upgrade, because the socket is the only way in.
+  app.get("/api/socket", { websocket: true }, (socket, request) => {
+    const query = request.query as { password?: unknown };
+    if (query.password !== password) {
+      socket.close(4401, "unauthorized");
+      return;
+    }
     const send = (frame: ServerFrame) => {
       if (socket.readyState === socket.OPEN) socket.send(JSON.stringify(frame));
     };

@@ -1,6 +1,7 @@
 import type Anthropic from "@anthropic-ai/sdk";
 import type { ClientMessage, ServerFrame } from "@edulab/iso/protocol.ts";
-import { expect, type Page, test } from "@playwright/test";
+import type { Page } from "@playwright/test";
+import { expect, test } from "./fixture.ts";
 
 const KEY = "edulab:v3:own";
 
@@ -51,7 +52,7 @@ function isGraphUpdate(message: ClientMessage): boolean {
  * whole point of the snapshot is that a restored interaction is not re-run. */
 async function backend(page: Page) {
   const counts = { turns: 0, updates: 0 };
-  await page.routeWebSocket("**/api/socket", (ws) => {
+  await page.routeWebSocket(/\/api\/socket/, (ws) => {
     ws.onMessage((raw) => {
       const message = JSON.parse(String(raw)) as ClientMessage;
       const send = (frame: ServerFrame) => ws.send(JSON.stringify(frame));

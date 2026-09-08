@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./fixture.ts";
 
 // Guards against the scripted stream in chat.spec.ts drifting from the SDK.
 test.skip(

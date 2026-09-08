@@ -23,7 +23,10 @@ export default defineConfig({
           {
             command: "node app.ts",
             cwd: "../backend",
-            env: { PORT: String(backendPort) },
+            env: {
+              PORT: String(backendPort),
+              APP_PASSWORD: process.env.APP_PASSWORD ?? "test-password",
+            },
             port: backendPort,
             reuseExistingServer: false,
             timeout: 60_000,

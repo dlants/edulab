@@ -1,3 +1,4 @@
+import { socketUrl } from "../auth.ts";
 import { type Citation, parse, resolve } from "../citation.ts";
 import {
   type GraphChange,
@@ -73,8 +74,7 @@ function changesOf(
 }
 
 function connect(): WebSocket {
-  const proto = window.location.protocol === "https:" ? "wss:" : "ws:";
-  return new WebSocket(`${proto}//${window.location.host}/api/socket`);
+  return new WebSocket(socketUrl());
 }
 
 /** Prototype 1: the task transcript, with learning threads hanging off the
@@ -342,7 +342,6 @@ export function mount(container: HTMLElement): void {
       inFlight: child.thread.inFlight,
       draft: child.draft,
       expanded: expandedFor(activeChild),
-      updates: updatesFor(activeChild),
       marks: tree.marks(activeChild),
       anchor: anchor?.thread === activeChild ? anchor : null,
     };

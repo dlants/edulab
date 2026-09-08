@@ -11,9 +11,11 @@ dotenv.config({
 async function run() {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) throw new Error("Missing required env var: ANTHROPIC_API_KEY");
+  const password = process.env.APP_PASSWORD;
+  if (!password) throw new Error("Missing required env var: APP_PASSWORD");
 
   const app = Fastify({ logger: true });
-  await registerSocket(app, apiKey);
+  await registerSocket(app, apiKey, password);
 
   const port = Number(process.env.PORT ?? 3000);
   await app.listen({ port, host: "0.0.0.0" });

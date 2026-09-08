@@ -1,6 +1,7 @@
 import type Anthropic from "@anthropic-ai/sdk";
 import type { ClientMessage, ServerFrame } from "@edulab/iso/protocol.ts";
-import { expect, type Page, test } from "@playwright/test";
+import type { Page } from "@playwright/test";
+import { expect, test } from "./fixture.ts";
 
 function events(chunks: string[]): Anthropic.RawMessageStreamEvent[] {
   return [
@@ -59,7 +60,7 @@ async function fakeBackend(page: Page, chunks: string[]) {
   });
   const started: string[] = [];
 
-  await page.routeWebSocket("**/api/socket", (ws) => {
+  await page.routeWebSocket(/\/api\/socket/, (ws) => {
     ws.onMessage(async (raw) => {
       const message = JSON.parse(String(raw)) as ClientMessage;
       if (isGraphUpdate(message)) {
@@ -91,7 +92,7 @@ async function fakeBackend(page: Page, chunks: string[]) {
  * with prose. The app configures no tools, so the call comes back as an error
  * result - what matters here is that the call is rendered at all. */
 async function toolBackend(page: Page) {
-  await page.routeWebSocket("**/api/socket", (ws) => {
+  await page.routeWebSocket(/\/api\/socket/, (ws) => {
     let requests = 0;
     ws.onMessage((raw) => {
       const message = JSON.parse(String(raw)) as ClientMessage;
@@ -744,7 +745,7 @@ async function chipBackend(page: Page, write = true) {
     release = resolve;
   });
   let updates = 0;
-  await page.routeWebSocket("**/api/socket", (ws) => {
+  await page.routeWebSocket(/\/api\/socket/, (ws) => {
     ws.onMessage(async (raw) => {
       const message = JSON.parse(String(raw)) as ClientMessage;
       const send = (frame: ServerFrame) => ws.send(JSON.stringify(frame));

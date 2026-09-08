@@ -1,3 +1,4 @@
+import { unlock } from "./auth.ts";
 import { mount } from "./prototypes/chat.ts";
 import { cls, mountStyle } from "./vamp.ts";
 
@@ -17,4 +18,5 @@ const page = document.createElement("div");
 page.className = pageClass;
 const root = document.getElementById("app") ?? document.body;
 root.append(page);
+await unlock(page);
 mount(page);

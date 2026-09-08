@@ -754,7 +754,6 @@ export type ThreadPaneState = {
   inFlight: boolean;
   draft: string;
   expanded: ReadonlySet<number>;
-  updates: Updates;
 };
 
 export type ThreadPaneMsg =
@@ -840,7 +839,10 @@ class ThreadPane implements View<ThreadPaneState, ThreadPaneMsg> {
               messageText(message).length,
             ),
             active: null,
-            update: s.updates.get(i) ?? null,
+            // The chips report what a turn taught the graph, and are only
+            // legible next to the reflect pane that explains them. This pane
+            // *is* that pane: nothing hangs to its right, so it shows none.
+            update: null,
           },
           {},
           (msg: MessageMsg) => {
@@ -1057,7 +1059,9 @@ class ThreadsView implements View<State, Msg, AppCtx> {
               messageText(message).length,
             ),
             active: s.activeMark,
-            update: s.updates.get(i) ?? null,
+            // Only worth showing while the reflect pane is beside this one:
+            // at layer 0 there is nowhere for a chip to lead.
+            update: s.split ? (s.updates.get(i) ?? null) : null,
           },
           {},
           (msg: MessageMsg) => {

@@ -1,10 +1,11 @@
 import type { ClientMessage, ServerFrame } from "@edulab/iso/protocol.ts";
-import { expect, type Page, test } from "@playwright/test";
+import type { Page } from "@playwright/test";
+import { expect, test } from "./fixture.ts";
 
 /** Answers every request with a one-word reply: this spec is about the graph
  * tab, and the transcript only has to exist. */
 async function backend(page: Page) {
-  await page.routeWebSocket("**/api/socket", (ws) => {
+  await page.routeWebSocket(/\/api\/socket/, (ws) => {
     ws.onMessage((raw) => {
       const message = JSON.parse(String(raw)) as ClientMessage;
       const send = (frame: ServerFrame) => ws.send(JSON.stringify(frame));
@@ -229,7 +230,7 @@ async function updateBackend(page: Page, failFirst = false) {
   const prompts: string[] = [];
   let live = 0;
   let overlap = false;
-  await page.routeWebSocket("**/api/socket", (ws) => {
+  await page.routeWebSocket(/\/api\/socket/, (ws) => {
     ws.onMessage((raw) => {
       const message = JSON.parse(String(raw)) as ClientMessage;
       const send = (frame: ServerFrame) => ws.send(JSON.stringify(frame));
@@ -539,7 +540,7 @@ test("a citation that does not resolve is left as text", async ({ page }) => {
  * prompt handed it: address in, address out, address back onto the transcript.
  * The only test that would catch the two ends disagreeing about the format. */
 async function citingBackend(page: Page) {
-  await page.routeWebSocket("**/api/socket", (ws) => {
+  await page.routeWebSocket(/\/api\/socket/, (ws) => {
     ws.onMessage((raw) => {
       const message = JSON.parse(String(raw)) as ClientMessage;
       const send = (frame: ServerFrame) => ws.send(JSON.stringify(frame));
