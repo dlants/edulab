@@ -1,0 +1,20 @@
+$ cd /Users/denis.lantsman/src/edulab && npm test 2>/dev/null
+stdout:
+> edulab@0.0.1 test
+> vitest run
+ RUN  v4.1.11 /Users/denis.lantsman/src/edulab
+ ✓ packages/frontend/graph.test.ts (10 tests) 4ms
+ ✓ packages/frontend/selection.test.ts (8 tests) 2ms
+ ✓ packages/frontend/layout.test.ts (7 tests) 9ms
+ ✓ packages/frontend/graph-tools.test.ts (8 tests) 15ms
+ ✓ packages/frontend/persistence.test.ts (5 tests) 3ms
+ ✓ packages/frontend/prompt.test.ts (17 tests) 4ms
+ ✓ packages/frontend/thread.test.ts (24 tests) 27ms
+ ✓ packages/frontend/citation.test.ts (4 tests) 11ms
+ ✓ packages/frontend/interactions.test.ts (4 tests) 12ms
+ ✓ packages/frontend/threads.test.ts (7 tests) 12ms
+ Test Files  10 passed (10)
+      Tests  94 passed (94)
+   Start at  11:55:04
+   Duration  392ms (transform 578ms, setup 0ms, import 961ms, tests 99ms, environment 0ms)
+exit code 0

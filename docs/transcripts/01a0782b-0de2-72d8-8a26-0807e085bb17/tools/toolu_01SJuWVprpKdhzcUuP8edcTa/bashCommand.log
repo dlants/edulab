@@ -1,0 +1,6 @@
+$ cd /Users/denis.lantsman/src/edulab && grep -rn "Select some text\|learning-empty\|mark-list\|Ask your own" packages/e2e packages/frontend --include=*.ts | grep -v "^packages/frontend/learning.ts"
+stdout:
+packages/e2e/tests/chat.spec.ts:400:  const list = page.locator("[data-ref^='mark-list'] button");
+packages/e2e/tests/chat.spec.ts:553:  await page.getByRole("button", { name: "Ask your own question…" }).click();
+packages/e2e/tests/chat.spec.ts:554:  const composer = page.getByPlaceholder("Ask your own question…");
+exit code 0

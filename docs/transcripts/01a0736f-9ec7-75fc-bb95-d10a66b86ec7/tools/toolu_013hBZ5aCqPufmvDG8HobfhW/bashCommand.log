@@ -1,0 +1,22 @@
+$ cd /Users/denis.lantsman/src/edulab && npm test && npm run typecheck && npm run lint
+stdout:
+> edulab@0.0.1 test
+> vitest run
+ RUN  v4.1.11 /Users/denis.lantsman/src/edulab
+ ✓ packages/frontend/graph.test.ts (9 tests) 3ms
+ ✓ packages/frontend/prompt.test.ts (7 tests) 3ms
+ ✓ packages/frontend/selection.test.ts (8 tests) 2ms
+ ✓ packages/frontend/layout.test.ts (7 tests) 7ms
+ ✓ packages/frontend/graph-tools.test.ts (7 tests) 14ms
+ ✓ packages/frontend/thread.test.ts (20 tests) 20ms
+ ✓ packages/frontend/threads.test.ts (3 tests) 10ms
+ Test Files  7 passed (7)
+      Tests  61 passed (61)
+   Start at  14:19:19
+   Duration  199ms (transform 322ms, setup 0ms, import 602ms, tests 59ms, environment 0ms)
+> edulab@0.0.1 typecheck
+> npm -w @edulab/iso exec tsc -- --noEmit && npm -w @edulab/frontend exec tsc -- --noEmit && npm -w @edulab/backend exec tsc -- --noEmit && npm -w @edulab/e2e exec tsc -- --noEmit
+> edulab@0.0.1 lint
+> biome check .
+Checked 46 files in 106ms. No fixes applied.
+exit code 0

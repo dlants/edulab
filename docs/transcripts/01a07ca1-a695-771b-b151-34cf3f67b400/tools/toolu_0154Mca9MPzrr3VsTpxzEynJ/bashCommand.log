@@ -1,0 +1,10 @@
+$ cd /Users/denis.lantsman/src/edulab/packages/e2e/tests && sed -i '' 's|routeWebSocket("\*\*/api/socket"|routeWebSocket(/\\/api\\/socket/|' *.spec.ts && grep -n "routeWebSocket" *.spec.ts
+stdout:
+chat.spec.ts:63:  await page.routeWebSocket(/\/api\/socket/, (ws) => {
+chat.spec.ts:95:  await page.routeWebSocket(/\/api\/socket/, (ws) => {
+chat.spec.ts:748:  await page.routeWebSocket(/\/api\/socket/, (ws) => {
+graph.spec.ts:8:  await page.routeWebSocket(/\/api\/socket/, (ws) => {
+graph.spec.ts:233:  await page.routeWebSocket(/\/api\/socket/, (ws) => {
+graph.spec.ts:543:  await page.routeWebSocket(/\/api\/socket/, (ws) => {
+persistence.spec.ts:55:  await page.routeWebSocket(/\/api\/socket/, (ws) => {
+exit code 0

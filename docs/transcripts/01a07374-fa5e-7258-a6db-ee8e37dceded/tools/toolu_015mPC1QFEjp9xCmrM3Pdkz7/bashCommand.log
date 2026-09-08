@@ -1,0 +1,96 @@
+$ cd /Users/denis.lantsman/src/edulab && sed -n '380,440p;585,620p' packages/frontend/thread.ts
+stdout:
+  handleFrame(frame: ServerFrame): void {
+    const pending = this.pending;
+    if (!pending || frame.requestId !== pending.requestId) return;
+    switch (frame.type) {
+      case "event":
+        this.handleEvent(frame.event);
+        break;
+      case "done":
+      case "error":
+        this.failed = true;
+        // A turn that ends without a message_stop still commits whatever text
+        // arrived, so the next turn's array stays valid.
+        this.commit();
+        break;
+    }
+    this.version++;
+    this.onChange?.();
+  }
+  private handleEvent(event: Anthropic.RawMessageStreamEvent): void {
+    const pending = this.pending;
+    if (!pending) return;
+    // RawMessageStreamEvent is an open union we forward verbatim from the SDK,
+    // so an unrecognized event warns rather than throwing - a version bump
+    // should not break a stream we can otherwise render.
+    switch (event.type) {
+      case "content_block_start": {
+        const block = startBlock(event.content_block);
+        if (block) pending.blocks[event.index] = block;
+        break;
+      }
+      case "content_block_delta":
+        appendDelta(pending.blocks[event.index], event.delta);
+        break;
+      case "content_block_stop": {
+        const block = pending.blocks[event.index];
+        // The model's json only becomes readable once it is complete; a stream
+        // cut short leaves `input` undefined and the partial json in place.
+        if (block?.type === "tool_use")
+          block.input = parseInput(block.inputJson);
+        break;
+      }
+      case "message_delta":
+        pending.stopReason = event.delta.stop_reason;
+        break;
+      case "message_stop":
+        this.commit();
+        break;
+      case "message_start":
+        break;
+      default:
+        console.warn("unhandled stream event", event);
+    }
+  }
+  private commit(): void {
+    const pending = this.pending;
+    if (!pending) return;
+    this.pending = undefined;
+    for (const block of pending.blocks) {
+/** Thinking blocks are not requested by this prototype, so they are warned
+ * about rather than silently dropped - when we add them, this is where they
+ * surface. */
+function startBlock(block: Anthropic.ContentBlock): PendingBlock | undefined {
+  switch (block.type) {
+    case "text":
+      return { type: "text", text: block.text };
+    case "tool_use":
+      return {
+        type: "tool_use",
+        id: block.id,
+        name: block.name,
+        inputJson: "",
+        input: undefined,
+      };
+    default:
+      console.warn("unhandled content block", block);
+      return undefined;
+  }
+}
+function appendDelta(
+  block: PendingBlock | undefined,
+  delta: Anthropic.RawContentBlockDelta,
+): void {
+  switch (delta.type) {
+    case "text_delta":
+      if (block?.type === "text") block.text += delta.text;
+      break;
+    case "input_json_delta":
+      if (block?.type === "tool_use") block.inputJson += delta.partial_json;
+      break;
+    default:
+      console.warn("unhandled content block delta", delta);
+  }
+}
+exit code 0

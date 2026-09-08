@@ -1,0 +1,172 @@
+$ cd /Users/denis.lantsman/src/edulab && npm run lint
+stdout:
+> edulab@0.0.1 lint
+> biome check .
+stderr:
+packages/frontend/prototypes/chat.ts
+:2:3 lint/correctness/noUnusedImports  FIXABLE  ━━━━━━━━━━━━━━━━
+  ! Several of these imports are unused.
+1 │ impo
+rt {
+  > 2 │   type EdgeId,
+      │   ^^^^^^^^^^^
+    3 │   type GraphEdge,
+    4 │   type Grap
+hNode,
+  i Unused imports might be the result of an incomplete refactoring.
+  i Unsafe fix: Remove the unused imports.
+      1   1 │ 
+  import {
+      2     │ - 
+··type·EdgeI
+d,
+      3   2 │   
+  type GraphEdge,
+      4   3 │     ty
+pe GraphNode,
+packages/frontend/prototypes/chat.ts
+:1:1 
+assist/source/organizeImports  FIXABLE  ━━━━━━━━━━━━━━━━━━━
+  × Sort these imports.
+   >
+ 1 │ impor
+t {
+       │ ^^^^^^^^
+   > 
+2 │   type EdgeI
+d,
+   > 3 │   type Gr
+aphEdge,
+   > 4 │ 
+  type Grap
+hNode,
+        ...
+   > 9 │ im
+port { layout, typ
+e Position } from "../l
+ayout.ts
+";
+  > 10 │ 
+import { re
+adTools } fr
+om "../graph-tools.ts";
+       │ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^
+    11 │ import { actionLabel } from "../prompt.ts";
+    12 │ 
+import { selectedSample, selec
+tSample } from "../samples/index.ts";
+  i Safe fix: Organize imports and exports (Biome)
+      6   6 │   
+  type NodeId,
+  7   7 │   } fro
+m "../graph.ts";
+      8     │ - 
+import·type
+·{·Msg·as·GraphMsg,·Sid
+ebar·}·from·"..
+/graph-view.ts";
+      9   
+  │ - import
+·{·layout,·type·Posit
+ion·}·from·".
+./layout.ts";
+     10   
+  │ - import
+·{·readTools·}·from·
+"../graph-too
+ls.ts";
+          8
+ │ + import
+·{·readTools·}·from·"
+../graph-tools
+.ts";
+          9 │ + 
+import·type·{
+·Msg·as·GraphMsg,·Si
+debar·}·from·
+"../graph-view.ts";
+         10 │ + 
+import·{·layout,·ty
+pe·Position
+·}·from·"../layout.t
+s";
+     11  11 │   
+import { acti
+onLabel } fr
+om "../prompt.ts";
+     12  12 │   i
+mport { selectedSampl
+e, selectSampl
+e } from "../sample
+s/index.ts";
+packages/frontend/prototypes/chat.ts format 
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  × Formatter would have printed the following content:
+    166 166 │           const no
+de = graph.node(msg.id);
+    167 167 │           i
+f (!node) break;
+    168     │ - ········sidebar·=·{
+·type:·"node",·id:·
+node.id,·draft:·draftOf(node),·err
+or:·null·};
+  168 │ + ········sidebar
+·=·{
+        169 │ + 
+··········type:·"node"
+,
+        170 │ + 
+··········id:·node.id,
+  171 │ + ····
+······draft:·draftOf(nod
+e),
+        172 │ +
+ ··········error:·nul
+l,
+173 │ + ········};
+169 174 │       
+    break;
+    170 175 │   
+      }
+······· │ 
+    172 177 │          
+ const edge = graph.edge(ms
+g.id);
+    173 178 │     
+      if (!edge)
+ break;
+    174     │ - ·
+·······sidebar
+·=·{·type:·"edge",·id
+:·edge.id,·d
+raft:·draftOf(edge),·
+error:·nu
+ll·};
+        179 │ + 
+········side
+bar·=·{
+        180 │ + 
+··········t
+ype:·"edge",
+        181 │ + ·········
+·id:·edge.id,
+    182 │ + ········
+··draft:·draft
+Of(edge),
+        183 │ + ··
+········error:·
+null,
+        184 │ + ········};
+  175 185 │        
+   break;
+    176 186 │         }
+stdout:
+Checked 47 files in 138ms. No fixes applied.
+Found 2 errors.
+Found 1 warning.
+stderr:
+check 
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  × Some errors were emitted while running checks.
+exit code 1

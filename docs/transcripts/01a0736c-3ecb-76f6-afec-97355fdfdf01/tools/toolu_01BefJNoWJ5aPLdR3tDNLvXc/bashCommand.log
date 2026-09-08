@@ -1,0 +1,60 @@
+$ cd /Users/denis.lantsman/src/edulab && sed -n 80,140p packages/frontend/thread.test.ts; grep -n "Tool" packages/frontend/threads.ts packages/frontend/threads.test.ts
+stdout:
+      type: "content_block_delta",
+      index,
+      delta: { type: "input_json_delta", partial_json },
+    });
+  }
+}
+/** Lets the thread's tool execution and follow-up request run. */
+function flush(): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, 0));
+}
+function setup() {
+  const socket = new FakeSocket();
+  return { socket, thread: new Thread(socket) };
+}
+it("accumulates deltas into the streaming assistant message", async () => {
+  const { socket, thread } = setup();
+  const turn = thread.send("hi");
+  expect(thread.messages).toEqual([{ type: "text", role: "user", text: "hi" }]);
+  socket.deliver({
+    type: "content_block_start",
+    index: 0,
+    content_block: { type: "text", text: "", citations: null },
+  });
+  socket.deliver({
+    type: "content_block_delta",
+    index: 0,
+    delta: { type: "text_delta", text: "he" },
+  });
+  expect(thread.messages[1]).toEqual({
+    type: "text",
+    role: "assistant",
+    text: "he",
+  });
+  socket.deliver({
+    type: "content_block_delta",
+    index: 0,
+    delta: { type: "text_delta", text: "llo" },
+  });
+  socket.deliver({ type: "message_stop" } as Anthropic.RawMessageStreamEvent);
+  await turn;
+  expect(thread.inFlight).toBe(false);
+  expect(thread.messages).toEqual([
+    { type: "text", role: "user", text: "hi" },
+    { type: "text", role: "assistant", text: "hello" },
+  ]);
+});
+it("sends the whole thread with alternating roles on the second turn", async () => {
+  const { socket, thread } = setup();
+  const first = thread.send("one");
+  socket.stream(["1"]);
+  await first;
+  const second = thread.send("two");
+  socket.stream(["2"]);
+packages/frontend/threads.ts:4:import type { Tool, TurnResult } from "./thread.ts";
+packages/frontend/threads.ts:14:  tools?: Record<string, Tool>;
+packages/frontend/threads.ts:15:  yieldSchema?: Anthropic.Tool.InputSchema | "text";
+packages/frontend/threads.test.ts:59:const SCHEMA: Anthropic.Tool.InputSchema = {
+exit code 0

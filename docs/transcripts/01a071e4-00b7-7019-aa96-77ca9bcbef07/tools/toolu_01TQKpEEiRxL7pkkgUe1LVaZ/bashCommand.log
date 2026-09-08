@@ -1,0 +1,72 @@
+$ cd /Users/denis.lantsman/src/edulab && npm run typecheck && npm test && npm run lint
+stdout:
+> edulab@0.0.1 typecheck
+> npm -w @edulab/iso exec tsc -- --noEmit && npm -w @edulab/frontend exec tsc -- --noEmit && npm -w @edulab/backend exec tsc -- --noEmit && npm -w @edulab/e2e exec tsc -- --noEmit
+> edulab@0.0.1 test
+> vitest run
+ RUN  v4.1.11 /Users/denis.lantsman/src/edulab
+ ✓ packages/frontend/prompt.test.ts (5 tests) 2ms
+ ✓ packages/frontend/selection.test.ts (8 tests) 2ms
+ ❯ packages/frontend/thread.test.ts (10 tests | 2 failed) 17ms
+   ✓ accumulates deltas into the streaming assistant message 11ms
+   × sends the whole thread with alternating roles on the second turn 3ms
+   ✓ ignores send while a turn is in flight 0ms
+   ✓ commits partial text when a turn ends in error 0ms
+   ✓ sends the seed as turn 0 but never renders it 0ms
+   ✓ surfaces a streamed tool call with its json parsed 0ms
+   ✓ projects text and a tool call in one turn as two entries 0ms
+   ✓ pairs a tool_result in the next user turn onto its call 0ms
+   × leaves input undefined when the json never finished 0ms
+   ✓ drops the assistant turn when no text arrived 0ms
+stderr:
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  packages/frontend/thread.test.ts > sends the whole thread with alternating roles on the second turn
+AssertionError: expected [ …(3) ] to deeply equal [ …(3) ]
+- Expected
++ Received
+@@ -2,11 +2,16 @@
+    {
+      "content": "one",
+      "role": "user",
+    },
+    {
+-     "content": "1",
++     "content": [
++       {
++         "text": "1",
++         "type": "text",
++       },
++     ],
+      "role": "assistant",
+    },
+    {
+      "content": "two",
+      "role": "user",
+ ❯ packages/frontend/thread.test.ts:140:43
+    138|     { type: "text", role: "assistant", text: "2" },
+    139|   ]);
+    140|   expect(socket.sent[1]?.params.messages).toEqual([
+       |                                           ^
+    141|     { role: "user", content: "one" },
+    142|     { role: "assistant", content: "1" },
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+ FAIL  packages/frontend/thread.test.ts > leaves input undefined when the json never finished
+AssertionError: expected {} to be undefined
+- Expected:
+undefined
++ Received:
+{}
+ ❯ packages/frontend/thread.test.ts:312:30
+    310|   const message = thread.messages[1];
+    311|   if (message?.type !== "tool_use") throw new Error("expected a tool c…
+    312|   expect(message.call.input).toBeUndefined();
+       |                              ^
+    313|   expect(message.call.inputJson).toBe('{"path"');
+    314| });
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+stdout:
+ Test Files  1 failed | 2 passed (3)
+      Tests  2 failed | 21 passed (23)
+   Start at  07:08:21
+   Duration  329ms (transform 96ms, setup 0ms, import 171ms, tests 22ms, environment 0ms)
+exit code 1

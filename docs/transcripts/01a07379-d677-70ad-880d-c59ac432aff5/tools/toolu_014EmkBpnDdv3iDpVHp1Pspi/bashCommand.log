@@ -1,0 +1,25 @@
+$ cd ~/.claude/skills/browser && pkgx pnpm exec tsx scripts/browser.ts "
+load http://localhost:5173/?sample=74979366
+sleep 1500
+eval
+const app = document.querySelector('#app > div');
+const body = app.children[1];
+const msgs = [...document.querySelectorAll('[data-role]')];
+return JSON.stringify({
+  win: window.innerHeight,
+  bodyRect: body.getBoundingClientRect().height,
+  bodyScroll: body.scrollHeight,
+  paneRect: body.firstElementChild.getBoundingClientRect().height,
+  msgs: msgs.map(m => ({over: m.dataset.overflowing, clipped: m.dataset.clipped, h: Math.round(m.getBoundingClientRect().height)})).slice(0,6),
+});
+endeval
+screenshot edulab.png
+"
+stdout:
+Loading http://localhost:5173/?sample=74979366...
+Sleeping for 1500ms...
+Evaluating code in page context...
+Eval result: {"win":720,"bodyRect":384.71875,"bodyScroll":13342,"paneRect":13230,"msgs":[{"over":"true","clipped":"true","h":412},{"over":"true","clipped":"true","h":396},{"over":"false","clipped":"true","h":130},{"over":"true","clipped":"true","h":396},{"over":"false","clipped":"true","h":130},{"over":"true","clipped":"true","h":396}]}
+Taking screenshot /tmp/magenta/edulab.png...
+Script completed successfully!
+exit code 0

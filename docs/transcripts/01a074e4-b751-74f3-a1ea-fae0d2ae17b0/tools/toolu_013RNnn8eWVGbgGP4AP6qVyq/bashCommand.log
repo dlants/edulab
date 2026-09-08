@@ -1,0 +1,197 @@
+$ cd /Users/denis.lantsman/src/edulab && sed -n 1,140p packages/frontend/thread.ts && echo ---- && grep -n "trimUnansweredTools" -A30 packages/frontend/thread.ts && echo ---GRAPH--- && grep -n "snapshot\|GraphSnapshot\|export type\|static from" packages/frontend/graph.ts && echo ---VIEW--- && grep -n "MessageIdx\|Build\|GraphChange\|type Msg\|sample" packages/frontend/view.ts
+stdout:
+import type Anthropic from "@anthropic-ai/sdk";
+import type { ClientMessage, ServerFrame } from "@edulab/iso/protocol.ts";
+const MODEL = "claude-opus-4-5";
+const MAX_TOKENS = 16384;
+// Task mode: the agent is here to get the user's work done. Learning mode is
+// the secondary mode we layer on top of a transcript this produces, so this
+// prompt must not pre-emptively tutor - the whole premise of the prototype is
+// that a user watching a capable agent work becomes a passive observer.
+const SYSTEM = [
+  "You are a capable engineering assistant helping the user complete a task.",
+  "Work the problem directly: make concrete decisions, write real code, and",
+  "state your reasoning as you go rather than asking the user to supply it.",
+  "Be concise. Do not quiz the user, do not pad explanations for a beginner,",
+  "and do not check whether they are following - just do the work well.",
+].join(" ");
+// Unattended mode: nobody is reading the transcript as it streams, so a
+// question to the user is a dead end. The only exit is the yield tool.
+const AUTONOMOUS_SYSTEM = [
+  "You are a capable engineering assistant running unattended: there is no",
+  "user to answer questions, and nothing you say outside the yield tool will",
+  "be read. Work the problem to completion, making whatever decisions you",
+  "need without asking, and finish by calling the yield tool exactly once",
+  "with your result. Do not stop for confirmation and do not ask questions.",
+].join(" ");
+const MAX_RESTARTS = 5;
+const restartNudge = (attempt: number, max: number) =>
+  `You stopped without yielding. Nobody read that message. Complete the task and call the yield tool when you are done. (auto-restart ${attempt}/${max})`;
+const YIELD = "yield";
+const DEFAULT_YIELD_SCHEMA: Anthropic.Tool.InputSchema = {
+  type: "object",
+  properties: {
+    result: {
+      type: "string",
+      description: "The result to return to whoever spawned this thread.",
+    },
+  },
+  required: ["result"],
+};
+export type ToolCall = {
+  id: string;
+  name: string;
+  /** Parsed from the streamed json; undefined while still streaming or if it
+   * never parsed. */
+  input: Record<string, unknown> | undefined;
+  /** Raw accumulated json, so a partial call is still renderable. */
+  inputJson: string;
+  /** Derived from the paired tool_result block in the next user turn; absent
+   * while the tool is still running. */
+  result: ToolResult | undefined;
+};
+export type YieldValue =
+  | { type: "text"; text: string }
+  | { type: "structured"; value: Record<string, unknown> };
+export type TurnResult =
+  | { type: "completed" }
+  | { type: "yielded"; value: YieldValue }
+  | { type: "error"; message: string };
+export type ThreadOpts = {
+  system?: string;
+  /** Sent after the seed, and rendered: a learning thread's opening ask is
+   * one of these, not part of the seed. */
+  initialTurns?: Anthropic.MessageParam[];
+  /** Content blocks rather than a string when the caller needs `cache_control`
+   * on part of it - a graph update marks its stable prefix. */
+  seed?: string | Anthropic.ContentBlockParam[];
+  tools?: Record<ToolName, Tool>;
+  /** Present => the yield tool is offered. `"text"` uses the default
+   * `{ result: string }` schema and settles with a text value; a schema
+   * settles with the whole input object. */
+  yieldSchema?: Anthropic.Tool.InputSchema | "text";
+};
+/** The key of a tool in the record handed to a thread; also what the model
+ * sends back as `tool_use.name`. */
+export type ToolName = string & { readonly __brand: "ToolName" };
+export type ToolResult =
+  | { status: "ok"; text: string }
+  | { status: "error"; error: string };
+/** A tool the thread can run, client side. */
+export type Tool = {
+  spec: Anthropic.Tool;
+  execute(input: Record<string, unknown>): Promise<ToolResult>;
+};
+/** Keys a set of tools by name. `Record<ToolName, Tool>` is a mapped type over
+ * a branded string, so an object literal cannot be written for it directly. */
+export function toolset(...tools: ReadonlyArray<Tool>): Record<ToolName, Tool> {
+  return Object.fromEntries(tools.map((t) => [t.spec.name, t]));
+}
+/** One entry of the derived transcript: a block, not a turn. A single agent
+ * turn can produce prose, a tool call, and more prose, and the transcript shows
+ * it that way. */
+export type Message =
+  | { type: "text"; role: "user" | "assistant"; text: string }
+  | { type: "tool_use"; role: "assistant"; call: ToolCall };
+/** A position in a thread's `messages`. Branded because it is an identifier -
+ * half of the `(thread, index)` address an interaction and a citation are
+ * written as - and only ever produced by reading a real position. */
+export type MessageIdx = number & { readonly __brand: "MessageIdx" };
+/** Anchors index into text entries only, so everything else has no text. */
+export function messageText(message: Message): string {
+  return message.type === "text" ? message.text : "";
+}
+/** A block of the assistant turn currently streaming. */
+type PendingBlock =
+  | { type: "text"; text: string }
+  | {
+      type: "tool_use";
+      id: string;
+      name: string;
+      inputJson: string;
+      input: Record<string, unknown> | undefined;
+    };
+/** The subset of WebSocket the thread uses, so tests can stand in for it. */
+export type Socket = {
+  send(data: string): void;
+  addEventListener(
+    type: "message",
+    listener: (e: MessageEvent<string>) => void,
+  ): void;
+};
+export type ThreadResult<Value> =
+  | { status: "ok"; result: Value }
+  | { status: "error"; error: string };
+----
+200:export function trimUnansweredTools(
+201-  log: ReadonlyArray<Anthropic.MessageParam>,
+202-): Anthropic.MessageParam[] {
+203-  const out = [...log];
+204-  while (out.length > 0 && !answered(out)) out.pop();
+205-  return out;
+206-}
+207-function answered(log: ReadonlyArray<Anthropic.MessageParam>): boolean {
+208-  const results = new Set<string>();
+209-  for (const turn of log) {
+210-    if (typeof turn.content === "string") continue;
+211-    for (const block of turn.content)
+212-      if (block.type === "tool_result") results.add(block.tool_use_id);
+213-  }
+214-  for (const turn of log) {
+215-    if (typeof turn.content === "string") continue;
+216-    for (const block of turn.content)
+217-      if (block.type === "tool_use" && !results.has(block.id)) return false;
+218-  }
+219-  return true;
+220-}
+221-export class Thread {
+222-  private readonly turns: Anthropic.MessageParam[];
+223-  private pending:
+224-    | {
+225-        requestId: string;
+226-        blocks: PendingBlock[];
+227-        stopReason: string | null;
+228-      }
+229-    | undefined;
+230-  /** Bumped whenever the log or the streaming block changes, so `messages` can
+---GRAPH---
+2:export type GraphId = NodeId | EdgeId;
+4:export type NodeId = string & { readonly __brand: "NodeId" };
+6:export type EdgeId = string & { readonly __brand: "EdgeId" };
+10:export type Level = 1 | 2 | 3 | 4;
+15:export type GraphNode = {
+26:export type GraphEdge = {
+38:export type GraphChange = {
+44:export type GraphResult =
+50:export type GraphSnapshot = {
+71:  snapshot(): GraphSnapshot {
+78:  static from(snapshot: GraphSnapshot): KnowledgeGraph {
+80:    for (const node of snapshot.nodes) graph.#nodes.set(node.id, node);
+81:    for (const edge of snapshot.edges) graph.#edges.set(edge.id, edge);
+82:    graph.#next = snapshot.next;
+---VIEW---
+1:import type { GraphChange, GraphId } from "./graph.ts";
+3:  type Msg as GraphMsg,
+8:  type Msg as LearningMsg,
+12:import { samples } from "./samples/index.ts";
+38:/** The sample-transcript batch. `done` is terminal: a second pass over the
+40:export type Build =
+50:  | { type: "done"; changes: ReadonlyArray<GraphChange> };
+59:  sample: string;
+80:  /** The sample-transcript batch: one graph update per loaded user turn. */
+81:  build: Build;
+90:export type Msg =
+120:const sampleClass = cls("sample");
+202:.${sampleClass} {
+418:type ChangeState = { change: GraphChange };
+758:    const sampleRef: Ref = ref("sample");
+769:        <select class="${sampleClass}" data-ref="${sampleRef}"></select>
+770:        <button type="button" data-build data-ref="${buildRef}">Build knowledge graph from this transcript</button>
+811:    // bound; switching sample is a page navigation anyway.
+812:    const picker = this.b.ref<HTMLSelectElement>(sampleRef);
+817:    for (const sample of samples) {
+819:      option.value = sample.id;
+820:      option.textContent = sample.label;
+899:    this.b.bindValue(sampleRef, (s) => s.sample);
+978:function buildStatus(build: Build): string {
+exit code 0

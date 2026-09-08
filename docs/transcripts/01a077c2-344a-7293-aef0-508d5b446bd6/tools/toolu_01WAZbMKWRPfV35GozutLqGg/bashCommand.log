@@ -1,0 +1,6 @@
+$ cd /Users/denis.lantsman/src/edulab/packages/e2e && npx playwright test -g "already opened"
+stdout:
+Running 1 test using 1 worker
+  ✓  1 tests/chat.spec.ts:390:1 › with nothing selected the pane lists the passages already opened (468ms)
+  1 passed (1.6s)
+exit code 0

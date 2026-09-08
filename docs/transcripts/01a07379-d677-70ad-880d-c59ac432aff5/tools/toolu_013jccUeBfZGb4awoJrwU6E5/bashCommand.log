@@ -1,0 +1,28 @@
+$ cd ~/.claude/skills/browser && pkgx pnpm exec tsx scripts/browser.ts "
+load http://localhost:5173/?sample=74979366
+sleep 1500
+eval
+const app=document.querySelector('#app > div'); const body=app.children[1];
+const m=document.querySelector('[data-role]');
+return JSON.stringify({win:innerHeight, body:Math.round(body.getBoundingClientRect().height), firstMsgOverflow:m.dataset.overflowing, toggleVisible: getComputedStyle(m.querySelector('button')).display, more: m.querySelector('[data-more]').textContent});
+endeval
+click .graph-tab, button
+sleep 300
+eval
+const app=document.querySelector('#app > div');
+return JSON.stringify({graph: Math.round(app.lastElementChild.getBoundingClientRect().height), body: Math.round(app.children[1].getBoundingClientRect().height)});
+endeval
+screenshot edulab2.png
+"
+stdout:
+Loading http://localhost:5173/?sample=74979366...
+Sleeping for 1500ms...
+Evaluating code in page context...
+Eval result: {"win":720,"body":673,"firstMsgOverflow":"true","toggleVisible":"block","more":"… 5 more lines"}
+Clicking .graph-tab, button...
+Sleeping for 300ms...
+Evaluating code in page context...
+Eval result: {"graph":0,"body":673}
+Taking screenshot /tmp/magenta/edulab2.png...
+Script completed successfully!
+exit code 0

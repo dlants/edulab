@@ -1,0 +1,13 @@
+$ cd /Users/denis.lantsman/src/edulab && git add -A && git commit -q -m "Estimate the clamp affordance, and mount one tab at a time
+
+Build failures carry their address and error, dumped by a ? next to the
+status. Threads and the graph are mutually exclusive bindSlot children, so
+the hidden pane cannot claim flex space. The message clamp is estimated
+from the text rather than measured, and the layout run re-renders when it
+lands." && git push && git log --oneline -1
+stderr:
+To github.com:dlants/edulab.git
+   3ec923f..43b58f1  main -> main
+stdout:
+43b58f1 Estimate the clamp affordance, and mount one tab at a time
+exit code 0

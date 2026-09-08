@@ -1,0 +1,40 @@
+$ cd ~/src/edulab && render workspace current -o json 2>&1; render services -o json --confirm 2>&1
+stdout:
+Error: no workspace set. Use `render workspace set` to set a workspace
+Usage:
+  render workspace current [flags]
+Flags:
+  -h, --help   help for current
+Global Flags:
+      --confirm         Skip all confirmation prompts
+  -o, --output string   Output format: interactive, json, yaml, or text (auto: text in non-TTY contexts unless explicitly set) (default "interactive")
+Error: no workspace set. Use `render workspace set` to set a workspace
+Usage:
+  render services [flags]
+  render services [command]
+Aliases:
+  services, service
+Examples:
+  # List all services
+  render services
+  # Output as JSON
+  render services --output json
+  # Filter by environment
+  render services -e env-abc123
+  # Include preview environments
+  render services --include-previews
+  # Combine filters
+  render services -e env-abc123,env-def456 --include-previews --output json
+Available Commands:
+  create      Create a new service
+  instances   List instances for a service
+  update      Update a service
+Flags:
+  -e, --environment-ids strings   Filter services by environment IDs
+  -h, --help                      help for services
+      --include-previews          Include preview environments
+Global Flags:
+      --confirm         Skip all confirmation prompts
+  -o, --output string   Output format: interactive, json, yaml, or text (auto: text in non-TTY contexts unless explicitly set) (default "interactive")
+Use "render services [command] --help" for more information about a command.
+exit code 1

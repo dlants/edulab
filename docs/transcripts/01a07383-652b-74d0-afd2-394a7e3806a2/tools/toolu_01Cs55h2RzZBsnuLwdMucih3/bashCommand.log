@@ -1,0 +1,8 @@
+$ cd /Users/denis.lantsman/src/edulab && grep -n "DFS\|depth-first\|parents before" plans/2026-09-05-interaction-reflection.md
+stdout:
+27:- `interactions(tree)` — pure `ThreadTree -> Interaction[]`, DFS, parents before children.
+47:**Slice the tree into interactions.** `interactions(tree)` walks depth-first from the root, parents before children, and emits one `Interaction` per user turn. Two kinds of user turn exist and both must be captured:
+108:/** Depth-first over the tree, parents before children, in creation order. */
+162:- Order is DFS, parents before children, children in creation order. A child's opening is reflected on after the parent turn that spawned it, so the graph is built in the order the user actually learned.
+178:  - Order over a root with two children, one of which has a child, is DFS parents-first in creation order.
+exit code 0

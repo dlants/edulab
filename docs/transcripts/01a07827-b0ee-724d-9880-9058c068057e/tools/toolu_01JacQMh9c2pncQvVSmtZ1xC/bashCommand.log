@@ -1,0 +1,7 @@
+$ cd /Users/denis.lantsman/src/edulab && grep -rn "edulab:v" packages/e2e
+stdout:
+packages/e2e/tests/persistence.spec.ts:5:const KEY = "edulab:v2:own";
+packages/e2e/tests/persistence.spec.ts:241:  const key = `edulab:v2:${sample}`;
+packages/e2e/test-results/persistence-an-unreadable--2b954-d-and-the-app-comes-up-bare/error-context.md:111:  241 |   const key = `edulab:v2:${sample}`;
+packages/e2e/test-results/persistence-a-build-interr-d0f1e-sh-resumes-where-it-stopped/error-context.md:154:  241 |   const key = `edulab:v2:${sample}`;
+exit code 0

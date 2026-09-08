@@ -1,0 +1,143 @@
+$ cd /Users/denis.lantsman/src/edulab && cat packages/e2e/test-results/chat-an-update-that-writes-nothing-says-so/error-context.md
+stdout:
+# Instructions
+- Following Playwright test failed.
+- Explain why, be concise, respect Playwright best practices.
+- Provide a snippet of code with the fix, if possible.
+# Test info
+- Name: chat.spec.ts >> an update that writes nothing says so
+- Location: packages/e2e/tests/chat.spec.ts:828:1
+# Error details
+```
+Error: expect(locator).toHaveText(expected) failed
+Locator:  locator('ul').first().locator('li').first().locator('[data-update-status]')
+Expected: "no knowledge graph changes"
+Received: ""
+Timeout:  5000ms
+Call log:
+  - Expect "toHaveText" locator('ul').first().locator('li').first().locator('[data-update-status]') with timeout 5000ms
+  - waiting for locator('ul').first().locator('li').first().locator('[data-update-status]')
+    14 × locator resolved to <span data-update-status="" data-ref="update-status_28"></span>
+       - unexpected value ""
+```
+```yaml
+- group: ⚙
+- button "Threads" [pressed]
+- button "Knowledge graph"
+- text: Layer 0
+- button "Reflect →"
+- list:
+  - listitem: user sure, keep going
+  - listitem: assistant ok
+- textbox "Ask something…": sure, keep going
+- button "Send" [disabled]
+```
+# Test source
+```ts
+  733 |     },
+  734 |     { type: "content_block_stop", index: 0 },
+  735 |     { type: "message_stop" } as Anthropic.RawMessageStreamEvent,
+  736 |   ];
+  737 | }
+  738 | /** Answers every graph update with one `put_nodes` call naming the node by its
+  739 |  * ordinal, then a yield; `write: false` yields straight away, which is the
+  740 |  * common case the chip still has to say something about. The first update is
+  741 |  * gated, so the "working" chip is observable. */
+  742 | async function chipBackend(page: Page, write = true) {
+  743 |   let release!: () => void;
+  744 |   const gate = new Promise<void>((resolve) => {
+  745 |     release = resolve;
+  746 |   });
+  747 |   let updates = 0;
+  748 |   await page.routeWebSocket("**/api/socket", (ws) => {
+  749 |     ws.onMessage(async (raw) => {
+  750 |       const message = JSON.parse(String(raw)) as ClientMessage;
+  751 |       const send = (frame: ServerFrame) => ws.send(JSON.stringify(frame));
+  752 |       const replay = (stream: Anthropic.RawMessageStreamEvent[]) => {
+  753 |         for (const event of stream)
+  754 |           send({ type: "event", requestId: message.requestId, event });
+  755 |         send({ type: "done", requestId: message.requestId });
+  756 |       };
+  757 |       if (!isGraphUpdate(message)) {
+  758 |         replay(events(["ok"]));
+  759 |         return;
+  760 |       }
+  761 |       // The second request of an update answers the tool result we just sent.
+  762 |       const answered = JSON.stringify(message.params.messages).includes(
+  763 |         "tool_result",
+  764 |       );
+  765 |       if (!write || answered) {
+  766 |         replay(yieldEvents());
+  767 |         return;
+  768 |       }
+  769 |       const ordinal = ++updates;
+  770 |       if (ordinal === 1) await gate;
+  771 |       replay(putNodesEvents(`concept-${ordinal}`));
+  772 |     });
+  773 |   });
+  774 |   return { release };
+  775 | }
+  776 | function updateStatus(page: Page, index: number) {
+  777 |   return taskTranscript(page)
+  778 |     .locator("li")
+  779 |     .nth(index)
+  780 |     .locator("[data-update-status]");
+  781 | }
+  782 | function changes(page: Page, index: number) {
+  783 |   return taskTranscript(page).locator("li").nth(index).locator("[data-change]");
+  784 | }
+  785 | async function turn(page: Page, text: string) {
+  786 |   await page.getByRole("textbox").fill(text);
+  787 |   await page.getByRole("textbox").press("Enter");
+  788 | }
+  789 | test("a turn shows its graph update working, then what it changed", async ({
+  790 |   page,
+  791 | }) => {
+  792 |   const backend = await chipBackend(page);
+  793 |   await page.goto("/");
+  794 |   await turn(page, "how does backpressure work");
+  795 |   await expect(updateStatus(page, 0)).toHaveText(
+  796 |     "updating the knowledge graph…",
+  797 |   );
+  798 |   backend.release();
+  799 |   await expect(changes(page, 0)).toHaveText(['created "concept-1"']);
+  800 |   await turn(page, "and framing");
+  801 |   await expect(changes(page, 2)).toHaveText(['created "concept-2"']);
+  802 |   // Each turn accounts for its own update and no other.
+  803 |   await expect(changes(page, 0)).toHaveText(['created "concept-1"']);
+  804 | });
+  805 | test("the update behind a turn opens its own transcript on the right", async ({
+  806 |   page,
+  807 | }) => {
+  808 |   const backend = await chipBackend(page);
+  809 |   backend.release();
+  810 |   await page.goto("/");
+  811 |   await turn(page, "how does backpressure work");
+  812 |   await expect(changes(page, 0)).toHaveText(['created "concept-1"']);
+  813 |   await taskTranscript(page)
+  814 |     .locator("li")
+  815 |     .nth(0)
+  816 |     .locator("[data-update-thread]")
+  817 |     .click();
+  818 |   const pane = page.locator("ul").nth(1);
+  819 |   await expect(pane.locator("[data-tool-name]:visible")).toHaveText([
+  820 |     "put_nodes",
+  821 |     "yield",
+  822 |   ]);
+  823 |   // Review, not descent: there is nothing to reply to here.
+  824 |   await expect(page.getByPlaceholder("Follow up…")).toHaveCount(0);
+  825 |   await page.getByRole("button", { name: "Close" }).click();
+  826 |   await expect(page.locator("[data-update-pane-status]")).toHaveCount(0);
+  827 | });
+  828 | test("an update that writes nothing says so", async ({ page }) => {
+  829 |   const backend = await chipBackend(page, false);
+  830 |   backend.release();
+  831 |   await page.goto("/");
+  832 |   await turn(page, "sure, keep going");
+> 833 |   await expect(updateStatus(page, 0)).toHaveText("no knowledge graph changes");
+      |                                       ^ Error: expect(locator).toHaveText(expected) failed
+  834 |   await expect(changes(page, 0)).toHaveCount(0);
+  835 | });
+  836 | 
+```
+exit code 0

@@ -1,0 +1,12 @@
+$ sed 's/[A-Za-z0-9_.-]\{16,\}/REDACTED/g' ~/.render/cli.yaml
+stdout:
+version: 1
+workspace: ""
+workspace_name: ""
+api:
+    key: REDACTED
+    expires_at: 1789441697
+    host: https://api.render.com/v1/
+    refreshtoken: REDACTED
+dashboard_url: https://REDACTED
+exit code 0

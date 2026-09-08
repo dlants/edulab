@@ -1,0 +1,167 @@
+$ cd /Users/denis.lantsman/src/edulab && npx playwright test graph.spec.ts --config packages/e2e/playwright.config.ts
+stdout:
+Running 15 tests using 7 workers
+  ✓   6 packages/e2e/tests/graph.spec.ts:92:1 › switching tabs leaves the transcript and the graph intact (612ms)
+  ✓   3 packages/e2e/tests/graph.spec.ts:288:1 › every interaction updates the graph, one update at a time (595ms)
+  ✓   2 packages/e2e/tests/graph.spec.ts:314:1 › opening a learning thread updates the graph from its ask (695ms)
+  ✓   8 packages/e2e/tests/graph.spec.ts:345:1 › a failed graph update leaves the app usable (139ms)
+  ✓   9 packages/e2e/tests/graph.spec.ts:365:1 › building from a sample transcript walks its turns once (1.1s)
+  ✓  10 packages/e2e/tests/graph.spec.ts:382:1 › a failed update mid-build does not stop the ones after it (1.1s)
+  ✓  11 packages/e2e/tests/graph.spec.ts:394:1 › interacting mid-build interleaves rather than races (1.4s)
+  ✘   1 packages/e2e/tests/graph.spec.ts:113:1 › clicking a node fills the sidebar and a retitle keeps its edges (5.6s)
+  ✘   4 packages/e2e/tests/graph.spec.ts:136:1 › a duplicate title is rejected without losing the draft (5.6s)
+  ✘   7 packages/e2e/tests/graph.spec.ts:159:1 › an edge is selectable and editable (5.6s)
+  ✘   5 packages/e2e/tests/graph.spec.ts:149:1 › deleting a node takes its edges with it (5.6s)
+  ✓  15 packages/e2e/tests/graph.spec.ts:596:1 › clicking a change opens the graph tab with that node selected (335ms)
+  ✘  13 packages/e2e/tests/graph.spec.ts:464:1 › a citation that does not resolve is left as text (5.2s)
+  ✘  12 packages/e2e/tests/graph.spec.ts:442:1 › a cited message is one click away from the note that rests on it (5.3s)
+  ✘  14 packages/e2e/tests/graph.spec.ts:577:1 › an address written by a graph update navigates back to its turn (5.2s)
+  1) packages/e2e/tests/graph.spec.ts:113:1 › clicking a node fills the sidebar and a retitle keeps its edges 
+    Error: expect(locator).toHaveValue(expected) failed
+    Locator:  locator('[data-graph-title]')
+    Expected: "closures"
+    Received: ""
+    Timeout:  5000ms
+    Call log:
+      - Expect "toHaveValue" locator('[data-graph-title]') with timeout 5000ms
+      - waiting for locator('[data-graph-title]')
+        14 × locator resolved to <input data-graph-title="" data-ref="graph-title_26"/>
+           - unexpected value ""
+      117 |   await nodes(page).filter({ hasText: "closures" }).click();
+      118 |
+    > 119 |   await expect(page.locator("[data-graph-title]")).toHaveValue("closures");
+          |                                                    ^
+      120 |   await expect(page.locator("[data-graph-description]")).toHaveValue(
+      121 |     "a function plus its environment",
+      122 |   );
+        at /Users/denis.lantsman/src/edulab/packages/e2e/tests/graph.spec.ts:119:52
+    Error Context: packages/e2e/test-results/graph-clicking-a-node-fill-5a1f2-d-a-retitle-keeps-its-edges/error-context.md
+  2) packages/e2e/tests/graph.spec.ts:136:1 › a duplicate title is rejected without losing the draft 
+    TimeoutError: locator.fill: Timeout 5000ms exceeded.
+    Call log:
+      - waiting for locator('[data-graph-title]')
+        - locator resolved to <input data-graph-title="" data-ref="graph-title_26"/>
+        - fill("scope")
+      - attempting fill action
+        2 × waiting for element to be visible, enabled and editable
+          - element is not visible
+        - retrying fill action
+        - waiting 20ms
+        2 × waiting for element to be visible, enabled and editable
+          - element is not visible
+        - retrying fill action
+          - waiting 100ms
+        10 × waiting for element to be visible, enabled and editable
+           - element is not visible
+         - retrying fill action
+           - waiting 500ms
+      139 |   await open(page);
+      140 |   await nodes(page).filter({ hasText: "closures" }).click();
+    > 141 |   await page.locator("[data-graph-title]").fill("scope");
+          |                                            ^
+      142 |   await page.getByRole("button", { name: "Save" }).click();
+      143 |
+      144 |   await expect(page.locator("[data-graph-error]")).toHaveText(/already used/);
+        at /Users/denis.lantsman/src/edulab/packages/e2e/tests/graph.spec.ts:141:44
+    Error Context: packages/e2e/test-results/graph-a-duplicate-title-is-rejected-without-losing-the-draft/error-context.md
+  3) packages/e2e/tests/graph.spec.ts:149:1 › deleting a node takes its edges with it ──────────────
+    TimeoutError: locator.click: Timeout 5000ms exceeded.
+    Call log:
+      - waiting for getByRole('button', { name: 'Delete' })
+      150 |   await open(page);
+      151 |   await nodes(page).filter({ hasText: "closures" }).click();
+    > 152 |   await page.getByRole("button", { name: "Delete" }).click();
+          |                                                      ^
+      153 |
+      154 |   await expect(nodes(page)).toHaveText(["scope"]);
+      155 |   await expect(page.locator("[data-edge]")).toHaveCount(0);
+        at /Users/denis.lantsman/src/edulab/packages/e2e/tests/graph.spec.ts:152:54
+    Error Context: packages/e2e/test-results/graph-deleting-a-node-takes-its-edges-with-it/error-context.md
+  4) packages/e2e/tests/graph.spec.ts:159:1 › an edge is selectable and editable ───────────────────
+    Error: expect(locator).toHaveValue(expected) failed
+    Locator:  locator('[data-graph-title]')
+    Expected: "builds on"
+    Received: ""
+    Timeout:  5000ms
+    Call log:
+      - Expect "toHaveValue" locator('[data-graph-title]') with timeout 5000ms
+      - waiting for locator('[data-graph-title]')
+        14 × locator resolved to <input data-graph-title="" data-ref="graph-title_26"/>
+           - unexpected value ""
+      161 |   await page.locator("[data-edge-label]").click();
+      162 |
+    > 163 |   await expect(page.locator("[data-graph-title]")).toHaveValue("builds on");
+          |                                                    ^
+      164 |   await expect(page.locator("[data-graph-notes]")).toBeHidden();
+      165 |
+      166 |   await page.locator("[data-graph-title]").fill("requires");
+        at /Users/denis.lantsman/src/edulab/packages/e2e/tests/graph.spec.ts:163:52
+    Error Context: packages/e2e/test-results/graph-an-edge-is-selectable-and-editable/error-context.md
+  5) packages/e2e/tests/graph.spec.ts:442:1 › a cited message is one click away from the note that rests on it 
+    Error: expect(locator).toHaveCount(expected) failed
+    Locator:  locator('[data-citation]')
+    Expected: 1
+    Received: 0
+    Timeout:  5000ms
+    Call log:
+      - Expect "toHaveCount" locator('[data-citation]') with timeout 5000ms
+      - waiting for locator('[data-citation]')
+        14 × locator resolved to 0 elements
+           - unexpected value "0"
+      451 |   await seedNote(page, "shaky on framing @message:t1:0");
+      452 |   const chip = page.locator("[data-citation]");
+    > 453 |   await expect(chip).toHaveCount(1);
+          |                      ^
+      454 |   await expect(chip).toHaveText(/Selected/);
+      455 |
+      456 |   await chip.click();
+        at /Users/denis.lantsman/src/edulab/packages/e2e/tests/graph.spec.ts:453:22
+    Error Context: packages/e2e/test-results/graph-a-cited-message-is-o-8b0f7-m-the-note-that-rests-on-it/error-context.md
+  6) packages/e2e/tests/graph.spec.ts:464:1 › a citation that does not resolve is left as text ─────
+    Error: expect(locator).toHaveValue(expected) failed
+    Locator:  locator('[data-graph-notes]')
+    Expected: "invented @message:t9:4 and malformed @message:t0:"
+    Received: ""
+    Timeout:  5000ms
+    Call log:
+      - Expect "toHaveValue" locator('[data-graph-notes]') with timeout 5000ms
+      - waiting for locator('[data-graph-notes]')
+        14 × locator resolved to <textarea rows="3" data-graph-notes="" data-ref="graph-notes_30"></textarea>
+           - unexpected value ""
+      468 |
+      469 |   await expect(page.locator("[data-citation]")).toHaveCount(0);
+    > 470 |   await expect(page.locator("[data-graph-notes]")).toHaveValue(
+          |                                                    ^
+      471 |     "invented @message:t9:4 and malformed @message:t0:",
+      472 |   );
+      473 | });
+        at /Users/denis.lantsman/src/edulab/packages/e2e/tests/graph.spec.ts:470:52
+    Error Context: packages/e2e/test-results/graph-a-citation-that-does-not-resolve-is-left-as-text/error-context.md
+  7) packages/e2e/tests/graph.spec.ts:577:1 › an address written by a graph update navigates back to its turn 
+    Error: expect(locator).toHaveText(expected) failed
+    Locator: locator('[data-citation]')
+    Expected pattern: /how does backpressure work/
+    Timeout: 5000ms
+    Error: element(s) not found
+    Call log:
+      - Expect "toHaveText" locator('[data-citation]') with timeout 5000ms
+      - waiting for locator('[data-citation]')
+      585 |   await nodes(page).first().click();
+      586 |   const chip = page.locator("[data-citation]");
+    > 587 |   await expect(chip).toHaveText(/how does backpressure work/);
+          |                      ^
+      588 |
+      589 |   await chip.click();
+      590 |   await expect(threadsTab(page)).toHaveAttribute("aria-pressed", "true");
+        at /Users/denis.lantsman/src/edulab/packages/e2e/tests/graph.spec.ts:587:22
+    Error Context: packages/e2e/test-results/graph-an-address-written-b-ca694--navigates-back-to-its-turn/error-context.md
+  7 failed
+    packages/e2e/tests/graph.spec.ts:113:1 › clicking a node fills the sidebar and a retitle keeps its edges 
+    packages/e2e/tests/graph.spec.ts:136:1 › a duplicate title is rejected without losing the draft 
+    packages/e2e/tests/graph.spec.ts:149:1 › deleting a node takes its edges with it ───────────────
+    packages/e2e/tests/graph.spec.ts:159:1 › an edge is selectable and editable ────────────────────
+    packages/e2e/tests/graph.spec.ts:442:1 › a cited message is one click away from the note that rests on it 
+    packages/e2e/tests/graph.spec.ts:464:1 › a citation that does not resolve is left as text ──────
+    packages/e2e/tests/graph.spec.ts:577:1 › an address written by a graph update navigates back to its turn 
+  8 passed (11.8s)
+exit code 1

@@ -1,0 +1,7 @@
+$ cd /Users/denis.lantsman/src/edulab && grep -n "Every failure is\|// keys:" plans/2026-09-05-domain-graph.md
+stdout:
+70:Every failure is a `{ status: "error" }` `ToolResult` with a message the model can act on ("no node with id X"), never an exception. Every ok result carries the affected id back, so the model can address what it just created without re-reading anything.
+72:Every failure is a `{ status: "error" }` `ToolResult` with a message the model can act on ("no node with id X"), never an exception. Every ok result carries the affected id back, so the model can address what it just created without re-reading anything.
+155:// keys: get, put_node, delete_node, put_edge, delete_edge
+196:- No tool ever throws. Every failure is an error `ToolResult` whose text tells the model how to recover.
+exit code 0

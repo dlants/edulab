@@ -1,0 +1,83 @@
+$ cd packages/frontend && sed -n 495,560p graph-view.ts && sed -n 160,175p graph-view.ts
+stdout:
+    const titleRef = ref("graph-title");
+    const descriptionRef = ref("graph-description");
+    const descriptionChipsRef = ref("graph-description-chips");
+    const notesRowRef = ref("graph-notes-row");
+    const notesRef = ref("graph-notes");
+    const notesChipsRef = ref("graph-notes-chips");
+    const levelRowRef = ref("graph-level-row");
+    const levelRef = ref("graph-level");
+    const errorRef = ref("graph-error");
+    const saveRef = ref("graph-save");
+    const deleteRef = ref("graph-delete");
+    const closeRef = ref("graph-close");
+    container.className = graphClass;
+    container.innerHTML = sanitize`
+      <div class="${canvasClass}" data-graph-canvas data-ref="${canvasRef}">
+        <p class="${emptyClass}" data-ref="${emptyRef}">Nothing here yet.</p>
+        <div data-ref="${edgesRef}"></div>
+        <div class="${controlsClass}" data-ref="${controlsRef}">
+          <button type="button" data-graph-zoom-out data-ref="${zoomOutRef}">−</button>
+          <button type="button" data-graph-zoom-in data-ref="${zoomInRef}">+</button>
+          <button type="button" data-graph-reset-view data-ref="${resetRef}">reset</button>
+        </div>
+      </div>
+      <div class="${sidebarClass}" data-ref="${sidebarRef}">
+        <p data-ref="${closedRef}">Click a node or an edge to edit it.</p>
+        <div data-ref="${openRef}">
+          <strong data-graph-kind data-ref="${kindRef}"></strong>
+          <label>Title<input data-graph-title data-ref="${titleRef}" /></label>
+          <label>Description<textarea rows="3" data-graph-description data-ref="${descriptionRef}"></textarea></label>
+          <div class="${chipsClass}" data-description-citations data-ref="${descriptionChipsRef}"></div>
+          <label data-ref="${notesRowRef}">Notes<textarea rows="3" data-graph-notes data-ref="${notesRef}"></textarea></label>
+          <div class="${chipsClass}" data-notes-citations data-ref="${notesChipsRef}"></div>
+          <label data-ref="${levelRowRef}">Understanding<select data-graph-level data-ref="${levelRef}"></select></label>
+          <p class="${errorClass}" data-graph-error data-ref="${errorRef}"></p>
+          <div class="${actionsClass}">
+            <button type="button" data-ref="${saveRef}">Save</button>
+            <button type="button" data-ref="${deleteRef}">Delete</button>
+            <button type="button" data-ref="${closeRef}">Close</button>
+          </div>
+        </div>
+      </div>
+    `;
+    this.container = container;
+    this.b = new Binder(container, initial);
+    this.b.bindList(canvasRef, "div", (s) =>
+      s.nodes.map((node) =>
+        showKeyed(
+          node.id,
+          NodeView,
+          {
+            node,
+            pos: node.pos,
+            viewport: s.viewport,
+            selected: selectedId(s) === node.id,
+          },
+          {},
+          () => dispatch({ type: "SELECT_NODE", id: node.id }),
+        ),
+      ),
+    );
+    this.b.bindList(edgesRef, "div", (s) =>
+      s.edges.map((edge) =>
+        showKeyed(
+          edge.id,
+  border-radius: 0.3rem;
+  background: rgba(255, 255, 255, 0.9);
+  cursor: pointer;
+}
+.${emptyClass} {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.5;
+  font-style: italic;
+}
+.${nodeClass} {
+  position: absolute;
+  transform: translate(-50%, -50%);
+exit code 0

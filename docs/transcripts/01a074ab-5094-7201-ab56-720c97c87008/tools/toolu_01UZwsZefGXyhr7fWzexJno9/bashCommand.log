@@ -1,0 +1,7 @@
+$ cd /Users/denis.lantsman/src/edulab && perl -0pi -e 's/  await deeper\(page\)\.click\(\);\n  await selectRange\(page, 0, 0, 5\);/  await deeper(page).click();\n  await selectRange(page, 1, 0, 5);/g; s/  await deeper\(page\)\.click\(\);\n  const sent = backend\.started\.length;\n  await selectRange\(page, 0, 6, 10\);/  await deeper(page).click();\n  const sent = backend.started.length;\n  await selectRange(page, 1, 6, 10);/g' packages/e2e/tests/chat.spec.ts && grep -n "selectRange(page, 1" packages/e2e/tests/chat.spec.ts
+stdout:
+422:  await selectRange(page, 1, 0, 5);
+446:  await selectRange(page, 1, 0, 5);
+452:  await selectRange(page, 1, 6, 10);
+481:  await selectRange(page, 1, 0, 5);
+exit code 0

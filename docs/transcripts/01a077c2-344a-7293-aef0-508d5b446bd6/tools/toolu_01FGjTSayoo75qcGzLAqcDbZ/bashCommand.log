@@ -1,0 +1,6 @@
+$ cd packages/frontend && wc -l view.ts thread.ts && ls *.css ../../*.css 2>/dev/null; find .. -name '*.css' -not -path '*node_modules*'
+stdout:
+    1302 view.ts
+     713 thread.ts
+    2015 total
+exit code 0

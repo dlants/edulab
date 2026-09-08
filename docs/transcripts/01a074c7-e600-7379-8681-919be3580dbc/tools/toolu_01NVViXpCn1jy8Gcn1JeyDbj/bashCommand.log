@@ -1,0 +1,4 @@
+$ cd /Users/denis.lantsman/src/edulab && git add -A && git commit -q -m "Graph tab: pan/zoom, two-column layout, level styling, edge arrowheads" && git push -q && git log --oneline -1
+stdout:
+3ec923f Graph tab: pan/zoom, two-column layout, level styling, edge arrowheads
+exit code 0

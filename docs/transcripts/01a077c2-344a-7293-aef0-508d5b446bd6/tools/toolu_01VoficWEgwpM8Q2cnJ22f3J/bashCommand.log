@@ -1,0 +1,30 @@
+$ cd /Users/denis.lantsman/src/edulab/packages/e2e && sed -i '' "s|.locator(\"\[data-ref^='mark-list'\]\").getByRole(\"button\")|.locator(\"[data-ref^='mark-list'] button\")|" tests/chat.spec.ts && npx playwright test -g "already opened"
+stdout:
+Running 1 test using 1 worker
+  ✘  1 tests/chat.spec.ts:390:1 › with nothing selected the pane lists the passages already opened (5.3s)
+  1) tests/chat.spec.ts:390:1 › with nothing selected the pane lists the passages already opened ───
+    Error: expect(locator).toHaveText(expected) failed
+    Locator: locator('[data-ref^=\'mark-list\'] button')
+    Timeout: 5000ms
+    - Expected  - 3
+    + Received  + 1
+    - Array [
+    -   "the quick",
+    - ]
+    + Array []
+    Call log:
+      - Expect "toHaveText" locator('[data-ref^=\'mark-list\'] button') with timeout 5000ms
+      - waiting for locator('[data-ref^=\'mark-list\'] button')
+        14 × locator resolved to 0 elements
+      399 |   await taskTranscript(page).locator("li").first().click();
+      400 |   const list = page.locator("[data-ref^='mark-list'] button");
+    > 401 |   await expect(list).toHaveText([SENTENCE.slice(0, 9)]);
+          |                      ^
+      402 |   await list.click();
+      403 |   await expect(threadTranscript(page).locator("li")).toHaveCount(2);
+      404 | });
+        at /Users/denis.lantsman/src/edulab/packages/e2e/tests/chat.spec.ts:401:22
+    Error Context: test-results/chat-with-nothing-selected-1a126-the-passages-already-opened/error-context.md
+  1 failed
+    tests/chat.spec.ts:390:1 › with nothing selected the pane lists the passages already opened ────
+exit code 1

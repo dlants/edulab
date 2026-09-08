@@ -1,0 +1,10 @@
+$ cd /Users/denis.lantsman/src/edulab && grep -rn "selectSample\|\.sample\b\|Thread.log\|get log\|systemPrompt" packages/frontend --include=*.ts | grep -v node_modules
+stdout:
+packages/frontend/view.ts:899:    this.b.bindValue(sampleRef, (s) => s.sample);
+packages/frontend/samples/index.ts:60:export function selectSample(id: string | undefined): void {
+packages/frontend/prototypes/chat.ts:22:import { selectedSample, selectSample } from "../samples/index.ts";
+packages/frontend/prototypes/chat.ts:422:        selectSample(msg.id === "" ? undefined : msg.id);
+packages/frontend/thread.test.ts:643:    system: thread.systemPrompt,
+packages/frontend/thread.ts:290:  get log(): ReadonlyArray<Anthropic.MessageParam> {
+packages/frontend/thread.ts:293:  get systemPrompt(): string {
+exit code 0

@@ -1,0 +1,30 @@
+$ cd /Users/denis.lantsman/src/edulab && npx playwright test --config packages/e2e/playwright.config.ts persistence -g "re-enqueued" --reporter=line
+stdout:
+Running 1 test using 1 worker
+[1/1] packages/e2e/tests/persistence.spec.ts:197:1 › an interaction whose update never finished is re-enqueued
+packages/e2e/tests/persistence.spec.ts:197:1 › an interaction whose update never finished is re-enqueued
+browser debug [vite] connecting...
+browser debug [vite] connected.
+stored {"version":1,"threads":[{"id":"t0","origin":null,"system":"You are a capable engineering assistant helping the user complete a task. Work the problem directly: make concrete decisions, write real code, and state your reasoning as you go rather than asking the user to supply it. Be concise. Do not quiz the user, do not pad explanations for a beginner, and do not check whether they are following - just do the work well.","log":[{"role":"user","content":"the quick brown fox jumps over the lazy dog"},{"role":"assistant","content":[{"type":"text","text":"ok"}]}],"children":[],"activeChild":null,"draft":""}],"nextThreadId":1,"root":"t0","graph":{"nodes":[],"edges":[],"next":0},"updates":[],"build":{"type":"idle"}}
+browser debug [vite] connecting...
+browser debug [vite] connected.
+browser error DOMException: Failed to execute 'send' on 'WebSocket': Still in CONNECTING state.
+after {"version":1,"threads":[{"id":"t0","origin":null,"system":"You are a capable engineering assistant helping the user complete a task. Work the problem directly: make concrete decisions, write real code, and state your reasoning as you go rather than asking the user to supply it. Be concise. Do not quiz the user, do not pad explanations for a beginner, and do not check whether they are following - just do the work well.","log":[{"role":"user","content":"the quick brown fox jumps over the lazy dog"},{"role":"assistant","content":[{"type":"text","text":"ok"}]}],"children":[],"activeChild":null,"draft":""}],"nextThreadId":1,"root":"t0","graph":{"nodes":[],"edges":[],"next":0},"updates":[],"build":{"type":"idle"}}
+  1) packages/e2e/tests/persistence.spec.ts:197:1 › an interaction whose update never finished is re-enqueued 
+    Error: expect(received).toBe(expected) // Object.is equality
+    Expected: 2
+    Received: 1
+    Call Log:
+    - Timeout 5000ms exceeded while waiting on the predicate
+      228 |     await page.evaluate((key) => localStorage.getItem(key), KEY),
+      229 |   );
+    > 230 |   await expect.poll(() => counts.updates).toBe(before + 1);
+          |                                           ^
+      231 |   expect(counts.turns).toBe(1);
+      232 | });
+      233 |
+        at /Users/denis.lantsman/src/edulab/packages/e2e/tests/persistence.spec.ts:230:43
+    Error Context: packages/e2e/test-results/persistence-an-interaction-a1084-ver-finished-is-re-enqueued/error-context.md
+  1 failed
+    packages/e2e/tests/persistence.spec.ts:197:1 › an interaction whose update never finished is re-enqueued 
+exit code 1

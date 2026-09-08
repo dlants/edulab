@@ -1,0 +1,151 @@
+$ cd /Users/denis.lantsman/src/edulab && npm run test:e2e
+stdout:
+> edulab@0.0.1 test:e2e
+> npm -w @edulab/e2e run test
+> @edulab/e2e@0.0.1 test
+> playwright test
+Running 41 tests using 7 workers
+  ✓   7 tests/chat.spec.ts:231:1 › a second turn sends the full thread (411ms)
+  ✓   6 tests/chat.spec.ts:217:1 › the composer is disabled while a turn is in flight (454ms)
+  ✓   1 tests/chat.spec.ts:201:1 › streams a response into the transcript (444ms)
+  ✓   2 tests/chat.spec.ts:294:1 › an action opens a thread seeded with the selected passage (564ms)
+  ✓   5 tests/chat.spec.ts:249:1 › a live selection overlapping a mark offers no actions (551ms)
+  ✓   4 tests/chat.spec.ts:321:1 › a follow-up in the thread pane re-sends the seed (579ms)
+  ✓   3 tests/chat.spec.ts:271:1 › two marks in one message are both clickable (690ms)
+  ✓   9 tests/chat.spec.ts:392:1 › the arrows name the layer and stop at the ends (260ms)
+  ✓   8 tests/chat.spec.ts:340:1 › clicking a mark reopens its thread without a new request (385ms)
+  ✓  10 tests/chat.spec.ts:409:1 › a thread opened at depth carries both selections once (410ms)
+  ✓  11 tests/chat.spec.ts:445:1 › a descended thread shows what it was opened from, in its transcript (332ms)
+  ✓  14 tests/chat.spec.ts:510:1 › a tool call is rendered and text above it stays selectable (317ms)
+  ✓  16 tests/chat.spec.ts:622:1 › a turn shows its graph update working, then what it changed (220ms)
+  ✓  15 tests/chat.spec.ts:535:1 › a new selection leaves committed marks rendered (309ms)
+  ✓  13 tests/chat.spec.ts:488:1 › nesting goes three deep (439ms)
+  ✓  17 tests/chat.spec.ts:638:1 › an update that writes nothing says so (174ms)
+  ✓  12 tests/chat.spec.ts:464:1 › ← climbs back without losing threads or highlights (503ms)
+  ✓  18 tests/graph.spec.ts:92:1 › switching tabs leaves the transcript and the graph intact (293ms)
+  ✓  19 tests/graph.spec.ts:113:1 › clicking a node fills the sidebar and a retitle keeps its edges (300ms)
+  ✓  20 tests/graph.spec.ts:136:1 › a duplicate title is rejected without losing the draft (302ms)
+  ✓  21 tests/graph.spec.ts:149:1 › deleting a node takes its edges with it (321ms)
+  ✓  22 tests/graph.spec.ts:159:1 › an edge is selectable and editable (339ms)
+  ✓  25 tests/graph.spec.ts:339:1 › every interaction updates the graph, one update at a time (259ms)
+  ✓  24 tests/graph.spec.ts:199:1 › dragging the canvas pans the graph but still selects on a click (393ms)
+  ✓  23 tests/graph.spec.ts:180:1 › zooming spreads the nodes without resizing them, and reset restores (434ms)
+  ✓  27 tests/graph.spec.ts:396:1 › a failed graph update leaves the app usable (186ms)
+  ✓  26 tests/graph.spec.ts:365:1 › opening a learning thread updates the graph from its ask (341ms)
+  ✓  31 tests/graph.spec.ts:515:1 › a citation that does not resolve is left as text (203ms)
+  ✓  34 tests/graph.spec.ts:647:1 › clicking a change opens the graph tab with that node selected (175ms)
+  ✓  33 tests/graph.spec.ts:628:1 › an address written by a graph update navigates back to its turn (320ms)
+  ✓  32 tests/graph.spec.ts:493:1 › a cited message is one click away from the note that rests on it (410ms)
+  ✓  29 tests/graph.spec.ts:433:1 › a failed update mid-build does not stop the ones after it (4.9s)
+  ✘  39 tests/persistence.spec.ts:270:1 › an unreadable snapshot is dropped and the app comes up bare (140ms)
+  ✓  28 tests/graph.spec.ts:416:1 › building from a sample transcript walks its turns once (5.1s)
+  ✘  35 tests/persistence.spec.ts:153:1 › a reload keeps the transcript, the graph and the update chips (5.1s)
+  ✘  37 tests/persistence.spec.ts:202:1 › an interaction whose update never finished is re-enqueued (5.0s)
+  ✘  36 tests/persistence.spec.ts:180:1 › a reload keeps a learning thread behind its mark (5.1s)
+  ✘  38 tests/persistence.spec.ts:228:1 › a build interrupted by a refresh resumes where it stopped (5.1s)
+  ✓  30 tests/graph.spec.ts:445:1 › interacting mid-build interleaves rather than races (5.9s)
+  ✓  40 tests/smoke.spec.ts:9:1 › streams a real response end to end (1.4s)
+  ✘  41 tests/persistence.spec.ts:289:1 › Reset clears this sample's state for good (5.0s)
+  1) tests/persistence.spec.ts:153:1 › a reload keeps the transcript, the graph and the update chips 
+    Error: expect(received).not.toBeNull()
+    Received: null
+    Call Log:
+    - Timeout 5000ms exceeded while waiting on the predicate
+      109 |   await expect
+      110 |     .poll(() => page.evaluate((key) => localStorage.getItem(key), KEY))
+    > 111 |     .not.toBeNull();
+          |          ^
+      112 |   await page.waitForTimeout(600);
+      113 | }
+      114 |
+        at settled (/Users/denis.lantsman/src/edulab/packages/e2e/tests/persistence.spec.ts:111:10)
+        at /Users/denis.lantsman/src/edulab/packages/e2e/tests/persistence.spec.ts:165:9
+    Error Context: test-results/persistence-a-reload-keeps-dbf95--graph-and-the-update-chips/error-context.md
+  2) tests/persistence.spec.ts:180:1 › a reload keeps a learning thread behind its mark ────────────
+    Error: expect(received).not.toBeNull()
+    Received: null
+    Call Log:
+    - Timeout 5000ms exceeded while waiting on the predicate
+      109 |   await expect
+      110 |     .poll(() => page.evaluate((key) => localStorage.getItem(key), KEY))
+    > 111 |     .not.toBeNull();
+          |          ^
+      112 |   await page.waitForTimeout(600);
+      113 | }
+      114 |
+        at settled (/Users/denis.lantsman/src/edulab/packages/e2e/tests/persistence.spec.ts:111:10)
+        at /Users/denis.lantsman/src/edulab/packages/e2e/tests/persistence.spec.ts:190:9
+    Error Context: test-results/persistence-a-reload-keeps-a-learning-thread-behind-its-mark/error-context.md
+  3) tests/persistence.spec.ts:202:1 › an interaction whose update never finished is re-enqueued ───
+    Error: expect(received).not.toBeNull()
+    Received: null
+    Call Log:
+    - Timeout 5000ms exceeded while waiting on the predicate
+      109 |   await expect
+      110 |     .poll(() => page.evaluate((key) => localStorage.getItem(key), KEY))
+    > 111 |     .not.toBeNull();
+          |          ^
+      112 |   await page.waitForTimeout(600);
+      113 | }
+      114 |
+        at settled (/Users/denis.lantsman/src/edulab/packages/e2e/tests/persistence.spec.ts:111:10)
+        at /Users/denis.lantsman/src/edulab/packages/e2e/tests/persistence.spec.ts:211:9
+    Error Context: test-results/persistence-an-interaction-a1084-ver-finished-is-re-enqueued/error-context.md
+  4) tests/persistence.spec.ts:228:1 › a build interrupted by a refresh resumes where it stopped ───
+    Error: expect(received).not.toBeNull()
+    Received: null
+    Call Log:
+    - Timeout 5000ms exceeded while waiting on the predicate
+      242 |   await expect
+      243 |     .poll(() => page.evaluate((k) => localStorage.getItem(k), key))
+    > 244 |     .not.toBeNull();
+          |          ^
+      245 |   await page.waitForTimeout(600);
+      246 |   const total = await page.evaluate((k) => {
+      247 |     const snapshot = JSON.parse(localStorage.getItem(k) as string) as {
+        at /Users/denis.lantsman/src/edulab/packages/e2e/tests/persistence.spec.ts:244:10
+    Error Context: test-results/persistence-a-build-interr-d0f1e-sh-resumes-where-it-stopped/error-context.md
+  5) tests/persistence.spec.ts:270:1 › an unreadable snapshot is dropped and the app comes up bare ─
+    Error: expect(received).not.toBe(expected) // Object.is equality
+    Expected: not "{ not json"
+      282 |   await graphTab(page).click();
+      283 |   await expect(page.locator("[data-node]")).toHaveCount(0);
+    > 284 |   expect(await page.evaluate((key) => localStorage.getItem(key), KEY)).not.toBe(
+          |                                                                            ^
+      285 |     "{ not json",
+      286 |   );
+      287 | });
+        at /Users/denis.lantsman/src/edulab/packages/e2e/tests/persistence.spec.ts:284:76
+    Error Context: test-results/persistence-an-unreadable--2b954-d-and-the-app-comes-up-bare/error-context.md
+  6) tests/persistence.spec.ts:289:1 › Reset clears this sample's state for good ───────────────────
+    Error: expect(received).not.toBeNull()
+    Received: null
+    Call Log:
+    - Timeout 5000ms exceeded while waiting on the predicate
+      109 |   await expect
+      110 |     .poll(() => page.evaluate((key) => localStorage.getItem(key), KEY))
+    > 111 |     .not.toBeNull();
+          |          ^
+      112 |   await page.waitForTimeout(600);
+      113 | }
+      114 |
+        at settled (/Users/denis.lantsman/src/edulab/packages/e2e/tests/persistence.spec.ts:111:10)
+        at /Users/denis.lantsman/src/edulab/packages/e2e/tests/persistence.spec.ts:296:9
+    Error Context: test-results/persistence-Reset-clears-this-sample-s-state-for-good/error-context.md
+  6 failed
+    tests/persistence.spec.ts:153:1 › a reload keeps the transcript, the graph and the update chips 
+    tests/persistence.spec.ts:180:1 › a reload keeps a learning thread behind its mark ─────────────
+    tests/persistence.spec.ts:202:1 › an interaction whose update never finished is re-enqueued ────
+    tests/persistence.spec.ts:228:1 › a build interrupted by a refresh resumes where it stopped ────
+    tests/persistence.spec.ts:270:1 › an unreadable snapshot is dropped and the app comes up bare ──
+    tests/persistence.spec.ts:289:1 › Reset clears this sample's state for good ────────────────────
+  35 passed (14.9s)
+stderr:
+npm error Lifecycle script `test` failed with error:
+npm error code 1
+npm error path /Users/denis.lantsman/src/edulab/packages/e2e
+npm error workspace @edulab/e2e@0.0.1
+npm error location /Users/denis.lantsman/src/edulab/packages/e2e
+npm error command failed
+npm error command sh -c playwright test
+exit code 1

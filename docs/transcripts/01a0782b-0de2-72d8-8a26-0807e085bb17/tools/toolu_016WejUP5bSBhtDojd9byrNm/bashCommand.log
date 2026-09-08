@@ -1,0 +1,195 @@
+$ cd /Users/denis.lantsman/src/edulab && sed -n 150,260p packages/e2e/tests/chat.spec.ts && echo ---- && sed -n 370,420p packages/e2e/tests/chat.spec.ts && echo ---- && sed -n 530,580p packages/e2e/tests/chat.spec.ts
+stdout:
+/** As `selectRange`, but over the transcript in the `ul`th pane: 0 is the left
+ * pane, 1 the thread on the right. */
+async function selectRangeIn(
+  page: Page,
+  ul: number,
+  msg: number,
+  start: number,
+  end: number,
+) {
+  await page.evaluate(
+    ({ ul, msg, start, end }) => {
+      const li = document.querySelectorAll("ul")[ul].children[msg];
+      // The text span is where the offsets the app anchors into live.
+      const root = li.querySelector("[data-text]") as HTMLElement;
+      const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+      let at = 0;
+      let from: [Node, number] | null = null;
+      let to: [Node, number] | null = null;
+      let node = walker.nextNode();
+      while (node) {
+        const len = node.textContent?.length ?? 0;
+        if (!from && start <= at + len) from = [node, start - at];
+        if (!to && end <= at + len) to = [node, end - at];
+        at += len;
+        node = walker.nextNode();
+      }
+      if (!from || !to) throw new Error("range out of bounds");
+      const range = document.createRange();
+      range.setStart(from[0], from[1]);
+      range.setEnd(to[0], to[1]);
+      const selection = window.getSelection();
+      selection?.removeAllRanges();
+      selection?.addRange(range);
+    },
+    { ul, msg, start, end },
+  );
+  await page.locator("ul").nth(ul).dispatchEvent("mouseup");
+}
+/** The right pane's transcript, present only while a thread is open there. */
+function threadTranscript(page: Page) {
+  return page.locator("ul").nth(1);
+}
+/** The left pane's transcript. The right pane renders its own <ul>. */
+function taskTranscript(page: Page) {
+  return page.locator("ul").first();
+}
+const SENTENCE = "the quick brown fox jumps over the lazy dog";
+/** A transcript with one user message of known text, in learning mode. */
+async function transcript(
+  page: Page,
+  chunks: string[] = ["ok"],
+  reflect = true,
+) {
+  const backend = await fakeBackend(page, chunks);
+  backend.release();
+  await page.goto("/");
+  await page.getByRole("textbox").fill(SENTENCE);
+  await page.getByRole("textbox").press("Enter");
+  await expect(taskTranscript(page).locator("li")).toHaveCount(2);
+  if (reflect) await page.getByRole("button", { name: "Reflect" }).click();
+  return backend;
+}
+test("streams a response into the transcript", async ({ page }) => {
+  const backend = await fakeBackend(page, ["Hello", ", world"]);
+  await page.goto("/");
+  await page.getByRole("textbox").fill("hi");
+  await page.getByRole("button", { name: "Send" }).click();
+  await expect(page.locator('[data-role="user"]')).toHaveText(/hi/);
+  backend.release();
+  await expect(page.locator('[data-role="assistant"]')).toHaveText(
+    /Hello, world/,
+  );
+  await expect(taskTranscript(page).locator("li")).toHaveCount(2);
+});
+test("the composer is disabled while a turn is in flight", async ({ page }) => {
+  const backend = await fakeBackend(page, ["ok"]);
+  await page.goto("/");
+  const input = page.getByRole("textbox");
+  await input.fill("hi");
+  await page.getByRole("button", { name: "Send" }).click();
+  await expect(input).toBeDisabled();
+  backend.release();
+  await expect(input).toBeEnabled();
+  await expect(input).toHaveValue("");
+});
+test("a second turn sends the full thread", async ({ page }) => {
+  const backend = await fakeBackend(page, ["ok"]);
+  backend.release();
+  await page.goto("/");
+  const input = page.getByRole("textbox");
+  await input.fill("first");
+  await input.press("Enter");
+  await expect(taskTranscript(page).locator("li")).toHaveCount(2);
+  await input.fill("second");
+  await input.press("Enter");
+  await expect(taskTranscript(page).locator("li")).toHaveCount(4);
+----
+  await expect(threadTranscript(page).locator("li").first()).toContainText(
+    "I don't understand this.",
+  );
+  await expect(threadTranscript(page).locator("li")).toHaveCount(2);
+  expect(backend.started).toHaveLength(sent);
+});
+test("a mark clicked with the reflect column closed reopens it", async ({
+  page,
+}) => {
+  await transcript(page);
+  await selectRange(page, 0, 0, 9);
+  await page.getByRole("button", { name: "I don't understand this." }).click();
+  await expect(threadTranscript(page).locator("li")).toHaveCount(2);
+  await page.getByRole("button", { name: "← Back" }).click();
+  await expect(threadTranscript(page)).toHaveCount(0);
+  await page.locator("[data-mark]").first().click();
+  await expect(threadTranscript(page).locator("li")).toHaveCount(2);
+});
+test("with nothing selected the pane lists the passages already opened", async ({
+  page,
+}) => {
+  await transcript(page);
+  await selectRange(page, 0, 0, 9);
+  await page.getByRole("button", { name: "I don't understand this." }).click();
+  await expect(threadTranscript(page).locator("li")).toHaveCount(2);
+  // A collapsed selection drops both the anchor and the open thread, which
+  // leaves the pane on its empty state.
+  await selectRange(page, 0, 20, 20);
+  const list = page.locator("[data-ref^='mark-list'] button");
+  await expect(list).toHaveText([SENTENCE.slice(0, 9)]);
+  await list.click();
+  await expect(threadTranscript(page).locator("li")).toHaveCount(2);
+});
+const REPLY = "alpha beta gamma delta";
+function explainButton(page: Page) {
+  return page.getByRole("button", { name: "I don't understand this." });
+}
+function quizButton(page: Page) {
+  return page.getByRole("button", { name: "Quiz me on this." });
+}
+function deeper(page: Page) {
+  return page.getByRole("button", { name: /→/ });
+}
+function back(page: Page) {
+----
+  await deeper(page).click();
+  await expect(page.getByText("Layer 3")).toBeVisible();
+  expect(backend.started).toHaveLength(sent);
+});
+test("a selection at layer 0 opens a thread from the popup", async ({
+  page,
+}) => {
+  await transcript(page, [REPLY], false);
+  await expect(explainButton(page)).toBeHidden();
+  await selectRange(page, 0, 0, 9);
+  await explainButton(page).click();
+  await expect(page.getByText("Layer 1")).toBeVisible();
+  await expect(threadTranscript(page).locator("li").first()).toContainText(
+    'Selected: "the quick"',
+  );
+  await expect(explainButton(page)).toBeHidden();
+});
+test("the popup's own question hands off to the pane's composer", async ({
+  page,
+}) => {
+  await transcript(page, [REPLY], false);
+  await selectRange(page, 0, 0, 9);
+  await page.getByRole("button", { name: "Ask your own question…" }).click();
+  const composer = page.getByPlaceholder("Ask your own question…");
+  await expect(composer).toBeFocused();
+  await composer.type("why this?");
+  await composer.press("Enter");
+  await expect(threadTranscript(page).locator("li").first()).toContainText(
+    "why this?",
+  );
+});
+test("a selection in the reflect thread opens the layer below it", async ({
+  page,
+}) => {
+  await transcript(page, [REPLY]);
+  await selectRange(page, 0, 0, 9);
+  await explainButton(page).click();
+  await expect(threadTranscript(page).locator("li")).toHaveCount(2);
+  // The reply in the thread on the right, which has no pane of its own.
+  await selectRangeIn(page, 1, 1, 0, 5);
+  await quizButton(page).click();
+  await expect(page.getByText("Layer 2")).toBeVisible();
+  await expect(taskTranscript(page).locator("[data-mark]")).toHaveText("alpha");
+  await expect(threadTranscript(page).locator("li").first()).toContainText(
+    'Selected: "alpha"',
+  );
+});
+test("nesting goes three deep", async ({ page }) => {
+  const backend = await transcript(page, [REPLY]);
+  await selectRange(page, 0, 0, 9);
+exit code 0

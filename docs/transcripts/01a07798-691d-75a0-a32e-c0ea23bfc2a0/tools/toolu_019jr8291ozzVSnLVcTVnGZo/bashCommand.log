@@ -1,0 +1,7 @@
+$ cd /Users/denis.lantsman/src/edulab && grep -n "VERSION" packages/frontend/persistence.ts
+stdout:
+10:export const VERSION = 2;
+56:  return `edulab:v${VERSION}:${sample ?? "own"}` as StorageKey;
+80:    s.version === VERSION &&
+147:    version: VERSION,
+exit code 0

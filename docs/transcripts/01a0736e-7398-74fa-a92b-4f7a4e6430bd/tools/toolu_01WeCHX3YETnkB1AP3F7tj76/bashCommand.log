@@ -1,0 +1,6 @@
+$ cd /Users/denis.lantsman/src/edulab && npm run typecheck && git add -A && git commit -m "Stage 3: prompt and wiring" -q && git log --oneline -1
+stdout:
+> edulab@0.0.1 typecheck
+> npm -w @edulab/iso exec tsc -- --noEmit && npm -w @edulab/frontend exec tsc -- --noEmit && npm -w @edulab/backend exec tsc -- --noEmit && npm -w @edulab/e2e exec tsc -- --noEmit
+7add28b Stage 3: prompt and wiring
+exit code 0

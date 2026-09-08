@@ -1,0 +1,446 @@
+$ cd /Users/denis.lantsman/src/edulab && cat packages/frontend/threads.ts packages/frontend/prompt.test.ts && sed -n 1,80p packages/frontend/threads.test.ts && cat packages/frontend/prototypes/chat.ts
+stdout:
+import type Anthropic from "@anthropic-ai/sdk";
+import { type Action, LEARNING_SYSTEM, seedTurn } from "./prompt.ts";
+import type { Anchor, Mark, ThreadId } from "./selection.ts";
+import type { Tool, ToolName, TurnResult } from "./thread.ts";
+import { type Socket, Thread } from "./thread.ts";
+export type { Action };
+/** `anchor.thread` is the parent, so the link upward is the highlight itself. */
+export type Origin = { anchor: Anchor; action: Action };
+/** What a child thread is given beyond its seed. */
+export type ChildOpts = {
+  tools?: Record<ToolName, Tool>;
+  yieldSchema?: Anthropic.Tool.InputSchema | "text";
+};
+export type TreeNode = {
+  id: ThreadId;
+  /** null only for the root task thread. */
+  origin: Origin | null;
+  thread: Thread;
+  /** Creation order; each child's `origin.anchor` is its highlight. */
+  children: ThreadId[];
+  activeChild: ThreadId | null;
+  draft: string;
+};
+/** The tree of threads. Every thread but the root was opened from a
+ * passage of its parent, so a thread and the highlight over its parent are the
+ * same edge seen from either end. Threads are never destroyed or reparented. */
+export class ThreadTree {
+  private readonly threads = new Map<ThreadId, TreeNode>();
+  private nextId = 0;
+  readonly root: ThreadId;
+  private readonly socket: Socket;
+  /** Attached to every thread the tree owns, so a stream anywhere in the
+   * tree re-syncs the app. */
+  private readonly onChange: () => void;
+  constructor(socket: Socket, root: Thread, onChange: () => void) {
+    this.socket = socket;
+    this.onChange = onChange;
+    this.root = this.add(null, root);
+  }
+  get(id: ThreadId): TreeNode {
+    const node = this.threads.get(id);
+    if (!node) throw new Error(`unknown thread ${id}`);
+    return node;
+  }
+  /** Seeds a child thread from the parent's own seed plus its transcript
+   * up to `anchor`, links it in, and makes it the parent's active child. The
+   * caller starts it: the tree does not own the request lifecycle. */
+  open(anchor: Anchor, action: Action, opts: ChildOpts = {}): ThreadId {
+    const parent = this.get(anchor.thread);
+    const thread = new Thread(this.socket, {
+      system: LEARNING_SYSTEM,
+      seed: seedTurn(
+        parent.thread.seed,
+        parent.thread.messages,
+        anchor,
+        action,
+      ),
+      tools: opts.tools,
+      yieldSchema: opts.yieldSchema,
+    });
+    const id = this.add({ anchor, action }, thread);
+    parent.children.push(id);
+    parent.activeChild = id;
+    return id;
+  }
+  /** What a child thread settled with, once it has yielded. The parent renders
+   * threads it never awaited, so the settled value has to be readable here. */
+  result(id: ThreadId): TurnResult | undefined {
+    return this.get(id).thread.result;
+  }
+  /** The highlights to draw over `id`'s transcript: one per child. */
+  marks(id: ThreadId): Mark[] {
+    return this.get(id).children.map((child) => {
+      const origin = this.get(child).origin;
+      if (!origin) throw new Error("child thread without an origin");
+      return { thread: child, anchor: origin.anchor };
+    });
+  }
+  /** root -> id, for the depth indicator. */
+  path(id: ThreadId): ThreadId[] {
+    const out: ThreadId[] = [];
+    let at: ThreadId | undefined = id;
+    while (at) {
+      out.unshift(at);
+      at = this.get(at).origin?.anchor.thread;
+    }
+    return out;
+  }
+  private add(origin: Origin | null, thread: Thread): ThreadId {
+    const id = `t${this.nextId++}` as ThreadId;
+    thread.onChange = this.onChange;
+    this.threads.set(id, {
+      id,
+      origin,
+      thread,
+      children: [],
+      activeChild: null,
+      draft: "",
+    });
+    return id;
+  }
+}
+import { expect, it } from "vitest";
+import { seedTurn } from "./prompt.ts";
+import type { Anchor, ThreadId } from "./selection.ts";
+const messages = [
+  { type: "text" as const, role: "user" as const, text: "build a parser" },
+  {
+    type: "text" as const,
+    role: "assistant" as const,
+    text: "I used a recursive descent approach.",
+  },
+  { type: "text" as const, role: "user" as const, text: "thanks" },
+] as const;
+const at = (
+  startMsg: number,
+  start: number,
+  endMsg: number,
+  end: number,
+): Anchor => ({
+  thread: "root" as ThreadId,
+  start: { msg: startMsg, offset: start },
+  end: { msg: endMsg, offset: end },
+});
+it("quotes the selection verbatim", () => {
+  const seed = seedTurn(undefined, messages, at(1, 9, 1, 26), {
+    type: "explain",
+  });
+  expect(seed).toContain('The user then selected: "recursive descent"');
+});
+it("quotes a selection spanning two messages", () => {
+  const seed = seedTurn(undefined, messages, at(0, 6, 1, 6), { type: "quiz" });
+  expect(seed).toContain('selected: "a parser\n\nI used"');
+});
+it("truncates the transcript after the message containing the selection end", () => {
+  const seed = seedTurn(undefined, messages, at(1, 0, 1, 5), {
+    type: "explain",
+  });
+  expect(seed).toContain("build a parser");
+  expect(seed).not.toContain("thanks");
+});
+it("distinguishes the three actions and carries a query through", () => {
+  const anchor = at(1, 9, 1, 26);
+  const explain = seedTurn(undefined, messages, anchor, { type: "explain" });
+  const quiz = seedTurn(undefined, messages, anchor, { type: "quiz" });
+  const query = seedTurn(undefined, messages, anchor, {
+    type: "query",
+    text: "why not a parser generator?",
+  });
+  expect(new Set([explain, quiz, query]).size).toBe(3);
+  expect(query).toContain("why not a parser generator?");
+});
+it("composes flat at depth, oldest section first", () => {
+  const root = seedTurn(undefined, messages, at(1, 9, 1, 26), {
+    type: "explain",
+  });
+  const level1 = [
+    {
+      type: "text" as const,
+      role: "assistant" as const,
+      text: "It parses top-down.",
+    },
+  ] as const;
+  const depth2 = seedTurn(root, level1, at(0, 10, 0, 18), { type: "quiz" });
+  expect(depth2).toBe(
+    [
+      "User: build a parser",
+      "",
+      "Assistant: I used a recursive descent approach.",
+      "",
+      'The user then selected: "recursive descent"',
+      "They said they don't understand this. Explain what it means and why it is there.",
+      "",
+      "Assistant: It parses top-down.",
+      "",
+      'The user then selected: "top-down"',
+      "They asked to be quizzed on this. Ask one question that checks whether they understand it, and wait for their answer.",
+    ].join("\n"),
+  );
+  expect(depth2.startsWith(root)).toBe(true);
+  expect(depth2.split("build a parser")).toHaveLength(2);
+  const level2 = [
+    {
+      type: "text" as const,
+      role: "assistant" as const,
+      text: "Question: what is a token?",
+    },
+  ] as const;
+  const depth3 = seedTurn(depth2, level2, at(0, 0, 0, 8), {
+    type: "query",
+    text: "what?",
+  });
+  expect(depth3.startsWith(depth2)).toBe(true);
+  expect(depth3.split("build a parser")).toHaveLength(2);
+  expect(depth3.split("It parses top-down")).toHaveLength(2);
+});
+import type Anthropic from "@anthropic-ai/sdk";
+import type { ClientMessage } from "@edulab/iso/protocol.ts";
+import { expect, it } from "vitest";
+import type { Anchor } from "./selection.ts";
+import { type Socket, Thread } from "./thread.ts";
+import { ThreadTree } from "./threads.ts";
+class FakeSocket implements Socket {
+  readonly sent: ClientMessage[] = [];
+  private readonly listeners: ((e: MessageEvent<string>) => void)[] = [];
+  send(data: string) {
+    this.sent.push(JSON.parse(data) as ClientMessage);
+  }
+  addEventListener(
+    _type: "message",
+    listener: (e: MessageEvent<string>) => void,
+  ) {
+    this.listeners.push(listener);
+  }
+  get last(): ClientMessage {
+    const last = this.sent[this.sent.length - 1];
+    if (!last) throw new Error("nothing sent");
+    return last;
+  }
+  deliver(event: Anthropic.RawMessageStreamEvent) {
+    const requestId = this.last.requestId;
+    const data = JSON.stringify({ type: "event", requestId, event });
+    for (const listener of [...this.listeners]) {
+      listener(new MessageEvent("message", { data }));
+    }
+  }
+  yields(input: Record<string, unknown>) {
+    this.deliver({
+      type: "content_block_start",
+      index: 0,
+      content_block: {
+        type: "tool_use",
+        id: "call-1",
+        name: "yield",
+        input: {},
+        caller: { type: "direct" },
+      },
+    });
+    this.deliver({
+      type: "content_block_delta",
+      index: 0,
+      delta: { type: "input_json_delta", partial_json: JSON.stringify(input) },
+    });
+    this.deliver({ type: "content_block_stop", index: 0 });
+    this.deliver({ type: "message_stop" } as Anthropic.RawMessageStreamEvent);
+  }
+}
+const SCHEMA: Anthropic.Tool.InputSchema = {
+  type: "object",
+  properties: { grade: { type: "string" } },
+  required: ["grade"],
+};
+/** A tree whose root has one committed user turn, so there is something to
+ * anchor a child onto. */
+function setup() {
+  const socket = new FakeSocket();
+  const root = new Thread(socket, { initialTurns: [] });
+  const tree = new ThreadTree(socket, root, () => {});
+  void root.send("the quick brown fox");
+  const anchor: Anchor = {
+    thread: tree.root,
+    start: { msg: 0, offset: 0 },
+    end: { msg: 0, offset: 9 },
+  };
+  return { socket, tree, anchor };
+}
+it("passes a yield schema to a child and surfaces its settled value", async () => {
+import { actionLabel } from "../prompt.ts";
+import { selectedSample, selectSample } from "../samples/index.ts";
+import { anchorText, overlaps, type ThreadId } from "../selection.ts";
+import { Thread } from "../thread.ts";
+import { ThreadTree } from "../threads.ts";
+import { AppView, type Msg, type State } from "../view.ts";
+function connect(): WebSocket {
+  const proto = window.location.protocol === "https:" ? "wss:" : "ws:";
+  return new WebSocket(`${proto}//${window.location.host}/api/socket`);
+}
+/** Prototype 1: the task transcript, with learning threads hanging off the
+ * passages the user picks out of it. */
+export function mount(container: HTMLElement): void {
+  // One socket for the whole app: every Thread adds its own
+  // listener and drops frames whose requestId it does not own, so streams
+  // interleave over the single connection.
+  const socket = connect();
+  const tree = new ThreadTree(
+    socket,
+    new Thread(socket, { initialTurns: selectedSample()?.turns }),
+    () => {
+      refresh();
+      view.sync(state);
+    },
+  );
+  // The thread on the left. Moved only by the arrows.
+  let focus = tree.root;
+  const state: State = {
+    sample: selectedSample()?.id ?? "",
+    messages: [],
+    inFlight: false,
+    draft: "",
+    split: false,
+    depth: 0,
+    canDescend: false,
+    thread: focus,
+    marks: [],
+    activeMark: null,
+    anchor: null,
+    query: "",
+    origin: null,
+    child: null,
+  };
+  /** Re-projects the tree onto the view's state. Everything but the fields the
+   * user is editing is derived, so this runs after every dispatch. */
+  function refresh(): void {
+    const node = tree.get(focus);
+    state.thread = focus;
+    state.depth = state.split ? tree.path(focus).length : 0;
+    state.canDescend = node.activeChild !== null;
+    state.messages = node.thread.messages;
+    state.inFlight = node.thread.inFlight;
+    state.draft = node.draft;
+    state.marks = tree.marks(focus);
+    const own = node.origin;
+    state.origin = own
+      ? {
+          action: actionLabel(own.action),
+          quote: anchorText(
+            own.anchor,
+            tree.get(own.anchor.thread).thread.messages,
+          ),
+        }
+      : null;
+    state.activeMark = node.activeChild;
+    const activeChild = node.activeChild;
+    if (!activeChild) {
+      state.child = null;
+      return;
+    }
+    const child = tree.get(activeChild);
+    const origin = child.origin;
+    state.child = {
+      action: origin ? actionLabel(origin.action) : "",
+      messages: child.thread.messages,
+      inFlight: child.thread.inFlight,
+      draft: child.draft,
+    };
+  }
+  function send(id: ThreadId): void {
+    const node = tree.get(id);
+    const text = node.draft.trim();
+    if (text === "" || node.thread.inFlight) return;
+    node.draft = "";
+    node.thread.send(text).then(undefined, (e: unknown) => {
+      console.error(e);
+    });
+  }
+  function update(state: State, msg: Msg): void {
+    const node = tree.get(focus);
+    switch (msg.type) {
+      case "DRAFT_CHANGED":
+        node.draft = msg.draft;
+        break;
+      case "SAMPLE_CHANGED":
+        selectSample(msg.id === "" ? undefined : msg.id);
+        break;
+      case "SUBMIT":
+        send(focus);
+        break;
+      case "GO_DEEPER": {
+        if (!state.split) {
+          state.split = true;
+          break;
+        }
+        const child = node.activeChild;
+        if (!child) break;
+        focus = child;
+        state.anchor = null;
+        state.query = "";
+        break;
+      }
+      case "GO_BACK": {
+        const parent = node.origin?.anchor.thread;
+        if (parent === undefined) state.split = false;
+        else focus = parent;
+        state.anchor = null;
+        state.query = "";
+        break;
+      }
+      case "SELECTION_CHANGED":
+        state.anchor = msg.anchor;
+        node.activeChild = null;
+        break;
+      case "MARK_CLICKED":
+        state.anchor = null;
+        node.activeChild = msg.thread;
+        break;
+      case "LEARNING_MSG":
+        switch (msg.msg.type) {
+          case "ACTION": {
+            const anchor = state.anchor;
+            if (!anchor || overlaps(state.marks, anchor)) break;
+            const id = tree.open(anchor, msg.msg.action);
+            state.anchor = null;
+            state.query = "";
+            tree
+              .get(id)
+              .thread.start()
+              .then(undefined, (e: unknown) => {
+                console.error(e);
+              });
+            break;
+          }
+          case "QUERY_CHANGED":
+            state.query = msg.msg.query;
+            break;
+        }
+        break;
+      case "CHILD_MSG": {
+        const activeChild = node.activeChild;
+        if (!activeChild) break;
+        switch (msg.msg.type) {
+          case "DRAFT_CHANGED":
+            tree.get(activeChild).draft = msg.msg.draft;
+            break;
+          case "SUBMIT":
+            send(activeChild);
+            break;
+        }
+        break;
+      }
+    }
+    refresh();
+  }
+  let dispatching = false;
+  function dispatch(msg: Msg): void {
+    if (dispatching) throw new Error("dispatch-in-dispatch");
+    dispatching = true;
+    update(state, msg);
+    view.sync(state);
+    dispatching = false;
+  }
+  refresh();
+  const view = new AppView(container, dispatch, state);
+}
+exit code 0

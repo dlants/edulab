@@ -1,0 +1,52 @@
+$ cd /Users/denis.lantsman/src/edulab && grep -n "update-status" -A 12 -B 12 packages/frontend/view.ts | sed -n 1,80p
+stdout:
+600-    initial: MessageState,
+601-  ) {
+602-    const roleRef = ref("role");
+603-    const textRef = ref("text");
+604-    const toolRef = ref("tool");
+605-    const toolNameRef = ref("tool-name");
+606-    const toolInputRef = ref("tool-input");
+607-    const toolResultRef = ref("tool-result");
+608-    const clipRef = ref("clip");
+609-    const toggleRef = ref("toggle");
+610-    const moreRef = ref("more");
+611-    const updateRef = ref("update");
+612:    const updateStatusRef = ref("update-status");
+613-    const changesRef = ref("changes");
+614-    const updateThreadRef = ref("update-thread");
+615-    container.className = messageClass;
+616-    // The tool block sits outside the .text span on purpose: resolvePoint only
+617-    // anchors inside it, so a tool call is rendered but not selectable.
+618-    container.innerHTML = sanitize`
+619-      <span class="${roleClass}" data-ref="${roleRef}"></span>
+620-      <button
+621-        class="${toggleClass}"
+622-        type="button"
+623-        data-ref="${toggleRef}"
+624-        aria-label="Expand or collapse this message"
+625-      ></button>
+626-      <div class="${clipClass}" data-ref="${clipRef}">
+627-        <span class="${textClass}" data-text data-ref="${textRef}"></span>
+628-        <div class="${toolClass}" data-tool data-ref="${toolRef}">
+629-          <strong data-tool-name data-ref="${toolNameRef}"></strong>
+630-          <pre data-tool-input data-ref="${toolInputRef}"></pre>
+631-          <pre class="${toolResultClass}" data-tool-result data-ref="${toolResultRef}"></pre>
+632-        </div>
+633-      </div>
+634-      <div class="${moreClass}" data-more data-ref="${moreRef}"></div>
+635-      <div class="${updateClass}" data-update data-ref="${updateRef}">
+636:        <span data-update-status data-ref="${updateStatusRef}"></span>
+637-        <span class="${changeListClass}" data-ref="${changesRef}"></span>
+638-        <button
+639-          class="${changeClass}"
+640-          type="button"
+641-          data-update-thread
+642-          data-ref="${updateThreadRef}"
+643-        >transcript</button>
+644-      </div>
+645-    `;
+646-    this.container = container;
+647-    this.b = new Binder(container, initial);
+648-    this.b.bindText(roleRef, (s) => s.message.role);
+exit code 0

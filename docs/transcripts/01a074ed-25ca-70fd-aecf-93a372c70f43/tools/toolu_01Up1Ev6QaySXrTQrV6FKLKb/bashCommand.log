@@ -1,0 +1,112 @@
+$ cd /Users/denis.lantsman/src/edulab && npm run lint:fix >/dev/null && sed -n 1,120p packages/e2e/tests/persistence.spec.ts
+stdout:
+import type Anthropic from "@anthropic-ai/sdk";
+import type { ClientMessage, ServerFrame } from "@edulab/iso/protocol.ts";
+import { expect, type Page, test } from "@playwright/test";
+const KEY = "edulab:v1:own";
+function events(text: string): Anthropic.RawMessageStreamEvent[] {
+  return [
+    {
+      type: "content_block_start",
+      index: 0,
+      content_block: { type: "text", text: "", citations: null },
+    },
+    {
+      type: "content_block_delta",
+      index: 0,
+      delta: { type: "text_delta", text },
+    },
+    { type: "content_block_stop", index: 0 },
+    { type: "message_stop" } as Anthropic.RawMessageStreamEvent,
+  ];
+}
+function yieldEvents(): Anthropic.RawMessageStreamEvent[] {
+  return [
+    {
+      type: "content_block_start",
+      index: 0,
+      content_block: {
+        type: "tool_use",
+        id: "yield-1",
+        name: "yield",
+        input: {},
+      },
+    } as Anthropic.RawMessageStreamEvent,
+    {
+      type: "content_block_delta",
+      index: 0,
+      delta: { type: "input_json_delta", partial_json: '{"result":"ok"}' },
+    },
+    { type: "content_block_stop", index: 0 },
+    { type: "message_stop" } as Anthropic.RawMessageStreamEvent,
+  ];
+}
+function isGraphUpdate(message: ClientMessage): boolean {
+  return (message.params.tools ?? []).some((t) => t.name === "put_nodes");
+}
+/** Answers everything, and keeps the counts a reload has to leave alone: the
+ * whole point of the snapshot is that a restored interaction is not re-run. */
+async function backend(page: Page) {
+  const counts = { turns: 0, updates: 0 };
+  await page.routeWebSocket("**/api/socket", (ws) => {
+    ws.onMessage((raw) => {
+      const message = JSON.parse(String(raw)) as ClientMessage;
+      const send = (frame: ServerFrame) => ws.send(JSON.stringify(frame));
+      const update = isGraphUpdate(message);
+      if (update) counts.updates++;
+      else counts.turns++;
+      for (const event of update ? yieldEvents() : events("ok")) {
+        send({ type: "event", requestId: message.requestId, event });
+      }
+      send({ type: "done", requestId: message.requestId });
+    });
+  });
+  return counts;
+}
+/** The graph the sidebar specs seed, through the same handle. */
+async function seedGraph(page: Page) {
+  await page.evaluate(() => {
+    const graph = (
+      window as unknown as {
+        __graph: {
+          putNode(n: {
+            title: string;
+            description: string;
+            notes: string;
+            level: number;
+          }): unknown;
+        };
+      }
+    ).__graph;
+    graph.putNode({
+      title: "closures",
+      description: "a function plus its environment",
+      notes: "",
+      level: 2,
+    });
+  });
+}
+function taskTranscript(page: Page) {
+  return page.locator("ul").first();
+}
+function threadTranscript(page: Page) {
+  return page.locator("ul").nth(1);
+}
+function graphTab(page: Page) {
+  return page.getByRole("button", { name: "Knowledge graph", exact: true });
+}
+/** The write is debounced off the streaming path, so a reload has to wait for
+ * it to land. */
+async function settled(page: Page) {
+  await expect
+    .poll(() => page.evaluate((key) => localStorage.getItem(key), KEY))
+    .not.toBeNull();
+  await page.waitForTimeout(600);
+}
+/** Selects characters [start, end) of message `msg`, as the app captures it. */
+async function selectRange(
+  page: Page,
+  msg: number,
+  start: number,
+  end: number,
+exit code 0

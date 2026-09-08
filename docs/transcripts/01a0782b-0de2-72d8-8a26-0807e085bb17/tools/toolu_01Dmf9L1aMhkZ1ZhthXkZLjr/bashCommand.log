@@ -1,0 +1,28 @@
+$ cd /Users/denis.lantsman/src/edulab && grep -n "getByRole(\"textbox\")\|getByPlaceholder" packages/e2e/tests/*.spec.ts
+stdout:
+packages/e2e/tests/chat.spec.ts:210:  await page.getByRole("textbox").fill(SENTENCE);
+packages/e2e/tests/chat.spec.ts:211:  await page.getByRole("textbox").press("Enter");
+packages/e2e/tests/chat.spec.ts:221:  await page.getByRole("textbox").fill("hi");
+packages/e2e/tests/chat.spec.ts:237:  const input = page.getByRole("textbox");
+packages/e2e/tests/chat.spec.ts:252:  const input = page.getByRole("textbox");
+packages/e2e/tests/chat.spec.ts:343:  const follow = page.getByPlaceholder("Follow up…");
+packages/e2e/tests/chat.spec.ts:554:  const composer = page.getByPlaceholder("Ask your own question…");
+packages/e2e/tests/chat.spec.ts:605:  await page.getByRole("textbox").fill(SENTENCE);
+packages/e2e/tests/chat.spec.ts:606:  await page.getByRole("textbox").press("Enter");
+packages/e2e/tests/chat.spec.ts:709:  await page.getByRole("textbox").fill(text);
+packages/e2e/tests/chat.spec.ts:710:  await page.getByRole("textbox").press("Enter");
+packages/e2e/tests/chat.spec.ts:747:  await expect(page.getByPlaceholder("Follow up…")).toHaveCount(0);
+packages/e2e/tests/graph.spec.ts:97:  await page.getByRole("textbox").fill("hello");
+packages/e2e/tests/graph.spec.ts:98:  await page.getByRole("textbox").press("Enter");
+packages/e2e/tests/graph.spec.ts:338:  await page.getByRole("textbox").fill(text);
+packages/e2e/tests/graph.spec.ts:339:  await page.getByRole("textbox").press("Enter");
+packages/e2e/tests/persistence.spec.ts:158:  await page.getByRole("textbox").fill(SENTENCE);
+packages/e2e/tests/persistence.spec.ts:159:  await page.getByRole("textbox").press("Enter");
+packages/e2e/tests/persistence.spec.ts:183:  await page.getByRole("textbox").fill(SENTENCE);
+packages/e2e/tests/persistence.spec.ts:184:  await page.getByRole("textbox").press("Enter");
+packages/e2e/tests/persistence.spec.ts:207:  await page.getByRole("textbox").fill(SENTENCE);
+packages/e2e/tests/persistence.spec.ts:208:  await page.getByRole("textbox").press("Enter");
+packages/e2e/tests/persistence.spec.ts:292:  await page.getByRole("textbox").fill(SENTENCE);
+packages/e2e/tests/persistence.spec.ts:293:  await page.getByRole("textbox").press("Enter");
+packages/e2e/tests/smoke.spec.ts:11:  const input = page.getByRole("textbox");
+exit code 0

@@ -1,0 +1,17 @@
+$ cd /Users/denis.lantsman/src/edulab && grep -n "graphSlotRef\|bodyRef\|bindVisible" packages/frontend/view.ts packages/frontend/vamp.ts
+stdout:
+packages/frontend/view.ts:439:    this.b.bindVisible(toolRef, (s) => s.message.type === "tool_use");
+packages/frontend/view.ts:447:    this.b.bindVisible(toolResultRef, (s) => resultText(s.message) !== "");
+packages/frontend/view.ts:625:    const bodyRef: Ref = ref("body");
+packages/frontend/view.ts:626:    const graphSlotRef: Ref = ref("graph-slot");
+packages/frontend/view.ts:641:      <div class="${bodyClass}" data-ref="${bodyRef}">
+packages/frontend/view.ts:655:      <div class="${graphTabClass}" data-ref="${graphSlotRef}"></div>
+packages/frontend/view.ts:756:    this.b.bindVisible(bodyRef, (s) => s.tab === "threads");
+packages/frontend/view.ts:757:    this.b.bindSlot(graphSlotRef, (s) =>
+packages/frontend/view.ts:768:    this.b.bindVisible(backRef, (s) => s.split && s.tab === "threads");
+packages/frontend/view.ts:769:    this.b.bindVisible(forwardRef, (s) => s.tab === "threads");
+packages/frontend/view.ts:770:    this.b.bindVisible(depthRef, (s) => s.tab === "threads");
+packages/frontend/view.ts:772:    this.b.bindVisible(originRef, (s) => s.origin !== null);
+packages/frontend/vamp.ts:3: * bindVisible, bindStyle, bindDisabled, bindAttr, bindContainerAttr,
+packages/frontend/vamp.ts:179:  bindVisible(ref: Ref, fn: (s: State) => boolean): void {
+exit code 0

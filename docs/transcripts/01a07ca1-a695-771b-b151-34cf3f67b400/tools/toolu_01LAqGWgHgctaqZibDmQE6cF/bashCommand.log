@@ -1,0 +1,59 @@
+$ cd /Users/denis.lantsman/src/edulab && sed -n 780,835p packages/e2e/tests/chat.spec.ts
+stdout:
+    .locator("[data-update-status]");
+}
+function changes(page: Page, index: number) {
+  return taskTranscript(page).locator("li").nth(index).locator("[data-change]");
+}
+async function turn(page: Page, text: string) {
+  await page.getByRole("textbox").fill(text);
+  await page.getByRole("textbox").press("Enter");
+}
+test("a turn shows its graph update working, then what it changed", async ({
+  page,
+}) => {
+  const backend = await chipBackend(page);
+  await page.goto("/");
+  await turn(page, "how does backpressure work");
+  await expect(updateStatus(page, 0)).toHaveText(
+    "updating the knowledge graph…",
+  );
+  backend.release();
+  await expect(changes(page, 0)).toHaveText(['created "concept-1"']);
+  await turn(page, "and framing");
+  await expect(changes(page, 2)).toHaveText(['created "concept-2"']);
+  // Each turn accounts for its own update and no other.
+  await expect(changes(page, 0)).toHaveText(['created "concept-1"']);
+});
+test("the update behind a turn opens its own transcript on the right", async ({
+  page,
+}) => {
+  const backend = await chipBackend(page);
+  backend.release();
+  await page.goto("/");
+  await turn(page, "how does backpressure work");
+  await expect(changes(page, 0)).toHaveText(['created "concept-1"']);
+  await taskTranscript(page)
+    .locator("li")
+    .nth(0)
+    .locator("[data-update-thread]")
+    .click();
+  const pane = page.locator("ul").nth(1);
+  await expect(pane.locator("[data-tool-name]:visible")).toHaveText([
+    "put_nodes",
+    "yield",
+  ]);
+  // Review, not descent: there is nothing to reply to here.
+  await expect(page.getByPlaceholder("Follow up…")).toHaveCount(0);
+  await page.getByRole("button", { name: "Close" }).click();
+  await expect(page.locator("[data-update-pane-status]")).toHaveCount(0);
+});
+test("an update that writes nothing says so", async ({ page }) => {
+  const backend = await chipBackend(page, false);
+  backend.release();
+  await page.goto("/");
+  await turn(page, "sure, keep going");
+  await expect(updateStatus(page, 0)).toHaveText("no knowledge graph changes");
+  await expect(changes(page, 0)).toHaveCount(0);
+});
+exit code 0

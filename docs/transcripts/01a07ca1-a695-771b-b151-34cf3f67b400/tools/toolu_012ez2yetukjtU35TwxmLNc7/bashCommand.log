@@ -1,0 +1,20 @@
+$ cd /Users/denis.lantsman/src/edulab && ls -a | grep env; grep -rn "APP_PASSWORD\|render" README.md render.yaml 2>/dev/null; ls
+stdout:
+.env
+biome.json
+context.md
+docs
+node_modules
+notes
+package-lock.json
+package.json
+packages
+plans
+README.md
+scripts
+task-samples
+test-results
+tsconfig.base.json
+vite.config.ts
+vitest.config.ts
+exit code 0

@@ -1,0 +1,7 @@
+$ cd /Users/denis.lantsman/src/edulab && grep -n "name: \"" packages/frontend/graph-tools.ts
+stdout:
+138:      name: "get",
+157:      name: "put_nodes",
+210:      name: "put_edges",
+262:      name: "delete",
+exit code 0

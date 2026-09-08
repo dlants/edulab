@@ -1,0 +1,38 @@
+$ cd /Users/denis.lantsman/src/edulab/packages/frontend && grep -n "navClass\|sampleClass\|buildRef\|Reset\|resetRef\|spacerClass\|tabsClass\|buildStatus\|buildDebug" view.ts
+stdout:
+142:const navClass = cls("nav");
+150:const sampleClass = cls("sample");
+151:const buildStatusClass = cls("build-status");
+152:const buildDebugClass = cls("build-debug");
+153:const spacerClass = cls("spacer");
+154:const tabsClass = cls("tabs");
+216:.${navClass} {
+225:.${navClass} button {
+233:.${navClass} button:disabled {
+237:.${buildStatusClass} {
+241:.${navClass} button.${buildDebugClass} {
+247:.${sampleClass} {
+250:.${spacerClass} {
+253:.${tabsClass} button[aria-pressed="true"] {
+857:        <span class="${spacerClass}"></span>
+1087:    const buildRef: Ref = ref("build");
+1088:    const resetRef: Ref = ref("reset");
+1089:    const buildStatusRef: Ref = ref("build-status");
+1090:    const buildDebugRef: Ref = ref("build-debug");
+1098:      <div class="${navClass}">
+1099:        <select class="${sampleClass}" data-ref="${sampleRef}"></select>
+1100:        <button type="button" data-build data-ref="${buildRef}">Build knowledge graph from this transcript</button>
+1101:        <span class="${buildStatusClass}">
+1102:          <span data-build-status data-ref="${buildStatusRef}"></span>
+1103:          <button type="button" class="${buildDebugClass}" title="Dump build diagnostics to the console" data-ref="${buildDebugRef}">?</button>
+1105:        <span class="${tabsClass}">
+1109:        <span class="${spacerClass}"></span>
+1110:        <button type="button" data-ref="${resetRef}">Reset</button>
+1147:      .ref(buildRef)
+1149:    this.b.bindDisabled(buildRef, (s) => s.build.type !== "idle");
+1150:    this.b.bindText(buildStatusRef, (s) => buildStatus(s.build));
+1151:    this.b.bindVisible(buildDebugRef, (s) => buildFailures(s.build).length > 0);
+1152:    this.b.ref(buildDebugRef).addEventListener("click", () => {
+1159:      .ref(resetRef)
+1225:function buildStatus(build: Build): string {
+exit code 0

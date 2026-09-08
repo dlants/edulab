@@ -1,0 +1,11 @@
+$ cd /Users/denis.lantsman/src/edulab && git commit -m "Gate the socket behind a password
+
+The deployment is public but the API key is not, so the websocket upgrade
+checks a password and the frontend prompts for one before mounting." && git log --oneline -1
+stdout:
+[main c86a7a1] Gate the socket behind a password
+ 13 files changed, 283 insertions(+), 21 deletions(-)
+ create mode 100644 packages/e2e/tests/fixture.ts
+ create mode 100644 packages/frontend/auth.ts
+c86a7a1 Gate the socket behind a password
+exit code 0

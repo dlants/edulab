@@ -1,0 +1,8 @@
+$ cd /Users/denis.lantsman/src/edulab && git add -A && git commit -m "Yield nothing from graph update threads" -m "The background graph update threads settle with a text yield the parent never reads, so the model spends a turn writing a summary into a dead end. Add a \"void\" yield schema - a no-input yield tool - and use it there." && git push
+stdout:
+[main ac23079] Yield nothing from graph update threads
+ 7 files changed, 390 insertions(+), 47 deletions(-)
+stderr:
+To github.com:dlants/edulab.git
+   b97781d..ac23079  main -> main
+exit code 0

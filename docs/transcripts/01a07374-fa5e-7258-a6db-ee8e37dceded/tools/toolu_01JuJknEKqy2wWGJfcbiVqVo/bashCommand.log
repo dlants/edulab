@@ -1,0 +1,23 @@
+$ cd /Users/denis.lantsman/src/edulab && npx playwright test --config packages/e2e/playwright.config.ts graph 2>/dev/null
+stdout:
+SyntaxError: /Users/denis.lantsman/src/edulab/packages/e2e/tests/graph.spec.ts: Unterminated string constant. (276:5)
+  274 | }
+  275 |
+> 276 | test("building from the session fills the canvas...
+      |      ^
+  277 |   page,
+  278 | }) => {
+  279 |   await extractionBackend(page);
+   at graph.spec.ts:276
+  274 | }
+  275 |
+> 276 | test("building from the session fills the canvas...
+      |     ^
+  277 |   page,
+  278 | }) => {
+  279 |   await extractionBackend(page);
+    at eval (<anonymous>:1:1)
+Error: No tests found.
+Make sure that arguments are regular expressions matching test files.
+You may need to escape symbols like "$" or "*" and quote the arguments.
+exit code 1

@@ -1,0 +1,66 @@
+$ cd /Users/denis.lantsman/src/edulab && sed -n '1,60p' packages/frontend/interactions.test.ts && grep -n "graphUpdatePrompt\|Interaction" packages/frontend/prompt.test.ts
+stdout:
+import type Anthropic from "@anthropic-ai/sdk";
+import type { ClientMessage } from "@edulab/iso/protocol.ts";
+import { expect, it } from "vitest";
+import { interactionAt } from "./interactions.ts";
+import type { Anchor } from "./selection.ts";
+import { type MessageIdx, type Socket, Thread } from "./thread.ts";
+import { ThreadTree } from "./threads.ts";
+class FakeSocket implements Socket {
+  readonly sent: ClientMessage[] = [];
+  private readonly listeners: ((e: MessageEvent<string>) => void)[] = [];
+  send(data: string) {
+    this.sent.push(JSON.parse(data) as ClientMessage);
+  }
+  addEventListener(
+    _type: "message",
+    listener: (e: MessageEvent<string>) => void,
+  ) {
+    this.listeners.push(listener);
+  }
+  get last(): ClientMessage {
+    const last = this.sent[this.sent.length - 1];
+    if (!last) throw new Error("nothing sent");
+    return last;
+  }
+  private deliver(event: Anthropic.RawMessageStreamEvent) {
+    const data = JSON.stringify({
+      type: "event",
+      requestId: this.last.requestId,
+      event,
+    });
+    for (const listener of [...this.listeners]) {
+      listener(new MessageEvent("message", { data }));
+    }
+  }
+  /** Streams one assistant text block, leaving the turn open. */
+  streams(text: string) {
+    this.deliver({
+      type: "content_block_start",
+      index: 0,
+      content_block: { type: "text", text: "", citations: [] },
+    });
+    this.deliver({
+      type: "content_block_delta",
+      index: 0,
+      delta: { type: "text_delta", text },
+    });
+  }
+  replies(text: string) {
+    this.streams(text);
+    this.deliver({ type: "content_block_stop", index: 0 });
+    this.deliver({ type: "message_stop" } as Anthropic.RawMessageStreamEvent);
+  }
+}
+const idx = (n: number) => n as MessageIdx;
+function setup() {
+  const socket = new FakeSocket();
+  const root = new Thread(socket, { initialTurns: [] });
+4:import type { Interaction } from "./interactions.ts";
+10:  graphUpdatePrompt,
+126:): Interaction => ({
+137:  const [cached, volatile] = graphUpdatePrompt(
+152:  const blocks = graphUpdatePrompt(interaction(2, "thanks", "seed"), "graph a");
+162:  const [cached] = graphUpdatePrompt(
+exit code 0

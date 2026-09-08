@@ -1,0 +1,9 @@
+$ cd /Users/denis.lantsman/src/edulab && npx playwright test --config packages/e2e/playwright.config.ts persistence --reporter=line
+stdout:
+Running 4 tests using 4 workers
+[1/4] packages/e2e/tests/persistence.spec.ts:223:1 › an unreadable snapshot is dropped and the app comes up bare
+[2/4] packages/e2e/tests/persistence.spec.ts:148:1 › a reload keeps the transcript, the graph and the update chips
+[3/4] packages/e2e/tests/persistence.spec.ts:197:1 › an interaction whose update never finished is re-enqueued
+[4/4] packages/e2e/tests/persistence.spec.ts:175:1 › a reload keeps a learning thread behind its mark
+  4 passed (3.2s)
+exit code 0

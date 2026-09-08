@@ -1,0 +1,35 @@
+$ cd /Users/denis.lantsman/src/edulab/packages/frontend && perl -pi -e 's/const thread = this\.threads\.get\(id\);/const node = this.threads.get(id);/; s/if \(!thread\) throw new Error\(`unknown thread \$\{id\}`\);/if (!node) throw new Error(`unknown thread ${id}`);/; s/^    return thread;$/    return node;/;' threads.ts && perl -pi -e 's#"../conversation.ts"#"../thread.ts"#; s/\bConversation\b/Thread/g; s/\bthread\.conversation\b/node.thread/g;' prototypes/chat.ts && grep -n "thread\|Thread" prototypes/chat.ts
+stdout:
+1:import { Thread } from "../thread.ts";
+4:import { anchorText, overlaps, type ThreadId } from "../selection.ts";
+5:import { ThreadTree } from "../threads.ts";
+13:/** Prototype 1: the task transcript, with learning threads hanging off the
+16:  // One socket for the whole app: every thread's Thread adds its own
+20:  const tree = new ThreadTree(
+22:    new Thread(socket, { initialTurns: selectedSample()?.turns }),
+28:  // The thread on the left. Moved only by the arrows.
+39:    thread: focus,
+51:    const thread = tree.get(focus);
+52:    state.thread = focus;
+54:    state.canDescend = thread.activeChild !== null;
+55:    state.messages = node.thread.messages;
+56:    state.inFlight = node.thread.inFlight;
+57:    state.draft = thread.draft;
+59:    const own = thread.origin;
+65:            tree.get(own.anchor.thread).conversation.messages,
+69:    state.activeMark = thread.activeChild;
+70:    const activeChild = thread.activeChild;
+85:  function send(id: ThreadId): void {
+86:    const thread = tree.get(id);
+87:    const text = thread.draft.trim();
+88:    if (text === "" || node.thread.inFlight) return;
+89:    thread.draft = "";
+90:    node.thread.send(text).then(undefined, (e: unknown) => {
+96:    const thread = tree.get(focus);
+99:        thread.draft = msg.draft;
+112:        const child = thread.activeChild;
+120:        const parent = thread.origin?.anchor.thread;
+129:        thread.activeChild = null;
+133:        thread.activeChild = msg.thread;
+157:        const activeChild = thread.activeChild;
+exit code 0

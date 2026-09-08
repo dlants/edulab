@@ -1,0 +1,4 @@
+$ cd /Users/denis.lantsman/src/edulab/packages/frontend && perl -pi -e 's{"\.\./node\.ts"}{"../thread.ts"}' prototypes/chat.ts && grep -rn "conversation\|Conversation" . --include=*.ts --exclude-dir=node_modules; cd .. && grep -rn "conversation\|Conversation" e2e backend iso --include=*.ts
+stdout:
+e2e/tests/chat.spec.ts:140:test("a second turn sends the full conversation", async ({ page }) => {
+exit code 0

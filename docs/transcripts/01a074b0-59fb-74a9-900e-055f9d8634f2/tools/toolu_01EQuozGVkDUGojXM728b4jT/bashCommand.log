@@ -1,0 +1,10 @@
+$ cd /Users/denis.lantsman/src/edulab && grep -rn "EXTRACT_SYSTEM\|renderTree\|actionLabel" packages --include=*.ts | grep -v prompt.test
+stdout:
+packages/frontend/prompt.ts:72:export const EXTRACT_SYSTEM = [
+packages/frontend/prompt.ts:96:export function renderTree(tree: ThreadTree, graph?: string): string {
+packages/frontend/prompt.ts:115:    ? `Follow-up thread (depth ${depth}) on "${quote}" - the user said: ${actionLabel(origin.action)}`
+packages/frontend/prompt.ts:135:export function actionLabel(action: Action): string {
+packages/frontend/prototypes/chat.ts:10:import { EXTRACT_SYSTEM, renderTree } from "../prompt.ts";
+packages/frontend/prototypes/chat.ts:159:      system: EXTRACT_SYSTEM,
+packages/frontend/prototypes/chat.ts:160:      seed: renderTree(tree, graph.render()),
+exit code 0

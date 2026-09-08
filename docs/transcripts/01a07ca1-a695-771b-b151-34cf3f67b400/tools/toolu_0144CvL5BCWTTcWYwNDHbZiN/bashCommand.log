@@ -1,0 +1,109 @@
+$ cd /Users/denis.lantsman/src/edulab && cat packages/iso/protocol.ts && cat packages/backend/socket.ts && cat packages/backend/app.ts && cat .env 2>/dev/null | sed 's/=.*/=REDACTED/' && ls packages/frontend packages/frontend/prototypes
+stdout:
+import type Anthropic from "@anthropic-ai/sdk";
+export type ClientMessage = {
+  type: "start";
+  requestId: string;
+  params: Anthropic.MessageCreateParamsStreaming;
+};
+export type ServerFrame =
+  | { type: "event"; requestId: string; event: Anthropic.RawMessageStreamEvent }
+  | { type: "done"; requestId: string }
+  | { type: "error"; requestId: string; message: string };
+import Anthropic from "@anthropic-ai/sdk";
+import type { ClientMessage, ServerFrame } from "@edulab/iso/protocol.ts";
+import websocket from "@fastify/websocket";
+import type { FastifyInstance } from "fastify";
+export async function registerSocket(app: FastifyInstance, apiKey: string) {
+  const client = new Anthropic({ apiKey });
+  await app.register(websocket);
+  app.get("/api/socket", { websocket: true }, (socket) => {
+    const send = (frame: ServerFrame) => {
+      if (socket.readyState === socket.OPEN) socket.send(JSON.stringify(frame));
+    };
+    socket.on("message", (data: Buffer) => {
+      let message: ClientMessage;
+      try {
+        message = JSON.parse(data.toString()) as ClientMessage;
+      } catch {
+        socket.close(4400, "bad_request");
+        return;
+      }
+      void run(message);
+    });
+    // The server is a pipe: it forwards every event to the client tagged with
+    // the request id, and always terminates the request with done | error.
+    async function run(message: ClientMessage) {
+      const { requestId } = message;
+      try {
+        const stream = client.messages.stream(message.params);
+        for await (const event of stream) {
+          send({ type: "event", requestId, event });
+        }
+        send({ type: "done", requestId });
+      } catch (err) {
+        send({
+          type: "error",
+          requestId,
+          message: err instanceof Error ? err.message : String(err),
+        });
+      }
+    }
+  });
+}
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import dotenv from "dotenv";
+import Fastify from "fastify";
+import { registerSocket } from "./socket.ts";
+dotenv.config({
+  path: path.join(path.dirname(fileURLToPath(import.meta.url)), "../../.env"),
+});
+async function run() {
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) throw new Error("Missing required env var: ANTHROPIC_API_KEY");
+  const app = Fastify({ logger: true });
+  await registerSocket(app, apiKey);
+  const port = Number(process.env.PORT ?? 3000);
+  await app.listen({ port, host: "0.0.0.0" });
+}
+run().catch((err: unknown) => {
+  console.error(err);
+  process.exit(1);
+});
+ANTHROPIC_API_KEY=REDACTED
+packages/frontend:
+citation.test.ts
+citation.ts
+graph-tools.test.ts
+graph-tools.ts
+graph-view.ts
+graph.test.ts
+graph.ts
+index.html
+interactions.test.ts
+interactions.ts
+layout.test.ts
+layout.ts
+learning.ts
+main.ts
+node_modules
+package.json
+persistence.test.ts
+persistence.ts
+prompt.test.ts
+prompt.ts
+prototypes
+samples
+selection.test.ts
+selection.ts
+thread.test.ts
+thread.ts
+threads.test.ts
+threads.ts
+tsconfig.json
+vamp.ts
+view.ts
+packages/frontend/prototypes:
+chat.ts
+exit code 0

@@ -1,0 +1,58 @@
+$ cd packages/frontend && grep -rn "layout(" --include=*.ts . ; echo ---; grep -n "graph" prototypes/chat.ts
+stdout:
+./prototypes/chat.ts:246:      placement = layout(graph);
+./layout.ts:13:export function layout(graph: KnowledgeGraph): Map<NodeId, Position> {
+./layout.test.ts:46:  expect([...layout(graph)]).toEqual([...layout(graph)]);
+./layout.test.ts:56:  const positions = layout(graph);
+./layout.test.ts:77:  const positions = layout(graph);
+---
+9:} from "../graph.ts";
+10:import { changesIn, readTools, writeTools } from "../graph-tools.ts";
+17:} from "../graph-view.ts";
+18:import { IDENTITY_VIEWPORT, panZoom } from "../graph-view.ts";
+29:import { GRAPH_UPDATE_SYSTEM, graphUpdatePrompt } from "../prompt.ts";
+95:  const graph = snapshot
+96:    ? KnowledgeGraph.from(snapshot.graph)
+117:            tools: s.origin ? readTools(graph) : undefined,
+129:  // holds no state of its own, and a rebuild of the graph must not recentre it.
+132:  // pre-update graph and mint rival nodes for the same concept. Appending to
+141:  const graphUpdates = new Map<string, GraphUpdate>(
+153:        graph,
+154:        updates: [...graphUpdates].flatMap(([key, update]) => {
+172:    for (const [key, update] of graphUpdates) {
+179:  // keystroke, so it is recomputed only when the shape of the graph changes.
+185:  // The address of the graph update whose transcript the right pane is
+219:    graph: {
+236:  /** The graph projected onto view state: positions from `layout`, and the
+239:    const nodes = graph.nodes;
+240:    const edges = graph.edges;
+246:      placement = layout(graph);
+251:    state.graph = {
+261:   * off the graph rather than the draft: a half-typed address is not a
+274:        const edge = graph.edge(sidebar.id);
+278:        const node = graph.node(sidebar.id);
+320:    const update = graphUpdates.get(updateFocus);
+335:  /** One detached thread per user interaction, writing straight into the graph
+345:    graphUpdates.set(key, { type: "running", messages: [] });
+353:        // writes rather than the graph as it stood when it was enqueued.
+356:          prompt: graphUpdatePrompt(interaction, graph.render()),
+357:          tools: writeTools(graph),
+361:            graphUpdates.set(key, { type: "running", messages });
+376:        graphUpdates.set(key, {
+390:   * after these came from an interaction that updated the graph itself, so
+483:  /** The graph tab's own reducer. It writes to the graph and to `sidebar`;
+488:        const node = graph.node(msg.id);
+499:        const edge = graph.edge(msg.id);
+525:            ? graph.putNode({ id: sidebar.id, ...sidebar.draft })
+526:            : graph.putEdge({ id: sidebar.id, ...sidebar.draft });
+533:        if (sidebar.type === "node") graph.deleteNode(sidebar.id);
+534:        else graph.deleteEdge(sidebar.id);
+551:    if (!graphUpdates.has(key)) return;
+574:        state.tab = "graph";
+651:              tools: readTools(graph),
+652:              graph: graph.render(),
+713:  // e2e specs seed a known graph through this handle rather than driving the
+715:  (window as unknown as { __graph?: KnowledgeGraph }).__graph = graph;
+729:    ).filter(({ thread, index }) => !graphUpdates.has(address(thread, index)));
+734:          graphUpdates.has(address(tree.root, index)),
+exit code 0

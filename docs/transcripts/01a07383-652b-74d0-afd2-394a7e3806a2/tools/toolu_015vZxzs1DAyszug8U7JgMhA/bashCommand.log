@@ -1,0 +1,10 @@
+$ cd /Users/denis.lantsman/src/edulab && grep -n "after\`\|\`after\|answered it\|answered this turn" plans/2026-09-05-interaction-reflection.md
+stdout:
+26:- `Interaction` — one user turn somewhere in the tree, together with everything that led to it: its thread's seed and transcript up to that point, and the assistant blocks that answered it. New; lives in `interactions.ts`.
+56:**Context is the whole thread prefix.** The cheap thing — sending only the assistant blocks either side of the turn — is an optimization, and optimizing before we know whether the model can produce good notes at all is backwards. So each interaction is reflected on with everything that led to it: its thread's seed, its transcript from the top, and the assistant blocks that answered this turn. This is quadratic in tokens over a thread, and at prototype scale that is affordable.
+69:- `after` — the assistant blocks that answered it. A quiz answer only means something next to the question.
+111:  /** The assistant blocks that answered it; empty if nothing came back yet. */
+190:  - A turn that is still streaming (no assistant reply yet) yields an interaction with an empty `after` rather than being skipped.
+191:  - Every emitted block carries the index it sits at in its thread's `messages`, `prefix` and `after` included, so an address rendered into a prompt round-trips back to the same block.
+209:  - `reflectPrompt` renders the interaction's own address and those of its `prefix`/`after` blocks, and they resolve back to those blocks through `resolve`.
+exit code 0

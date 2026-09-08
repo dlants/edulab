@@ -1,0 +1,4 @@
+$ cd /Users/denis.lantsman/src/edulab && git add -A && git commit -m "Stage 3: the graph update prompt" -q && git log --oneline -1
+stdout:
+7139e22 Stage 3: the graph update prompt
+exit code 0

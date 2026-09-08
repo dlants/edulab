@@ -1,0 +1,12 @@
+$ cd /Users/denis.lantsman/src/edulab/packages/frontend && awk 'NR>1230 && NR<1300 && (/destroy/||/cleanup/)' view.ts; grep -n "destroy()" view.ts
+stdout:
+  destroy(): void {
+    this.b.cleanup();
+507:  destroy(): void {
+542:  destroy(): void {
+697:  destroy(): void {
+854:  destroy(): void {
+930:  destroy(): void {
+1099:  destroy(): void {
+1265:  destroy(): void {
+exit code 0

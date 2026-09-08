@@ -1,0 +1,62 @@
+$ cd /Users/denis.lantsman/src/edulab/packages/e2e && npx playwright test tests/persistence.spec.ts tests/graph.spec.ts --reporter=line
+stdout:
+Running 23 tests using 7 workers
+[1/23] tests/graph.spec.ts:159:1 › an edge is selectable and editable
+[2/23] tests/graph.spec.ts:113:1 › clicking a node fills the sidebar and a retitle keeps its edges
+[3/23] tests/graph.spec.ts:92:1 › switching tabs leaves the transcript and the graph intact
+[4/23] tests/graph.spec.ts:199:1 › dragging the canvas pans the graph but still selects on a click
+[5/23] tests/graph.spec.ts:149:1 › deleting a node takes its edges with it
+[6/23] tests/graph.spec.ts:180:1 › zooming spreads the nodes without resizing them, and reset restores
+[7/23] tests/graph.spec.ts:136:1 › a duplicate title is rejected without losing the draft
+  1) tests/graph.spec.ts:180:1 › zooming spreads the nodes without resizing them, and reset restores 
+    Error: nodes are not laid out
+      174 |   const boxes = await nodes(page).all();
+      175 |   const [a, b] = await Promise.all(boxes.map((n) => n.boundingBox()));
+    > 176 |   if (!a || !b) throw new Error("nodes are not laid out");
+          |                       ^
+      177 |   return Math.hypot(a.x - b.x, a.y - b.y);
+      178 | }
+      179 |
+        at spread (/Users/denis.lantsman/src/edulab/packages/e2e/tests/graph.spec.ts:176:23)
+        at /Users/denis.lantsman/src/edulab/packages/e2e/tests/graph.spec.ts:184:18
+    Error Context: test-results/graph-zooming-spreads-the--a2696-ing-them-and-reset-restores/error-context.md
+[8/23] tests/graph.spec.ts:365:1 › opening a learning thread updates the graph from its ask
+[9/23] tests/graph.spec.ts:396:1 › a failed graph update leaves the app usable
+[10/23] tests/graph.spec.ts:416:1 › building from a sample transcript walks its turns once
+[11/23] tests/graph.spec.ts:433:1 › a failed update mid-build does not stop the ones after it
+[12/23] tests/graph.spec.ts:445:1 › interacting mid-build interleaves rather than races
+[13/23] tests/graph.spec.ts:493:1 › a cited message is one click away from the note that rests on it
+[14/23] tests/graph.spec.ts:339:1 › every interaction updates the graph, one update at a time
+[15/23] tests/graph.spec.ts:515:1 › a citation that does not resolve is left as text
+[16/23] tests/graph.spec.ts:628:1 › an address written by a graph update navigates back to its turn
+[17/23] tests/graph.spec.ts:647:1 › clicking a change opens the graph tab with that node selected
+[18/23] tests/persistence.spec.ts:153:1 › a reload keeps the transcript, the graph and the update chips
+[19/23] tests/persistence.spec.ts:180:1 › a reload keeps a learning thread behind its mark
+[20/23] tests/persistence.spec.ts:202:1 › an interaction whose update never finished is re-enqueued
+[21/23] tests/persistence.spec.ts:228:1 › a build interrupted by a refresh resumes where it stopped
+[22/23] tests/persistence.spec.ts:270:1 › an unreadable snapshot is dropped and the app comes up bare
+[23/23] tests/persistence.spec.ts:289:1 › Reset clears this sample's state for good
+  2) tests/persistence.spec.ts:228:1 › a build interrupted by a refresh resumes where it stopped ───
+    Test timeout of 30000ms exceeded.
+    Error: expect(locator).toBeVisible() failed
+    Locator: getByText('built', { exact: true })
+    Expected: visible
+    Error: element(s) not found
+    Call log:
+      - Expect "toBeVisible" getByText('built', { exact: true }) with timeout 30000ms
+      - waiting for getByText('built', { exact: true })
+      - Test timeout of 30000ms exceeded.
+      259 |
+      260 |   await page.reload();
+    > 261 |   await expect(page.getByText("built", { exact: true })).toBeVisible({
+          |                                                          ^
+      262 |     timeout: 30_000,
+      263 |   });
+      264 |   expect(counts.updates).toBe(total);
+        at /Users/denis.lantsman/src/edulab/packages/e2e/tests/persistence.spec.ts:261:58
+    Error Context: test-results/persistence-a-build-interr-d0f1e-sh-resumes-where-it-stopped/error-context.md
+  2 failed
+    tests/graph.spec.ts:180:1 › zooming spreads the nodes without resizing them, and reset restores 
+    tests/persistence.spec.ts:228:1 › a build interrupted by a refresh resumes where it stopped ────
+  21 passed (32.8s)
+exit code 1

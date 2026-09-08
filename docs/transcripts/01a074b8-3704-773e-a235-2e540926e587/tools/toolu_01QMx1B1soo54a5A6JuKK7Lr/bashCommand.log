@@ -1,0 +1,34 @@
+$ cd /Users/denis.lantsman/src/edulab && sed -n '178,215p' packages/e2e/tests/chat.spec.ts
+stdout:
+function threadTranscript(page: Page) {
+  return page.locator("ul").nth(1);
+}
+/** The left pane's transcript. The right pane renders its own <ul>. */
+function taskTranscript(page: Page) {
+  return page.locator("ul").first();
+}
+const SENTENCE = "the quick brown fox jumps over the lazy dog";
+/** A transcript with one user message of known text, in learning mode. */
+async function transcript(page: Page, chunks: string[] = ["ok"]) {
+  const backend = await fakeBackend(page, chunks);
+  backend.release();
+  await page.goto("/");
+  await page.getByRole("textbox").fill(SENTENCE);
+  await page.getByRole("textbox").press("Enter");
+  await expect(taskTranscript(page).locator("li")).toHaveCount(2);
+  await page.getByRole("button", { name: "Reflect" }).click();
+  return backend;
+}
+test("streams a response into the transcript", async ({ page }) => {
+  const backend = await fakeBackend(page, ["Hello", ", world"]);
+  await page.goto("/");
+  await page.getByRole("textbox").fill("hi");
+  await page.getByRole("button", { name: "Send" }).click();
+  await expect(page.locator('[data-role="user"]')).toHaveText(/hi/);
+  backend.release();
+  await expect(page.locator('[data-role="assistant"]')).toHaveText(
+    /Hello, world/,
+  );
+  await expect(taskTranscript(page).locator("li")).toHaveCount(2);
+});
+exit code 0

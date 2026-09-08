@@ -1,0 +1,13 @@
+$ cd /Users/denis.lantsman/src/edulab/plans && f=2026-09-05-interaction-graph-updates.md && sed -i '' \
+ -e 's/the model can reflect just builds/the model can keep up just builds/' \
+ -e 's/and the reflecting model is the same model/and the updating thread runs the same model/' \
+ -e 's/which thread and index it is reflecting on/which thread and index it is looking at/' \
+ -e 's/Alternatives rejected: reflecting on thread/Alternatives rejected: updating the graph on thread/' \
+ -e 's/Nothing is reflected on twice, and nothing reflects on the agent.s own turns/Nothing is counted twice, and the agent'"'"'s own turns never trigger one/' \
+ -e 's/^## reflect on every interaction/## update the graph on every interaction/' \
+ -e 's/likewise reflects, with the opening/likewise kicks one off, with the opening/' \
+ -e 's/and the next interaction still reflects/and the next interaction still updates the graph/' \
+ $f && grep -in "reflect" $f
+stdout:
+8:> - instead of pushing the whole thread it at once, I want to traverse every user interaction, and ask the agent to just reflect on that interaction in the context of the domain graph.
+exit code 0

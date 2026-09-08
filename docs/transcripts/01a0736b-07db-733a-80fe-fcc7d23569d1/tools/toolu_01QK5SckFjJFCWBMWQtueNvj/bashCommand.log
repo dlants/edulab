@@ -1,0 +1,100 @@
+$ cd packages/frontend && sed -n 1,60p selection.test.ts && sed -n 1,50p thread.ts
+stdout:
+import { expect, it } from "vitest";
+import {
+  type Anchor,
+  type Mark,
+  overlaps,
+  segments,
+  type ThreadId,
+} from "./selection.ts";
+const thread = (n: number) => `t${n}` as ThreadId;
+const at = (
+  startMsg: number,
+  start: number,
+  endMsg: number,
+  end: number,
+): Anchor => ({
+  thread: "root" as ThreadId,
+  start: { msg: startMsg, offset: start },
+  end: { msg: endMsg, offset: end },
+});
+const mark = (n: number, anchor: Anchor): Mark => ({
+  thread: thread(n),
+  anchor,
+});
+const shape = (segs: ReturnType<typeof segments>) =>
+  segs.map((s) => [s.start, s.end, s.thread ?? (s.live ? "live" : null)]);
+it("renders one plain run when there is nothing to mark", () => {
+  expect(shape(segments([], null, 0, 10))).toEqual([[0, 10, null]]);
+});
+it("splits around a single mark", () => {
+  const segs = segments([mark(1, at(0, 2, 0, 5))], null, 0, 10);
+  expect(shape(segs)).toEqual([
+    [0, 2, null],
+    [2, 5, thread(1)],
+    [5, 10, null],
+  ]);
+});
+it("keeps two disjoint marks in document order", () => {
+  const marks = [mark(2, at(0, 6, 0, 8)), mark(1, at(0, 1, 0, 3))];
+  expect(shape(segments(marks, null, 0, 10))).toEqual([
+    [0, 1, null],
+    [1, 3, thread(1)],
+    [3, 6, null],
+    [6, 8, thread(2)],
+    [8, 10, null],
+  ]);
+});
+it("covers whole intermediate messages of a multi-message mark", () => {
+  const marks = [mark(1, at(0, 4, 2, 3))];
+  expect(shape(segments(marks, null, 1, 10))).toEqual([[0, 10, thread(1)]]);
+  expect(shape(segments(marks, null, 0, 10))).toEqual([
+    [0, 4, null],
+    [4, 10, thread(1)],
+import type Anthropic from "@anthropic-ai/sdk";
+import type { ClientMessage, ServerFrame } from "@edulab/iso/protocol.ts";
+const MODEL = "claude-opus-4-5";
+const MAX_TOKENS = 16384;
+// Task mode: the agent is here to get the user's work done. Learning mode is
+// the secondary mode we layer on top of a transcript this produces, so this
+// prompt must not pre-emptively tutor - the whole premise of the prototype is
+// that a user watching a capable agent work becomes a passive observer.
+const SYSTEM = [
+  "You are a capable engineering assistant helping the user complete a task.",
+  "Work the problem directly: make concrete decisions, write real code, and",
+  "state your reasoning as you go rather than asking the user to supply it.",
+  "Be concise. Do not quiz the user, do not pad explanations for a beginner,",
+  "and do not check whether they are following - just do the work well.",
+].join(" ");
+// Unattended mode: nobody is reading the transcript as it streams, so a
+// question to the user is a dead end. The only exit is the yield tool.
+const AUTONOMOUS_SYSTEM = [
+  "You are a capable engineering assistant running unattended: there is no",
+  "user to answer questions, and nothing you say outside the yield tool will",
+  "be read. Work the problem to completion, making whatever decisions you",
+  "need without asking, and finish by calling the yield tool exactly once",
+  "with your result. Do not stop for confirmation and do not ask questions.",
+].join(" ");
+const MAX_RESTARTS = 5;
+const restartNudge = (attempt: number, max: number) =>
+  `You stopped without yielding. Nobody read that message. Complete the task and call the yield tool when you are done. (auto-restart ${attempt}/${max})`;
+const YIELD = "yield";
+const DEFAULT_YIELD_SCHEMA: Anthropic.Tool.InputSchema = {
+  type: "object",
+  properties: {
+    result: {
+      type: "string",
+      description: "The result to return to whoever spawned this thread.",
+    },
+  },
+  required: ["result"],
+};
+export type ToolCall = {
+  id: string;
+  name: string;
+  /** Parsed from the streamed json; undefined while still streaming or if it
+   * never parsed. */
+  input: Record<string, unknown> | undefined;
+  /** Raw accumulated json, so a partial call is still renderable. */
+exit code 0

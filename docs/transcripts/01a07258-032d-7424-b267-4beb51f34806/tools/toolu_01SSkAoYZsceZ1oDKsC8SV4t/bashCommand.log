@@ -1,0 +1,122 @@
+$ cd /Users/denis.lantsman/src/edulab && cat packages/frontend/prompt.ts && sed -n '127,160p;311,340p' packages/frontend/vamp.ts
+stdout:
+import { type Anchor, anchorText } from "./selection.ts";
+import type { Message } from "./thread.ts";
+export type Action =
+  | { type: "explain" }
+  | { type: "quiz" }
+  | { type: "query"; text: string };
+/** Learning mode: the agent is explaining work that already happened, to a
+ * user who chose the passage they are stuck on. */
+export const LEARNING_SYSTEM = [
+  "You are helping a user understand engineering work that was done for them.",
+  "They will show you a transcript and point at a passage they picked out.",
+  "Answer about that passage specifically, in plain language, and assume the",
+  "user has not followed the reasoning that produced it. Be concise, and do",
+  "not restate the whole transcript back to them.",
+].join(" ");
+/** The single synthetic user turn seeding a learning thread. `seed` is the
+ * parent's own seed and is emitted verbatim - wrapping or re-labelling it
+ * would nest the framing one layer deeper at every level. */
+export function seedTurn(
+  seed: string | undefined,
+  messages: ReadonlyArray<Message>,
+  anchor: Anchor,
+  action: Action,
+): string {
+  const visible = messages.slice(0, anchor.end.msg + 1);
+  const sections = [];
+  if (seed) sections.push(seed);
+  sections.push(transcript(visible));
+  sections.push(
+    `The user then selected: "${anchorText(anchor, visible)}"\n${question(action)}`,
+  );
+  return sections.join("\n\n");
+}
+function transcript(messages: ReadonlyArray<Message>): string {
+  return messages
+    .map((m) => `${m.role === "user" ? "User" : "Assistant"}: ${line(m)}`)
+    .join("\n\n");
+}
+function line(message: Message): string {
+  return message.type === "text"
+    ? message.text
+    : `[called tool ${message.call.name} with ${message.call.inputJson}]`;
+}
+/** How the thread was opened, shown at the top of its pane so the user can see
+ * what they asked for. */
+export function actionLabel(action: Action): string {
+  switch (action.type) {
+    case "explain":
+      return "I don't understand this.";
+    case "quiz":
+      return "Quiz me on this.";
+    case "query":
+      return action.text;
+  }
+}
+function question(action: Action): string {
+  switch (action.type) {
+    case "explain":
+      return "They said they don't understand this. Explain what it means and why it is there.";
+    case "quiz":
+      return "They asked to be quizzed on this. Ask one question that checks whether they understand it, and wait for their answer.";
+    case "query":
+      return `They asked: ${action.text}`;
+  }
+}
+export class Binder<State> {
+  private bindings: Binding<State>[] = [];
+  private container: HTMLElement;
+  private cleanups: (() => void)[] = [];
+  private state: State;
+  constructor(container: HTMLElement, initialState: State) {
+    this.container = container;
+    this.state = initialState;
+  }
+  /** Query a single element by its data-ref attribute. Throws if not exactly one match. */
+  ref<T extends HTMLElement = HTMLElement>(name: Ref): T {
+    const els = this.container.querySelectorAll<T>(`[data-ref="${name}"]`);
+    if (els.length !== 1) {
+      throw new Error(`ref("${name}"): expected 1 match, found ${els.length}`);
+    }
+    return els[0];
+  }
+  sync(state: State): void {
+    this.state = state;
+    for (const b of this.bindings) b(state);
+  }
+  cleanup(): void {
+    for (const c of this.cleanups) c();
+    this.cleanups = [];
+    this.bindings = [];
+  }
+  /** Bind the text of the element via textContent (for XSS protection) */
+  bindText(ref: Ref, fn: (s: State) => string): void {
+  bindList(
+    ref: Ref,
+    childTag: string,
+    fn: (s: State) => KeyedSlotContent[],
+  ): void {
+    const el = this.ref(ref);
+    const children = new Map<
+      string,
+      {
+        view: View<unknown>;
+        ctor: ViewCtor<unknown, unknown, unknown>;
+        el: HTMLElement;
+      }
+    >();
+    const cleanup = () => {
+      for (const [, child] of children) child.view.destroy();
+      children.clear();
+      el.innerHTML = "";
+    };
+    const binding = (s: State) => {
+      const items = fn(s) as unknown as KeyedSlotContentInternal[];
+      const nextKeys = new Set<string>();
+      for (const item of items) {
+        nextKeys.add(item.key);
+        let child = children.get(item.key);
+        if (child && child.ctor !== item.ctor) {
+exit code 0

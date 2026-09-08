@@ -1,0 +1,60 @@
+$ cd /Users/denis.lantsman/src/edulab/packages/frontend && python3 - <<'EOF'
+import re
+p='interactions.test.ts'
+s=open(p).read()
+s=s.replace('''it("captures a root turn with everything before it and nothing after", () => {
+  const { socket, tree, root } = setup();
+  void root.send("how does backpressure work");
+  socket.replies("it does not");
+  void root.send("and framing");''','''it("captures a root turn with everything before it and nothing after", async () => {
+  const { socket, tree, root } = setup();
+  const first = root.send("how does backpressure work");
+  socket.replies("it does not");
+  await first;
+  void root.send("and framing");''')
+s=s.replace('''it("shares a prefix between two interactions in the same thread", () => {
+  const { socket, tree, root } = setup();
+  void root.send("first");
+  socket.replies("ok");
+  void root.send("second");
+  socket.replies("ok too");
+  void root.send("third");''','''it("shares a prefix between two interactions in the same thread", async () => {
+  const { socket, tree, root } = setup();
+  const first = root.send("first");
+  socket.replies("ok");
+  await first;
+  const second = root.send("second");
+  socket.replies("ok too");
+  await second;
+  void root.send("third");''')
+s=s.replace('''it("refuses an address that is not a user turn", () => {
+  const { socket, tree, root } = setup();
+  void root.send("hi");
+  socket.replies("hello");''','''it("refuses an address that is not a user turn", async () => {
+  const { socket, tree, root } = setup();
+  const turn = root.send("hi");
+  socket.replies("hello");
+  await turn;''')
+s=s.replace('''  const first = interactionAt(tree, tree.root, idx(0));
+  const second = interactionAt(tree, tree.root, idx(4));''','''  const firstAsk = interactionAt(tree, tree.root, idx(0));
+  const secondAsk = interactionAt(tree, tree.root, idx(4));''')
+s=s.replace('''  expect(second.prefix.messages.slice(0, first.prefix.messages.length)).toEqual(
+    first.prefix.messages,
+  );
+  expect(second.prefix.messages).toEqual(''','''  expect(
+    secondAsk.prefix.messages.slice(0, firstAsk.prefix.messages.length),
+  ).toEqual(firstAsk.prefix.messages);
+  expect(secondAsk.prefix.messages).toEqual(''')
+open(p,'w').write(s)
+EOF
+cd /Users/denis.lantsman/src/edulab && npm test -- --run packages/frontend/interactions.test.ts
+stdout:
+> edulab@0.0.1 test
+> vitest run --run packages/frontend/interactions.test.ts
+ RUN  v4.1.11 /Users/denis.lantsman/src/edulab
+ ✓ packages/frontend/interactions.test.ts (4 tests) 12ms
+ Test Files  1 passed (1)
+      Tests  4 passed (4)
+   Start at  20:08:05
+   Duration  182ms (transform 37ms, setup 0ms, import 100ms, tests 12ms, environment 0ms)
+exit code 0

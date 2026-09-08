@@ -1,0 +1,7 @@
+$ cd /Users/denis.lantsman/src/edulab && npx biome check --write packages/frontend/thread.ts && npm run typecheck && npm test
+stdout:
+Checked 1 file in 104ms. Fixed 1 file.
+> edulab@0.0.1 typecheck
+> npm -w @edulab/iso exec tsc -- --noEmit && npm -w @edulab/frontend exec tsc -- --noEmit && npm -w @edulab/backend exec tsc -- --noEmit && npm -w @edulab/e2e exec tsc -- --noEmit
+thread.ts(187,17): error TS2394: This overload signature is not compatible with its implementation signature.
+exit code 2

@@ -1,0 +1,6 @@
+$ cd /Users/denis.lantsman/src/edulab && grep -rn "transcript" packages/e2e --include=*.ts -l
+stdout:
+packages/e2e/tests/persistence.spec.ts
+packages/e2e/tests/graph.spec.ts
+packages/e2e/tests/chat.spec.ts
+exit code 0

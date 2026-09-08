@@ -1,0 +1,49 @@
+$ cd /Users/denis.lantsman/src/edulab && npm test --silent && npm run typecheck --silent && npm run lint --silent
+stdout:
+ RUN  v4.1.11 /Users/denis.lantsman/src/edulab
+ ✓ packages/frontend/prompt.test.ts (5 tests) 2ms
+ ✓ packages/frontend/selection.test.ts (8 tests) 3ms
+ ✓ packages/frontend/thread.test.ts (15 tests) 20ms
+ Test Files  3 passed (3)
+      Tests  28 passed (28)
+   Start at  07:11:20
+   Duration  164ms (transform 94ms, setup 0ms, import 202ms, tests 24ms, environment 0ms)
+stderr:
+packages/frontend/thread.test.ts format ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  × Formatter would have printed the following content:
+      3   3 │   
+import { expect, it } from "vitest";
+      4   4 │   import {
+ anchorText, type ThreadId } f
+rom "./selection.t
+s";
+      5     │ - 
+import·{
+      6
+     │ - ··t
+ype·Socket,
+  7     │ - ··Th
+read,
+      8     │ 
+- ··type·Tool,
+      9     │ - ··type·ToolResult,
+     10     │ - 
+}·from·"./thread.ts";
+          5 │ 
++ impo
+rt·{·type·S
+ocket,·Thread,·type·Tool,·type·
+ToolResult·}·from·
+"./thread.ts
+";
+     11   6 │   
+     12   7 │   class FakeSocke
+t implements So
+cket {
+stdout:
+Checked 39 files in 115ms. No fixes applied.
+Found 1 error.
+stderr:
+check ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  × Some errors were emitted while running checks.
+exit code 1

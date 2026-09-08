@@ -1,0 +1,4 @@
+$ cd /Users/denis.lantsman/src/edulab && git add -A && git commit -q -m "Stage 5: Rendering and the tree" && git log --oneline -1
+stdout:
+c92a27e Stage 5: Rendering and the tree
+exit code 0

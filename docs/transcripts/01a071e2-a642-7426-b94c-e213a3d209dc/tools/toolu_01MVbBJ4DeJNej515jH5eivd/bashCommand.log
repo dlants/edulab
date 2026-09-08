@@ -1,0 +1,46 @@
+$ cd /Users/denis.lantsman/src/edulab && git log --oneline -6 --name-status | grep -i -E "samples|^[0-9a-f]{7} " | head -40; ls samples 2>/dev/null; find . -name "*.json" -newer package.json -not -path "*/node_modules/*"
+stdout:
+251d673 Sync transcripts
+41226d7 Collapse the prototype tabs into one page, sample picker in the header
+25874b6 Show the opening action, and pin the bars around a scrolling transcript
+9b0ab1d Add five more task samples
+A	task-samples/357dee9a-statsforecast-zero-constraints.json
+A	task-samples/37734816-colbert-raptor-rag-design.json
+A	task-samples/5b878a60-solidity-guildtoken-audit.json
+A	task-samples/80e08978-quantum-espresso-burai-relaxation.json
+A	task-samples/aa0cb918-statsforecast-polars-series-lengths.json
+343ff8d Stage 4: Nesting and the arrows
+20be80b Stage 3: Threads on the right pane
+./task-samples/80e08978-quantum-espresso-burai-relaxation.json
+./task-samples/74979366-floating-dock-pontoon.json
+./task-samples/3890541b-chiller-system-hysys-model.json
+./task-samples/9833484b-c-heap-file-block-storage.json
+./task-samples/357dee9a-statsforecast-zero-constraints.json
+./task-samples/44bbcae8-tile-adhesive-formulation.json
+./task-samples/72c7ec37-django-event-app-urls.json
+./task-samples/aa0cb918-statsforecast-polars-series-lengths.json
+./task-samples/5b878a60-solidity-guildtoken-audit.json
+./task-samples/37734816-colbert-raptor-rag-design.json
+./docs/transcripts/01a07039-f345-74ba-8ac2-66d6e0c92aed/meta.json
+./docs/transcripts/01a07044-33b9-76ef-9127-8aff3d6090ea/meta.json
+./docs/transcripts/01a071d2-d244-7009-b24a-5271da1b3361/meta.json
+./docs/transcripts/01a071bf-597d-7589-838a-1dd82a5dabb5/meta.json
+./docs/transcripts/01a07002-c45e-74bf-8535-1f74aeff3421/meta.json
+./docs/transcripts/01a071d2-d246-7144-865d-9a403cc90cf5/meta.json
+./docs/transcripts/01a071d3-8170-760f-a2c8-767f91129f02/meta.json
+./docs/transcripts/01a07039-cd76-72ec-b8e0-3dd95451c722/meta.json
+./docs/transcripts/01a06fe2-9750-7150-8898-a2438b7ee2e2/meta.json
+./docs/transcripts/01a071cd-d7cb-7540-8cff-8cdf36666435/meta.json
+./docs/transcripts/01a07040-9e4b-7168-9a48-4df8c29e793f/meta.json
+./docs/transcripts/01a0703b-86b6-7799-9b08-e51121690118/meta.json
+./docs/transcripts/01a0700b-ae3b-7751-a85f-d886dd9fcfee/meta.json
+./docs/transcripts/01a071d4-e04d-7288-9714-26caf5e424e0/meta.json
+./docs/transcripts/01a071d2-d246-7144-865d-9d65df68851e/meta.json
+./package-lock.json
+./packages/frontend/samples/74979366-floating-dock-pontoon.json
+./packages/frontend/samples/9833484b-c-heap-file-block-storage.json
+./packages/frontend/samples/44bbcae8-tile-adhesive-formulation.json
+./packages/frontend/samples/72c7ec37-django-event-app-urls.json
+./packages/frontend/tsconfig.json
+./packages/e2e/package.json
+exit code 0

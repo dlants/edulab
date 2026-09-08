@@ -1,0 +1,16 @@
+$ cd /Users/denis.lantsman/src/edulab && ls packages/frontend/samples && grep -rn "initialTurns\|samples" packages/frontend/prototypes/chat.ts | sed -n 1,40p
+stdout:
+357dee9a-statsforecast-zero-constraints.json
+37734816-colbert-raptor-rag-design.json
+3890541b-chiller-system-hysys-model.json
+44bbcae8-tile-adhesive-formulation.json
+5b878a60-solidity-guildtoken-audit.json
+72c7ec37-django-event-app-urls.json
+74979366-floating-dock-pontoon.json
+80e08978-quantum-espresso-burai-relaxation.json
+9833484b-c-heap-file-block-storage.json
+aa0cb918-statsforecast-polars-series-lengths.json
+index.ts
+packages/frontend/prototypes/chat.ts:11:import { selectedSample, selectSample } from "../samples/index.ts";
+packages/frontend/prototypes/chat.ts:43:    new Thread(socket, { initialTurns: selectedSample()?.turns }),
+exit code 0

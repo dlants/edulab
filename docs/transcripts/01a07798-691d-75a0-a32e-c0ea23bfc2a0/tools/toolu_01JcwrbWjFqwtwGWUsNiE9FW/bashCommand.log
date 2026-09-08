@@ -1,0 +1,5 @@
+$ cd /Users/denis.lantsman/src/edulab && grep -n "const input = this.b.ref<HTMLTextAreaElement>" packages/frontend/view.ts
+stdout:
+738:    const input = this.b.ref<HTMLTextAreaElement>(inputRef);
+939:    const input = this.b.ref<HTMLTextAreaElement>(inputRef);
+exit code 0

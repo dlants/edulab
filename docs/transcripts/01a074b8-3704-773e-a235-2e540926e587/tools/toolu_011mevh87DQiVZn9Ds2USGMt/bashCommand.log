@@ -1,0 +1,20 @@
+$ cd /Users/denis.lantsman/src/edulab && cat >> packages/e2e/tests/graph.spec.ts <<'EOF'
+test("clicking a change opens the graph tab with that node selected", async ({
+  page,
+}) => {
+  await updateBackend(page);
+  await page.goto("/");
+  await turn(page, "how does backpressure work");
+  const change = page.locator("[data-change]");
+  await expect(change).toHaveText(['created "concept-1"']);
+  await change.click();
+  await expect(graphTab(page)).toHaveAttribute("aria-pressed", "true");
+  await expect(page.locator("[data-graph-title]")).toHaveValue("concept-1");
+});
+EOF
+cd packages/e2e && npx playwright test --grep "clicking a change" --reporter=line
+stdout:
+Running 1 test using 1 worker
+[1/1] tests/graph.spec.ts:406:1 › clicking a change opens the graph tab with that node selected
+  1 passed (1.3s)
+exit code 0

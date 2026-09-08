@@ -1,0 +1,98 @@
+$ cd /Users/denis.lantsman/src/edulab && sed -n 370,470p packages/frontend/prototypes/chat.ts
+stdout:
+      expanded: updateExpandedFor(updateFocus),
+    };
+  }
+  function sync(): void {
+    refresh();
+    view.sync(state);
+    save();
+  }
+  /** One detached thread per user interaction, writing straight into the graph
+   * through its tools. Queued against every other update rather than run
+   * concurrently, and never awaited by the user: the learning thread answers
+   * them regardless, and a failure here is invisible outside the console. */
+  function queueGraphUpdate(
+    thread: ThreadId,
+    index: MessageIdx,
+  ): Promise<string | null> {
+    const interaction = interactionAt(tree, thread, index);
+    const key = address(thread, index);
+    graphUpdates.set(key, { type: "running", messages: [] });
+    // The update thread's transcript, as of its last change: the chips are read
+    // off the calls it actually made, not off a side channel, and the same
+    // transcript is what the review pane shows.
+    let transcript: ReadonlyArray<Message> = [];
+    const done = updates
+      .then(async () => {
+        // Read inside the queued step, so this update sees the previous one's
+        // writes rather than the graph as it stood when it was enqueued.
+        const result = await runThread(socket, {
+          system: GRAPH_UPDATE_SYSTEM,
+          prompt: graphUpdatePrompt(interaction, graph.render()),
+          tools: writeTools(graph),
+          yieldSchema: "void",
+          onChange: (messages) => {
+            transcript = messages;
+            graphUpdates.set(key, { type: "running", messages });
+            sync();
+          },
+        });
+        if (result.status === "error") {
+          console.error(result.error);
+          return String(result.error);
+        }
+        return null;
+      })
+      .catch((e: unknown) => {
+        console.error(e);
+        return String(e);
+      })
+      .then((error) => {
+        graphUpdates.set(key, {
+          type: "done",
+          changes: changesOf(transcript),
+          messages: transcript,
+        });
+        sync();
+        return error;
+      });
+    updates = done.then(() => undefined);
+    return done;
+  }
+  /** The sample's own turns: a loaded transcript is a session that happened
+   * before this page existed, so no live update ever ran over it. Every turn
+   * after these came from an interaction that updated the graph itself, so
+   * enumerating once at mount is what keeps the build from double-counting. */
+  const sampleTurnCount = (sample?.turns ?? []).filter(
+    (t) => t.role === "user",
+  ).length;
+  const sampleInteractions: MessageIdx[] = tree
+    .get(tree.root)
+    .thread.messages.flatMap((m, i) =>
+      m.role === "user" && m.type === "text" ? [i as MessageIdx] : [],
+    )
+    .slice(0, sampleTurnCount);
+  function advanceBuild(key: string, error: string | null): void {
+    const build = state.build;
+    if (build.type !== "running") return;
+    state.build = {
+      type: "running",
+      done: build.done + 1,
+      total: build.total,
+      failures:
+        error === null
+          ? build.failures
+          : [...build.failures, { address: key, error }],
+    };
+  }
+  function finishBuild(): void {
+    const build = state.build;
+    if (build.type !== "running") return;
+    state.build = { type: "done", failures: build.failures };
+  }
+  /** Walks the loaded sample's turns through the same queue the live updates
+   * use, so an interaction mid-build interleaves rather than races. */
+  function runBuild(): void {
+    if (state.build.type !== "idle") return;
+exit code 0

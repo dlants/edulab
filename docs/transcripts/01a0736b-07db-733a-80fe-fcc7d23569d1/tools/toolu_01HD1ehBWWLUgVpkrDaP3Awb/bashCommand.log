@@ -1,0 +1,23 @@
+$ ls packages/frontend; cat packages/frontend/conversation.test.ts
+stdout:
+index.html
+learning.ts
+main.ts
+node_modules
+package.json
+prompt.test.ts
+prompt.ts
+prototypes
+samples
+selection.test.ts
+selection.ts
+thread.test.ts
+thread.ts
+threads.test.ts
+threads.ts
+tsconfig.json
+vamp.ts
+view.ts
+stderr:
+cat: packages/frontend/conversation.test.ts: No such file or directory
+exit code 1

@@ -1,0 +1,23 @@
+$ cd /Users/denis.lantsman/src/edulab && grep -n "test:e2e" package.json && npm run test:e2e -- --grep "tool call is rendered"
+stdout:
+16:    "test:e2e": "npm -w @edulab/e2e run test",
+> edulab@0.0.1 test:e2e
+> npm -w @edulab/e2e run test --grep tool call is rendered
+stderr:
+npm warn "tool call is rendered" is being parsed as a normal command line argument.
+npm warn Unknown cli config "--grep". This will stop working in the next major version of npm.
+stdout:
+> @edulab/e2e@0.0.1 test
+> playwright test tool call is rendered
+Error: No tests found.
+Make sure that arguments are regular expressions matching test files.
+You may need to escape symbols like "$" or "*" and quote the arguments.
+stderr:
+npm error Lifecycle script `test` failed with error:
+npm error code 1
+npm error path /Users/denis.lantsman/src/edulab/packages/e2e
+npm error workspace @edulab/e2e@0.0.1
+npm error location /Users/denis.lantsman/src/edulab/packages/e2e
+npm error command failed
+npm error command sh -c playwright test 'tool call is rendered'
+exit code 1

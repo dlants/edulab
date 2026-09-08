@@ -1,0 +1,293 @@
+$ sed -n 550,660p packages/frontend/view.ts; echo ===; sed -n 740,860p packages/frontend/view.ts; echo ===1040; sed -n 1030,1100p packages/frontend/view.ts
+stdout:
+  }
+  sync(state: ChangeState): void {
+    this.b.sync(state);
+  }
+  destroy(): void {
+    this.b.cleanup();
+    this.container.innerHTML = "";
+  }
+}
+type MessageState = {
+  message: Message;
+  expanded: boolean;
+  segments: ReadonlyArray<Segment>;
+  active: ThreadId | null;
+  /** The background graph update this turn triggered, if it triggered one. */
+  update: GraphUpdate | null;
+};
+type MessageMsg =
+  | SegmentMsg
+  | { type: "TOGGLE_EXPANDED" }
+  | { type: "CHANGE_CLICKED"; id: GraphId }
+  | { type: "SHOW_UPDATE" };
+/** How many lines the clamp hides, estimated from the text that the clipped
+ * box holds: the prose, and the tool call rendered under it. */
+function hiddenLines(message: Message): number {
+  const blocks = [messageText(message), resultText(message)];
+  if (message.type === "tool_use")
+    blocks.push(message.call.name, message.call.inputJson);
+  const lines = blocks
+    .filter((block) => block !== "")
+    .flatMap((block) => block.split("\n"))
+    .reduce(
+      (total, line) => total + Math.ceil(line.length / CHARS_PER_LINE),
+      0,
+    );
+  return lines - MAX_MESSAGE_LINES;
+}
+class MessageView implements View<MessageState, MessageMsg> {
+  container: HTMLElement;
+  private b: Binder<MessageState>;
+  constructor(
+    container: HTMLElement,
+    dispatch: (msg: MessageMsg) => void,
+    initial: MessageState,
+  ) {
+    const roleRef = ref("role");
+    const textRef = ref("text");
+    const toolRef = ref("tool");
+    const toolNameRef = ref("tool-name");
+    const toolInputRef = ref("tool-input");
+    const toolResultRef = ref("tool-result");
+    const clipRef = ref("clip");
+    const toggleRef = ref("toggle");
+    const moreRef = ref("more");
+    const updateRef = ref("update");
+    const updateStatusRef = ref("update-status");
+    const changesRef = ref("changes");
+    const updateThreadRef = ref("update-thread");
+    container.className = messageClass;
+    // The tool block sits outside the .text span on purpose: resolvePoint only
+    // anchors inside it, so a tool call is rendered but not selectable.
+    container.innerHTML = sanitize`
+      <span class="${roleClass}" data-ref="${roleRef}"></span>
+      <button
+        class="${toggleClass}"
+        type="button"
+        data-ref="${toggleRef}"
+        aria-label="Expand or collapse this message"
+      ></button>
+      <div class="${clipClass}" data-ref="${clipRef}">
+        <span class="${textClass}" data-text data-ref="${textRef}"></span>
+        <div class="${toolClass}" data-tool data-ref="${toolRef}">
+          <strong data-tool-name data-ref="${toolNameRef}"></strong>
+          <pre data-tool-input data-ref="${toolInputRef}"></pre>
+          <pre class="${toolResultClass}" data-tool-result data-ref="${toolResultRef}"></pre>
+        </div>
+      </div>
+      <div class="${moreClass}" data-more data-ref="${moreRef}"></div>
+      <div class="${updateClass}" data-update data-ref="${updateRef}">
+        <span data-update-status data-ref="${updateStatusRef}"></span>
+        <span class="${changeListClass}" data-ref="${changesRef}"></span>
+        <button
+          class="${changeClass}"
+          type="button"
+          data-update-thread
+          data-ref="${updateThreadRef}"
+        >transcript</button>
+      </div>
+    `;
+    this.container = container;
+    this.b = new Binder(container, initial);
+    this.b.bindText(roleRef, (s) => s.message.role);
+    // Keyed by start offset: the transcript is append-only, so a run keeps its
+    // start while the message grows and while marks are added after it.
+    this.b.bindList(textRef, "span", (s) =>
+      s.segments.map((seg) =>
+        showKeyed(
+          String(seg.start),
+          SegmentView,
+          {
+            text: messageText(s.message).slice(seg.start, seg.end),
+            thread: seg.thread,
+            live: seg.live,
+            active: seg.thread !== null && seg.thread === s.active,
+===
+  if (message.type !== "tool_use") return "";
+  const result = message.call.result;
+  if (!result) return "";
+  return result.status === "ok" ? result.text : result.error;
+}
+export type ThreadPaneState = {
+  messages: ReadonlyArray<Message>;
+  /** The thread this pane shows: a selection over it anchors to it. */
+  thread: ThreadId;
+  /** Highlights over this transcript, one per thread opened from it. */
+  marks: ReadonlyArray<Mark>;
+  /** The live selection, when it is over this pane rather than the left one. */
+  anchor: Anchor | null;
+  inFlight: boolean;
+  draft: string;
+  expanded: ReadonlySet<number>;
+  updates: Updates;
+};
+export type ThreadPaneMsg =
+  | { type: "DRAFT_CHANGED"; draft: string }
+  | { type: "SUBMIT" }
+  | { type: "TOGGLE_EXPANDED"; index: number }
+  | { type: "CHANGE_CLICKED"; id: GraphId }
+  | { type: "SHOW_UPDATE"; index: number }
+  | {
+      type: "SELECTION_CHANGED";
+      anchor: Anchor | null;
+      at: { x: number; y: number } | null;
+    }
+  | { type: "MARK_CLICKED"; thread: ThreadId };
+/** A learning thread on the right: its transcript and a composer. It captures
+ * a selection of its own, which is how the next layer down is opened without
+ * first descending into this one. */
+class ThreadPane implements View<ThreadPaneState, ThreadPaneMsg> {
+  container: HTMLElement;
+  private b: Binder<ThreadPaneState>;
+  /** The latest state, for the selection handler, which runs outside a binding. */
+  private current: ThreadPaneState;
+  constructor(
+    container: HTMLElement,
+    dispatch: (msg: ThreadPaneMsg) => void,
+    initial: ThreadPaneState,
+  ) {
+    const transcriptRef = ref("thread-transcript");
+    const inputRef = ref("thread-input");
+    const sendRef = ref("thread-send");
+    container.className = threadPaneClass;
+    container.innerHTML = sanitize`
+      <div class="${scrollbackClass}">
+        <ul class="${transcriptClass}" data-ref="${transcriptRef}"></ul>
+      </div>
+      <div class="${composerClass}">
+        <textarea data-ref="${inputRef}" rows="2" placeholder="Follow up…"></textarea>
+        <button type="button" data-ref="${sendRef}">Reply</button>
+      </div>
+    `;
+    this.container = container;
+    this.current = initial;
+    this.b = new Binder(container, initial);
+    const transcript = this.b.ref(transcriptRef);
+    const capture = () => {
+      const anchor = readAnchor(transcript, this.current.thread);
+      if (anchor === undefined) return;
+      dispatch({ type: "SELECTION_CHANGED", anchor, at: pointOfSelection() });
+    };
+    transcript.addEventListener("mouseup", capture);
+    transcript.addEventListener("keyup", capture);
+    const input = this.b.ref<HTMLTextAreaElement>(inputRef);
+    input.addEventListener("input", () => {
+      dispatch({ type: "DRAFT_CHANGED", draft: input.value });
+    });
+    input.addEventListener("keydown", (e: KeyboardEvent) => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        dispatch({ type: "SUBMIT" });
+      }
+    });
+    this.b
+      .ref(sendRef)
+      .addEventListener("click", () => dispatch({ type: "SUBMIT" }));
+    this.b.bindList(transcriptRef, "li", (s) =>
+      s.messages.map((message, i) =>
+        showKeyed(
+          String(i),
+          MessageView,
+          {
+            message,
+            expanded: lastExpanded(s.expanded, i, s.messages.length),
+            segments: segments(
+              s.marks,
+              s.anchor,
+              i,
+              messageText(message).length,
+            ),
+            active: null,
+            update: s.updates.get(i) ?? null,
+          },
+          {},
+          (msg: MessageMsg) => {
+            if (msg.type === "TOGGLE_EXPANDED")
+              dispatch({ type: "TOGGLE_EXPANDED", index: i });
+            else if (msg.type === "SHOW_UPDATE")
+              dispatch({ type: "SHOW_UPDATE", index: i });
+            else if (msg.type === "CLICKED")
+              dispatch({ type: "MARK_CLICKED", thread: msg.thread });
+            else if (msg.type === "CHANGE_CLICKED") dispatch(msg);
+          },
+        ),
+      ),
+    );
+    this.b.bindValue(inputRef, (s) => s.draft);
+    this.b.bindDisabled(inputRef, (s) => s.inFlight);
+    this.b.bindDisabled(sendRef, (s) => s.inFlight || s.draft.trim() === "");
+===1040
+      if (event.type === "mark:reveal") {
+        const mark = transcript.querySelector(`[data-mark="${event.thread}"]`);
+        if (mark instanceof HTMLElement) scrollIntoView(mark);
+        return;
+      }
+      if (event.type !== "transcript:reveal") return;
+      const li = transcript.children[event.index];
+      if (!(li instanceof HTMLElement)) return;
+      scrollIntoView(li);
+      li.classList.remove(flashClass);
+      // Restarting the animation needs a frame with the class off.
+      requestAnimationFrame(() => li.classList.add(flashClass));
+    });
+    // The transcript is append-only and never reorders, so the position of a
+    // message is a stable identity.
+    this.b.bindList(transcriptRef, "li", (s) =>
+      s.messages.map((message, i) =>
+        showKeyed(
+          String(i),
+          MessageView,
+          {
+            message,
+            expanded: lastExpanded(s.expanded, i, s.messages.length),
+            segments: segments(
+              s.marks,
+              s.anchor,
+              i,
+              messageText(message).length,
+            ),
+            active: s.activeMark,
+            update: s.updates.get(i) ?? null,
+          },
+          {},
+          (msg: MessageMsg) => {
+            switch (msg.type) {
+              case "TOGGLE_EXPANDED":
+                dispatch({ type: "TOGGLE_EXPANDED", index: i });
+                break;
+              case "CHANGE_CLICKED":
+                dispatch(msg);
+                break;
+              case "SHOW_UPDATE":
+                dispatch({ type: "SHOW_UPDATE", index: i });
+                break;
+              case "CLICKED":
+                dispatch({ type: "MARK_CLICKED", thread: msg.thread });
+                break;
+            }
+          },
+        ),
+      ),
+    );
+    this.b.bindSlot(learningRef, (s) => {
+      if (!s.split) return undefined;
+      // The update transcript is opened explicitly and closed explicitly, so
+      // while it is open it outranks both the active child and a selection.
+      if (s.updatePane) {
+        return show(UpdatePane, s.updatePane, {}, (msg: UpdatePaneMsg) =>
+          dispatch({ type: "UPDATE_MSG", msg }),
+        );
+      }
+      const child = s.child;
+      // A live selection and an active child compete for this pane; the newer
+      // one wins, and a selection is always the newer of the two here because
+      // opening or clicking a thread clears it.
+      if (child && !s.anchor) {
+        return show(ThreadPane, child, {}, (msg: ThreadPaneMsg) =>
+          dispatch({ type: "CHILD_MSG", msg }),
+        );
+      }
+      const learningState: LearningState = {
+exit code 0

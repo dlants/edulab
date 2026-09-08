@@ -1,0 +1,16 @@
+$ cd /Users/denis.lantsman/src/edulab && grep -n "^#\|^##" notes/exploration.md
+stdout:
+3:# framing the user's engagement with the learning moment
+15:# exploring the learning context
+19:## validity and quality
+23:## relevance to domain expertise
+33:## student-centered learning
+47:## intervention
+57:## the human stuff
+65:# Prototype exploration
+67:## domain map
+81:## prototype 1 - user-driven review
+87:## prototype 2 - the agent suggests key points to review
+95:## prototype 3 - domain map
+99:## prototype 4 - interactives
+exit code 0

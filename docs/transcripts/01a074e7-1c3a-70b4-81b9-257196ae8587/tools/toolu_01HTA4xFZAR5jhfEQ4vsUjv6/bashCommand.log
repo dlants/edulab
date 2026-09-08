@@ -1,0 +1,66 @@
+$ cd /Users/denis.lantsman/src/edulab && ls packages/frontend packages/e2e/tests && wc -l packages/frontend/*.ts packages/frontend/prototypes/*.ts
+stdout:
+packages/e2e/tests:
+chat.spec.ts
+graph.spec.ts
+smoke.spec.ts
+packages/frontend:
+citation.test.ts
+citation.ts
+graph-tools.test.ts
+graph-tools.ts
+graph-view.ts
+graph.test.ts
+graph.ts
+index.html
+interactions.test.ts
+interactions.ts
+layout.test.ts
+layout.ts
+learning.ts
+main.ts
+node_modules
+package.json
+persistence.test.ts
+persistence.ts
+prompt.test.ts
+prompt.ts
+prototypes
+samples
+selection.test.ts
+selection.ts
+thread.test.ts
+thread.ts
+threads.test.ts
+threads.ts
+tsconfig.json
+vamp.ts
+view.ts
+      89 packages/frontend/citation.test.ts
+      55 packages/frontend/citation.ts
+     224 packages/frontend/graph-tools.test.ts
+     298 packages/frontend/graph-tools.ts
+     771 packages/frontend/graph-view.ts
+     195 packages/frontend/graph.test.ts
+     242 packages/frontend/graph.ts
+     128 packages/frontend/interactions.test.ts
+      51 packages/frontend/interactions.ts
+      86 packages/frontend/layout.test.ts
+     106 packages/frontend/layout.ts
+     137 packages/frontend/learning.ts
+      20 packages/frontend/main.ts
+     111 packages/frontend/persistence.test.ts
+      91 packages/frontend/persistence.ts
+     218 packages/frontend/prompt.test.ts
+     196 packages/frontend/prompt.ts
+      97 packages/frontend/selection.test.ts
+     116 packages/frontend/selection.ts
+     685 packages/frontend/thread.test.ts
+     677 packages/frontend/thread.ts
+     144 packages/frontend/threads.test.ts
+     176 packages/frontend/threads.ts
+     585 packages/frontend/vamp.ts
+    1051 packages/frontend/view.ts
+     553 packages/frontend/prototypes/chat.ts
+    7102 total
+exit code 0

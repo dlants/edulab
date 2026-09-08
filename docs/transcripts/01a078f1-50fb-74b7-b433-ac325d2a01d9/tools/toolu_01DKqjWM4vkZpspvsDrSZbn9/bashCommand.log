@@ -1,0 +1,17 @@
+$ cd /Users/denis.lantsman/src/edulab && python3 -c "
+import json
+sample = json.load(open('packages/frontend/samples/80e08978-quantum-espresso-burai-relaxation.json'))
+print('Hash:', sample['hash'])
+print('Model:', sample['model'])
+print('Turns:', sample['turns'])
+print('Messages:', len(sample['messages']))
+print('First user message length:', len(sample['messages'][0]['content']))
+"
+
+stdout:
+Hash: 80e08978ef2df8e1fa94e38f330feddc
+Model: gpt-4-1106-preview
+Turns: 21
+Messages: 42
+First user message length: 15072
+exit code 0

@@ -1,0 +1,77 @@
+$ cd packages/frontend && sed -n 180,260p thread.ts
+stdout:
+      }
+    : { status: "error", error: result.message };
+}
+export class Thread {
+  private readonly turns: Anthropic.MessageParam[];
+  private pending:
+    | {
+        requestId: string;
+        blocks: PendingBlock[];
+        stopReason: string | null;
+      }
+    | undefined;
+  /** Bumped whenever the log or the streaming block changes, so `messages` can
+   * be recomputed lazily rather than on every delta. */
+  private version = 0;
+  private cache:
+    | { version: number; messages: ReadonlyArray<Message> }
+    | undefined;
+  private settle:
+    | ((content: Anthropic.ContentBlockParam[]) => void)
+    | undefined;
+  /** True for the whole agent turn, including while tools execute between
+   * requests - the UI and the send guard care about the turn, not the request. */
+  private running = false;
+  /** Set when a request ends in a done/error frame, which ends the turn even
+   * if tools were requested. */
+  private failed = false;
+  /** tool_use ids whose streamed json never parsed. The log has to carry an
+   * object the API would accept, so this is the only place that knowledge
+   * survives the commit. */
+  private readonly unparsed = new Set<string>();
+  onChange: (() => void) | undefined;
+  private readonly socket: Socket;
+  private readonly system: string;
+  private readonly tools: Record<ToolName, Tool>;
+  /** Present => the yield tool is offered and the turn can settle with data. */
+  private readonly yieldSchema: Anthropic.Tool.InputSchema | "text" | undefined;
+  private settled: TurnResult | undefined;
+  /** Turn 0 when present: sent like any other turn, never rendered. */
+  readonly seed: string | undefined;
+  constructor(socket: Socket, opts: ThreadOpts = {}) {
+    this.socket = socket;
+    this.system = opts.system ?? SYSTEM;
+    this.tools = opts.tools ?? {};
+    this.yieldSchema = opts.yieldSchema;
+    this.seed = opts.seed;
+    this.turns = [
+      ...(opts.seed ? [{ role: "user" as const, content: opts.seed }] : []),
+      ...(opts.initialTurns ?? []),
+    ];
+    socket.addEventListener("message", (e: MessageEvent<string>) => {
+      this.handleFrame(JSON.parse(e.data) as ServerFrame);
+    });
+  }
+  /** The derived transcript: the log flattened into blocks, plus whatever is
+   * currently streaming. The log stays the wire format; nothing is ever
+   * converted back out of `Message`. */
+  get messages(): ReadonlyArray<Message> {
+    if (this.cache?.version === this.version) return this.cache.messages;
+    const messages = project(
+      this.seed ? this.turns.slice(1) : this.turns,
+      this.pending?.blocks,
+    );
+    this.cache = { version: this.version, messages };
+    return messages;
+  }
+  get inFlight(): boolean {
+    return this.running;
+  }
+  /** The settled yield, once the thread has produced one. */
+  get result(): TurnResult | undefined {
+    return this.settled;
+  }
+  send(text: string): Promise<TurnResult> {
+exit code 0

@@ -1,0 +1,6 @@
+$ cd /Users/denis.lantsman/src/edulab/packages/e2e && npx playwright test -g "reflect column closed"
+stdout:
+Running 1 test using 1 worker
+  ✓  1 tests/chat.spec.ts:377:1 › a mark clicked with the reflect column closed reopens it (279ms)
+  1 passed (1.5s)
+exit code 0

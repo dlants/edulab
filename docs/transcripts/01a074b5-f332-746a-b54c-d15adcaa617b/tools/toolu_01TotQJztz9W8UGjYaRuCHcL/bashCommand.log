@@ -1,0 +1,42 @@
+$ cd /Users/denis.lantsman/src/edulab && grep -n "sample\|Sample\|Msg =\|type State" packages/frontend/view.ts | head -60; echo ---; git show HEAD~1:packages/frontend/graph-view.ts | grep -n "Build\|build\|toolbar" 
+stdout:
+3:  type State as GraphState,
+9:  type State as LearningState,
+11:import { samples } from "./samples/index.ts";
+35:export type State = {
+38:  sample: string;
+65:export type Msg =
+93:const sampleClass = cls("sample");
+166:.${sampleClass} {
+309:type SegmentMsg = { type: "CLICKED"; thread: ThreadId };
+360:type MessageMsg = SegmentMsg | { type: "TOGGLE_EXPANDED" };
+513:export type ThreadPaneMsg =
+612:    const sampleRef: Ref = ref("sample");
+621:        <select class="${sampleClass}" data-ref="${sampleRef}"></select>
+661:    // bound; switching sample is a page navigation anyway.
+662:    const picker = this.b.ref<HTMLSelectElement>(sampleRef);
+667:    for (const sample of samples) {
+669:      option.value = sample.id;
+670:      option.textContent = sample.label;
+723:    this.b.bindValue(sampleRef, (s) => s.sample);
+---
+34:export type Build =
+44:  build: Build;
+86:const toolbarClass = cls("graph-toolbar");
+182:.${toolbarClass} {
+189:.${toolbarClass} button {
+240:/** A rotated div rather than SVG: bindList builds children with
+324:    const buildRef = ref("graph-build");
+325:    const buildStatusRef = ref("graph-build-status");
+329:      <div class="${toolbarClass}">
+330:        <button type="button" data-graph-build data-ref="${buildRef}"></button>
+331:        <span data-graph-build-status data-ref="${buildStatusRef}"></span>
+432:      .ref(buildRef)
+434:    this.b.bindText(buildRef, (s) =>
+435:      s.nodes.length === 0 ? "Build from this session" : "Rebuild",
+437:    this.b.bindDisabled(buildRef, (s) => s.build.type === "running");
+438:    this.b.bindText(buildStatusRef, (s) => buildStatus(s.build));
+481:function buildStatus(build: Build): string {
+482:  switch (build.type) {
+490:      return build.error;
+exit code 0

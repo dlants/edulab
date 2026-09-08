@@ -1,0 +1,131 @@
+$ cd packages/frontend && sed -n 1,140p graph-view.ts
+stdout:
+import type { Citation } from "./citation.ts";
+import type { EdgeId, GraphEdge, GraphNode, Level, NodeId } from "./graph.ts";
+import { LEVELS } from "./graph.ts";
+import type { Position } from "./layout.ts";
+import {
+  Binder,
+  cls,
+  mountStyle,
+  ref,
+  sanitize,
+  showKeyed,
+  type View,
+} from "./vamp.ts";
+/** The sidebar is a small state machine: nothing selected, or a selection
+ * together with the draft being edited. There is no state in which something
+ * is selected and there is no draft, so the two are one field. */
+export type Sidebar =
+  | { type: "closed" }
+  | {
+      type: "node";
+      id: NodeId;
+      draft: Omit<GraphNode, "id">;
+      error: string | null;
+    }
+  | {
+      type: "edge";
+      id: EdgeId;
+      draft: Omit<GraphEdge, "id">;
+      error: string | null;
+    };
+/** A reference from a saved node's prose back into the transcript, together
+ * with the quote it resolves to. A textarea cannot hold a link, so the
+ * references are rendered as a row of chips beneath the field instead - a
+ * bibliography for the claim rather than inline markup. */
+export type Chip = { citation: Citation; quote: string };
+/** The chips for the *saved* text of the open selection, not for the draft:
+ * a half-typed address is not a citation. */
+export type Citations = {
+  description: ReadonlyArray<Chip>;
+  notes: ReadonlyArray<Chip>;
+};
+/** Pan in canvas pixels, zoom as a multiplier on the *spacing* between nodes:
+ * the node itself is unscaled DOM, so text stays legible at every zoom and
+ * zooming out is a way to fit more of the graph rather than to shrink it. */
+export type Viewport = { zoom: number; x: number; y: number };
+export const IDENTITY_VIEWPORT: Viewport = { zoom: 1, x: 0, y: 0 };
+export const MIN_ZOOM = 0.3;
+export const MAX_ZOOM = 3;
+export type State = {
+  nodes: ReadonlyArray<GraphNode & { pos: Position }>;
+  edges: ReadonlyArray<GraphEdge & { from_: Position; to_: Position }>;
+  viewport: Viewport;
+  sidebar: Sidebar;
+  citations: Citations;
+};
+/** `field` is keyed off what is open, so a message for the wrong kind of
+ * selection does not typecheck. */
+export type Msg =
+  | { type: "SELECT_NODE"; id: NodeId }
+  | { type: "SELECT_EDGE"; id: EdgeId }
+  | { type: "CLOSE" }
+  | {
+      type: "NODE_FIELD";
+      field: "title" | "description" | "notes";
+      value: string;
+    }
+  | { type: "LEVEL_CHANGED"; level: Level }
+  | { type: "EDGE_FIELD"; field: "title" | "description"; value: string }
+  | { type: "SAVE" }
+  | { type: "DELETE" }
+  | { type: "CITATION_CLICKED"; citation: Citation }
+  | { type: "PAN"; dx: number; dy: number }
+  /** `at` is in canvas pixels, so the point under the cursor stays put. */
+  | { type: "ZOOM"; factor: number; at: { x: number; y: number } }
+  | { type: "RESET_VIEW" };
+/** The canvas is sized in pixels rather than percentages: an edge is a rotated
+ * bar, and a bar whose length is a percentage of the width but whose angle is
+ * computed in square coordinates would shear on a non-square canvas. */
+const WIDTH = 900;
+const HEIGHT = 560;
+const PAD = 60;
+/** How far short of the target's centre an edge stops, so the arrowhead lands
+ * on the rim of the pill rather than under it. Constant in screen pixels
+ * because the pill does not scale with zoom. */
+const BACKOFF = 52;
+const px = (pos: Position, vp: Viewport) => ({
+  x: vp.x + vp.zoom * (PAD + pos.x * (WIDTH - 2 * PAD)),
+  y: vp.y + vp.zoom * (PAD + pos.y * (HEIGHT - 2 * PAD)),
+});
+const graphClass = cls("graph");
+const canvasClass = cls("graph-canvas");
+const nodeClass = cls("graph-node");
+const edgeClass = cls("graph-edge");
+const edgeBarClass = cls("graph-edge-bar");
+const edgeLabelClass = cls("graph-edge-label");
+const edgeHeadClass = cls("graph-edge-head");
+const controlsClass = cls("graph-controls");
+const sidebarClass = cls("graph-sidebar");
+const emptyClass = cls("graph-empty");
+const errorClass = cls("graph-error");
+const actionsClass = cls("graph-actions");
+const chipsClass = cls("graph-chips");
+const chipClass = cls("graph-chip");
+mountStyle(`
+.${graphClass} {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: 1.5rem;
+  padding: 1rem;
+  align-items: start;
+}
+/* The canvas keeps its pixel size, so below the width that fits both columns
+ * the sidebar drops underneath it rather than squeezing it. */
+@media (max-width: ${WIDTH + 340}px) {
+  .${graphClass} {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.${canvasClass} {
+  position: relative;
+  width: ${WIDTH}px;
+  max-width: 100%;
+  touch-action: none;
+  cursor: grab;
+  height: ${HEIGHT}px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 0.5rem;
+  background: #fcfcfc;
+exit code 0

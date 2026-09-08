@@ -1,0 +1,23 @@
+$ cd /Users/denis.lantsman/src/edulab && grep -n "graphSlotRef\|bodyRef\|graphTabClass\|GraphView\|bindVisible\|bindSlot" packages/frontend/view.ts
+stdout:
+5:  GraphView,
+145:const graphTabClass = cls("graph-tab");
+241:.${graphTabClass} {
+592:    this.b.bindVisible(toolRef, (s) => s.message.type === "tool_use");
+600:    this.b.bindVisible(toolResultRef, (s) => resultText(s.message) !== "");
+604:    this.b.bindVisible(updateRef, (s) => s.update !== null);
+901:    const bodyRef: Ref = ref("body");
+902:    const graphSlotRef: Ref = ref("graph-slot");
+923:      <div class="${bodyClass}" data-ref="${bodyRef}">
+933:      <div class="${graphTabClass}" data-ref="${graphSlotRef}"></div>
+1043:    this.b.bindVisible(buildDebugRef, (s) => buildFailures(s.build).length > 0);
+1072:    this.b.bindVisible(bodyRef, (s) => s.tab === "threads");
+1075:    this.b.bindVisible(graphSlotRef, (s) => s.tab === "graph");
+1076:    this.b.bindSlot(graphSlotRef, (s) =>
+1078:        ? show(GraphView, s.graph, {}, (msg: GraphMsg) =>
+1087:    this.b.bindVisible(backRef, (s) => s.split && s.tab === "threads");
+1088:    this.b.bindVisible(forwardRef, (s) => s.tab === "threads");
+1089:    this.b.bindVisible(depthRef, (s) => s.tab === "threads");
+1091:    this.b.bindSlot(learningRef, (s) => {
+1114:      // bindSlot hands this straight to the child as its dispatch, so it must
+exit code 0

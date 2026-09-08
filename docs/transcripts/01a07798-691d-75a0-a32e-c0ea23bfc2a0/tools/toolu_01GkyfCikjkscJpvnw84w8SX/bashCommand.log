@@ -1,0 +1,28 @@
+$ cd /Users/denis.lantsman/src/edulab && grep -n "MAX_MESSAGE_LINES\|hiddenLines\|clipClass\|data-clipped\|overflowing\|this.clip\|this.more\|moreRef\|toggleRef" packages/frontend/view.ts
+stdout:
+147:const MAX_MESSAGE_LINES = 15;
+148:const clipClass = cls("clip");
+275:.${clipClass} {
+280:.${messageClass}[data-clipped="true"] .${clipClass} {
+281:  max-height: calc(${MAX_MESSAGE_LINES} * 1.5em);
+297:.${messageClass}[data-overflowing="false"] > .${toggleClass},
+298:.${messageClass}[data-overflowing="false"] > .${moreClass} {
+514:  private hiddenLines = 0;
+528:    const toggleRef = ref("toggle");
+529:    const moreRef = ref("more");
+542:        data-ref="${toggleRef}"
+545:      <div class="${clipClass}" data-ref="${clipRef}">
+553:      <div class="${moreClass}" data-more data-ref="${moreRef}"></div>
+611:    this.clip = this.b.ref(clipRef);
+612:    this.more = this.b.ref(moreRef);
+614:    this.b.ref(toggleRef).addEventListener("click", toggle);
+615:    this.more.addEventListener("click", toggle);
+618:    this.b.bindContainerAttr("data-clipped", (s) =>
+642:      Number.parseFloat(getComputedStyle(this.clip).lineHeight) || 1;
+646:    this.hiddenLines = Math.round(
+647:      this.clip.scrollHeight / lineHeight - MAX_MESSAGE_LINES,
+649:    const clipped = this.hiddenLines > 0;
+650:    this.container.dataset.overflowing = clipped ? "true" : "false";
+651:    this.more.textContent =
+652:      clipped && !expanded ? `… ${this.hiddenLines} more lines` : "";
+exit code 0

@@ -1,0 +1,109 @@
+$ cd /Users/denis.lantsman/src/edulab && sed -n 1,90p packages/e2e/tests/chat.spec.ts && grep -n "test(" packages/e2e/tests/chat.spec.ts
+stdout:
+import type Anthropic from "@anthropic-ai/sdk";
+import type { ClientMessage, ServerFrame } from "@edulab/iso/protocol.ts";
+import { expect, type Page, test } from "@playwright/test";
+function events(chunks: string[]): Anthropic.RawMessageStreamEvent[] {
+  return [
+    {
+      type: "content_block_start",
+      index: 0,
+      content_block: { type: "text", text: "", citations: null },
+    },
+    ...chunks.map(
+      (text): Anthropic.RawMessageStreamEvent => ({
+        type: "content_block_delta",
+        index: 0,
+        delta: { type: "text_delta", text },
+      }),
+    ),
+    { type: "content_block_stop", index: 0 },
+    { type: "message_stop" } as Anthropic.RawMessageStreamEvent,
+  ];
+}
+/** A graph update runs on every interaction and is not what these specs are
+ * about: they are recognised by their write tools, answered with an immediate
+ * yield, and kept out of `started`. */
+function isGraphUpdate(message: ClientMessage): boolean {
+  return (message.params.tools ?? []).some((t) => t.name === "put_nodes");
+}
+function yieldEvents(): Anthropic.RawMessageStreamEvent[] {
+  return [
+    {
+      type: "content_block_start",
+      index: 0,
+      content_block: {
+        type: "tool_use",
+        id: "yield-1",
+        name: "yield",
+        input: {},
+      },
+    } as Anthropic.RawMessageStreamEvent,
+    {
+      type: "content_block_delta",
+      index: 0,
+      delta: { type: "input_json_delta", partial_json: '{"result":"ok"}' },
+    },
+    { type: "content_block_stop", index: 0 },
+    { type: "message_stop" } as Anthropic.RawMessageStreamEvent,
+  ];
+}
+/** Stand in for the backend: replay `chunks` one delta at a time, and expose a
+ * promise that resolves once the browser has sent its `start` frame. */
+async function fakeBackend(page: Page, chunks: string[]) {
+  let release!: () => void;
+  const gate = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  const started: string[] = [];
+  await page.routeWebSocket("**/api/socket", (ws) => {
+    ws.onMessage(async (raw) => {
+      const message = JSON.parse(String(raw)) as ClientMessage;
+      if (isGraphUpdate(message)) {
+        for (const event of yieldEvents()) {
+          ws.send(
+            JSON.stringify({
+              type: "event",
+              requestId: message.requestId,
+              event,
+            } satisfies ServerFrame),
+          );
+        }
+        return;
+      }
+      started.push(JSON.stringify(message.params.messages));
+      await gate;
+      const send = (frame: ServerFrame) => ws.send(JSON.stringify(frame));
+      for (const event of events(chunks)) {
+        send({ type: "event", requestId: message.requestId, event });
+      }
+      send({ type: "done", requestId: message.requestId });
+    });
+  });
+  return { release, started };
+}
+/** Answers the first request with prose plus a tool call, and every later one
+217:test("streams a response into the transcript", async ({ page }) => {
+233:test("the composer is disabled while a turn is in flight", async ({ page }) => {
+247:test("a second turn sends the full thread", async ({ page }) => {
+265:test("a live selection overlapping a mark offers no actions", async ({
+287:test("two marks in one message are both clickable", async ({ page }) => {
+310:test("an action opens a thread seeded with the selected passage", async ({
+337:test("a follow-up in the thread pane re-sends the seed", async ({ page }) => {
+356:test("clicking a mark reopens its thread without a new request", async ({
+377:test("a mark clicked with the reflect column closed reopens it", async ({
+390:test("with nothing selected the pane lists the passages already opened", async ({
+437:test("the arrows name the layer and stop at the ends", async ({ page }) => {
+454:test("a thread opened at depth carries both selections once", async ({
+490:test("a descended thread shows what it was opened from, in its transcript", async ({
+509:test("← climbs back without losing threads or highlights", async ({ page }) => {
+535:test("a selection at layer 0 opens a thread from the popup", async ({
+548:test("the popup's own question hands off to the pane's composer", async ({
+562:test("a selection in the reflect thread opens the layer below it", async ({
+578:test("nesting goes three deep", async ({ page }) => {
+600:test("a tool call is rendered and text above it stays selectable", async ({
+625:test("a new selection leaves committed marks rendered", async ({ page }) => {
+712:test("a turn shows its graph update working, then what it changed", async ({
+728:test("the update behind a turn opens its own transcript on the right", async ({
+751:test("an update that writes nothing says so", async ({ page }) => {
+exit code 0

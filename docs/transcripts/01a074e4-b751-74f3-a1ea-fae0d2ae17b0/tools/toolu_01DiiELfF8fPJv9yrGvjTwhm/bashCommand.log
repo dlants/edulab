@@ -1,0 +1,8 @@
+$ cd /Users/denis.lantsman/src/edulab && npm run typecheck
+stdout:
+> edulab@0.0.1 typecheck
+> npm -w @edulab/iso exec tsc -- --noEmit && npm -w @edulab/frontend exec tsc -- --noEmit && npm -w @edulab/backend exec tsc -- --noEmit && npm -w @edulab/e2e exec tsc -- --noEmit
+prototypes/chat.ts(422,22): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'SampleId | undefined'.
+  Type 'string' is not assignable to type 'SampleId'.
+    Type 'string' is not assignable to type '{ readonly __brand: "SampleId"; }'.
+exit code 2

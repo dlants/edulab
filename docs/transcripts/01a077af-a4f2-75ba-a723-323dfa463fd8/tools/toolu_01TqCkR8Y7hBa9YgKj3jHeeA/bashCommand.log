@@ -1,0 +1,16 @@
+$ cd /Users/denis.lantsman/src/edulab/packages/e2e && grep -n "explainButton\|quizButton\|const REPLY\|function deeper\|function back\|queryBox" tests/chat.spec.ts
+stdout:
+361:const REPLY = "alpha beta gamma delta";
+363:function explainButton(page: Page) {
+367:function quizButton(page: Page) {
+371:function deeper(page: Page) {
+375:function back(page: Page) {
+414:  await explainButton(page).click();
+425:  await quizButton(page).click();
+450:  await explainButton(page).click();
+467:  await explainButton(page).click();
+472:  await quizButton(page).click();
+493:  await explainButton(page).click();
+498:  await quizButton(page).click();
+504:  await explainButton(page).click();
+exit code 0

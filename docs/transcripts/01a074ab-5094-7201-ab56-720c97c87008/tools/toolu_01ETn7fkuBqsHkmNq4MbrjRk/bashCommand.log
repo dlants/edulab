@@ -1,0 +1,28 @@
+$ cd /Users/denis.lantsman/src/edulab && grep -n "origin\|actionLabel\|anchorText" packages/frontend/view.ts packages/frontend/prototypes/chat.ts
+stdout:
+packages/frontend/view.ts:14:  anchorText,
+packages/frontend/view.ts:60:  origin: { action: string; quote: string } | null;
+packages/frontend/view.ts:96:const originQuoteClass = cls("origin-quote");
+packages/frontend/view.ts:297:.${originQuoteClass} {
+packages/frontend/view.ts:636:    const originRef: Ref = ref("origin");
+packages/frontend/view.ts:637:    const originActionRef: Ref = ref("origin-action");
+packages/frontend/view.ts:638:    const originQuoteRef: Ref = ref("origin-quote");
+packages/frontend/view.ts:660:        <div data-ref="${originRef}">
+packages/frontend/view.ts:661:          <div class="${threadActionClass}" data-focus-action data-ref="${originActionRef}"></div>
+packages/frontend/view.ts:662:          <blockquote class="${originQuoteClass}" data-focus-quote data-ref="${originQuoteRef}"></blockquote>
+packages/frontend/view.ts:792:    this.b.bindVisible(originRef, (s) => s.origin !== null);
+packages/frontend/view.ts:793:    this.b.bindText(originActionRef, (s) => s.origin?.action ?? "");
+packages/frontend/view.ts:794:    this.b.bindText(originQuoteRef, (s) => s.origin?.quote ?? "");
+packages/frontend/view.ts:850:  if (s.anchor) return anchorText(s.anchor, s.messages);
+packages/frontend/view.ts:852:  return active ? anchorText(active.anchor, s.messages) : null;
+packages/frontend/prototypes/chat.ts:10:import { actionLabel, EXTRACT_SYSTEM, renderTree } from "../prompt.ts";
+packages/frontend/prototypes/chat.ts:12:import { anchorText, overlaps, type ThreadId } from "../selection.ts";
+packages/frontend/prototypes/chat.ts:87:    origin: null,
+packages/frontend/prototypes/chat.ts:128:    const own = node.origin;
+packages/frontend/prototypes/chat.ts:129:    state.origin = own
+packages/frontend/prototypes/chat.ts:131:          action: actionLabel(own.action),
+packages/frontend/prototypes/chat.ts:132:          quote: anchorText(
+packages/frontend/prototypes/chat.ts:145:    const origin = child.origin;
+packages/frontend/prototypes/chat.ts:147:      action: origin ? actionLabel(origin.action) : "",
+packages/frontend/prototypes/chat.ts:287:        const parent = node.origin?.anchor.thread;
+exit code 0

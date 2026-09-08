@@ -1,0 +1,368 @@
+$ cd /Users/denis.lantsman/src/edulab && cat packages/frontend/threads.ts && cat packages/frontend/persistence.ts && ls packages/frontend
+stdout:
+import type Anthropic from "@anthropic-ai/sdk";
+import type { ThreadSnapshot } from "./persistence.ts";
+import {
+  type Action,
+  askTurn,
+  contextSeed,
+  LEARNING_SYSTEM,
+} from "./prompt.ts";
+import type { Anchor, Mark, ThreadId } from "./selection.ts";
+import type { Tool, ToolName, TurnResult } from "./thread.ts";
+import { type Socket, Thread } from "./thread.ts";
+export type { Action };
+/** `anchor.thread` is the parent, so the link upward is the highlight itself. */
+export type Origin = { anchor: Anchor; action: Action };
+/** What a child thread is given beyond its seed. */
+export type ChildOpts = {
+  tools?: Record<ToolName, Tool>;
+  /** The rendered knowledge graph, injected into the seed of a top-level
+   * learning thread. */
+  graph?: string;
+  yieldSchema?: Anthropic.Tool.InputSchema | "text" | "void";
+};
+export type TreeNode = {
+  id: ThreadId;
+  /** null only for the root task thread. */
+  origin: Origin | null;
+  thread: Thread;
+  /** Creation order; each child's `origin.anchor` is its highlight. */
+  children: ThreadId[];
+  activeChild: ThreadId | null;
+  draft: string;
+};
+/** The tree of threads. Every thread but the root was opened from a
+ * passage of its parent, so a thread and the highlight over its parent are the
+ * same edge seen from either end. Threads are never destroyed or reparented. */
+export class ThreadTree {
+  private readonly threads = new Map<ThreadId, TreeNode>();
+  private nextId = 0;
+  root: ThreadId;
+  private readonly socket: Socket;
+  /** Attached to every thread the tree owns, so a stream anywhere in the
+   * tree re-syncs the app. */
+  private readonly onChange: () => void;
+  constructor(socket: Socket, root: Thread, onChange: () => void) {
+    this.socket = socket;
+    this.onChange = onChange;
+    this.root = this.add(null, root);
+  }
+  get(id: ThreadId): TreeNode {
+    const node = this.threads.get(id);
+    if (!node) throw new Error(`unknown thread ${id}`);
+    return node;
+  }
+  /** Seeds a child thread from the parent's own seed plus its transcript
+   * up to `anchor`, links it in, and makes it the parent's active child. The
+   * caller starts it: the tree does not own the request lifecycle. */
+  open(anchor: Anchor, action: Action, opts: ChildOpts = {}): ThreadId {
+    const parent = this.get(anchor.thread);
+    const thread = new Thread(this.socket, {
+      system: LEARNING_SYSTEM,
+      seed: contextSeed(
+        typeof parent.thread.seed === "string" ? parent.thread.seed : undefined,
+        parent.thread.messages,
+        anchor,
+        opts.graph,
+      ),
+      initialTurns: [
+        {
+          role: "user",
+          content: askTurn(anchor, parent.thread.messages, action),
+        },
+      ],
+      tools: opts.tools,
+      yieldSchema: opts.yieldSchema,
+    });
+    const id = this.add({ anchor, action }, thread);
+    parent.children.push(id);
+    parent.activeChild = id;
+    return id;
+  }
+  /** What a child thread settled with, once it has yielded. The parent renders
+   * threads it never awaited, so the settled value has to be readable here. */
+  result(id: ThreadId): TurnResult | undefined {
+    return this.get(id).thread.result;
+  }
+  /** The highlights to draw over `id`'s transcript: one per child. */
+  marks(id: ThreadId): Mark[] {
+    return this.get(id).children.map((child) => {
+      const origin = this.get(child).origin;
+      if (!origin) throw new Error("child thread without an origin");
+      return { thread: child, anchor: origin.anchor };
+    });
+  }
+  /** root -> id, for the depth indicator. */
+  path(id: ThreadId): ThreadId[] {
+    const out: ThreadId[] = [];
+    let at: ThreadId | undefined = id;
+    while (at) {
+      out.unshift(at);
+      at = this.get(at).origin?.anchor.thread;
+    }
+    return out;
+  }
+  /** The id counter, persisted so a restored tree cannot re-mint an id. */
+  get nextThreadId(): number {
+    return this.nextId;
+  }
+  /** Every node, in creation order. */
+  nodes(): ReadonlyArray<TreeNode> {
+    return [...this.threads.values()];
+  }
+  /** Rebuilds a tree from persisted snapshots rather than from a root thread.
+   * `threadOf` mints the `Thread` for each snapshot, so the caller owns tool
+   * wiring, which the snapshot deliberately does not carry. */
+  static restore(
+    socket: Socket,
+    snapshots: ReadonlyArray<ThreadSnapshot>,
+    root: ThreadId,
+    nextId: number,
+    onChange: () => void,
+    threadOf: (snapshot: ThreadSnapshot) => Thread,
+  ): ThreadTree {
+    const rootSnapshot = snapshots.find((s) => s.id === root);
+    if (!rootSnapshot) throw new Error(`no snapshot for root ${root}`);
+    const tree = new ThreadTree(socket, threadOf(rootSnapshot), onChange);
+    const rootThread = tree.get(tree.root).thread;
+    tree.threads.clear();
+    for (const snapshot of snapshots) {
+      const thread = snapshot.id === root ? rootThread : threadOf(snapshot);
+      tree.threads.set(snapshot.id, tree.node(snapshot, thread));
+    }
+    tree.root = root;
+    tree.nextId = nextId;
+    return tree;
+  }
+  private node(snapshot: ThreadSnapshot, thread: Thread): TreeNode {
+    thread.onChange = this.onChange;
+    return {
+      id: snapshot.id,
+      origin: snapshot.origin,
+      thread,
+      children: [...snapshot.children],
+      activeChild: snapshot.activeChild,
+      draft: snapshot.draft,
+    };
+  }
+  private add(origin: Origin | null, thread: Thread): ThreadId {
+    const id = `t${this.nextId++}` as ThreadId;
+    thread.onChange = this.onChange;
+    this.threads.set(id, {
+      id,
+      origin,
+      thread,
+      children: [],
+      activeChild: null,
+      draft: "",
+    });
+    return id;
+  }
+}
+import type Anthropic from "@anthropic-ai/sdk";
+import type { GraphChange, GraphSnapshot, KnowledgeGraph } from "./graph.ts";
+import type { SampleId } from "./samples/index.ts";
+import type { ThreadId } from "./selection.ts";
+import type { Message, MessageIdx } from "./thread.ts";
+import { projectLog, trimUnansweredTools } from "./thread.ts";
+import type { Origin, ThreadTree } from "./threads.ts";
+import type { Build } from "./view.ts";
+export const VERSION = 2;
+export type ThreadSnapshot = {
+  id: ThreadId;
+  origin: Origin | null;
+  system: string;
+  /** Held apart from `log` because `Thread` does: it is turn 0 of the wire
+   * log and is never rendered, so restoring it as an ordinary turn would put
+   * it in the transcript. */
+  seed: string | Anthropic.ContentBlockParam[] | undefined;
+  /** The committed turns after the seed. */
+  log: Anthropic.MessageParam[];
+  children: ThreadId[];
+  activeChild: ThreadId | null;
+  draft: string;
+};
+/** One finished graph update, keyed by the interaction that caused it.
+ * Running updates are omitted, which is what makes them re-enqueue. */
+export type UpdateSnapshot = {
+  thread: ThreadId;
+  index: MessageIdx;
+  changes: ReadonlyArray<GraphChange>;
+  /** The update thread's own transcript, kept so the prompt and the model's
+   * work can still be reviewed after a reload. */
+  messages: ReadonlyArray<Message>;
+};
+export type Snapshot = {
+  version: number;
+  sample: SampleId | undefined;
+  threads: ThreadSnapshot[];
+  nextThreadId: number;
+  root: ThreadId;
+  graph: GraphSnapshot;
+  updates: UpdateSnapshot[];
+  build: Build;
+};
+/** The localStorage key, so nothing else can pass a bare string to the store. */
+export type StorageKey = string & { readonly __brand: "StorageKey" };
+/** One key per sample - switching sample is already a page load, so it picks
+ * up that sample's state and nothing else. The version is part of the key, so
+ * a bump orphans old data rather than having to migrate it. */
+export function storageKey(sample: SampleId | undefined): StorageKey {
+  return `edulab:v${VERSION}:${sample ?? "own"}` as StorageKey;
+}
+/** All-or-nothing: a parse failure, a version mismatch or a shape mismatch
+ * drops the whole key and the caller starts fresh. */
+export function loadSnapshot(sample: SampleId | undefined): Snapshot | null {
+  const key = storageKey(sample);
+  const raw = window.localStorage.getItem(key);
+  if (raw === null) return null;
+  try {
+    const parsed: unknown = JSON.parse(raw);
+    if (!wellFormed(parsed)) throw new Error("shape mismatch");
+    return parsed;
+  } catch (e) {
+    console.warn("dropping unreadable snapshot", e);
+    window.localStorage.removeItem(key);
+    return null;
+  }
+}
+function wellFormed(value: unknown): value is Snapshot {
+  if (typeof value !== "object" || value === null) return false;
+  const s = value as Partial<Snapshot>;
+  return (
+    s.version === VERSION &&
+    Array.isArray(s.threads) &&
+    s.threads.every((t) => typeof t?.id === "string" && Array.isArray(t.log)) &&
+    typeof s.nextThreadId === "number" &&
+    typeof s.root === "string" &&
+    typeof s.graph === "object" &&
+    s.graph !== null &&
+    Array.isArray(s.graph.nodes) &&
+    Array.isArray(s.graph.edges) &&
+    typeof s.graph.next === "number" &&
+    Array.isArray(s.updates) &&
+    typeof s.build === "object" &&
+    s.build !== null &&
+    typeof s.build.type === "string" &&
+    (s.build.type === "idle" || Array.isArray(s.build.failures))
+  );
+}
+let pending: ReturnType<typeof setTimeout> | undefined;
+/** Trailing-debounced: `sync()` runs on every streamed token, and serializing
+ * the tree per token is pure waste. */
+export function saveSnapshot(snapshot: Snapshot): void {
+  if (pending !== undefined) clearTimeout(pending);
+  pending = setTimeout(() => {
+    pending = undefined;
+    const key = storageKey(snapshot.sample);
+    try {
+      window.localStorage.setItem(key, JSON.stringify(snapshot));
+    } catch (e) {
+      // The prototype keeps running, it just stops persisting.
+      console.warn("could not persist", e);
+      window.localStorage.removeItem(key);
+    }
+  }, SAVE_DELAY_MS);
+}
+const SAVE_DELAY_MS = 500;
+export function clearSnapshot(sample: SampleId | undefined): void {
+  if (pending !== undefined) clearTimeout(pending);
+  pending = undefined;
+  window.localStorage.removeItem(storageKey(sample));
+}
+/** The tree, flattened. Logs are trimmed to stay API-valid, so a refresh
+ * mid-tool-call cannot persist a call the model can never answer. */
+export function threadSnapshots(tree: ThreadTree): ThreadSnapshot[] {
+  return tree.nodes().map((node) => ({
+    id: node.id,
+    origin: node.origin,
+    system: node.thread.systemPrompt,
+    seed: node.thread.seed,
+    log: trimUnansweredTools(node.thread.log),
+    children: [...node.children],
+    activeChild: node.activeChild,
+    draft: node.draft,
+  }));
+}
+export function toSnapshot(args: {
+  sample: SampleId | undefined;
+  tree: ThreadTree;
+  graph: KnowledgeGraph;
+  updates: ReadonlyArray<UpdateSnapshot>;
+  build: Build;
+}): Snapshot {
+  return {
+    version: VERSION,
+    sample: args.sample,
+    threads: threadSnapshots(args.tree),
+    nextThreadId: args.tree.nextThreadId,
+    root: args.tree.root,
+    graph: args.graph.snapshot(),
+    updates: [...args.updates],
+    build: args.build,
+  };
+}
+export type InteractionAddress = { thread: ThreadId; index: MessageIdx };
+/** Every user turn in the tree - the addresses a graph update is keyed by -
+ * root first and then the remaining threads in id order, each in message
+ * order, which is the order a rebuild has to replay them in.
+ *
+ * `sampleTurnCount` is how many of the root's interactions came from the
+ * canned transcript; they are only in scope once a build has been asked for. */
+export function interactionAddresses(
+  threads: ReadonlyArray<ThreadSnapshot>,
+  root: ThreadId,
+  includeSampleTurns: boolean,
+  sampleTurnCount: number,
+): InteractionAddress[] {
+  const ordered = [
+    ...threads.filter((t) => t.id === root),
+    ...threads.filter((t) => t.id !== root),
+  ];
+  const out: InteractionAddress[] = [];
+  for (const thread of ordered) {
+    const isRoot = thread.id === root;
+    let seen = 0;
+    projectLog(thread.log).forEach((message, i) => {
+      if (message.type !== "text" || message.role !== "user") return;
+      const sampleTurn = isRoot && seen < sampleTurnCount;
+      seen++;
+      if (sampleTurn && !includeSampleTurns) return;
+      out.push({ thread: thread.id, index: i as MessageIdx });
+    });
+  }
+  return out;
+}
+citation.test.ts
+citation.ts
+graph-tools.test.ts
+graph-tools.ts
+graph-view.ts
+graph.test.ts
+graph.ts
+index.html
+interactions.test.ts
+interactions.ts
+layout.test.ts
+layout.ts
+learning.ts
+main.ts
+node_modules
+package.json
+persistence.test.ts
+persistence.ts
+prompt.test.ts
+prompt.ts
+prototypes
+samples
+selection.test.ts
+selection.ts
+thread.test.ts
+thread.ts
+threads.test.ts
+threads.ts
+tsconfig.json
+vamp.ts
+view.ts
+exit code 0

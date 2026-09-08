@@ -1,0 +1,23 @@
+$ cd packages/frontend && grep -n "export type Message\|export class Thread\|seed\|messages" thread.ts
+stdout:
+68:  /** Sent after the seed, and rendered: a learning thread's opening ask is
+69:   * one of these, not part of the seed. */
+71:  seed?: string;
+101:export type Message =
+143:/** Runs a thread to completion with no user in the loop: the seed prompt goes
+161:    seed: opts.prompt,
+184:export class Thread {
+193:  /** Bumped whenever the log or the streaming block changes, so `messages` can
+197:    | { version: number; messages: ReadonlyArray<Message> }
+221:  readonly seed: string | undefined;
+228:    this.seed = opts.seed;
+230:      ...(opts.seed ? [{ role: "user" as const, content: opts.seed }] : []),
+241:  get messages(): ReadonlyArray<Message> {
+242:    if (this.cache?.version === this.version) return this.cache.messages;
+243:    const messages = project(
+244:      this.seed ? this.turns.slice(1) : this.turns,
+247:    this.cache = { version: this.version, messages };
+248:    return messages;
+267:  /** Requests a reply to the turns already present - the seeded first turn of
+373:        messages: [...this.turns],
+exit code 0

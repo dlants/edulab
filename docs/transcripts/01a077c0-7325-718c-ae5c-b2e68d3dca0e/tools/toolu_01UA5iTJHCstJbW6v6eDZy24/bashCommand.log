@@ -1,0 +1,4 @@
+$ grep -rn "yield" packages/frontend/src --include=*.ts -l; grep -rni "knowledge" packages/frontend/src -l
+stderr:
+grep: packages/frontend/src: No such file or directory
+exit code 2

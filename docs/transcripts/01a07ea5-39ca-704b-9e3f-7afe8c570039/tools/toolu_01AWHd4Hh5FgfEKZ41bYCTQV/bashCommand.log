@@ -1,0 +1,64 @@
+$ cd ~/src/dotfiles && sed -n '55,95p' nix/common.nix; echo ---; sed -n '1,25p' nix/darwin.nix; echo ---; nix eval nixpkgs#render-cli.version 2>&1
+stdout:
+  # Enable flakes
+  home.file.".config/nix/nix.conf".text = ''
+    experimental-features = nix-command flakes
+  '';
+  # Common packages
+  home.packages = with pkgs; [
+    # Dev tools
+    ripgrep
+    fd
+    delta  # git-delta
+    gh     # GitHub CLI
+    codex  # OpenAI Codex CLI (also provides ChatGPT-subscription auth for magenta)
+    rustup
+    tree-sitter
+    postgresql  # psql client
+    # Language servers
+    lua-language-server
+    typescript
+    typescript-language-server
+    bash-language-server
+    yaml-language-server
+    vscode-langservers-extracted
+    terraform-ls
+    tflint
+    biome
+    gopls  # Go language server
+    sqruff # SQL formatter/linter
+    # Go toolchain & tools
+    go
+    delve  # Go debugger (dlv)
+    # Formatters
+    carapace
+    prettier
+    dprint  # fast markdown formatter (see dprint/dprint.json)
+    stylua
+    gofumpt   # stricter gofmt
+    (lib.lowPrio gotools)  # goimports (lowPrio: avoids `modernize` clash with gopls)
+---
+# macOS-specific configuration
+{ config, pkgs, lib, dotfilesDir, ... }:
+{
+  home.packages = with pkgs; [
+    # macOS-specific tools (GUI apps installed via brew below)
+    ollama  # local LLM runtime (Metal-accelerated on Apple Silicon)
+    nodejs  # includes npm
+    tmux
+    zig
+    zls  # Zig language server
+  ];
+  # Tmux config symlink
+  home.file.".tmux.conf".source = config.lib.file.mkOutOfStoreSymlink "${dotfilesDir}/tmux.conf";
+  # Tmux helper scripts
+  home.file.".local/bin/ta".source = config.lib.file.mkOutOfStoreSymlink "${dotfilesDir}/scripts/ta";
+  home.file.".local/bin/tmux-session-using-fzf".source = config.lib.file.mkOutOfStoreSymlink "${dotfilesDir}/scripts/tmux-session-using-fzf";
+  home.file.".local/bin/clipboard-sync".source = config.lib.file.mkOutOfStoreSymlink "${dotfilesDir}/scripts/clipboard-sync";
+  # Install apps via Homebrew (not available in nixpkgs for macOS)
+  home.activation.brewInstall = lib.hm.dag.entryAfter ["writeBoundary"] ''
+    if command -v brew &> /dev/null; then
+---
+unpacking 'https://channels.nixos.org/nixpkgs-unstable/nixexprs.tar.xz' into the Git cache...
+"2.24.0"
+exit code 0

@@ -1,0 +1,126 @@
+$ cd /Users/denis.lantsman/src/edulab && git diff --cached packages/frontend/auth.ts packages/backend/socket.ts packages/frontend/main.ts
+stdout:
+diff --git a/packages/backend/socket.ts b/packages/backend/socket.ts
+index 90ea5d0..93456fd 100644
+--- a/packages/backend/socket.ts
++++ b/packages/backend/socket.ts
+@@ -3,11 +3,23 @@ import type { ClientMessage, ServerFrame } from "@edulab/iso/protocol.ts";
+ import websocket from "@fastify/websocket";
+ import type { FastifyInstance } from "fastify";
+-export async function registerSocket(app: FastifyInstance, apiKey: string) {
++export async function registerSocket(
++  app: FastifyInstance,
++  apiKey: string,
++  password: string,
++) {
+   const client = new Anthropic({ apiKey });
++
+   await app.register(websocket);
+-  app.get("/api/socket", { websocket: true }, (socket) => {
++  // The gate for the backend's API key: the deployment is public, inference is
++  // not. Checked once, at the upgrade, because the socket is the only way in.
++  app.get("/api/socket", { websocket: true }, (socket, request) => {
++    const query = request.query as { password?: unknown };
++    if (query.password !== password) {
++      socket.close(4401, "unauthorized");
++      return;
++    }
+     const send = (frame: ServerFrame) => {
+       if (socket.readyState === socket.OPEN) socket.send(JSON.stringify(frame));
+     };
+diff --git a/packages/frontend/auth.ts b/packages/frontend/auth.ts
+new file mode 100644
+index 0000000..395b965
+--- /dev/null
++++ b/packages/frontend/auth.ts
+@@ -0,0 +1,75 @@
++/** The deployment is public and the API key is not, so every inference request
++ * carries a password the backend checks. It is held in memory for the session
++ * and in localStorage so a reload does not re-prompt. */
++const KEY = "edulab:password";
++
++let current = "";
++
++export function password(): string {
++  return current;
++}
++
++export function socketUrl(candidate = current): string {
++  const proto = window.location.protocol === "https:" ? "wss:" : "ws:";
++  const query = new URLSearchParams({ password: candidate });
++  return `${proto}//${window.location.host}/api/socket?${query.toString()}`;
++}
++
++/** The only thing the password gates is the socket, so the check is opening
++ * one: the backend closes it at the upgrade if the password is wrong. */
++function check(candidate: string): Promise<boolean> {
++  const socket = new WebSocket(socketUrl(candidate));
++  return new Promise<boolean>((resolve) => {
++    socket.addEventListener("open", () => {
++      socket.close();
++      resolve(true);
++    });
++    socket.addEventListener("close", () => {
++      resolve(false);
++    });
++  });
++}
++
++/** Resolves once a password the backend accepts is in hand. A stored one is
++ * tried first, so the form is only shown when there is nothing to go on. */
++export async function unlock(container: HTMLElement): Promise<void> {
++  const stored = window.localStorage.getItem(KEY);
++  if (stored !== null && (await check(stored))) {
++    current = stored;
++    return;
++  }
++  window.localStorage.removeItem(KEY);
++  return new Promise<void>((resolve) => {
++    const form = document.createElement("form");
++    form.style.cssText =
++      "display:flex;gap:8px;align-items:center;justify-content:center;height:100%;font:14px system-ui";
++    const input = document.createElement("input");
++    input.type = "password";
++    input.placeholder = "password";
++    input.autofocus = true;
++    const button = document.createElement("button");
++    button.type = "submit";
++    button.textContent = "Enter";
++    const error = document.createElement("span");
++    error.style.color = "#c00";
++    form.append(input, button, error);
++    container.append(form);
++    input.focus();
++    form.addEventListener("submit", (e) => {
++      e.preventDefault();
++      error.textContent = "";
++      button.disabled = true;
++      void check(input.value).then((ok) => {
++        button.disabled = false;
++        if (!ok) {
++          error.textContent = "nope";
++          return;
++        }
++        current = input.value;
++        window.localStorage.setItem(KEY, current);
++        form.remove();
++        resolve();
++      });
++    });
++  });
++}
+diff --git a/packages/frontend/main.ts b/packages/frontend/main.ts
+index 61307aa..95721e6 100644
+--- a/packages/frontend/main.ts
++++ b/packages/frontend/main.ts
+@@ -1,3 +1,4 @@
++import { unlock } from "./auth.ts";
+ import { mount } from "./prototypes/chat.ts";
+ import { cls, mountStyle } from "./vamp.ts";
+@@ -17,4 +18,5 @@ const page = document.createElement("div");
+ page.className = pageClass;
+ const root = document.getElementById("app") ?? document.body;
+ root.append(page);
++await unlock(page);
+ mount(page);
+exit code 0

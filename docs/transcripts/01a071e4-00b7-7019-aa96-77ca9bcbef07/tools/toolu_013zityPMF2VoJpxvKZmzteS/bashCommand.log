@@ -1,0 +1,10 @@
+$ cd /Users/denis.lantsman/src/edulab && grep -rn "\.text\|messages" packages/frontend/prototypes/chat.ts packages/frontend/threads.ts packages/frontend/samples/*.ts
+stdout:
+packages/frontend/prototypes/chat.ts:33:    messages: [],
+packages/frontend/prototypes/chat.ts:55:    state.messages = node.thread.messages;
+packages/frontend/prototypes/chat.ts:65:            tree.get(own.anchor.thread).thread.messages,
+packages/frontend/prototypes/chat.ts:79:      messages: child.thread.messages,
+packages/frontend/threads.ts:54:        parent.thread.messages,
+packages/frontend/samples/index.ts:24:  messages: { role: string; content: string }[];
+packages/frontend/samples/index.ts:31:    turns: file.messages.map((m) => ({
+exit code 0

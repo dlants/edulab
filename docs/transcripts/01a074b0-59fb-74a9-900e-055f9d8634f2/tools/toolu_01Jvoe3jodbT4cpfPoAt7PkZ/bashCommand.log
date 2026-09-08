@@ -1,0 +1,47 @@
+$ cd /Users/denis.lantsman/src/edulab && sed -n 1,40p packages/frontend/prototypes/chat.ts && grep -rn "build" packages/frontend/prototypes/chat.ts | sed -n 1,40p
+stdout:
+import {
+  type GraphEdge,
+  type GraphNode,
+  KnowledgeGraph,
+  type NodeId,
+} from "../graph.ts";
+import { readTools, writeTools } from "../graph-tools.ts";
+import type { Build, Msg as GraphMsg, Sidebar } from "../graph-view.ts";
+import { layout, type Position } from "../layout.ts";
+import { EXTRACT_SYSTEM, renderTree } from "../prompt.ts";
+import { selectedSample, selectSample } from "../samples/index.ts";
+import { overlaps, type ThreadId } from "../selection.ts";
+import { Thread } from "../thread.ts";
+import { ThreadTree } from "../threads.ts";
+import { AppView, type Msg, type State } from "../view.ts";
+/** The editable fields of a node or edge: the id addresses it, so it is not
+ * part of what the sidebar edits. */
+function draftOf(node: GraphNode): Omit<GraphNode, "id">;
+function draftOf(edge: GraphEdge): Omit<GraphEdge, "id">;
+function draftOf<T extends { id: string }>(item: T): Omit<T, "id"> {
+  const { id: _id, ...rest } = item;
+  return rest;
+}
+function connect(): WebSocket {
+  const proto = window.location.protocol === "https:" ? "wss:" : "ws:";
+  return new WebSocket(`${proto}//${window.location.host}/api/socket`);
+}
+/** Prototype 1: the task transcript, with learning threads hanging off the
+ * passages the user picks out of it. */
+export function mount(container: HTMLElement): void {
+  // One socket for the whole app: every Thread adds its own
+  // listener and drops frames whose requestId it does not own, so streams
+  // interleave over the single connection.
+  const socket = connect();
+  // Scoped to the user, not to a thread: it outlives every thread in the tree
+  // and is discarded only by a page load.
+  const graph = new KnowledgeGraph();
+packages/frontend/prototypes/chat.ts:55:  let build: Build = { type: "idle" };
+packages/frontend/prototypes/chat.ts:85:    graph: { nodes: [], edges: [], sidebar, build },
+packages/frontend/prototypes/chat.ts:112:      build,
+packages/frontend/prototypes/chat.ts:156:    if (build.type === "running") return;
+packages/frontend/prototypes/chat.ts:157:    build = { type: "running" };
+packages/frontend/prototypes/chat.ts:170:        build =
+packages/frontend/prototypes/chat.ts:177:        build = { type: "error", error: String(e) };
+exit code 0

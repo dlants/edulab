@@ -1,0 +1,27 @@
+$ cd packages/frontend && grep -n "SAMPLE_CHANGED" -A6 prototypes/chat.ts && grep -n "clearSnapshot\|storageKey\|sample" prototypes/chat.ts
+stdout:
+514:      case "SAMPLE_CHANGED":
+515-        selectSample(msg.id === "" ? undefined : (msg.id as SampleId));
+516-        break;
+517-      case "TAB_CHANGED":
+518-        state.tab = msg.tab;
+519-        break;
+520-      case "CHANGE_CLICKED":
+33:} from "../samples/index.ts";
+89:  const sample = selectedSample();
+90:  const snapshot = loadSnapshot(sample?.id);
+120:        new Thread(socket, { initialTurns: sample?.turns }),
+149:        sample: sample?.id,
+192:    sample: sample?.id ?? "",
+351:  /** The sample's own turns: a loaded transcript is a session that happened
+355:  const sampleTurnCount = (sample?.turns ?? []).filter(
+358:  const sampleInteractions: MessageIdx[] = tree
+363:    .slice(0, sampleTurnCount);
+382:  /** Walks the loaded sample's turns through the same queue the live updates
+386:    const total = sampleInteractions.length;
+390:      sampleInteractions.map((index) => ({ thread: tree.root, index })),
+402:    const owned = new Set(sampleInteractions);
+652:      sampleTurnCount,
+657:        done: sampleInteractions.filter((index) =>
+660:        total: sampleInteractions.length,
+exit code 0

@@ -1,0 +1,26 @@
+$ cd /Users/denis.lantsman/src/edulab && sed -n 1096,1118p packages/frontend/view.ts
+stdout:
+        return show(ThreadPane, child, {}, (msg: ThreadPaneMsg) =>
+          dispatch({ type: "CHILD_MSG", msg }),
+        );
+      }
+      const learningState: LearningState = {
+        selection: paneSelection(s),
+        overlapping: s.anchor !== null && overlaps(s.marks, s.anchor),
+        query: s.query,
+        marks: s.marks.map((mark) => ({
+          thread: mark.thread,
+          text: anchorText(mark.anchor, s.messages),
+        })),
+        threads: s.threads,
+      };
+      // bindSlot hands this straight to the child as its dispatch, so it must
+      // dispatch rather than return a wrapped message.
+      return show(LearningPane, learningState, ctx, (msg: LearningMsg) =>
+        dispatch({ type: "LEARNING_MSG", msg }),
+      );
+    });
+    this.b.bindValue(inputRef, (s) => s.draft);
+    this.b.bindDisabled(inputRef, (s) => s.inFlight);
+    this.b.bindDisabled(sendRef, (s) => s.inFlight || s.draft.trim() === "");
+exit code 0

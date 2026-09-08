@@ -1,0 +1,316 @@
+$ cd /Users/denis.lantsman/src/edulab && cat >> packages/frontend/threads.test.ts <<'EOF'
+
+it("sends a child's tools on its first request, and none for the root task thread", () => {
+  const { socket, tree, anchor } = setup();
+  expect(socket.last.params.tools).toBeUndefined();
+  const graph = new KnowledgeGraph();
+  const child = tree.open(anchor, { type: "explain" }, {
+    tools: readTools(graph),
+    graph: graph.render(),
+  });
+  void tree.get(child).thread.start();
+  expect(socket.last.params.tools?.map((t) => t.name)).toEqual(["get"]);
+  expect(tree.get(child).thread.seed).toContain(graph.render());
+});
+EOF
+python3 - <<'EOF'
+p='packages/frontend/threads.test.ts'
+s=open(p).read()
+s=s.replace('import type { Anchor } from "./selection.ts";','import { readTools } from "./graph-tools.ts";\nimport { KnowledgeGraph } from "./graph.ts";\nimport type { Anchor } from "./selection.ts";')
+open(p,'w').write(s)
+EOF
+cat >> packages/frontend/prompt.test.ts <<'EOF'
+
+it("names the get tool and the scale in the learning system prompt", () => {
+  expect(LEARNING_SYSTEM).toContain("`get`");
+  for (const label of LEVELS) expect(LEARNING_SYSTEM).toContain(label);
+});
+
+it("renders the graph into a top-level seed, and only there", () => {
+  const graph = new KnowledgeGraph();
+  graph.putNode({
+    title: "recursive descent",
+    description: "top-down parsing",
+    notes: "asked about it",
+    level: 2,
+  });
+  const rendered = graph.render();
+  const top = seedTurn(undefined, messages, at(1, 9, 1, 26), { type: "explain" }, rendered);
+  expect(top).toContain(rendered);
+  const deeper = seedTurn(top, messages, at(1, 9, 1, 26), { type: "explain" }, rendered);
+  expect(deeper.split(rendered)).toHaveLength(2);
+});
+EOF
+python3 - <<'EOF'
+p='packages/frontend/prompt.test.ts'
+s=open(p).read()
+s=s.replace('import { seedTurn } from "./prompt.ts";','import { KnowledgeGraph, LEVELS } from "./graph.ts";\nimport { LEARNING_SYSTEM, seedTurn } from "./prompt.ts";')
+open(p,'w').write(s)
+EOF
+npm test && npm run typecheck && npm run lint
+stdout:
+> edulab@0.0.1 test
+> vitest run
+ RUN  v4.1.11 /Users/denis.lantsman/src/edulab
+ ✓ packages/frontend/graph.test.ts (9 tests) 3ms
+ ✓ packages/frontend/selection.test.ts (8 tests) 2ms
+ ✓ packages/frontend/prompt.test.ts (7 tests) 2ms
+ ✓ packages/frontend/graph-tools.test.ts (7 tests) 14ms
+ ✓ packages/frontend/threads.test.ts (3 tests) 10ms
+ ✓ packages/frontend/thread.test.ts (20 tests) 22ms
+ Test Files  6 passed (6)
+      Tests  54 passed (54)
+   Start at  14:17:42
+   Duration  203ms (transform 334ms, setup 0ms, import 542ms, tests 55ms, environment 0ms)
+> edulab@0.0.1 typecheck
+> npm -w @edulab/iso exec tsc -- --noEmit && npm -w @edulab/frontend exec tsc -- --noEmit && npm -w @edulab/backend exec tsc -- --noEmit && npm -w @edulab/e2e exec tsc -- --noEmit
+> edulab@0.0.1 lint
+> biome check .
+stderr:
+packages/frontend/prompt.test.ts format ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  × Formatter would have printed the following content:
+    118 118 │     });
+    119 119 │     const rendered = graph.render();
+    120     │ - ··const·top·=·seedTurn(
+undefined,·messages,·at(1,·9,·1,·26
+),·{·type:·"explain"·},·rendered);
+        120 │ + ··const·top·=·seedTurn
+(
+        121 │ + ···
+·undefined,
+        122
+ │ + ····messages,
+        123 │ + ····at
+(1,·9,·1,·26),
+124 │ + ····{·
+type:·"explain"·},
+        125 │ + 
+····render
+ed,
+        126 │ 
++ ··);
+    121
+ 127 │     expect(top).to
+Contain(rendere
+d);
+    122    
+ │ - ··const·deep
+er·=·seedTurn(top
+,·messages,·a
+t(1,·9,·1,
+·26),·{·typ
+e:·"explain
+"·},·rendered);
+ 128 │ + ··const·deeper·=·seed
+Turn(
+        129 │ 
++ ····top
+,
+        130 │ + ····
+messages,
+ 131 │ + ·
+···at(1,·9,·1,·
+26),
+        132 │ + ···
+·{·type:·"explain"·},
+ 133 │ + ····
+rendered,
+        134 │ + 
+··);
+    123 135 │ 
+    expec
+t(deeper.
+split(rendered)).toHa
+veLength(2);
+    124 136 │   
+});
+packages/frontend/prompt.ts format 
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  × Formatter would have printed the following content:
+    41 41 │     // show 
+the model the same overview once per le
+vel.
+    42 42 │     
+if (seed) sections.push(seed);
+    43    │ - 
+··else·if·(graph)
+·sections.push
+(`What·this·user·already·understands:\n
+${graph}`);
+ 43 │ + ··el
+se·if·(graph)
+       44 │ + ···
+·sections.push(`W
+hat·this·use
+r·already·u
+nderstands:\n${graph}`)
+;
+    44 45 │   
+  secti
+ons.push(transcript(visible));
+    45 46 │     sections.push(
+packages/frontend/prototypes/chat.ts:
+1:1 assist/source/organizeImports  FIXABLE  ━━━━━━━━━━━━━━━━━━━
+  × Sort these imports.
+  > 
+1 │ 
+import { read
+Tools } from
+ "../graph-t
+ools.ts";
+      │ ^^^^^
+^^^^^^^^^^^^^^^^
+^^^^^^^^^^^
+^^^^^^^^^^^
+^^^
+  > 2 │ im
+port { Knowle
+dgeGraph }
+ from "../
+graph.ts";
+      │ ^^^^^
+^^^^^^^^^^^^^^^
+^^^^^^^^^^^
+^^^^^^^^^
+^^^^^
+    3 │ import
+ { actionLabel
+ } from ".
+./prompt.ts
+";
+    4 │ 
+import { selectedSample, sel
+ectSample
+ } from "../samples/index.ts";
+  i Safe fix: Organize imports and exports (Biome)
+      1     │ - import·{·readTools·}·
+from·"../graph-tools.ts";
+      2     │ - import·{·KnowledgeGraph·}·from·"../
+graph.ts";
+          1 │ + import·
+{·KnowledgeGraph·}·from·"../graph.ts";
+    2 │ + import·{·rea
+dTools·}·from·"../graph-tools
+.ts";
+      3   3 │   
+import { actionLabel } 
+from "../prompt.ts";
+      4 
+  4 │   import {
+ selectedSam
+ple, selectSample } f
+rom "../sample
+s/index.ts";
+packages/frontend/threads.test.ts
+:1:1 assist/source/organizeImports  FIXABLE  
+━━━━━━━━━━━━━━━━━━━━━━
+  × Sort these imports.
+  > 1 │ 
+import type 
+Anthropic from "@ant
+hropic-ai/sd
+k";
+      │ ^^^
+^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^
+> 2 │ impor
+t type { Cl
+ientMessage } from
+ "@edulab/is
+o/protocol.
+ts";
+  > 3 │ impor
+t { expect, it 
+} from "vi
+test";
+  > 4 │ im
+port { readTool
+s } from "
+./graph-tools.ts";
+  > 5 │ im
+port { Know
+ledgeGraph } from
+ "./graph.ts
+";
+      │ ^^^^
+^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^
+^^^^^^^^^
+  6 │ impo
+rt type { An
+chor } from "./se
+lection.ts";
+    7 │ 
+import { 
+type Socket, Thread 
+} from "./thr
+ead.ts";
+i Safe fix: Organize imports and exports (Biome)
+      2   2 │   
+import type { ClientM
+essage } fro
+m "@edulab
+/iso/protocol.ts";
+    3   3 │   i
+mport { expe
+ct, it } from "vite
+st";
+      4   
+  │ - imp
+ort·{·readTools·}·f
+rom·"./graph-
+tools.ts";
+      5     │ - im
+port·{·Knowle
+dgeGraph·}
+·from·"./graph.ts"
+;
+          4 │ + 
+import·{
+·KnowledgeGraph·}·
+from·"./graph
+.ts";
+    5 │ + import·{
+·readTools·
+}·from·"./g
+raph-tools.ts";
+  6   6 │   i
+mport type
+ { Anchor } from "
+./selection.
+ts";
+      7 
+  7 │   import { t
+ype Socket, 
+Thread } fr
+om "./thread.ts";
+packages/frontend/threads.test.ts 
+format ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  × Formatter would have printed the following content:
+    111 111 │     expect(socket.last.params.tools).toBeUndefined();
+    112 112 │     const graph = new KnowledgeGraph();
+    113     │ - ··const·child·=·tree.open(anchor,·{·type:·"explain"·},·{
+    114     │ - ····tools:·readTools(graph),
+    115     │ - ····graph:·graph.render(),
+    116     │ - ··});
+        113 │ + ··const·child·=·tree.open(
+        114 │ + ····anchor,
+        115 │ + ····{·type:·"explain"·},
+        116 │ + ····{
+        117 │ + ······tools:·readTools(graph),
+        118 │ + ······graph:·graph.render(),
+        119 │ + ····},
+        120 │ + ··);
+    117 121 │     v
+oid tree.get(child).thread.start();
+    118 122 │     expect(socket.last.params.to
+ols?.map((t) => t.name)).toEqual([
+"get"]);
+stdout:
+Checked 44 files in 106ms. No fixes applied.
+Found 5 errors.
+stderr:
+check ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  × Some errors were emitted while running checks.
+exit code 1

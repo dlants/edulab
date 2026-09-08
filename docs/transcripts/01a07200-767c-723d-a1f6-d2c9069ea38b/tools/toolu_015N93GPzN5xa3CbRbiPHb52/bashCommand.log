@@ -1,0 +1,48 @@
+$ cd /Users/denis.lantsman/src/magenta.nvim && grep -n "yield\|Yield" node/core/src/thread.ts
+stdout:
+69:  YieldValue,
+71:import { renderYieldValue } from "./thread-api.ts";
+90:/** How a thread's yield came to rest. */
+91:export type YieldState = {
+92:  value: YieldValue;
+110:  /** The shape this thread yields in. The thread's own concern: it decides the
+111:   * tool's spec and reads the yielded input back — the agent never sees a
+112:   * yield. */
+113:  yieldSchema?: JSONSchemaType;
+194:    context.yieldSchema,
+270:    onYield: [],
+398:    if (this.yieldState) {
+399:      return { type: "yielded", value: this.yieldState.value };
+576:  /** Set once the thread's yield has been resolved. `tornDown` means an owner
+579:  private yieldState: YieldState | undefined;
+580:  get yielded(): YieldState | undefined {
+581:    return this.yieldState;
+585:    // A yielded thread has already completed its work.
+586:    if (this.yieldState) return { unsent: [] };
+767:        (results) => this.yieldGate(results),
+780:  /** `yield_to_parent` ran like any other tool; the suspension it raises is
+784:   * it, and only for ids in this step's results, so an earlier yield inherited
+786:  private yieldGate(results: ToolResults): SuspendReason | undefined {
+790:        "yield_to_parent",
+793:      const value: YieldValue =
+794:        this.context.yieldSchema !== undefined
+797:      return { kind: "yield", value };
+832:    if (this.yieldState?.tornDown) {
+873:      if (r.type === "yielded") this.settleResult(r);
+981:      // A yield suspension is the thread's own, raised by `yieldGate`, and
+983:      if (result.type === "suspended" && result.reason.kind === "yield") {
+984:        const resolved = await this.resolveYield(result.reason.value);
+986:        // A rejected yield goes back in through the front door, as an
+1023:  /** The agent has yielded and settled; the supervisors decide whether that
+1027:  private async resolveYield(
+1028:    value: YieldValue,
+1033:    const rendered = renderYieldValue(value);
+1035:    for (const hook of this.hooks.onYield) {
+1041:        const accepted: YieldValue =
+1045:        this.yieldState = { value: accepted, response, tornDown: true };
+1048:          result: { type: "yielded", value: accepted },
+1060:      this.yieldState = {
+1065:      return { type: "settled", result: { type: "yielded", value } };
+1133:      case "yield":
+1264:      reason: "thread destroyed before it yielded",
+exit code 0

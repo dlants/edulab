@@ -1,0 +1,7 @@
+$ cd /Users/denis.lantsman/src/edulab/packages/e2e/tests && sed -i '' 's|import { expect, type Page, test } from "@playwright/test";|import type { Page } from "@playwright/test";\nimport { expect, test } from "./fixture.ts";|' chat.spec.ts graph.spec.ts persistence.spec.ts && sed -i '' 's|import { expect, test } from "@playwright/test";|import { expect, test } from "./fixture.ts";|' smoke.spec.ts && grep -n "fixture" *.spec.ts
+stdout:
+chat.spec.ts:4:import { expect, test } from "./fixture.ts";
+graph.spec.ts:3:import { expect, test } from "./fixture.ts";
+persistence.spec.ts:4:import { expect, test } from "./fixture.ts";
+smoke.spec.ts:1:import { expect, test } from "./fixture.ts";
+exit code 0

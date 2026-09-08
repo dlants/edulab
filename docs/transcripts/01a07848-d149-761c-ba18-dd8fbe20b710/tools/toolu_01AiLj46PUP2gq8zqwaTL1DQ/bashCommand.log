@@ -1,0 +1,17 @@
+$ grep -n "updates" packages/frontend/view.ts | sed -n 1,40p; grep -rn "ThreadPaneState" packages/frontend packages/e2e --include=*.ts
+stdout:
+41: * same turns updates nodes rather than teaching us anything new. */
+68:/** The updates over one thread, keyed by the index of the turn that triggered
+103:  /** The background graph updates over this transcript. */
+104:  updates: Updates;
+757:  updates: Updates;
+843:            update: s.updates.get(i) ?? null,
+1060:            update: s.updates.get(i) ?? null,
+packages/frontend/view.ts:106:  child: ThreadPaneState | null;
+packages/frontend/view.ts:746:export type ThreadPaneState = {
+packages/frontend/view.ts:776:class ThreadPane implements View<ThreadPaneState, ThreadPaneMsg> {
+packages/frontend/view.ts:778:  private b: Binder<ThreadPaneState>;
+packages/frontend/view.ts:780:  private current: ThreadPaneState;
+packages/frontend/view.ts:785:    initial: ThreadPaneState,
+packages/frontend/view.ts:863:  sync(state: ThreadPaneState): void {
+exit code 0

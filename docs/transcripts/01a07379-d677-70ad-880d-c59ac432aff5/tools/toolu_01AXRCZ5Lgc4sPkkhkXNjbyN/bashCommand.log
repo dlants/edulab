@@ -1,0 +1,19 @@
+$ cd ~/.claude/skills/browser && pkgx pnpm exec tsx scripts/browser.ts "
+load http://localhost:5173/?sample=74979366
+sleep 1200
+eval
+[...document.querySelectorAll('button')].find(b=>b.textContent.includes('Knowledge')).click();
+await new Promise(r=>setTimeout(r,400));
+const app=document.querySelector('#app > div');
+return JSON.stringify({graph: Math.round(app.lastElementChild.getBoundingClientRect().height), body: Math.round(app.children[1].getBoundingClientRect().height)});
+endeval
+screenshot edulab-graph.png
+"
+stdout:
+Loading http://localhost:5173/?sample=74979366...
+Sleeping for 1200ms...
+Evaluating code in page context...
+Eval result: {"graph":641,"body":0}
+Taking screenshot /tmp/magenta/edulab-graph.png...
+Script completed successfully!
+exit code 0

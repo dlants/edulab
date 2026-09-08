@@ -1,0 +1,108 @@
+$ cd /Users/denis.lantsman/src/edulab && npm run lint:fix && npm test
+stdout:
+> edulab@0.0.1 lint:fix
+> biome check --write .
+Checked 52 files in 119ms. Fixed 3 files.
+> edulab@0.0.1 test
+> vitest run
+ RUN  v4.1.11 /Users/denis.lantsman/src/edulab
+ ❯ packages/frontend/graph.test.ts (9 tests | 1 failed) 6ms
+   × cascades a node delete to the edges on both sides of it 4ms
+   ✓ keeps the id and the edges when a node is retitled 1ms
+   ✓ rejects a title another node already uses, leaving the graph unchanged 0ms
+   ✓ rejects unknown ids and unknown endpoints 0ms
+   ✓ never reuses an id 0ms
+   ✓ allows several edges between the same pair, even with the same title 0ms
+   ✓ rejects a self edge 0ms
+   ✓ reports incident edges, endpoints and unknown ids from get 0ms
+   ✓ renders an empty graph as something a model can act on 0ms
+ ✓ packages/frontend/selection.test.ts (8 tests) 2ms
+ ✓ packages/frontend/layout.test.ts (7 tests) 7ms
+ ✓ packages/frontend/prompt.test.ts (14 tests) 3ms
+ ✓ packages/frontend/thread.test.ts (20 tests) 22ms
+ ❯ packages/frontend/graph-tools.test.ts (7 tests | 3 failed) 19ms
+   ✓ readTools offers only get; writeTools offers the mutations too 1ms
+   ✓ applies a batch of nodes in one call and reports each new id 0ms
+   × edges, get over a mixed list, and delete 3ms
+   ✓ updates in place when an id is given 0ms
+   × a bad entry does not stop its neighbours, and the call is still ok 1ms
+   ✓ unusable input comes back as an error result rather than throwing 0ms
+   × a real thread streaming a put_nodes call writes to the graph 12ms
+ ✓ packages/frontend/citation.test.ts (4 tests) 11ms
+ ✓ packages/frontend/interactions.test.ts (4 tests) 12ms
+ ✓ packages/frontend/threads.test.ts (4 tests) 12ms
+stderr:
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  packages/frontend/graph-tools.test.ts > edges, get over a mixed list, and delete
+AssertionError: expected '{"op":"deleted","kind":"node","id":"n…' to contain '1 incident edge'
+Expected: "1 incident edge"
+Received: "{"op":"deleted","kind":"node","id":"n0","title":"a"}"
+ ❯ packages/frontend/graph-tools.test.ts:74:25
+     72|   const deleted = await run("delete", { ids: ["n0"] });
+     73|   expect(deleted.status).toBe("ok");
+     74|   expect(text(deleted)).toContain("1 incident edge");
+       |                         ^
+     75|   expect(graph.nodes).toHaveLength(1);
+     76|   expect(graph.edges).toHaveLength(0);
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+ FAIL  packages/frontend/graph-tools.test.ts > a bad entry does not stop its neighbours, and the call is still ok
+AssertionError: expected 'entry 0: error: title "a" is already …' to contain 'entry 2: created'
+- Expected
++ Received
+- entry 2: created
++ entry 0: error: title "a" is already used by node n0
++ entry 1: error: no node with id n99
++ {"op":"created","kind":"node","id":"n1","title":"b"}
+ ❯ packages/frontend/graph-tools.test.ts:106:24
+    104|   expect(text(result)).toContain("entry 0: error:");
+    105|   expect(text(result)).toContain("entry 1: error:");
+    106|   expect(text(result)).toContain("entry 2: created");
+       |                        ^
+    107|   expect(graph.nodes.map((n) => n.title)).toEqual(["a", "b"]);
+    108|
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+ FAIL  packages/frontend/graph-tools.test.ts > a real thread streaming a put_nodes call writes to the graph
+AssertionError: expected { status: 'ok', …(1) } to deeply equal { status: 'ok', …(1) }
+- Expected
++ Received
+  {
+    "status": "ok",
+-   "text": "entry 0: created node n0 \"closures\"",
++   "text": "{\"op\":\"created\",\"kind\":\"node\",\"id\":\"n0\",\"title\":\"closures\"}",
+  }
+ ❯ packages/frontend/graph-tools.test.ts:193:57
+    191|   expect(graph.nodes.map((n) => n.title)).toEqual(["closures"]);
+    192|   const call = thread.messages.find((m) => m.type === "tool_use");
+    193|   expect(call?.type === "tool_use" && call.call.result).toEqual({
+       |                                                         ^
+    194|     status: "ok",
+    195|     text: 'entry 0: created node n0 "closures"',
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+ FAIL  packages/frontend/graph.test.ts > cascades a node delete to the edges on both sides of it
+AssertionError: expected { status: 'ok', change: { …(4) } } to deeply equal { status: 'ok', …(1) }
+- Expected
++ Received
+  {
+-   "message": StringContaining "2 incident edge(s)",
++   "change": {
++     "id": "n1",
++     "kind": "node",
++     "op": "deleted",
++     "title": "b",
++   },
+    "status": "ok",
+  }
+ ❯ packages/frontend/graph.test.ts:45:18
+     43|   addEdge(graph, b, c, "out");
+     44|   const result = graph.deleteNode(b);
+     45|   expect(result).toEqual({
+       |                  ^
+     46|     status: "ok",
+     47|     message: expect.stringContaining("2 incident edge(s)"),
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
+stdout:
+ Test Files  2 failed | 7 passed (9)
+      Tests  4 failed | 73 passed (77)
+   Start at  20:20:27
+   Duration  195ms (transform 368ms, setup 0ms, import 731ms, tests 94ms, environment 0ms)
+exit code 1

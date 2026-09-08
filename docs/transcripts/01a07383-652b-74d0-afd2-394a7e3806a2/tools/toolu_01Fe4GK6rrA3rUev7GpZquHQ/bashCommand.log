@@ -1,0 +1,5 @@
+$ cd /Users/denis.lantsman/src/edulab && grep -n "DFS\|depth-first\|depth first" plans/2026-09-05-interaction-reflection.md
+stdout:
+47:**Slice the tree into interactions, in the order the user made them.** `interactions(tree)` visits every thread and emits one `Interaction` per user turn, then sorts the whole list by when that turn happened. Chronological rather than depth-first: a session is one person's journey, and the journey is that they asked the agent for X, read some of it, dropped into a follow-up, came back up, asked something else. A DFS would reflect on the entire root thread before ever seeing the first "I don't understand this", which reorders the evidence into a shape the user never experienced and asks the model to judge their understanding of a passage before seeing them struggle with it.
+189:  - Interactions come back in timestamp order across threads: a child thread opened partway through the root thread is interleaved between the root turns it sits between, not appended after all of them. This is the whole point of the stage and the thing a DFS would silently get wrong.
+exit code 0

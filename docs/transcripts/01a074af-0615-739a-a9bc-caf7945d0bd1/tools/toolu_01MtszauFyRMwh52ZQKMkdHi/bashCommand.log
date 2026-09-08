@@ -1,0 +1,197 @@
+$ cd packages/frontend && sed -n 55,145p thread.ts; echo ---THREADS; sed -n 1,60p threads.ts; echo ---TEST; sed -n 1,70p threads.test.ts
+stdout:
+};
+export type YieldValue =
+  | { type: "text"; text: string }
+  | { type: "structured"; value: Record<string, unknown> };
+export type TurnResult =
+  | { type: "completed" }
+  | { type: "yielded"; value: YieldValue }
+  | { type: "error"; message: string };
+export type ThreadOpts = {
+  system?: string;
+  /** Sent after the seed, and rendered: a learning thread's opening ask is
+   * one of these, not part of the seed. */
+  initialTurns?: Anthropic.MessageParam[];
+  seed?: string;
+  tools?: Record<ToolName, Tool>;
+  /** Present => the yield tool is offered. `"text"` uses the default
+   * `{ result: string }` schema and settles with a text value; a schema
+   * settles with the whole input object. */
+  yieldSchema?: Anthropic.Tool.InputSchema | "text";
+};
+/** The key of a tool in the record handed to a thread; also what the model
+ * sends back as `tool_use.name`. */
+export type ToolName = string & { readonly __brand: "ToolName" };
+export type ToolResult =
+  | { status: "ok"; text: string }
+  | { status: "error"; error: string };
+/** A tool the thread can run, client side. */
+export type Tool = {
+  spec: Anthropic.Tool;
+  execute(input: Record<string, unknown>): Promise<ToolResult>;
+};
+/** Keys a set of tools by name. `Record<ToolName, Tool>` is a mapped type over
+ * a branded string, so an object literal cannot be written for it directly. */
+export function toolset(...tools: ReadonlyArray<Tool>): Record<ToolName, Tool> {
+  return Object.fromEntries(tools.map((t) => [t.spec.name, t]));
+}
+/** One entry of the derived transcript: a block, not a turn. A single agent
+ * turn can produce prose, a tool call, and more prose, and the transcript shows
+ * it that way. */
+export type Message =
+  | { type: "text"; role: "user" | "assistant"; text: string }
+  | { type: "tool_use"; role: "assistant"; call: ToolCall };
+/** Anchors index into text entries only, so everything else has no text. */
+export function messageText(message: Message): string {
+  return message.type === "text" ? message.text : "";
+}
+/** A block of the assistant turn currently streaming. */
+type PendingBlock =
+  | { type: "text"; text: string }
+  | {
+      type: "tool_use";
+      id: string;
+      name: string;
+      inputJson: string;
+      input: Record<string, unknown> | undefined;
+    };
+/** The subset of WebSocket the thread uses, so tests can stand in for it. */
+export type Socket = {
+  send(data: string): void;
+  addEventListener(
+    type: "message",
+    listener: (e: MessageEvent<string>) => void,
+  ): void;
+};
+export type ThreadResult<Value> =
+  | { status: "ok"; result: Value }
+  | { status: "error"; error: string };
+export type RunThreadOpts = {
+  prompt: string;
+  tools?: Record<ToolName, Tool>;
+  yieldSchema: Anthropic.Tool.InputSchema | "text";
+  system?: string;
+  /** How many times a turn that ends without a yield is nudged back to work. */
+  maxRestarts?: number;
+};
+/** Runs a thread to completion with no user in the loop: the seed prompt goes
+ * in, tools run client side, and the settled yield comes back. A turn that
+ * ends without yielding is restarted rather than accepted. */
+---THREADS
+import type Anthropic from "@anthropic-ai/sdk";
+import {
+  type Action,
+  askTurn,
+  contextSeed,
+  LEARNING_SYSTEM,
+} from "./prompt.ts";
+import type { Anchor, Mark, ThreadId } from "./selection.ts";
+import type { Tool, ToolName, TurnResult } from "./thread.ts";
+import { type Socket, Thread } from "./thread.ts";
+export type { Action };
+/** `anchor.thread` is the parent, so the link upward is the highlight itself. */
+export type Origin = { anchor: Anchor; action: Action };
+/** What a child thread is given beyond its seed. */
+export type ChildOpts = {
+  tools?: Record<ToolName, Tool>;
+  /** The rendered knowledge graph, injected into the seed of a top-level
+   * learning thread. */
+  graph?: string;
+  yieldSchema?: Anthropic.Tool.InputSchema | "text";
+};
+export type TreeNode = {
+  id: ThreadId;
+  /** null only for the root task thread. */
+  origin: Origin | null;
+  thread: Thread;
+  /** Creation order; each child's `origin.anchor` is its highlight. */
+  children: ThreadId[];
+  activeChild: ThreadId | null;
+  draft: string;
+};
+/** The tree of threads. Every thread but the root was opened from a
+ * passage of its parent, so a thread and the highlight over its parent are the
+ * same edge seen from either end. Threads are never destroyed or reparented. */
+export class ThreadTree {
+  private readonly threads = new Map<ThreadId, TreeNode>();
+  private nextId = 0;
+  readonly root: ThreadId;
+  private readonly socket: Socket;
+  /** Attached to every thread the tree owns, so a stream anywhere in the
+   * tree re-syncs the app. */
+  private readonly onChange: () => void;
+  constructor(socket: Socket, root: Thread, onChange: () => void) {
+    this.socket = socket;
+    this.onChange = onChange;
+    this.root = this.add(null, root);
+  }
+  get(id: ThreadId): TreeNode {
+    const node = this.threads.get(id);
+    if (!node) throw new Error(`unknown thread ${id}`);
+    return node;
+  }
+---TEST
+import type Anthropic from "@anthropic-ai/sdk";
+import type { ClientMessage } from "@edulab/iso/protocol.ts";
+import { expect, it } from "vitest";
+import { KnowledgeGraph } from "./graph.ts";
+import { readTools } from "./graph-tools.ts";
+import type { Anchor } from "./selection.ts";
+import { type Socket, Thread } from "./thread.ts";
+import { ThreadTree } from "./threads.ts";
+class FakeSocket implements Socket {
+  readonly sent: ClientMessage[] = [];
+  private readonly listeners: ((e: MessageEvent<string>) => void)[] = [];
+  send(data: string) {
+    this.sent.push(JSON.parse(data) as ClientMessage);
+  }
+  addEventListener(
+    _type: "message",
+    listener: (e: MessageEvent<string>) => void,
+  ) {
+    this.listeners.push(listener);
+  }
+  get last(): ClientMessage {
+    const last = this.sent[this.sent.length - 1];
+    if (!last) throw new Error("nothing sent");
+    return last;
+  }
+  deliver(event: Anthropic.RawMessageStreamEvent) {
+    const requestId = this.last.requestId;
+    const data = JSON.stringify({ type: "event", requestId, event });
+    for (const listener of [...this.listeners]) {
+      listener(new MessageEvent("message", { data }));
+    }
+  }
+  yields(input: Record<string, unknown>) {
+    this.deliver({
+      type: "content_block_start",
+      index: 0,
+      content_block: {
+        type: "tool_use",
+        id: "call-1",
+        name: "yield",
+        input: {},
+        caller: { type: "direct" },
+      },
+    });
+    this.deliver({
+      type: "content_block_delta",
+      index: 0,
+      delta: { type: "input_json_delta", partial_json: JSON.stringify(input) },
+    });
+    this.deliver({ type: "content_block_stop", index: 0 });
+    this.deliver({ type: "message_stop" } as Anthropic.RawMessageStreamEvent);
+  }
+}
+const SCHEMA: Anthropic.Tool.InputSchema = {
+  type: "object",
+  properties: { grade: { type: "string" } },
+  required: ["grade"],
+};
+/** A tree whose root has one committed user turn, so there is something to
+ * anchor a child onto. */
+function setup() {
+  const socket = new FakeSocket();
+exit code 0

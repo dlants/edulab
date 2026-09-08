@@ -1,0 +1,130 @@
+$ cd /Users/denis.lantsman/src/edulab && npm run lint && npm run typecheck && npm test
+stdout:
+> edulab@0.0.1 lint
+> biome check .
+stderr:
+packages/frontend/prototypes/chat.ts
+:
+10:10 lint/correctness/noUnusedImports 
+ FIXABLE  ━━━━━━━━━━━━━━
+  ! Several of these 
+imports are unused.
+8 │ import type { Build, Msg as GraphMsg, Sidebar }
+ from "../graph-view.ts";
+   9 │ import { 
+layout, type Position } from "../layout.ts";
+  > 10 │ import { actionLabel, EXTRACT_SYSTEM, renderTree } from "../prompt.
+ts";
+       │          ^^^^^^
+^^^^^
+    11 │ import { s
+electedSample, selectSample } from
+ "../samples/index.
+ts";
+    12 │ i
+mport { anchorText, overlaps, typ
+e ThreadId } from "
+../selection.ts";
+  i Unused imports might be the result of an incomplete refactoring.
+  i Unsafe fix: Remove the unused imports.
+    10 │ 
+import·{·actionLabel,·EXTRACT_SYSTEM,·renderTree·}
+·from·"../prompt.
+ts";
+       │          ---------
+----                               
+packages/frontend/prototypes/chat.ts
+:12:10 lint/correctness/noUnusedImports  FIXABLE  
+━━━━━━━━━━━━━━
+  ! Several of these imports are unused.
+    10 │ 
+import {
+ actionLabel, EXTRACT
+_SYSTEM, render
+Tree } from "../prompt.
+ts";
+    11 │ i
+mport { selectedSample, s
+electSample } f
+rom "../samples/index.t
+s";
+  > 12 │ 
+import { anchorText, over
+laps, type Thr
+eadId } from "../selec
+tion.ts";
+   │          ^^^^^^^^^^
+13 │ import
+ { Thread } from ".
+./thread.ts";
+    14 │ import { Th
+readTree } from 
+"../threads.ts";
+i Unused imports might be the result of an incomplete refactoring.
+  i Unsafe fix: Remove the unused imports.
+    12 │ 
+import·{·anchorText,·o
+verlaps,·type·
+ThreadId·}·from·"../se
+lection.ts";
+     │          ------------  
+packages/frontend/thread.ts
+ format ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  × Formatter would have printed the following content:
+    228 228 │   
+    this.seed = opts.seed;
+    229 229 │       this.turns = [
+    230     │ - ······...(opts.seed
+  231     │ - ········?·[{·role:·"user"·as·const,·content:·opts.seed·}]
+    232
+     │ - ········:·[]),
+        230 │ 
++ ······...(opts.seed·?·[{·role:·"user"·as
+·const,·content:·opts.se
+ed·}]·:·[]),
+    233 231 │         
+...(opts.initialTurns ?? []),
+    234 232 │       ];
+packages/frontend/threads.ts format ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  × Formatter would have printed the following content:
+      1   1 │   
+import type Anthrop
+ic from "@anth
+ropic-ai/sdk";
+      2     │ - 
+import·{·type·Act
+ion,·askTurn,·contextSeed,
+·LEARNING_SYSTE
+M·}·from·"./prompt.ts";
+        2 │ + imp
+ort·{
+          3 │ + ··ty
+pe·Action,
+          4 │ + ··askTurn
+,
+          5 │ + 
+··contextSeed,
+          6 │ + 
+··LEARNING_SY
+STEM,
+          7 │ + }·f
+rom·"./prompt.ts
+";
+      3   8 │   import t
+ype { Anchor, Mark, Thre
+adId } from "./s
+election.ts"
+;
+      4   9 │   
+import type {
+ Tool, ToolNa
+me, Tur
+nResult } from "./thread.ts";
+stdout:
+Checked 48 files in 161ms. No fixes applied.
+Found 2 errors.
+Found 2 warnings.
+stderr:
+check ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  × Some errors were emitted while running checks.
+exit code 1

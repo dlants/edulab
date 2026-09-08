@@ -1,0 +1,95 @@
+$ cd /Users/denis.lantsman/src/edulab && sed -n '96,152p;228,270p' packages/e2e/tests/persistence.spec.ts
+stdout:
+}
+function threadTranscript(page: Page) {
+  return page.locator("ul").nth(1);
+}
+function graphTab(page: Page) {
+  return page.getByRole("button", { name: "Knowledge graph", exact: true });
+}
+/** The write is debounced off the streaming path, so a reload has to wait for
+ * it to land. */
+async function settled(page: Page) {
+  await expect
+    .poll(() => page.evaluate((key) => localStorage.getItem(key), KEY))
+    .not.toBeNull();
+  await page.waitForTimeout(600);
+}
+/** Selects characters [start, end) of message `msg`, as the app captures it. */
+async function selectRange(
+  page: Page,
+  msg: number,
+  start: number,
+  end: number,
+) {
+  await page.evaluate(
+    ({ msg, start, end }) => {
+      const li = document.querySelectorAll("ul")[0].children[msg];
+      const root = li.querySelector("[data-text]") as HTMLElement;
+      const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+      let at = 0;
+      let from: [Node, number] | null = null;
+      let to: [Node, number] | null = null;
+      let node = walker.nextNode();
+      while (node) {
+        const len = node.textContent?.length ?? 0;
+        if (!from && start <= at + len) from = [node, start - at];
+        if (!to && end <= at + len) to = [node, end - at];
+        at += len;
+        node = walker.nextNode();
+      }
+      if (!from || !to) throw new Error("range out of bounds");
+      const range = document.createRange();
+      range.setStart(from[0], from[1]);
+      range.setEnd(to[0], to[1]);
+      const selection = window.getSelection();
+      selection?.removeAllRanges();
+      selection?.addRange(range);
+    },
+    { msg, start, end },
+  );
+  await taskTranscript(page).dispatchEvent("mouseup");
+}
+const SENTENCE = "the quick brown fox jumps over the lazy dog";
+test("a build interrupted by a refresh resumes where it stopped", async ({
+  page,
+}) => {
+  const counts = await backend(page);
+  await page.goto("/");
+  const sample = await page
+    .locator("select option")
+    .nth(1)
+    .getAttribute("value");
+  await page.goto(`/?sample=${sample}`);
+  const turns = await taskTranscript(page).locator("li").count();
+  // Nothing is saved until something happens, so nudge one dispatch through.
+  await graphTab(page).click();
+  const key = `edulab:v2:${sample}`;
+  await expect
+    .poll(() => page.evaluate((k) => localStorage.getItem(k), key))
+    .not.toBeNull();
+  await page.waitForTimeout(600);
+  const total = await page.evaluate((k) => {
+    const snapshot = JSON.parse(localStorage.getItem(k) as string) as {
+      build: unknown;
+      threads: { log: { role: string }[] }[];
+    };
+    const asks = snapshot.threads[0].log.filter(
+      (t) => t.role === "user",
+    ).length;
+    snapshot.build = { type: "running", done: 0, total: asks, failed: 0 };
+    localStorage.setItem(k, JSON.stringify(snapshot));
+    return asks;
+  }, key);
+  expect(total).toBeGreaterThan(1);
+  await page.reload();
+  await expect(page.getByText("built", { exact: true })).toBeVisible({
+    timeout: 30_000,
+  });
+  expect(counts.updates).toBe(total);
+  // The transcript is the sample's, untouched: a resume sends no user turns.
+  expect(counts.turns).toBe(0);
+  await expect(taskTranscript(page).locator("li")).toHaveCount(turns);
+});
+test("an unreadable snapshot is dropped and the app comes up bare", async ({
+exit code 0

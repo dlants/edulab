@@ -1,0 +1,40 @@
+$ cd /Users/denis.lantsman/src/edulab && grep -n "tab\|GRAPH_MSG\|GraphView\|bindSlot\|graph" packages/frontend/view.ts
+stdout:
+4:  GraphView,
+5:} from "./graph-view.ts";
+55:  /** Which top-level tab is showing. State, not a route: a page load would
+56:   * discard the graph. */
+57:  tab: "threads" | "graph";
+58:  graph: GraphState;
+76:  | { type: "TAB_CHANGED"; tab: "threads" | "graph" }
+77:  | { type: "GRAPH_MSG"; msg: GraphMsg }
+99:const tabsClass = cls("tabs");
+100:const graphTabClass = cls("graph-tab");
+166:.${tabsClass} button[aria-pressed="true"] {
+170:.${graphTabClass} {
+394:    // anchors inside it, so a tool call is rendered but not selectable.
+610:    const threadsTabRef: Ref = ref("threads-tab");
+611:    const graphTabRef: Ref = ref("graph-tab");
+613:    const graphSlotRef: Ref = ref("graph-slot");
+619:        <span class="${tabsClass}">
+621:          <button type="button" data-ref="${graphTabRef}">Knowledge graph</button>
+642:      <div class="${graphTabClass}" data-ref="${graphSlotRef}"></div>
+697:    // message is a stable identity.
+728:        dispatch({ type: "TAB_CHANGED", tab: "threads" }),
+731:      .ref(graphTabRef)
+733:        dispatch({ type: "TAB_CHANGED", tab: "graph" }),
+736:      s.tab === "threads" ? "true" : "false",
+738:    this.b.bindAttr(graphTabRef, "aria-pressed", (s) =>
+739:      s.tab === "graph" ? "true" : "false",
+742:    // draft and the live selection all survive a trip to the graph tab.
+743:    this.b.bindVisible(bodyRef, (s) => s.tab === "threads");
+744:    this.b.bindSlot(graphSlotRef, (s) =>
+745:      s.tab === "graph"
+746:        ? show(GraphView, s.graph, {}, (msg: GraphMsg) =>
+747:            dispatch({ type: "GRAPH_MSG", msg }),
+755:    this.b.bindVisible(backRef, (s) => s.split && s.tab === "threads");
+756:    this.b.bindVisible(forwardRef, (s) => s.tab === "threads");
+757:    this.b.bindVisible(depthRef, (s) => s.tab === "threads");
+762:    this.b.bindSlot(learningRef, (s) => {
+778:      // bindSlot hands this straight to the child as its dispatch, so it must
+exit code 0

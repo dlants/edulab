@@ -1,0 +1,4 @@
+$ cd /Users/denis.lantsman/src/edulab && git add -A && git commit -q -m "Stage 2: graph tools" && git log --oneline -1
+stdout:
+ba7fb1a Stage 2: graph tools
+exit code 0

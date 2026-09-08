@@ -1,0 +1,104 @@
+$ cd /Users/denis.lantsman/src/edulab && npm run typecheck && npm test && npm run lint
+stdout:
+> edulab@0.0.1 typecheck
+> npm -w @edulab/iso exec tsc -- --noEmit && npm -w @edulab/frontend exec tsc -- --noEmit && npm -w @edulab/backend exec tsc -- --noEmit && npm -w @edulab/e2e exec tsc -- --noEmit
+> edulab@0.0.1 test
+> vitest run
+ RUN  v4.1.11 /Users/denis.lantsman/src/edulab
+ ✓ packages/frontend/graph.test.ts (10 tests) 3ms
+ ✓ packages/frontend/selection.test.ts (8 tests) 2ms
+ ✓ packages/frontend/layout.test.ts (7 tests) 7ms
+ ✓ packages/frontend/graph-tools.test.ts (8 tests) 13ms
+ ✓ packages/frontend/persistence.test.ts (5 tests) 3ms
+ ✓ packages/frontend/prompt.test.ts (14 tests) 4ms
+ ✓ packages/frontend/citation.test.ts (4 tests) 12ms
+ ✓ packages/frontend/threads.test.ts (5 tests) 12ms
+ ✓ packages/frontend/interactions.test.ts (4 tests) 13ms
+ ✓ packages/frontend/thread.test.ts (24 tests) 29ms
+ Test Files  10 passed (10)
+      Tests  89 passed (89)
+   Start at  12:18:47
+   Duration  393ms (transform 539ms, setup 0ms, import 958ms, tests 98ms, environment 0ms)
+> edulab@0.0.1 lint
+> biome check .
+stderr:
+packages/frontend/persistence.test.ts:88:8 lint/style/noNonNullAssertion 
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  ! Forbidden non-null assertion.
+    86 │   const deep = "t9" as ThreadId;
+    87 │   snapshots.push({
+  > 88 │     ...snapshots[1]!,
+       │        ^^^^^^^^^^^^^
+    89 │     id: deep,
+    90 │     origin: { type: "thread", parent: tree.root, action: { type: "explain" } },
+packages/frontend/persistence.test.ts:94:3 lint/style/noNonNullAssertion  FIXABLE  ━━━━━━━━━━━━━━━━━
+  ! Forbidden non-null assertion.
+    92 │     activeChild: null,
+    93 │   });
+  > 94 │   snapshots[0]!.chi
+ldren.push(deep);
+       │   ^^^^^^^^^^^^^
+    95 │   const restored = ThreadTree.restore(
+    96 │     socket,
+  i Unsafe fix: Replace with optional chain operator ?. This operator includes runtime checks, so it is safer than the compile-only non-null assertion operator
+     92  92 │   
+    activeChild: null,
+     93  93 │     });
+     94  
+   │ - ··snapshots[0]!.ch
+ildren.push(deep);
+         94 │ + 
+··snapshot
+s[0]?.children.p
+ush(deep);
+     95 
+ 95 │     const restored = Th
+readTree.restor
+e(
+     96 
+ 96 │       
+socket,
+packages/frontend/persistence.test.ts format 
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  × Formatter would have printed the following content:
+    101 101 │       (
+s) => new Thread(socket, { 
+seed: s.seed,
+ initialTurn
+s: s.log })
+,
+    102 102 │     );
+103     │ - ··e
+xpect(restor
+ed.marks
+(tree.root).map((m)·
+=>·m.thread))
+.toEqual([
+    104     │ - 
+····first,
+    105     │ 
+- ····"t2",
+    106     │ - 
+··]);
+    103 │ + ··expect(
+restored.mark
+s(tree.root)
+.map((m)·=>
+·m.thread)).toEqual([fi
+rst,·"t
+2"]);
+107 104 │   
+  expect(restored.p
+ath(deep)).to
+Equal([tre
+e.root, de
+ep]);
+    108 105 │   });
+stdout:
+Checked 55 files in 185ms. No fixes applied.
+Found 1 error.
+Found 2 warnings.
+stderr:
+check ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+× Some errors were emitted while running checks.
+exit code 1

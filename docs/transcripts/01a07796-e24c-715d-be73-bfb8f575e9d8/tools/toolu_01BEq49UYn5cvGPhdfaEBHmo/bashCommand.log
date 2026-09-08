@@ -1,0 +1,101 @@
+$ cd packages/frontend && sed -n 170,270p prototypes/chat.ts
+stdout:
+  function updatesFor(thread: ThreadId): Updates {
+    const out = new Map<number, GraphUpdate>();
+    for (const [key, update] of graphUpdates) {
+      const [id, index] = key.split(":");
+      if (id === thread) out.set(Number(index), update);
+    }
+    return out;
+  }
+  // The layout is a few hundred iterations, and refresh() runs on every
+  // keystroke, so it is recomputed only when the shape of the graph changes.
+  let placement = new Map<NodeId, Position>();
+  let placedFor = "";
+  // Purely presentational, and per thread: which messages the user has
+  // expanded past the collapsed height.
+  const expanded = new Map<ThreadId, Set<number>>();
+  // The address of the graph update whose transcript the right pane is
+  // reviewing, and the expansion state of its messages.
+  let updateFocus: string | null = null;
+  const updateExpanded = new Map<string, Set<number>>();
+  function updateExpandedFor(key: string): Set<number> {
+    let set = updateExpanded.get(key);
+    if (!set) {
+      set = new Set();
+      updateExpanded.set(key, set);
+    }
+    return set;
+  }
+  function expandedFor(id: ThreadId): Set<number> {
+    let set = expanded.get(id);
+    if (!set) {
+      set = new Set();
+      expanded.set(id, set);
+    }
+    return set;
+  }
+  const state: State = {
+    sample: sample?.id ?? "",
+    messages: [],
+    inFlight: false,
+    draft: "",
+    split: false,
+    depth: 0,
+    canDescend: false,
+    thread: focus,
+    marks: [],
+    activeMark: null,
+    anchor: null,
+    tab: "threads",
+    graph: {
+      nodes: [],
+      edges: [],
+      viewport,
+      sidebar,
+      citations: { description: [], notes: [] },
+    },
+    build: snapshot?.build ?? { type: "idle" },
+    query: "",
+    expanded: new Set(),
+    updates: new Map(),
+    child: null,
+    updatePane: null,
+  };
+  /** Re-projects the tree onto the view's state. Everything but the fields the
+   * user is editing is derived, so this runs after every dispatch. */
+  /** The graph projected onto view state: positions from `layout`, and the
+   * sidebar the user is editing. */
+  function refreshGraph(): void {
+    const nodes = graph.nodes;
+    const edges = graph.edges;
+    const shape = [
+      ...nodes.map((n) => n.id),
+      ...edges.map((e) => `${e.id}:${e.from}->${e.to}`),
+    ].join(",");
+    if (shape !== placedFor) {
+      placement = layout(graph);
+      placedFor = shape;
+    }
+    const at = (id: NodeId): Position =>
+      placement.get(id) ?? { x: 0.5, y: 0.5 };
+    state.graph = {
+      nodes: nodes.map((n) => ({ ...n, pos: at(n.id) })),
+      edges: edges.map((e) => ({ ...e, from_: at(e.from), to_: at(e.to) })),
+      viewport,
+      sidebar,
+      citations: citationsOf(),
+    };
+  }
+  /** The citations in the *saved* prose of whatever the sidebar has open. Read
+   * off the graph rather than the draft: a half-typed address is not a
+   * citation, and one that does not resolve against the tree is not either. */
+  function citationsOf(): Citations {
+    const chips = (text: string): Chip[] =>
+      parse(text).flatMap((span) => {
+        if (span.type !== "citation") return [];
+        const quote = resolve(tree, span.citation);
+        return quote === undefined ? [] : [{ citation: span.citation, quote }];
+      });
+    switch (sidebar.type) {
+exit code 0

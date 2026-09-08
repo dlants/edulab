@@ -1,0 +1,20 @@
+$ cd /Users/denis.lantsman/src/edulab && grep -n "putNode\|putEdge\|deleteNode\|deleteEdge\|put_node\|put_edge\|delete_node\|Each tool's\|Bad input" plans/2026-09-05-domain-graph.md
+stdout:
+58:**Identity is an id.** Nodes and edges are keyed by minted opaque ids (`n0`, `e0`), not by their titles. Titles are user- and agent-facing labels that can be edited freely: a rename is a field write, not a cascade, and nothing can dangle. Titles are still required to be unique among nodes — that is what makes the graph readable and stops the agent from minting the same concept twice — but uniqueness is a validated invariant rather than the addressing scheme. The rendered graph shows each id next to its title so the model can address anything it has been shown, and `put_node`/`put_edge` create when `id` is omitted and update when it is given. Several edges may join the same pair; they simply have different ids.
+64:- `put_nodes` — a list; each entry creates when `id` is omitted and updates when it is given.
+65:- `put_edges` — likewise. Nodes created by an earlier `put_nodes` call are addressable here, so a subgraph is two calls.
+133:  putNode(node: Omit<GraphNode, "id"> & { id?: NodeId }): GraphResult;
+135:  deleteNode(id: NodeId): GraphResult;
+137:  putEdge(edge: Omit<GraphEdge, "id"> & { id?: EdgeId }): GraphResult;
+138:  deleteEdge(id: EdgeId): GraphResult;
+155:// keys: get, put_nodes, put_edges, delete```
+192:- Node titles are unique among nodes and non-empty. `putNode` rejects a collision rather than overwriting or silently duplicating; a retitle is an ordinary update and touches no edges.
+193:- Every edge endpoint names an existing node. `putEdge` rejects unknown endpoints; `deleteNode` removes incident edges rather than leaving them dangling.
+208:  - `putNode` with a title another node already uses is an error, and the graph is unchanged.
+209:  - `putNode`/`putEdge` with an unknown `id`, and `putEdge` to an unknown endpoint, are errors, and the graph is unchanged.
+220:  - Each tool's `execute` returns an ok result and the graph reflects it.
+222:  - Bad input (missing field, unknown node, wrong `level`) comes back as an error `ToolResult` and never throws.
+223:  - **The integration that matters**: drive a real `Thread` over the `FakeSocket` from `thread.test.ts`, stream a `put_node` tool call, and assert the node landed in the graph and the tool result the model receives says so. This is the seam where a schema/name mismatch would actually bite, so it is checked end to end rather than by calling `execute` directly.
+249:  - **The integration that matters**: with a stubbed backend that answers a learning thread with a `put_node` call, open a learning thread from a highlight, then switch to the graph tab and find the new node. That path — tool -> graph -> layout -> canvas, across a tab boundary — is the whole point of the feature and is the thing most likely to be wired up wrong.
+260:  - `packages/e2e/tests/graph.spec.ts`: with a stubbed backend that answers the extraction request with two `put_node` calls and a `put_edge`, clicking the button on an empty tab leaves two nodes and an edge on the canvas, and the threads tab is untouched. **The integration that matters** for this stage: the button is the only path in the product that exercises tools -> graph -> layout -> canvas without a human typing, so it is also the fastest way to evaluate the graph UI at all.
+exit code 0

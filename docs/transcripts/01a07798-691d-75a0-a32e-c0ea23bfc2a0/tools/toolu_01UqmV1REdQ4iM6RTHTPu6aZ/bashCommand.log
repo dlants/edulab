@@ -1,0 +1,16 @@
+$ cd /Users/denis.lantsman/src/edulab && grep -n "buildStatus\|build\b\|build\." packages/frontend/view.ts
+stdout:
+85:  build: Build;
+131:const buildStatusClass = cls("build-status");
+210:.${buildStatusClass} {
+878:    const buildRef: Ref = ref("build");
+880:    const buildStatusRef: Ref = ref("build-status");
+890:        <button type="button" data-build data-ref="${buildRef}">Build knowledge graph from this transcript</button>
+891:        <span class="${buildStatusClass}" data-build-status data-ref="${buildStatusRef}"></span>
+1020:    this.b.bindDisabled(buildRef, (s) => s.build.type !== "idle");
+1021:    this.b.bindText(buildStatusRef, (s) => buildStatus(s.build));
+1112:function buildStatus(build: Build): string {
+1113:  switch (build.type) {
+1117:      return `${build.done} / ${build.total} interactions`;
+1119:      return build.failed === 0 ? "built" : `built, ${build.failed} failed`;
+exit code 0

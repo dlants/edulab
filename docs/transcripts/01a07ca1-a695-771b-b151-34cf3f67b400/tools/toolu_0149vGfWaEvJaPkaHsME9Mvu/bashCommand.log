@@ -1,0 +1,19 @@
+$ cd /Users/denis.lantsman/src/edulab && grep -n "send\|ClientMessage\|Socket" packages/frontend/thread.ts
+stdout:
+2:import type { ClientMessage, ServerFrame } from "@edulab/iso/protocol.ts";
+109: * sends back as `tool_use.name`. */
+155:/** The subset of WebSocket the thread uses, so tests can stand in for it. */
+156:export type Socket = {
+157:  send(data: string): void;
+184:  socket: Socket,
+188:  socket: Socket,
+192:  socket: Socket,
+196:  socket: Socket,
+216:    result = await thread.send(restartNudge(attempt, maxRestarts));
+279:   * requests - the UI and the send guard care about the turn, not the request. */
+290:  private readonly socket: Socket;
+303:  constructor(socket: Socket, opts: ThreadOpts = {}) {
+348:  send(text: string): Promise<TurnResult> {
+455:    const message: ClientMessage = {
+467:    this.socket.send(JSON.stringify(message));
+exit code 0

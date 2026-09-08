@@ -1,0 +1,29 @@
+$ cd /Users/denis.lantsman/src/edulab/packages/e2e && grep -n "const SENTENCE\|function taskTranscript\|function threadTranscript\|function selectRange" -A 4 tests/chat.spec.ts | sed -n 1,40p
+stdout:
+141:async function selectRange(
+142-  page: Page,
+143-  msg: number,
+144-  start: number,
+145-  end: number,
+--
+152:async function selectRangeIn(
+153-  page: Page,
+154-  ul: number,
+155-  msg: number,
+156-  start: number,
+--
+190:function threadTranscript(page: Page) {
+191-  return page.locator("ul").nth(1);
+192-}
+193-
+194-/** The left pane's transcript. The right pane renders its own <ul>. */
+195:function taskTranscript(page: Page) {
+196-  return page.locator("ul").first();
+197-}
+198-
+199:const SENTENCE = "the quick brown fox jumps over the lazy dog";
+200-
+201-/** A transcript with one user message of known text, in learning mode. */
+202-async function transcript(
+203-  page: Page,
+exit code 0

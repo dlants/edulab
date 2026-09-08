@@ -1,0 +1,18 @@
+$ cd ~/.claude/skills/browser && pkgx pnpm exec tsx scripts/browser.ts "
+load http://localhost:5173/?sample=74979366
+sleep 1200
+eval
+let el = document.querySelector('[data-ref]') ? null : null;
+const body = document.querySelector('#app > div').children[1];
+const out=[]; let e = body;
+while (e) { const cs=getComputedStyle(e); out.push({tag:e.tagName, cls:e.className, h:Math.round(e.getBoundingClientRect().height), css:cs.height, disp:cs.display, flex:cs.flex, minh:cs.minHeight}); e=e.parentElement; }
+return JSON.stringify(out);
+endeval
+"
+stdout:
+Loading http://localhost:5173/?sample=74979366...
+Sleeping for 1200ms...
+Evaluating code in page context...
+Eval result: [{"tag":"DIV","cls":"body_30","h":385,"css":"288.719px","disp":"grid","flex":"1 1 0%","minh":"0px"},{"tag":"DIV","cls":"app_16","h":720,"css":"720px","disp":"flex","flex":"0 1 auto","minh":"0px"},{"tag":"DIV","cls":"","h":720,"css":"720px","disp":"block","flex":"0 1 auto","minh":"0px"},{"tag":"BODY","cls":"","h":720,"css":"720px","disp":"block","flex":"0 1 auto","minh":"0px"},{"tag":"HTML","cls":"","h":720,"css":"720px","disp":"block","flex":"0 1 auto","minh":"0px"}]
+Script completed successfully!
+exit code 0

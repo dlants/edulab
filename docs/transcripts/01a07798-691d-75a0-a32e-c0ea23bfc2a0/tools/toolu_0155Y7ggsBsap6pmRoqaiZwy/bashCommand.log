@@ -1,0 +1,36 @@
+$ cd ~/.claude/skills/browser && pkgx pnpm exec tsx scripts/browser.ts "
+load http://localhost:5173
+sleep 2000
+eval
+const nav=document.querySelector('[class^=nav_]');
+const btn=Array.from(nav.querySelectorAll('button')).find(b=>b.textContent==='?');
+btn.style.display='';
+nav.querySelector('[class^=build-status]').textContent='built, 6 failed';
+await new Promise(r=>setTimeout(r,100));
+function d(e){const r=e.getBoundingClientRect();return {t:e.textContent.slice(0,20),x:Math.round(r.x),y:Math.round(r.y),w:Math.round(r.width),h:Math.round(r.height)}}
+return {nav:d(nav),kids:Array.from(nav.children).map(d)};
+endeval
+screenshot nav.png
+"
+stdout:
+Loading http://localhost:5173...
+Sleeping for 2000ms...
+Evaluating code in page context...
+Eval result: {
+  nav: { t: '\n        Write your ', x: 0, y: 0, w: 1280, h: 47 },
+  kids: [
+    { t: 'Write your ownFloati', x: 16, y: 12, w: 299, h: 22 },
+    { t: 'Build knowledge grap', x: 323, y: 10, w: 329, h: 26 },
+    { t: 'built, 6 failed', x: 660, y: 15, w: 78, h: 15 },
+    { t: '?', x: 746, y: 10, w: 29, h: 26 },
+    { t: '\n          Threads\n ', x: 783, y: 10, w: 236, h: 26 },
+    { t: '', x: 1027, y: 23, w: 18, h: 0 },
+    { t: 'Reset', x: 1053, y: 10, w: 62, h: 26 },
+    { t: '← Back', x: 0, y: 0, w: 0, h: 0 },
+    { t: 'Layer 0', x: 1124, y: 15, w: 42, h: 15 },
+    { t: 'Reflect →', x: 1173, y: 10, w: 91, h: 26 }
+  ]
+}
+Taking screenshot /tmp/magenta/nav.png...
+Script completed successfully!
+exit code 0

@@ -1,0 +1,73 @@
+$ cd /Users/denis.lantsman/src/edulab && grep -n "Build\|GraphUpdate\|sample" packages/frontend/view.ts | head -40; echo ---; grep -n "snapshot\|static from\|export type GraphSnapshot" -A12 packages/frontend/graph.ts | sed -n 1,60p; echo ---; grep -n "get log\|systemPrompt\|trimUnansweredTools\|projectLog\|export type MessageIdx\|constructor(\|export type ThreadOpts\|type Socket" packages/frontend/thread.ts
+stdout:
+12:import { samples } from "./samples/index.ts";
+38:/** The sample-transcript batch. `done` is terminal: a second pass over the
+40:export type Build =
+48:export type GraphUpdate =
+54:export type Updates = ReadonlyMap<number, GraphUpdate>;
+59:  sample: string;
+80:  /** The sample-transcript batch: one graph update per loaded user turn. */
+81:  build: Build;
+120:const sampleClass = cls("sample");
+202:.${sampleClass} {
+459:  update: GraphUpdate | null;
+623:function updateStatus(update: GraphUpdate | null): string {
+758:    const sampleRef: Ref = ref("sample");
+769:        <select class="${sampleClass}" data-ref="${sampleRef}"></select>
+770:        <button type="button" data-build data-ref="${buildRef}">Build knowledge graph from this transcript</button>
+811:    // bound; switching sample is a page navigation anyway.
+812:    const picker = this.b.ref<HTMLSelectElement>(sampleRef);
+817:    for (const sample of samples) {
+819:      option.value = sample.id;
+820:      option.textContent = sample.label;
+899:    this.b.bindValue(sampleRef, (s) => s.sample);
+978:function buildStatus(build: Build): string {
+---
+50:export type GraphSnapshot = {
+51-  nodes: GraphNode[];
+52-  edges: GraphEdge[];
+53-  next: number;
+54-};
+55-export const isNodeId = (id: string): id is NodeId => id.startsWith("n");
+56-export const isEdgeId = (id: string): id is EdgeId => id.startsWith("e");
+57-
+58-export class KnowledgeGraph {
+59-  #nodes = new Map<NodeId, GraphNode>();
+60-  #edges = new Map<EdgeId, GraphEdge>();
+61-  #next = 0;
+62-
+--
+71:  snapshot(): GraphSnapshot {
+72-    return {
+73-      nodes: [...this.#nodes.values()],
+74-      edges: [...this.#edges.values()],
+75-      next: this.#next,
+76-    };
+77-  }
+78:  static from(snapshot: GraphSnapshot): KnowledgeGraph {
+79-    const graph = new KnowledgeGraph();
+80:    for (const node of snapshot.nodes) graph.#nodes.set(node.id, node);
+81:    for (const edge of snapshot.edges) graph.#edges.set(edge.id, edge);
+82:    graph.#next = snapshot.next;
+83-    return graph;
+84-  }
+85-  node(id: NodeId): GraphNode | undefined {
+86-    return this.#nodes.get(id);
+87-  }
+88-
+89-  edge(id: EdgeId): GraphEdge | undefined {
+90-    return this.#edges.get(id);
+91-  }
+92-
+93-  /** Creates with a fresh id when `id` is omitted, updates in place when it is
+94-   * given. Rejects an unknown id, an empty title, or a title already used by
+---
+66:export type ThreadOpts = {
+110:export type MessageIdx = number & { readonly __brand: "MessageIdx" };
+129:export type Socket = {
+203:export function projectLog(
+209:export function trimUnansweredTools(
+269:  constructor(socket: Socket, opts: ThreadOpts = {}) {
+299:  get log(): ReadonlyArray<Anthropic.MessageParam> {
+302:  get systemPrompt(): string {
+exit code 0

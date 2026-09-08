@@ -1,0 +1,4 @@
+$ cd /Users/denis.lantsman/src/edulab && git add -A && git commit -m "Stage 2: Tree snapshot and restore" -q && git log --oneline -1
+stdout:
+3fe727b Stage 2: Tree snapshot and restore
+exit code 0

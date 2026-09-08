@@ -1,0 +1,11 @@
+$ cd /Users/denis.lantsman/src/edulab && grep -n "build" packages/frontend/persistence.ts
+stdout:
+46:  build: Build;
+91:    typeof s.build === "object" &&
+92:    s.build !== null &&
+93:    typeof s.build.type === "string"
+144:  build: Build;
+154:    build: args.build,
+162: * order, which is the order a rebuild has to replay them in.
+165: * canned transcript; they are only in scope once a build has been asked for. */
+exit code 0

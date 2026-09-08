@@ -1,0 +1,24 @@
+$ cd /Users/denis.lantsman/src/edulab && find packages/frontend -name '*.ts' -o -name '*.css' | grep -v node_modules | xargs wc -l && git status --short
+stdout:
+      20 packages/frontend/main.ts
+     137 packages/frontend/learning.ts
+     136 packages/frontend/prompt.test.ts
+      86 packages/frontend/prompt.ts
+     116 packages/frontend/selection.ts
+     118 packages/frontend/threads.ts
+     698 packages/frontend/view.ts
+      65 packages/frontend/samples/index.ts
+      97 packages/frontend/selection.test.ts
+     192 packages/frontend/prototypes/chat.ts
+     176 packages/frontend/graph.test.ts
+     203 packages/frontend/graph.ts
+     106 packages/frontend/layout.ts
+      86 packages/frontend/layout.test.ts
+     124 packages/frontend/threads.test.ts
+     596 packages/frontend/thread.test.ts
+     573 packages/frontend/vamp.ts
+     620 packages/frontend/thread.ts
+     202 packages/frontend/graph-tools.test.ts
+     276 packages/frontend/graph-tools.ts
+    4627 total
+exit code 0

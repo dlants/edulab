@@ -1,0 +1,44 @@
+$ cd /Users/denis.lantsman/src/edulab && grep -n "  bind\|  ref\|^export" packages/frontend/vamp.ts
+stdout:
+29:export type RequestStatus<T> =
+36:export interface View<State, _Message = never, _Ctx = unknown> {
+51:export type SlotContent = {
+56:export type KeyedSlotContent = {
+76:export const noop = () => {};
+85:export function show<ChildState, ChildMsg, ChildCtx>(
+104:export function showKeyed<ChildState, ChildMsg, ChildCtx>(
+127:export class Binder<State> {
+140:  ref<T extends HTMLElement = HTMLElement>(name: Ref): T {
+160:  bindText(ref: Ref, fn: (s: State) => string): void {
+166:    binding(this.state);
+169:  bindClass(refOrEl: Ref | HTMLElement, fn: (s: State) => string): void {
+175:    binding(this.state);
+179:  bindVisible(ref: Ref, fn: (s: State) => boolean): void {
+185:    binding(this.state);
+189:  bindStyle(ref: Ref, fn: (s: State) => Record<string, string>): void {
+205:    binding(this.state);
+209:  bindValue(ref: Ref, fn: (s: State) => string): void {
+222:    binding(this.state);
+225:  bindChecked(ref: Ref, fn: (s: State) => boolean): void {
+231:    binding(this.state);
+234:  bindDisabled(ref: Ref, fn: (s: State) => boolean): void {
+242:    binding(this.state);
+245:  bindAttr(ref: Ref, attr: string, fn: (s: State) => string | undefined): void {
+253:    binding(this.state);
+257:  bindContainerAttr(attr: string, fn: (s: State) => string | undefined): void {
+265:    binding(this.state);
+269:  bindSlot(ref: Ref, fn: (s: State) => SlotContent | undefined): void {
+305:    binding(this.state);
+311:  bindList(
+312:    ref: Ref,
+405:    binding(this.state);
+464:export class RawHtml {
+472:export function raw(html: string): RawHtml {
+481:export function sanitize(
+509:export class PostRenderEventBus<Event> {
+543:export type Ref = string & { readonly __brand: "Ref" };
+548:export function ref(prefix: string): Ref {
+555:export function cls(prefix: string): string {
+564:export function scrollIntoView(el: HTMLElement): void {
+569:export function mountStyle(css: string): void {
+exit code 0

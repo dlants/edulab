@@ -1,0 +1,9 @@
+$ cd /Users/denis.lantsman/src/edulab && grep -n "opened\|queueMicrotask\|setTimeout\|requestAnimationFrame\|enqueue" packages/frontend/prototypes/chat.ts
+stdout:
+87:  const opened =
+149:  // page went away comes back missing, which is what re-enqueues it.
+264:      setTimeout(() => {
+398:        // writes rather than the graph as it stood when it was enqueued.
+486:    await opened;
+693:        // Clicking a mark at layer 0 is how the reflect column is opened onto
+exit code 0

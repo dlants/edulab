@@ -1,0 +1,31 @@
+$ cd /Users/denis.lantsman/src/edulab && wc -l packages/frontend/*.ts packages/frontend/prototypes/*.ts packages/e2e/tests/*.ts
+stdout:
+      89 packages/frontend/citation.test.ts
+      55 packages/frontend/citation.ts
+     224 packages/frontend/graph-tools.test.ts
+     298 packages/frontend/graph-tools.ts
+     447 packages/frontend/graph-view.ts
+     176 packages/frontend/graph.test.ts
+     221 packages/frontend/graph.ts
+     128 packages/frontend/interactions.test.ts
+      51 packages/frontend/interactions.ts
+      86 packages/frontend/layout.test.ts
+     106 packages/frontend/layout.ts
+     137 packages/frontend/learning.ts
+      20 packages/frontend/main.ts
+     218 packages/frontend/prompt.test.ts
+     196 packages/frontend/prompt.ts
+      97 packages/frontend/selection.test.ts
+     116 packages/frontend/selection.ts
+     623 packages/frontend/thread.test.ts
+     635 packages/frontend/thread.ts
+     144 packages/frontend/threads.test.ts
+     128 packages/frontend/threads.ts
+     585 packages/frontend/vamp.ts
+    1018 packages/frontend/view.ts
+     469 packages/frontend/prototypes/chat.ts
+     645 packages/e2e/tests/chat.spec.ts
+     417 packages/e2e/tests/graph.spec.ts
+      19 packages/e2e/tests/smoke.spec.ts
+    7348 total
+exit code 0

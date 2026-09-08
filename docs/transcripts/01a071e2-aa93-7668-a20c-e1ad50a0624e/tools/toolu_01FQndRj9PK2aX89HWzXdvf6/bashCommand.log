@@ -1,0 +1,382 @@
+$ cd /Users/denis.lantsman/src/edulab && perl -pi -e 's/full conversation/full thread/' packages/e2e/tests/chat.spec.ts && npm run typecheck && npm test && npm run lint
+stdout:
+> edulab@0.0.1 typecheck
+> npm -w @edulab/iso exec tsc -- --noEmit && npm -w @edulab/frontend exec tsc -- --noEmit && npm -w @edulab/backend exec tsc -- --noEmit && npm -w @edulab/e2e exec tsc -- --noEmit
+> edulab@0.0.1 test
+> vitest run
+ RUN  v4.1.11 /Users/denis.lantsman/src/edulab
+ ✓ packages/frontend/selection.test.ts (8 tests) 2ms
+ ✓ packages/frontend/prompt.test.ts (5 tests) 2ms
+ ✓ packages/frontend/thread.test.ts (6 tests) 11ms
+ Test Files  3 passed (3)
+      Tests  19 passed (19)
+   Start at  07:05:28
+   Duration  124ms (transform 65ms, setup 0ms, import 121ms, tests 15ms, environment 0ms)
+> edulab@0.0.1 lint
+> biome check .
+stderr:
+packages/frontend/prototypes/chat.ts:1:1 assist/source/organizeImports  FIXABLE  
+━━━━━━━━━━━━━━━━━━━
+  × Sort these imports.
+  > 1 │ import { Thread } from "../thread.ts";
+      │ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 2 │ import { actionLabel } from "../prompt.ts";
+  > 3 │ import { selectedSample, selectSample } from "../samples/index.ts";
+  > 4 │ import { anchorText, overlaps, type ThreadId
+ } from "../selection.ts";
+      │ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    5 │ import { ThreadTree } from "../threads.ts"
+;
+    6 │ import { App
+View, type Msg, typ
+e State } from "../view.ts";
+  i
+ Safe fix: Organize imports and exports (Biome)
+      1     │ - import
+·{·Thread·}·from·"../thread.ts";
+      2     │ - import·{·actionLabel·}·from·".
+./prompt.ts";
+      3     │ - imp
+ort·{·selectedSample,·selectSample·}·from·"..
+/samples/index.ts";
+  4     │ - impo
+rt·{·anchorText,·overlaps,·t
+ype·ThreadId·}·
+from·"../sele
+ction.ts";
+          1 │ + import·
+{·actionLabel·
+}·from·"../p
+rompt.ts";
+          2 │ + 
+import·{·sele
+ctedSamp
+le,·selectSample·
+}·from·"../s
+amples/ind
+ex.ts";
+     3 │ + import·{·
+anchorText,·
+overlaps,·t
+ype·Threa
+dId·}·from·"../sele
+ction.ts";
+        4 │ + 
+import·{·T
+hread·}·from·"../t
+hread.ts"
+;
+      5   5
+ │   impor
+t { ThreadTree } from "..
+/threads.ts";
+      6   6 │   
+import { 
+AppView, type Msg, 
+type State }
+ from "../v
+iew.ts";
+packages/frontend/thread.test.ts
+:4:
+1 assist/source/organizeImports  FIXABLE  ━━━━━━━━━━━━━━━━━━━━━━━
+× Sort the imported names.
+    2 │ 
+import type { Clie
+ntMessage }
+ from "@edul
+ab/iso/pro
+tocol.ts";
+    3 │ 
+import { expect, it } from "vi
+test";
+  > 4 │ import { T
+hread, type Soc
+ket } from 
+"./thread.ts";
+    │ ^^^^^^^^^^
+^^^^^^^^
+^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^
+^^^^
+    5 │ 
+    6 │ cla
+ss FakeSocket implem
+ents Socket 
+{
+  i Safe fix: Organize imports and exports (Biome)
+      2   2 │   import t
+ype { ClientMessage } from "@e
+dulab/iso/pr
+otocol.ts"
+;
+      3   3 │   import 
+{ expect, it }
+ from "v
+itest";
+      4     │ -
+ import·{
+·Thread,·
+type·Socket·}·from
+·"./thread.ts
+";
+          4 │ 
++ import·{·type·So
+cket,·Thread
+·}·from·".
+/thread.ts";
+      5   5
+ │   
+      6   6
+ │   class F
+akeSocket implement
+s Socket 
+{
+packages/frontend/threads.ts
+:1:1 assist/source/organizeImports  FIXABLE  
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  × Sort these imports.
+  > 1 │ 
+import { Thread, ty
+pe Socket 
+} from "./
+thread.ts"
+;
+      │ ^^^^^^^^^^^
+^^^^^^^^^^^^^^
+^^^^^^^^^^
+^^^^^^^^^^^^^^^
+> 2 │ im
+port { ty
+pe Action, LEARNI
+NG_SYSTEM, s
+eedTurn } 
+from "./pr
+ompt.ts";
+  > 3 │ 
+import type {
+ Anchor, Ma
+rk, ThreadId } fro
+m "./select
+ion.ts";
+    │ ^^^^^^^^
+^^^^^^^^^^^^^^^^^^
+^^^^^^^^
+^^^^^^^
+^^^^^^^^^
+^^^^^^^^^^^
+    4 │ 
+    5 │ export
+ type { Act
+ion };
+  i Safe fix: Organize imports and exports (Biome)
+     1  
+  │ - import·{·T
+hread,·type·So
+cket·}·from·
+"./thread.ts";
+     2 
+   │ - impo
+rt·{·type·
+Action,·LEARNIN
+G_SYSTEM,·se
+edTurn·}·fr
+om·"./pro
+mpt.ts";
+     3    │ -
+ import·t
+ype·{·Anc
+hor,·Mark
+,·ThreadI
+d·}·from·
+"./select
+ion.ts";
+ 1 │ + 
+import·{·
+type·A
+ction,·
+LEARNING
+_SYSTEM,·s
+eedTurn·}
+·from·"./
+prompt.t
+s";
+        2
+ │ + imp
+ort·type·{·Anchor,
+·Mark,·Thre
+adId·}·fro
+m·"./selec
+tion.ts";
+        3
+ │ + impo
+rt·{·type
+·Socket,·Thread·}
+·from·"./
+thread.
+ts";
+     4
+  4 │   
+     5  5 │   
+export type { Act
+ion };
+packages/frontend/view.ts
+:1:1 assist/source/organizeImports  FIXABLE  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+× Sort these imports.
+   > 1 │ imp
+ort type { Messa
+ge } from "./
+thread.ts";
+       │ ^^^^^^^^^
+^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^
+^^^^^
+   > 2 │ imp
+ort {
+   > 3 │ 
+  type Msg
+ as Learn
+ingMsg,
+   > 4 │ 
+  Learni
+ngPane,
+      ...
+  > 16 │ 
+  type 
+ThreadId
+,
+  > 17 │ 
+} from "
+./selecti
+on.ts";
+       │ ^^^^
+^^^^^^^^^
+^^^^^^^^
+^^^
+    18 │ 
+import {
+  19 │   B
+inder,
+  i Safe fix: Organize imports and exports (Biome)
+      1     │ - impor
+t·type·{·Message·}·from·
+"./thread.ts"
+;
+      2    
+ │ - import·{
+      3   
+  │ - ··typ
+e·Msg·as·Le
+arningMsg,
+      4    
+ │ - ··Le
+arningPane,
+      5     │ - ··t
+ype·State·as
+·LearningS
+tate,
+      6     │ - 
+}·from·".
+/learning
+.ts";
+      7     │ - 
+import·{·sam
+ples·}·from·
+"./samples/index.
+ts";
+      8    
+ │ - impo
+rt·{
+      9     │ - 
+··type·Ancho
+r,
+     10    
+ │ - ··anchorText
+,
+     11     │ - 
+··type·M
+ark,
+     12     │ - 
+··overlaps,
+     13     │ -
+ ··type·Point,
+     14     │ - 
+··type·
+Segment,
+     15     │ 
+- ··segme
+nts,
+     16   
+  │ - ··type·Thre
+adId,
+     17    
+ │ - }·fr
+om·"./selection.t
+s";
+          1
+ │ + imp
+ort·{
+          2 │ + 
+··type·Msg·
+as·Learni
+ngMsg,
+          3 │ + 
+··Learni
+ngPane,
+        4 │ + ··typ
+e·State·as
+·Learning
+State,
+          5 │ +
+ }·from·"
+./learnin
+g.ts";
+          6 │ 
++ import
+·{·sample
+s·}·from·"./sampl
+es/index.ts
+";
+  7 │ + import·{
+        8 │ + 
+··type·An
+chor,
+          9 │ + 
+··anchorTe
+xt,
+ 10 │ + ··type·Ma
+rk,
+         11 │ 
++ ··overlaps,
+         12 │ + 
+··type·
+Point,
+         13 │ + 
+··type·Segm
+ent,
+  14 │ + ··segmen
+ts,
+         15 │ 
++ ··ty
+pe·ThreadId,
+ 16 │ + }·fr
+om·"./select
+ion.ts";
+   17 │ + 
+impo
+rt·type·{
+·Message·}·from
+·"./thread.
+ts";
+     18 
+ 18 │   impo
+rt {
+     19  19 │    
+ Binder,
+stdout:
+Checked 33 files in 125ms. No fixes applied.
+Found 4 errors.
+stderr:
+check ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  × Some errors were emitted while running checks.
+exit code 1

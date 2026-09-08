@@ -1,0 +1,29 @@
+$ cd /Users/denis.lantsman/src/edulab/packages/frontend && wc -l prototypes/chat.ts threads.ts learning.ts && grep -n "MARK_CLICKED\|GO_DEEPER\|GO_BACK\|activeMark\|split\|layer" prototypes/chat.ts
+stdout:
+     829 prototypes/chat.ts
+     176 threads.ts
+     247 learning.ts
+    1252 total
+161:          const [thread, index] = key.split(":");
+178:      const [id, index] = key.split(":");
+218:    split: false,
+223:    activeMark: null,
+312:    state.depth = state.split ? tree.path(focus).length : 0;
+321:    state.activeMark = node.activeChild;
+343:   * reflect pane wherever it is not on screen: at layer 0, and beside a
+349:    if (anchor.thread === focus) return state.split ? null : anchorAt;
+516:    state.split = path.length > 1;
+595:    state.split = true;
+635:      case "GO_DEEPER": {
+636:        if (!state.split) {
+637:          state.split = true;
+649:      case "GO_BACK": {
+651:        if (parent === undefined) state.split = false;
+668:        // was there gives way - but only while the split is showing; at layer 0
+671:        if (state.split) node.activeChild = null;
+674:      case "MARK_CLICKED":
+704:            state.split = true;
+728:            state.split = true;
+765:          case "MARK_CLICKED":
+766:            // A mark in the reflect thread names a thread one layer further
+exit code 0

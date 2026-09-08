@@ -1,0 +1,4 @@
+$ curl -s -o /dev/null -w "%{http_code}" http://localhost:5173
+stdout:
+200
+exit code 0

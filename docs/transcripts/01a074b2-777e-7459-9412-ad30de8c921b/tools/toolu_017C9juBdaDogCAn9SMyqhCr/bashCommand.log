@@ -1,0 +1,347 @@
+$ cd /Users/denis.lantsman/src/edulab && ls packages/frontend && cat packages/frontend/prompt.ts && cat packages/frontend/interactions.ts && cat packages/frontend/selection.ts
+stdout:
+graph-tools.test.ts
+graph-tools.ts
+graph-view.ts
+graph.test.ts
+graph.ts
+index.html
+interactions.test.ts
+interactions.ts
+layout.test.ts
+layout.ts
+learning.ts
+main.ts
+node_modules
+package.json
+prompt.test.ts
+prompt.ts
+prototypes
+samples
+selection.test.ts
+selection.ts
+thread.test.ts
+thread.ts
+threads.test.ts
+threads.ts
+tsconfig.json
+vamp.ts
+view.ts
+import type Anthropic from "@anthropic-ai/sdk";
+import type { Interaction } from "./interactions.ts";
+import { type Anchor, anchorText } from "./selection.ts";
+import type { Message } from "./thread.ts";
+export type Action =
+  | { type: "explain" }
+  | { type: "quiz" }
+  | { type: "query"; text: string };
+/** Learning mode: the agent is explaining work that already happened, to a
+ * user who chose the passage they are stuck on. */
+export const LEARNING_SYSTEM = [
+  "You are helping a user understand engineering work that was done for them.",
+  "They will show you a transcript and point at a passage they picked out.",
+  "Answer about that passage specifically, in plain language, and assume the",
+  "user has not followed the reasoning that produced it. Be concise, and do",
+  "not restate the whole transcript back to them.",
+  "",
+  "You may be shown a knowledge graph: what we believe this user already",
+  "understands, one line per node and edge, each with an id and a level on the",
+  "scale 1 unfamiliar, 2 emerging, 3 working, 4 fluent. Pitch your answer to",
+  "it: build on what they are fluent in and slow down on what they are not.",
+  "The overview is titles only, so call the `get` tool with the ids of",
+  "anything you are about to lean on to read its full description and the",
+  "notes on this user. You cannot change the graph; do not offer to.",
+].join(" ");
+/** The context a learning thread is seeded with: its parent's own seed plus
+ * the parent's transcript up to the anchor. `seed` is emitted verbatim -
+ * wrapping or re-labelling it would nest the framing one layer deeper at
+ * every level. The passage and the ask are not here: they are the thread's
+ * first visible turn. */
+export function contextSeed(
+  seed: string | undefined,
+  messages: ReadonlyArray<Message>,
+  anchor: Anchor,
+  graph?: string,
+): string {
+  const sections = [];
+  // Only the topmost learning thread renders the graph: a deeper thread's
+  // `seed` is its parent's, which already carries it, and repeating it would
+  // show the model the same overview once per level.
+  if (seed) sections.push(seed);
+  else if (graph)
+    sections.push(`What this user already understands:\n${graph}`);
+  sections.push(transcript(visibleTo(messages, anchor)));
+  return sections.join("\n\n");
+}
+/** The user's opening turn: the passage they highlighted and what they asked
+ * of it. Visible, because it is an interaction like any other. */
+export function askTurn(
+  anchor: Anchor,
+  messages: ReadonlyArray<Message>,
+  action: Action,
+): string {
+  const quote = anchorText(anchor, visibleTo(messages, anchor));
+  return `Selected: "${quote}"\n\n${ask(action)}`;
+}
+/** The parent's transcript truncated after the message the selection ends in:
+ * nothing later than the passage is context for asking about it. */
+function visibleTo(
+  messages: ReadonlyArray<Message>,
+  anchor: Anchor,
+): ReadonlyArray<Message> {
+  return messages.slice(0, anchor.end.msg + 1);
+}
+/** Graph update mode: one detached pass over a single user interaction, whose
+ * only output is whatever it writes to the graph through its tools. */
+export const GRAPH_UPDATE_SYSTEM = [
+  "You maintain a knowledge graph of what one user understands. You are shown",
+  "a single interaction that user just made, in the context of the thread it",
+  "happened in and the graph as it stands.",
+  "",
+  "Ask: what domain concepts is this interaction about, are they in the graph",
+  "already, what understanding does the user demonstrate here, and does",
+  "anything here read as a gap or a misconception. A node is a concept - an",
+  "idea a person can understand or fail to understand - never a file, a",
+  "message or a line of code. Set `level` from what the interaction reveals,",
+  "on the scale 1 unfamiliar, 2 emerging, 3 working, 4 fluent. The scale",
+  "cannot express a misconception - a confidently held wrong belief reads as",
+  "fluent - so put misconceptions, and anything else about how this user holds",
+  "the idea, in `notes`.",
+  "",
+  "Touch only what this interaction is about; leave the rest of the graph",
+  "alone. Keep the graph small and coarse: update the node that already covers",
+  "a concept rather than minting a second one for it, and split a concept only",
+  "when the split expresses something real about this user's understanding. A",
+  "concept the user merely brushed past does not need a node.",
+  "",
+  "Most interactions reveal nothing. If this one does not, change nothing and",
+  "yield: doing nothing is the expected outcome, not a failure. Nothing you",
+  "say outside the tools is read.",
+].join(" ");
+/** Two blocks: the cacheable prefix - the base prompt, the thread's seed and
+ * the transcript before the turn, all of which every earlier interaction in
+ * this thread shares - then the volatile tail, which starts with the graph
+ * because the previous update just rewrote it. */
+export function graphUpdatePrompt(
+  interaction: Interaction,
+  graph: string,
+): Anthropic.ContentBlockParam[] {
+  const prefix = [GRAPH_UPDATE_PREAMBLE];
+  if (interaction.prefix.seed)
+    prefix.push(`How this thread was framed:\n${interaction.prefix.seed}`);
+  if (interaction.prefix.messages.length > 0)
+    prefix.push(
+      `The thread up to this interaction:\n${transcript(interaction.prefix.messages)}`,
+    );
+  return [
+    {
+      type: "text",
+      text: prefix.join("\n\n"),
+      cache_control: { type: "ephemeral" },
+    },
+    {
+      type: "text",
+      text: [
+        `The knowledge graph as it stands:\n${graph}`,
+        `The interaction:\nUser: ${interaction.text}`,
+        GRAPH_UPDATE_QUESTIONS,
+      ].join("\n\n"),
+    },
+  ];
+}
+const GRAPH_UPDATE_PREAMBLE =
+  "Below is one interaction a user made while an engineering agent worked on a task for them, and the context it happened in.";
+const GRAPH_UPDATE_QUESTIONS = [
+  "What domain concepts does this interaction touch, and are they in the",
+  "graph? What understanding does it demonstrate, and what does it suggest",
+  "the user is missing? Update the graph so it reflects that, and nothing",
+  "else - then yield.",
+].join(" ");
+function transcript(messages: ReadonlyArray<Message>): string {
+  return messages
+    .map((m) => `${m.role === "user" ? "User" : "Assistant"}: ${line(m)}`)
+    .join("\n\n");
+}
+function line(message: Message): string {
+  return message.type === "text"
+    ? message.text
+    : `[called tool ${message.call.name} with ${message.call.inputJson}]`;
+}
+/** How the thread was opened, shown at the top of its pane so the user can see
+ * what they asked for. */
+export function actionLabel(action: Action): string {
+  switch (action.type) {
+    case "explain":
+      return "I don't understand this.";
+    case "quiz":
+      return "Quiz me on this.";
+    case "query":
+      return action.text;
+  }
+}
+/** What the user is asking for, in their own voice: this is a user turn now,
+ * not a briefing written about them. */
+function ask(action: Action): string {
+  switch (action.type) {
+    case "explain":
+      return "I don't understand this. Explain what it means and why it is there.";
+    case "quiz":
+      return "Quiz me on this. Ask one question that checks whether I understand it, and wait for my answer.";
+    case "query":
+      return action.text;
+  }
+}
+import type { ThreadId } from "./selection.ts";
+import { type Message, type MessageIdx, messageText } from "./thread.ts";
+import type { ThreadTree } from "./threads.ts";
+/** One user interaction, captured as it happens. The unit of evidence about
+ * what this user understands. */
+export type Interaction = {
+  thread: ThreadId;
+  /** Index into that thread's `messages`. With `thread`, this is the citable
+   * address. A learning thread's ask is its own message 0, so there is no
+   * special case. */
+  index: MessageIdx;
+  /** The thread's seed, then its blocks before the turn - which are messages
+   * 0 to index-1, so their addresses are their positions. Identical across
+   * interactions in the same thread up to their split point; the prompt cache
+   * depends on that. */
+  prefix: {
+    seed: string | undefined;
+    messages: ReadonlyArray<Message>;
+  };
+  /** The user's turn. */
+  text: string;
+};
+/** The interaction the user just made: the turn at `index` in `thread`. */
+export function interactionAt(
+  tree: ThreadTree,
+  thread: ThreadId,
+  index: MessageIdx,
+): Interaction {
+  const node = tree.get(thread);
+  const messages = node.thread.messages;
+  const message = messages[index];
+  if (!message) {
+    throw new Error(`no message ${index} in thread ${thread}`);
+  }
+  if (message.role !== "user") {
+    throw new Error(`message ${index} in thread ${thread} is not a user turn`);
+  }
+  return {
+    thread,
+    index,
+    prefix: {
+      // Only a learning thread's seed is prose; a graph update's seed is
+      // content blocks, and those threads have no interactions in them.
+      seed: typeof node.thread.seed === "string" ? node.thread.seed : undefined,
+      messages: messages.slice(0, index),
+    },
+    text: messageText(message),
+  };
+}
+import { type Message, messageText } from "./thread.ts";
+/** Declared here rather than in threads.ts because an anchor is meaningless
+ * without one, and threads.ts will import this module. */
+export type ThreadId = string & { readonly __brand: "ThreadId" };
+/** A selection over the transcript, stored as character offsets into message
+ * text rather than as a live DOM Range: the browser's Range dies the moment the
+ * user clicks the learning pane, and the transcript is append-only, so offsets
+ * stay valid while a message is still streaming.
+ *
+ * `msg` is an absolute index into the owning thread's turns, `offset` a
+ * character offset into that turn's text. */
+export type Point = { msg: number; offset: number };
+/** `start` precedes `end` in document order; `thread` is the thread whose
+ * transcript the range indexes, i.e. the parent of whatever it opens. */
+export type Anchor = { thread: ThreadId; start: Point; end: Point };
+/** A committed highlight: the passage, plus the thread it opens. The opened
+ * thread's id cannot live on the anchor, because `anchor.thread` already names
+ * the other end of the edge - the parent. */
+export type Mark = { thread: ThreadId; anchor: Anchor };
+/** A run of one message's text: plain, a committed mark, or the live selection
+ * the user has just dragged and not yet acted on. */
+export type Segment = {
+  start: number;
+  end: number;
+  /** The thread this run opens, or null for plain text and the live range. */
+  thread: ThreadId | null;
+  live: boolean;
+};
+/** True when `live` intersects any committed mark, which makes it unusable:
+ * a passage owned by two threads has no honest meaning as an edge in the tree. */
+export function overlaps(marks: ReadonlyArray<Mark>, live: Anchor): boolean {
+  return marks.some(
+    (m) => before(m.anchor.start, live.end) && before(live.start, m.anchor.end),
+  );
+}
+function before(a: Point, b: Point): boolean {
+  return a.msg !== b.msg ? a.msg < b.msg : a.offset < b.offset;
+}
+/** Splits message `i` into plain, marked and live runs, left to right.
+ * `marks` are pairwise disjoint; `live` may overlap them, and wins where it
+ * does, so the user still sees what they dragged. */
+export function segments(
+  marks: ReadonlyArray<Mark>,
+  live: Anchor | null,
+  i: number,
+  length: number,
+): Segment[] {
+  const liveClip = clipToMessage(live, i, length);
+  const runs: Segment[] = [];
+  for (const mark of marks) {
+    const clip = clipToMessage(mark.anchor, i, length);
+    if (!clip) continue;
+    for (const part of subtract(clip, liveClip)) {
+      runs.push({ ...part, thread: mark.thread, live: false });
+    }
+  }
+  if (liveClip) runs.push({ ...liveClip, thread: null, live: true });
+  runs.sort((a, b) => a.start - b.start);
+  const out: Segment[] = [];
+  let at = 0;
+  for (const run of runs) {
+    if (run.start > at) {
+      out.push({ start: at, end: run.start, thread: null, live: false });
+    }
+    out.push(run);
+    at = run.end;
+  }
+  if (at < length) {
+    out.push({ start: at, end: length, thread: null, live: false });
+  }
+  return out;
+}
+type Run = { start: number; end: number };
+function subtract(run: Run, hole: Run | null): Run[] {
+  if (!hole || hole.end <= run.start || hole.start >= run.end) return [run];
+  const out: Run[] = [];
+  if (run.start < hole.start) out.push({ start: run.start, end: hole.start });
+  if (run.end > hole.end) out.push({ start: hole.end, end: run.end });
+  return out;
+}
+/** The portion of `anchor` falling inside message `i`, or null. */
+function clipToMessage(
+  anchor: Anchor | null,
+  i: number,
+  length: number,
+): { start: number; end: number } | null {
+  if (!anchor) return null;
+  if (i < anchor.start.msg || i > anchor.end.msg) return null;
+  const start = i === anchor.start.msg ? anchor.start.offset : 0;
+  const end = i === anchor.end.msg ? anchor.end.offset : length;
+  return end > start ? { start, end } : null;
+}
+export function anchorText(
+  anchor: Anchor,
+  messages: ReadonlyArray<Message>,
+): string {
+  const parts: string[] = [];
+  for (let i = anchor.start.msg; i <= anchor.end.msg; i++) {
+    const text = messages[i] ? messageText(messages[i]) : "";
+    const clip = clipToMessage(anchor, i, text.length);
+    if (clip) parts.push(text.slice(clip.start, clip.end));
+  }
+  return parts.join("\n\n");
+}
+exit code 0

@@ -1,0 +1,4 @@
+$ cd /Users/denis.lantsman/src/edulab && grep -n "mixed list" plans/2026-09-05-domain-graph.md
+stdout:
+224:  - `get` with a mixed list of node and edge ids returns a record for each, in one call.
+exit code 0

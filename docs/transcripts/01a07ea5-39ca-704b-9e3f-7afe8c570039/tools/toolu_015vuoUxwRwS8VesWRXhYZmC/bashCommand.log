@@ -1,0 +1,50 @@
+$ cd ~/src/edulab && gh repo view dlants/edulab --json visibility,url && render services create --help
+stdout:
+{"url":"https://github.com/dlants/edulab","visibility":"PRIVATE"}
+Render CLI v2.15.1
+Create a new service
+USAGE
+  render services create
+ [flags]
+FLAGS
+      --auto-deploy                               Enable auto-deploy (default true)
+      --branch <string>                           Git branch
+      --build-command <string>                    Build command
+      --build-filter-ignored-path <stringArray>   Build filter ignored path (can be specified multiple times)
+      --build-filter-path <stringArray>           Build filter path (can be specified multiple times)
+      --cron-command <string>                     Cron command
+      --cron-schedule <string>                    Cron schedule
+      --env-var <stringArray>                     Environment variable in KEY=VALUE format (can be specified multiple times)
+      --environment-id <string>                   Environment ID
+      --from <string>                             Clone configuration from existing service (ID or name). Other flags override cloned values
+      --health-check-path <string>                Health check path
+  -h, --help                                      help for create
+      --image <string>                            Docker image URL
+      --ip-allow-list <stringArray>               IP allow list entry in cidr=...,description=... format (can be specified multiple times)
+      --maintenance-mode                          Enable maintenance mode
+      --maintenance-mode-uri <string>             Maintenance mode URI
+      --max-shutdown-delay <int>                  Max shutdown delay in seconds (default 0)
+      --name <string>                             Service name
+      --num-instances <int>                       Number of instances (default 0)
+      --plan <string>                             Service plan
+      --pre-deploy-command <string>               Pre-deploy command
+      --previews <enum>                           Preview generation mode
+      --publish-directory <string>                Publish directory
+      --region <enum>                             Deployment region
+      --registry-credential <string>              Registry credential
+      --repo <string>                             Git repository URL
+      --root-directory <string>                   Root directory
+      --runtime <enum>                            Runtime environment
+      --secret-file <stringArray>                 Secret file in NAME:LOCAL_PATH format (can be specified multiple times)
+      --start-command <string>                    Start command
+      --type <enum>                               Service type
+      --confirm                                   Skip all confirmation prompts
+  -o, --output <FORMAT>                           Output format: interactive, json, yaml, or text (auto: text in non-TTY contexts unless explicitly set) (default "interactive")
+DETAILS
+Create a new service on Render.
+This command currently runs in non-interactive mode only.
+Provide all config with flags.
+Examples:
+  render services create --name my-api --type web_service --repo https://github.com/org/repo --output json
+  render services create --from srv-abc123 --name my-api-clone --output json
+exit code 0

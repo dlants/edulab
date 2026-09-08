@@ -1,0 +1,30 @@
+$ cd /Users/denis.lantsman/src/edulab/packages/e2e && npx playwright test tests/chat.spec.ts -g "opens its own transcript"
+stdout:
+Running 1 test using 1 worker
+  ✘  1 tests/chat.spec.ts:638:1 › the update behind a turn opens its own transcript on the right (5.2s)
+  1) tests/chat.spec.ts:638:1 › the update behind a turn opens its own transcript on the right ─────
+    Error: expect(locator).toHaveText(expected) failed
+    Locator: locator('ul').nth(1).locator('[data-tool-name]:visible')
+    Timeout: 5000ms
+    - Expected  - 0
+    + Received  + 1
+      Array [
+        "put_nodes",
+    +   "yield",
+      ]
+    Call log:
+      - Expect "toHaveText" locator('ul').nth(1).locator('[data-tool-name]:visible') with timeout 5000ms
+      - waiting for locator('ul').nth(1).locator('[data-tool-name]:visible')
+        14 × locator resolved to 2 elements
+      650 |     .click();
+      651 |   const pane = page.locator("ul").nth(1);
+    > 652 |   await expect(pane.locator("[data-tool-name]:visible")).toHaveText([
+          |                                                          ^
+      653 |     "put_nodes",
+      654 |   ]);
+      655 |   // Review, not descent: there is nothing to reply to here.
+        at /Users/denis.lantsman/src/edulab/packages/e2e/tests/chat.spec.ts:652:58
+    Error Context: test-results/chat-the-update-behind-a-t-9d287-own-transcript-on-the-right/error-context.md
+  1 failed
+    tests/chat.spec.ts:638:1 › the update behind a turn opens its own transcript on the right ──────
+exit code 1

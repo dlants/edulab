@@ -1,0 +1,208 @@
+$ cd /Users/denis.lantsman/src/edulab && npm run typecheck && npm run lint
+stdout:
+> edulab@0.0.1 typecheck
+> npm -w @edulab/iso exec tsc -- --noEmit && npm -w @edulab/frontend exec tsc -- --noEmit && npm -w @edulab/backend exec tsc -- --noEmit && npm -w @edulab/e2e exec tsc -- --noEmit
+> edulab@0.0.1 lint
+> biome check .
+stderr:
+packages/frontend/prototypes/chat.ts
+:1:1 assist/source/organizeImports  FIXABLE  ━━━━━━━━━━━━━━━━━━━
+  × Sort these imports.
+   > 1 │ import {
+       │ ^^^^^^^^
+   > 2 │   type GraphChange,
+   > 3 │   type GraphEdge,
+   > 4 │   type GraphNode,
+        ...
+  > 15 │ } from "../gr
+aph-view.ts";
+  > 16 │ import { type Citation, parse, resolve } from "../citation.ts";
+       │ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^
+    17 │ import { inte
+ractionAt } from "..
+/interactions.ts";
+    18 │ import { layout, t
+ype Position } from ".
+./layout.ts";
+  i Safe fix: Organize imports and exports (Biome)
+      1     │ - 
+import·{
+      2     │ - ··type·GraphChange,
+      3     │ - ··type·GraphEdge,
+      4     │ - ··type·GraphNode,
+      5 
+    │ - ··isNodeId,
+      6     │ - 
+··KnowledgeGraph,
+      7     │ - ··type·NodeId,
+      8     │ -
+ }·from·"../graph.
+ts";
+      9     │ - 
+import·{·ch
+angesIn,·readTools,·writeTools·
+}·from·"../grap
+h-tools.ts
+";
+     10     │ 
+- imp
+ort·typ
+e·{
+     11     │ - ··Chi
+p,
+     12     │ - 
+··Citations,
+   13     │ - ··Msg·as·GraphMs
+g,
+     14     │ - 
+··Sideba
+r,
+     15   
+  │ - }·from·"../graph
+-view.ts";
+   16     │ - 
+import·
+{·type·Citat
+ion,·parse,·resolv
+e·}·from·"../
+citation.t
+s";
+  1 │ + 
+import·{·type·Citation,·parse,·re
+solve·}·from·"
+../citatio
+n.ts";
+  2 │ + import·{
+      3 │ + ·
+·type·Grap
+hChange,
+          4 │ + ··type·G
+raphEdge,
+          5 │ +
+ ··typ
+e·GraphN
+ode,
+          6 │ + ··
+isNodeId,
+    7 │ + 
+··Knowled
+geGraph,
+          8 │ + 
+··type·No
+deId,
+    9 │ + }·from·"../graph
+.ts";
+ 10 │ + 
+import·
+{·changesIn,·readTo
+ols,·write
+Tools·}·from·".
+./graph-to
+ols.ts";
+         11 │ + 
+import·t
+ype·{
+   12 │ + 
+··Chip,
+         13 │ + 
+··Citations
+,
+         14
+ │ + ··Ms
+g·as·GraphMsg,
+         15
+ │ + 
+··Side
+bar,
+         16 │ + 
+}·from·"..
+/graph-vie
+w.ts";
+     17  17 │   
+import { int
+eractionAt 
+} from "../interacti
+ons.ts";
+ 18  18 │   
+import { l
+ayout, ty
+pe Position } fro
+m "../layout.ts";
+packages/frontend/prototypes/chat.ts 
+format ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  × Formatter would have printed the following content:
+    422 422 │   
+        break;
+    423 423 │         case "GRAPH_MSG":
+    424     │ - 
+········if·(msg.msg.type·===·"CITATION_CLICKED")·reveal(state,·msg.msg.citation);
+  424 │ + ········if·(msg.msg.type·===·"CITATION_CLICKED")
+    425 │ + ·········
+·reveal(state,·msg.msg.citation);
+    425 426 │ 
+          e
+lse updateGra
+ph(msg.msg);
+    426 427 │     
+      break;
+packages/frontend/view.ts
+:24:1 
+assist/source/organizeImports  FIXABLE  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+× Sort the imported names.
+    22 │ 
+} from "./selection.ts";
+    23 │ i
+mport { type Mess
+age, messageText } from "./thre
+ad.ts";
+  > 24 │ i
+mport {
+       │ ^^^^^^^^
+  > 25 │   ty
+pe PostRen
+derEventBus,
+        ...
+> 35 │   ty
+pe View,
+> 36 │ } from "./va
+mp.ts";
+       │ 
+^^^^^^^^^^^^
+^^^^^^^
+    37 │ 
+    38 │ /** The sample-transcript batch. `done` is terminal: a secon
+d pass over the
+  i Safe fix: Organize imports and exports (Biome)
+      23   23 │   import 
+{ type Message, messageText } from "./thread.ts";
+      24   24 │   import {
+      25      │ - 
+··type·PostRenderEventBu
+s,
+      26      │ - ··Binder,
+      27      │ - ··c
+ls,
+      28      │ - ·
+·mountStyle,
+           25 │ + ·
+·Binder,
+    26 │ + 
+··cls,
+      27 │ + 
+··moun
+tStyle,
+           28 │ + ··ty
+pe·PostRenderEv
+entBus,
+      29   29 │     type 
+Ref,
+      30   30 │    
+ ref,
+stdout:
+Checked 52 files in 132ms. No fixes applied.
+Found 3 errors.
+stderr:
+check ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+× Some errors were emitted while running checks.
+exit code 1

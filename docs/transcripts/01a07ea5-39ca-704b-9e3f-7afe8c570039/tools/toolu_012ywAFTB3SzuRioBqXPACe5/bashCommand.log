@@ -1,0 +1,14 @@
+$ cd ~/src/edulab && git add -A && git commit -q -m "Serve the frontend from the backend, and a render blueprint
+
+A websocket cannot be routed through a Render static site rewrite, so the
+socket and the built frontend are one same-origin node service." && git push -q && sleep 90 && render deploys list edulab -o text --confirm
+stderr:
+Error: unexpected response: 404 Not Found
+Usage:
+  render deploys list [serviceID] [flags]
+Flags:
+  -h, --help   help for list
+Global Flags:
+      --confirm         Skip all confirmation prompts
+  -o, --output string   Output format: interactive, json, yaml, or text (auto: text in non-TTY contexts unless explicitly set) (default "interactive")
+exit code 1

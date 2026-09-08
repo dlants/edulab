@@ -1,0 +1,11 @@
+$ cd /Users/denis.lantsman/src/edulab && npx playwright test --config packages/e2e/playwright.config.ts graph 2>/dev/null
+stdout:
+Running 6 tests using 6 workers
+  ✓  2 packages/e2e/tests/graph.spec.ts:159:1 › an edge is selectable and editable (398ms)
+  ✓  3 packages/e2e/tests/graph.spec.ts:149:1 › deleting a node takes its edges with it (422ms)
+  ✓  1 packages/e2e/tests/graph.spec.ts:136:1 › a duplicate title is rejected without losing the draft (424ms)
+  ✓  6 packages/e2e/tests/graph.spec.ts:92:1 › switching tabs leaves the transcript and the graph intact (432ms)
+  ✓  5 packages/e2e/tests/graph.spec.ts:276:1 › building from the session fills the canvas and leaves the threads alone (438ms)
+  ✓  4 packages/e2e/tests/graph.spec.ts:113:1 › clicking a node fills the sidebar and a retitle keeps its edges (440ms)
+  6 passed (1.8s)
+exit code 0

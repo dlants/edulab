@@ -1,0 +1,16 @@
+$ cd packages/frontend/prototypes && perl -0pi -e 's/^(\s*)state\.anchor = null;$/$1anchor = null;\n$1anchorAt = null;/gm' chat.ts && grep -n "anchorAt\|state.anchor" chat.ts
+stdout:
+131:  let anchorAt: { x: number; y: number } | null = null;
+322:    state.anchor = anchor?.thread === focus ? anchor : null;
+347:    if (!anchor || !anchorAt) return null;
+349:    if (anchor.thread === focus) return state.split ? null : anchorAt;
+350:    return anchor.thread === tree.get(focus).activeChild ? anchorAt : null;
+519:    anchorAt = null;
+597:    anchorAt = null;
+644:        anchorAt = null;
+654:        anchorAt = null;
+665:        state.anchor = msg.anchor;
+671:        anchorAt = null;
+694:            const anchor = state.anchor;
+701:            anchorAt = null;
+exit code 0

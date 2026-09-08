@@ -1,0 +1,14 @@
+$ cd /Users/denis.lantsman/src/edulab && grep -n "failed" packages/frontend/view.ts packages/frontend/prototypes/chat.ts packages/frontend/thread.ts
+stdout:
+packages/frontend/view.ts:42:  | { type: "running"; done: number; total: number; failed: number }
+packages/frontend/view.ts:43:  | { type: "done"; failed: number };
+packages/frontend/view.ts:1119:      return build.failed === 0 ? "built" : `built, ${build.failed} failed`;
+packages/frontend/prototypes/chat.ts:424:      failed: build.failed + (ok ? 0 : 1),
+packages/frontend/prototypes/chat.ts:431:    state.build = { type: "done", failed: build.failed };
+packages/frontend/prototypes/chat.ts:440:    state.build = { type: "running", done: 0, total, failed: 0 };
+packages/frontend/prototypes/chat.ts:752:        failed: 0,
+packages/frontend/thread.ts:253:  private failed = false;
+packages/frontend/thread.ts:333:    this.failed = false;
+packages/frontend/thread.ts:337:        if (this.failed) return { type: "error", message: "request ended" };
+packages/frontend/thread.ts:447:        this.failed = true;
+exit code 0

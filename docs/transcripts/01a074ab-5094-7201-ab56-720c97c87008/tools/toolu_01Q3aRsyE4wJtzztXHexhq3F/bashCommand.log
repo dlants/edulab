@@ -1,0 +1,28 @@
+$ cd /Users/denis.lantsman/src/edulab && sed -n 365,395p packages/e2e/tests/chat.spec.ts
+stdout:
+  const backend = await transcript(page, [REPLY]);
+  await selectRange(page, 0, 0, 9);
+  await explainButton(page).click();
+  await expect(threadTranscript(page).locator("li")).toHaveCount(2);
+  await deeper(page).click();
+  await expect(taskTranscript(page).locator("li")).toHaveText([
+    new RegExp(REPLY),
+  ]);
+  const sent = backend.started.length;
+  await selectRange(page, 0, 0, 5);
+  await quizButton(page).click();
+  const seed = seedOf(backend, sent);
+  expect(occurrences(seed, SENTENCE)).toBe(1);
+  expect(seed).toContain("the quick");
+  expect(seed).toContain("alpha");
+  expect(seed.indexOf("the quick")).toBeLessThan(seed.indexOf("alpha"));
+  // Taking the action does not move the panes: the quiz lands on the right.
+  await expect(taskTranscript(page).locator("li")).toHaveText([
+    new RegExp(REPLY),
+  ]);
+  await expect(threadTranscript(page).locator("li")).toHaveCount(2);
+  await deeper(page).click();
+  await expect(taskTranscript(page).locator("li")).toHaveCount(1);
+  await expect(page.getByText("Layer 3")).toBeVisible();
+});
+exit code 0

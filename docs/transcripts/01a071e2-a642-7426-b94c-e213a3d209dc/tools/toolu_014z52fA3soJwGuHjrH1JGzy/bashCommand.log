@@ -1,0 +1,7 @@
+$ cd /Users/denis.lantsman/src/edulab && for f in packages/frontend/samples/*.json; do diff -q "$f" "task-samples/$(basename $f)"; done; grep -rn "task-samples" --include="*.ts" --include="*.md" --include="*.json" -l . | grep -v node_modules
+stdout:
+Files packages/frontend/samples/44bbcae8-tile-adhesive-formulation.json and task-samples/44bbcae8-tile-adhesive-formulation.json differ
+Files packages/frontend/samples/72c7ec37-django-event-app-urls.json and task-samples/72c7ec37-django-event-app-urls.json differ
+Files packages/frontend/samples/74979366-floating-dock-pontoon.json and task-samples/74979366-floating-dock-pontoon.json differ
+Files packages/frontend/samples/9833484b-c-heap-file-block-storage.json and task-samples/9833484b-c-heap-file-block-storage.json differ
+exit code 1

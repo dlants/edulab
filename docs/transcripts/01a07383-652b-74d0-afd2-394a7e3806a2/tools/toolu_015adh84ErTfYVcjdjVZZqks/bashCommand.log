@@ -1,0 +1,83 @@
+$ cd /Users/denis.lantsman/src/edulab && grep -n "runBuild" -B 5 -A 40 packages/frontend/prototypes/chat.ts | sed -n '1,80p'
+stdout:
+163-  }
+164-
+165-  /** One detached thread over the whole session, writing straight into the
+166-   * graph through its tools. Its transcript is never rendered: a second pane
+167-   * of prose nobody asked for would just be noise. */
+168:  function runBuild(): void {
+169-    if (build.type === "running") return;
+170-    build = { type: "running" };
+171-    const thread = new Thread(socket, {
+172-      system: EXTRACT_SYSTEM,
+173-      seed: renderTree(tree, graph.render()),
+174-      tools: writeTools(graph),
+175-    });
+176-    const sync = () => {
+177-      refresh();
+178-      view.sync(state);
+179-    };
+180-    thread.onChange = sync;
+181-    thread.start().then(
+182-      (result) => {
+183-        build =
+184-          result.type === "error"
+185-            ? { type: "error", error: result.message }
+186-            : { type: "done" };
+187-        sync();
+188-      },
+189-      (e: unknown) => {
+190-        build = { type: "error", error: String(e) };
+191-        sync();
+192-      },
+193-    );
+194-  }
+195-  /** The graph tab's own reducer. It writes to the graph and to `sidebar`;
+196-   * everything the canvas shows is re-derived in refreshGraph(). */
+197-  function updateGraph(msg: GraphMsg): void {
+198-    switch (msg.type) {
+199-      case "SELECT_NODE": {
+200-        const node = graph.node(msg.id);
+201-        if (!node) break;
+202-        sidebar = {
+203-          type: "node",
+204-          id: node.id,
+205-          draft: draftOf(node),
+206-          error: null,
+207-        };
+208-        break;
+--
+239-        // A rejected save keeps the draft, so the user's typing survives.
+240-        sidebar.error = result.status === "error" ? result.error : null;
+241-        break;
+242-      }
+243-      case "BUILD":
+244:        runBuild();
+245-        break;
+246-      case "DELETE": {
+247-        if (sidebar.type === "closed") break;
+248-        if (sidebar.type === "node") graph.deleteNode(sidebar.id);
+249-        else graph.deleteEdge(sidebar.id);
+250-        sidebar = { type: "closed" };
+251-        break;
+252-      }
+253-    }
+254-  }
+255-
+256-  function update(state: State, msg: Msg): void {
+257-    const node = tree.get(focus);
+258-    switch (msg.type) {
+259-      case "DRAFT_CHANGED":
+260-        node.draft = msg.draft;
+261-        break;
+262-      case "SAMPLE_CHANGED":
+263-        selectSample(msg.id === "" ? undefined : msg.id);
+264-        break;
+265-      case "TAB_CHANGED":
+266-        state.tab = msg.tab;
+267-        break;
+268-      case "GRAPH_MSG":
+269-        updateGraph(msg.msg);
+270-        break;
+271-      case "SUBMIT":
+exit code 0

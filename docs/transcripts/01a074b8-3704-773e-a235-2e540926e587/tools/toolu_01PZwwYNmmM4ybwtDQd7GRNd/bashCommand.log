@@ -1,0 +1,50 @@
+$ cd /Users/denis.lantsman/src/edulab && sed -n '13,65p' packages/frontend/thread.test.ts
+stdout:
+class FakeSocket implements Socket {
+  readonly sent: ClientMessage[] = [];
+  private listener: ((e: MessageEvent<string>) => void) | undefined;
+  send(data: string) {
+    this.sent.push(JSON.parse(data) as ClientMessage);
+  }
+  addEventListener(
+    _type: "message",
+    listener: (e: MessageEvent<string>) => void,
+  ) {
+    this.listener = listener;
+  }
+  get requestId(): string {
+    const last = this.sent[this.sent.length - 1];
+    if (!last) throw new Error("nothing sent");
+    return last.requestId;
+  }
+  deliver(event: Anthropic.RawMessageStreamEvent) {
+    this.listener?.(
+      new MessageEvent("message", {
+        data: JSON.stringify({
+          type: "event",
+          requestId: this.requestId,
+          event,
+        }),
+      }),
+    );
+  }
+  stream(chunks: string[]) {
+    this.deliver({
+      type: "content_block_start",
+      index: 0,
+      content_block: { type: "text", text: "", citations: null },
+    });
+    for (const text of chunks) {
+      this.deliver({
+        type: "content_block_delta",
+        index: 0,
+        delta: { type: "text_delta", text },
+      });
+    }
+    this.deliver({ type: "content_block_stop", index: 0 });
+    this.deliver({
+      type: "message_stop",
+    } as Anthropic.RawMessageStreamEvent);
+  }
+}
+exit code 0

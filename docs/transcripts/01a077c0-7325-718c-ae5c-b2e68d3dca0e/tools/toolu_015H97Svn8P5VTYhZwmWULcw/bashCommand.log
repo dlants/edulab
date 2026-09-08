@@ -1,0 +1,13 @@
+$ grep -rn "yield" packages --include=*.ts -il | grep -v node_modules
+stdout:
+packages/frontend/prompt.test.ts
+packages/frontend/prompt.ts
+packages/frontend/threads.ts
+packages/frontend/prototypes/chat.ts
+packages/frontend/threads.test.ts
+packages/frontend/thread.test.ts
+packages/frontend/thread.ts
+packages/e2e/tests/persistence.spec.ts
+packages/e2e/tests/graph.spec.ts
+packages/e2e/tests/chat.spec.ts
+exit code 0

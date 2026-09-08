@@ -1,0 +1,4 @@
+$ cd /Users/denis.lantsman/src/edulab && git add -A && git commit -m "Stage 8: citation chips and navigation" -q && git log --oneline -1
+stdout:
+d2bfd95 Stage 8: citation chips and navigation
+exit code 0

@@ -1,0 +1,44 @@
+$ cd /Users/denis.lantsman/src/edulab && sed -n '281,325p' packages/frontend/vamp.ts
+stdout:
+  bindSlot(ref: Ref, fn: (s: State) => SlotContent | undefined): void {
+    const el = this.ref(ref);
+    let currentCtor: SlotContentInternal["ctor"] | undefined;
+    let currentKey: string | undefined;
+    let currentView: View<unknown, unknown> | undefined;
+    const cleanup = () => {
+      if (currentView) {
+        currentView.destroy();
+        el.innerHTML = "";
+        currentView = undefined;
+        currentCtor = undefined;
+        currentKey = undefined;
+      }
+    };
+    const binding = (s: State) => {
+      const result = fn(s);
+      const content = result as unknown as SlotContentInternal | undefined;
+      if (!content) {
+        cleanup();
+      } else if (content.ctor !== currentCtor || content.key !== currentKey) {
+        cleanup();
+        currentView = new content.ctor(
+          el,
+          content.childDispatch,
+          content.state,
+          content.ctx,
+        );
+        currentCtor = content.ctor;
+        currentKey = content.key;
+      } else {
+        currentView?.sync(content.state as State);
+      }
+    };
+    this.bindings.push(binding);
+    binding(this.state);
+    this.cleanups.push(cleanup);
+  }
+  /** Keyed list reconciliation. Maps an array of showKeyed() descriptors to child views. */
+  bindList(
+    ref: Ref,
+    childTag: string,
+exit code 0

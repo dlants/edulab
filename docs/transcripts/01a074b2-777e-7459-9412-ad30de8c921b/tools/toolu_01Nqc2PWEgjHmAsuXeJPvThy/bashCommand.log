@@ -1,0 +1,102 @@
+$ cd /Users/denis.lantsman/src/edulab && sed -n '56,80p' packages/frontend/interactions.test.ts && sed -n '115,200p' packages/frontend/prompt.test.ts
+stdout:
+const idx = (n: number) => n as MessageIdx;
+function setup() {
+  const socket = new FakeSocket();
+  const root = new Thread(socket, { initialTurns: [] });
+  const tree = new ThreadTree(socket, root, () => {});
+  return { socket, tree, root };
+}
+it("captures a root turn with everything before it and nothing after", async () => {
+  const { socket, tree, root } = setup();
+  const first = root.send("how does backpressure work");
+  socket.replies("it does not");
+  await first;
+  void root.send("and framing");
+  socket.streams("well,");
+  const interaction = interactionAt(tree, tree.root, idx(2));
+  expect(interaction.text).toBe("and framing");
+  expect(interaction.prefix.seed).toBeUndefined();
+  expect(interaction.prefix.messages.map((m) => m.role)).toEqual([
+    "user",
+    "assistant",
+  ]);
+});
+  ] as const;
+  const depth3 = contextSeed(depth2, level2, at(0, 0, 0, 8));
+  expect(depth3.startsWith(depth2)).toBe(true);
+  expect(depth3.split("build a parser")).toHaveLength(2);
+  expect(depth3.split("It parses top-down")).toHaveLength(2);
+});
+const interaction = (
+  index: number,
+  text: string,
+  seed?: string,
+): Interaction => ({
+  thread: "root" as ThreadId,
+  index: index as MessageIdx,
+  prefix: { seed, messages: messages.slice(0, index) as Message[] },
+  text,
+});
+const blockText = (block: Anthropic.ContentBlockParam | undefined): string =>
+  block?.type === "text" ? block.text : "";
+it("puts the prefix in the cached block and the turn, graph and questions in the volatile one", () => {
+  const [cached, volatile] = graphUpdatePrompt(
+    interaction(2, "thanks", "the framing"),
+    "the graph",
+  );
+  const front = blockText(cached);
+  const back = blockText(volatile);
+  expect(front).toContain("the framing");
+  expect(front).toContain("build a parser");
+  expect(front).not.toContain("the graph");
+  expect(back).toContain("the graph");
+  expect(back).toContain("thanks");
+  expect(back).toContain("yield");
+});
+it("marks exactly one block for caching, and it is identical across a thread", () => {
+  const blocks = graphUpdatePrompt(interaction(2, "thanks", "seed"), "graph a");
+  expect(
+    blocks.filter((b) => "cache_control" in b && b.cache_control).length,
+  ).toBe(1);
+  expect(blocks[0]?.type === "text" && blocks[0].cache_control).toEqual({
+    type: "ephemeral",
+  });
+});
+it("renders a seedless root interaction without an empty framing section", () => {
+  const [cached] = graphUpdatePrompt(
+    interaction(0, "build a parser"),
+    "the graph",
+  );
+  const front = blockText(cached);
+  expect(front).not.toContain("framing");
+  expect(front).not.toContain("\n\n\n");
+  expect(front.trim()).toBe(front);
+});
+it("states the scope restriction, the coarseness rule and the licence to change nothing", () => {
+  expect(GRAPH_UPDATE_SYSTEM).toContain(
+    "Touch only what this interaction is about",
+  );
+  expect(GRAPH_UPDATE_SYSTEM).toContain("small and coarse");
+  expect(GRAPH_UPDATE_SYSTEM).toContain("change nothing");
+  expect(GRAPH_UPDATE_SYSTEM).toContain("`notes`");
+});
+it("names the get tool and the scale in the learning system prompt", () => {
+  expect(LEARNING_SYSTEM).toContain("`get`");
+  for (const label of LEVELS) expect(LEARNING_SYSTEM).toContain(label);
+});
+it("renders the graph into a top-level seed, and only there", () => {
+  const graph = new KnowledgeGraph();
+  graph.putNode({
+    title: "recursive descent",
+    description: "top-down parsing",
+    notes: "asked about it",
+    level: 2,
+  });
+  const rendered = graph.render();
+  const top = contextSeed(undefined, messages, at(1, 9, 1, 26), rendered);
+  expect(top).toContain(rendered);
+  const deeper = contextSeed(top, messages, at(1, 9, 1, 26), rendered);
+  expect(deeper.split(rendered)).toHaveLength(2);
+});
+exit code 0

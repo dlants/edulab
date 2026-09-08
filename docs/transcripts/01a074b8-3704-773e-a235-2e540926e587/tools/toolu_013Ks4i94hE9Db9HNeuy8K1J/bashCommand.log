@@ -1,0 +1,4 @@
+$ cd /Users/denis.lantsman/src/edulab && git add -A && git commit -q -m "Stage 7: surfacing the update in the transcript" && git log --oneline -1
+stdout:
+3324451 Stage 7: surfacing the update in the transcript
+exit code 0

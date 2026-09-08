@@ -1,0 +1,18 @@
+$ cd /Users/denis.lantsman/src/edulab && grep -n "taskTranscript\s*(\|function threadPane\|thread-pane\|data-tool-name" packages/e2e/tests/chat.spec.ts
+stdout:
+174:  await taskTranscript(page).dispatchEvent("mouseup");
+183:function taskTranscript(page: Page) {
+196:  await expect(taskTranscript(page).locator("li")).toHaveCount(2);
+214:  await expect(taskTranscript(page).locator("li")).toHaveCount(2);
+239:  await expect(taskTranscript(page).locator("li")).toHaveCount(2);
+243:  await expect(taskTranscript(page).locator("li")).toHaveCount(4);
+418:  await expect(taskTranscript(page).locator("li")).toHaveText([
+434:  await expect(taskTranscript(page).locator("li")).toHaveText([
+441:  await expect(taskTranscript(page).locator("li")).toHaveCount(2);
+456:  await expect(taskTranscript(page).locator("li").first()).toContainText(
+459:  await expect(taskTranscript(page).locator("li").first()).toContainText(
+518:  await expect(taskTranscript(page).locator("li")).toHaveCount(4);
+519:  await expect(page.locator("[data-tool-name]:visible")).toHaveText(
+610:  return taskTranscript(page)
+616:  return taskTranscript(page).locator("li").nth(index).locator("[data-change]");
+exit code 0

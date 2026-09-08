@@ -1,0 +1,124 @@
+$ cd /Users/denis.lantsman/src/edulab && sed -n 1,60p packages/frontend/graph-tools.ts && sed -n 55,100p packages/frontend/threads.ts && grep -n "toolset\|ToolName\|system\|seed" packages/frontend/thread.ts
+stdout:
+import type Anthropic from "@anthropic-ai/sdk";
+import {
+  type EdgeId,
+  type GraphId,
+  type GraphResult,
+  isEdgeId,
+  isNodeId,
+  type KnowledgeGraph,
+  LEVELS,
+  type Level,
+  type NodeId,
+} from "./graph.ts";
+import {
+  type Tool,
+  type ToolName,
+  type ToolResult,
+  toolset,
+} from "./thread.ts";
+/** Batches are not transactional: an entry that fails is reported on its own
+ * line and its neighbours still apply, so the model can fix one entry rather
+ * than reconstruct the whole call. Only unusable *input* fails the call. */
+const ok = (lines: ReadonlyArray<string>): ToolResult => ({
+  status: "ok",
+  text: lines.join("\n"),
+});
+const err = (error: string): ToolResult => ({ status: "error", error });
+const ID_LIST: Anthropic.Tool.InputSchema = {
+  type: "object",
+  properties: {
+    ids: {
+      type: "array",
+      items: { type: "string" },
+      description: "Node ids (n0, n1, ...) and/or edge ids (e0, e1, ...).",
+    },
+  },
+  required: ["ids"],
+};
+const NODE_PROPERTIES = {
+  id: {
+    type: "string",
+    description:
+      "Omit to create a new node; give it to update an existing one.",
+  },
+  title: {
+    type: "string",
+    description: "Up to 5 words, unique among nodes.",
+  },
+  description: { type: "string", description: "What this knowledge is." },
+  notes: {
+    type: "string",
+    description:
+      "Your read on this user's grasp of it, including any misconceptions.",
+  },
+  level: {
+    type: "integer",
+    enum: [1, 2, 3, 4],
+    description: LEVELS.map((label, i) => `${i + 1} ${label}`).join(", "),
+   * caller starts it: the tree does not own the request lifecycle. */
+  open(anchor: Anchor, action: Action, opts: ChildOpts = {}): ThreadId {
+    const parent = this.get(anchor.thread);
+    const thread = new Thread(this.socket, {
+      system: LEARNING_SYSTEM,
+      seed: seedTurn(
+        parent.thread.seed,
+        parent.thread.messages,
+        anchor,
+        action,
+      ),
+      tools: opts.tools,
+      yieldSchema: opts.yieldSchema,
+    });
+    const id = this.add({ anchor, action }, thread);
+    parent.children.push(id);
+    parent.activeChild = id;
+    return id;
+  }
+  /** What a child thread settled with, once it has yielded. The parent renders
+   * threads it never awaited, so the settled value has to be readable here. */
+  result(id: ThreadId): TurnResult | undefined {
+    return this.get(id).thread.result;
+  }
+  /** The highlights to draw over `id`'s transcript: one per child. */
+  marks(id: ThreadId): Mark[] {
+    return this.get(id).children.map((child) => {
+      const origin = this.get(child).origin;
+      if (!origin) throw new Error("child thread without an origin");
+      return { thread: child, anchor: origin.anchor };
+    });
+  }
+  /** root -> id, for the depth indicator. */
+  path(id: ThreadId): ThreadId[] {
+    const out: ThreadId[] = [];
+    let at: ThreadId | undefined = id;
+    while (at) {
+      out.unshift(at);
+      at = this.get(at).origin?.anchor.thread;
+    }
+    return out;
+  }
+67:  system?: string;
+69:  seed?: string;
+70:  tools?: Record<ToolName, Tool>;
+79:export type ToolName = string & { readonly __brand: "ToolName" };
+90:/** Keys a set of tools by name. `Record<ToolName, Tool>` is a mapped type over
+92:export function toolset(...tools: ReadonlyArray<Tool>): Record<ToolName, Tool> {
+134:  tools?: Record<ToolName, Tool>;
+136:  system?: string;
+141:/** Runs a thread to completion with no user in the loop: the seed prompt goes
+158:    system: opts.system ?? AUTONOMOUS_SYSTEM,
+159:    seed: opts.prompt,
+213:  private readonly system: string;
+214:  private readonly tools: Record<ToolName, Tool>;
+219:  readonly seed: string | undefined;
+223:    this.system = opts.system ?? SYSTEM;
+226:    this.seed = opts.seed;
+227:    this.turns = opts.seed
+228:      ? [{ role: "user", content: opts.seed }]
+241:      this.seed ? this.turns.slice(1) : this.turns,
+264:  /** Requests a reply to the turns already present - the seeded first turn of
+347:        : await runTool(this.tools[call.name as ToolName], call);
+368:        system: this.system,
+exit code 0

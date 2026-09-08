@@ -1,0 +1,21 @@
+$ cd /Users/denis.lantsman/src/edulab/packages/e2e/tests && sed -n 828,835p chat.spec.ts > /tmp/t.txt && { cat <<'EOF'
+test("dbg copy", async ({ page }) => {
+  page.on("console", (m) => console.log("CONSOLE", m.type(), m.text().slice(0,200)));
+  page.on("pageerror", (e) => console.log("PAGEERROR", e.message));
+  const backend = await chipBackend(page, false);
+  backend.release();
+  await page.goto("/");
+  await turn(page, "sure, keep going");
+  await page.waitForTimeout(2000);
+  console.log("STATUS", await updateStatus(page, 0).textContent());
+});
+EOF
+} >> chat.spec.ts && cd /Users/denis.lantsman/src/edulab && npx playwright test -c packages/e2e/playwright.config.ts -g "dbg copy"
+stdout:
+Running 1 test using 1 worker
+CONSOLE debug [vite] connecting...
+CONSOLE debug [vite] connected.
+STATUS 
+  ✓  1 packages/e2e/tests/chat.spec.ts:836:1 › dbg copy (2.2s)
+  1 passed (3.4s)
+exit code 0

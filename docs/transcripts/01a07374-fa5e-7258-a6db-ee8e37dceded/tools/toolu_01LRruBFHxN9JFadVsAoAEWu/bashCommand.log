@@ -1,0 +1,45 @@
+$ cd /Users/denis.lantsman/src/edulab && cat >> packages/frontend/prompt.test.ts <<'EOF'
+
+const silentSocket: Socket = { send() {}, addEventListener() {} };
+
+it("renders the whole tree, keeping each child's action and anchor text", () => {
+  const root = new Thread(silentSocket, { initialTurns: [] });
+  const tree = new ThreadTree(silentSocket, root, () => {});
+  void root.send("build a parser");
+  const anchor: Anchor = {
+    thread: tree.root,
+    start: { msg: 0, offset: 6 },
+    end: { msg: 0, offset: 14 },
+  };
+  tree.open(anchor, { type: "quiz" });
+
+  const rendered = renderTree(tree, "the graph");
+  expect(rendered).toContain("build a parser");
+  expect(rendered).toContain("a parser");
+  expect(rendered).toContain("Quiz me on this.");
+  expect(rendered).toContain("the graph");
+});
+
+it("tells the extraction agent what a node is and where misconceptions go", () => {
+  expect(EXTRACT_SYSTEM).toContain("One node per concept");
+  expect(EXTRACT_SYSTEM).toContain("`notes`");
+});
+EOF
+npx biome check --write packages/frontend/prompt.test.ts packages/frontend/prompt.ts packages/frontend/graph-view.ts packages/frontend/prototypes/chat.ts && npm test 2>/dev/null
+stdout:
+Checked 4 files in 146ms. Fixed 2 files.
+> edulab@0.0.1 test
+> vitest run
+ RUN  v4.1.11 /Users/denis.lantsman/src/edulab
+ ✓ packages/frontend/graph.test.ts (9 tests) 3ms
+ ✓ packages/frontend/selection.test.ts (8 tests) 3ms
+ ✓ packages/frontend/layout.test.ts (7 tests) 7ms
+ ✓ packages/frontend/prompt.test.ts (9 tests) 4ms
+ ✓ packages/frontend/graph-tools.test.ts (7 tests) 14ms
+ ✓ packages/frontend/threads.test.ts (3 tests) 11ms
+ ✓ packages/frontend/thread.test.ts (20 tests) 21ms
+ Test Files  7 passed (7)
+      Tests  63 passed (63)
+   Start at  14:26:13
+   Duration  195ms (transform 288ms, setup 0ms, import 584ms, tests 61ms, environment 0ms)
+exit code 0

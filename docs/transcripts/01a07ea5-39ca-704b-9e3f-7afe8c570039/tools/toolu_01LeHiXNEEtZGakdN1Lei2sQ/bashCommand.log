@@ -1,0 +1,25 @@
+$ cd ~/src/edulab && npm i -w @edulab/backend @fastify/static && npm run build && ls packages/frontend/dist
+stdout:
+added 19 packages, and audited 149 packages in 2s
+46 packages are looking for funding
+  run `npm fund` for details
+found 0 vulnerabilities
+> edulab@0.0.1 build
+> vite build
+vite v6.4.3 building for production...
+transforming...
+✓ 30 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                    0.31 kB │ gzip:   0.23 kB
+dist/assets/index-C05CdfNy.js  1,343.26 kB │ gzip: 330.82 kB
+stderr:
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+stdout:
+✓ built in 336ms
+assets
+index.html
+exit code 0

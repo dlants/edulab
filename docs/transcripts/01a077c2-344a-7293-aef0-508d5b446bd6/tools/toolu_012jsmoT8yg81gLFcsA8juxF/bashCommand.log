@@ -1,0 +1,14 @@
+$ cd /Users/denis.lantsman/src/edulab/packages/e2e && ls tests && grep -rn "buildButton(page)" tests && grep -n "^import\|from \"" tests/graph.spec.ts | sed -n 1,10p
+stdout:
+chat.spec.ts
+graph.spec.ts
+persistence.spec.ts
+smoke.spec.ts
+tests/graph.spec.ts:424:  await buildButton(page).click();
+tests/graph.spec.ts:425:  await expect(buildButton(page)).toBeDisabled();
+tests/graph.spec.ts:431:  await expect(buildButton(page)).toBeDisabled();
+tests/graph.spec.ts:441:  await buildButton(page).click();
+tests/graph.spec.ts:453:  await buildButton(page).click();
+1:import type { ClientMessage, ServerFrame } from "@edulab/iso/protocol.ts";
+2:import { expect, type Page, test } from "@playwright/test";
+exit code 0

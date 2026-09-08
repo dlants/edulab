@@ -1,0 +1,24 @@
+$ cd packages/frontend && grep -n "^  [a-zA-Z]*(" vamp.ts | sed -n '1,80p'
+stdout:
+38:  sync(state: State): void;
+39:  destroy(): void;
+134:  constructor(container: HTMLElement, initialState: State) {
+148:  sync(state: State): void {
+153:  cleanup(): void {
+160:  bindText(ref: Ref, fn: (s: State) => string): void {
+169:  bindClass(refOrEl: Ref | HTMLElement, fn: (s: State) => string): void {
+179:  bindVisible(ref: Ref, fn: (s: State) => boolean): void {
+189:  bindStyle(ref: Ref, fn: (s: State) => Record<string, string>): void {
+195:  bindContainerStyle(fn: (s: State) => Record<string, string>): void {
+221:  bindValue(ref: Ref, fn: (s: State) => string): void {
+237:  bindChecked(ref: Ref, fn: (s: State) => boolean): void {
+246:  bindDisabled(ref: Ref, fn: (s: State) => boolean): void {
+257:  bindAttr(ref: Ref, attr: string, fn: (s: State) => string | undefined): void {
+269:  bindContainerAttr(attr: string, fn: (s: State) => string | undefined): void {
+281:  bindSlot(ref: Ref, fn: (s: State) => SlotContent | undefined): void {
+323:  bindList(
+478:  constructor(html: string) {
+526:  emit(event: Event): void {
+531:  subscribe(handler: (event: Event) => void): () => void {
+542:  flush(): void {
+exit code 0

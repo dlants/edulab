@@ -1,0 +1,6 @@
+$ cd packages/frontend && grep -n "emptyRef" graph-view.ts
+stdout:
+490:    const emptyRef = ref("graph-empty");
+511:        <p class="${emptyClass}" data-ref="${emptyRef}">Nothing here yet.</p>
+705:    this.b.bindVisible(emptyRef, (s) => s.nodes.length === 0);
+exit code 0

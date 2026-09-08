@@ -1,0 +1,57 @@
+$ sed -n 305,360p packages/frontend/prototypes/chat.ts
+stdout:
+        return {
+          description: chips(node?.description ?? ""),
+          notes: chips(node?.notes ?? ""),
+        };
+      }
+    }
+  }
+  function refresh(): void {
+    refreshGraph();
+    const node = tree.get(focus);
+    state.thread = focus;
+    state.depth = state.split ? tree.path(focus).length : 0;
+    state.canDescend = node.activeChild !== null;
+    state.messages = node.thread.messages;
+    state.inFlight = node.thread.inFlight;
+    state.draft = node.draft;
+    state.marks = tree.marks(focus);
+    state.threads = tree.threadChildren(focus).map((child) => ({
+      thread: child.thread,
+      label: actionLabel(child.action),
+    }));
+    state.expanded = expandedFor(focus);
+    state.updates = updatesFor(focus);
+    state.updatePane = updatePane();
+    state.activeMark = node.activeChild;
+    state.anchor = anchor?.thread === focus ? anchor : null;
+    state.popup = popupAt();
+    const activeChild = node.activeChild;
+    if (!activeChild) {
+      state.child = null;
+      return;
+    }
+    const child = tree.get(activeChild);
+    state.child = {
+      thread: activeChild,
+      messages: child.thread.messages,
+      inFlight: child.thread.inFlight,
+      draft: child.draft,
+      expanded: expandedFor(activeChild),
+      updates: updatesFor(activeChild),
+      marks: tree.marks(activeChild),
+      anchor: anchor?.thread === activeChild ? anchor : null,
+    };
+  }
+  /** Where the floating actions go, or null for no popup. They stand in for the
+   * reflect pane wherever it is not on screen: at layer 0, and beside a
+   * selection made in the reflect thread itself, which has no pane of its own.
+   * A passage that already owns a thread offers nothing. */
+  function popupAt(): { x: number; y: number } | null {
+    if (!anchor || !anchorAt) return null;
+    if (overlaps(tree.marks(anchor.thread), anchor)) return null;
+    if (anchor.thread === focus) return state.split ? null : anchorAt;
+    return anchor.thread === tree.get(focus).activeChild ? anchorAt : null;
+  }
+exit code 0

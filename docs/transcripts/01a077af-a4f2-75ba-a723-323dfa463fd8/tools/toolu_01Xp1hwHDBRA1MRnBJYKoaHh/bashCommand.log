@@ -1,0 +1,42 @@
+$ cd /Users/denis.lantsman/src/edulab/packages/e2e && sed -n '455,500p' tests/chat.spec.ts
+stdout:
+  // message like any other, so it needs no header of its own.
+  await expect(taskTranscript(page).locator("li").first()).toContainText(
+    'Selected: "the quick"',
+  );
+  await expect(taskTranscript(page).locator("li").first()).toContainText(
+    "I don't understand this.",
+  );
+});
+test("← climbs back without losing threads or highlights", async ({ page }) => {
+  const backend = await transcript(page, [REPLY]);
+  await selectRange(page, 0, 0, 9);
+  await explainButton(page).click();
+  await expect(threadTranscript(page).locator("li")).toHaveCount(2);
+  await deeper(page).click();
+  await selectRange(page, 1, 0, 5);
+  await quizButton(page).click();
+  await expect(threadTranscript(page).locator("li")).toHaveCount(2);
+  const sent = backend.started.length;
+  await back(page).click();
+  await expect(page.getByText("Layer 1")).toBeVisible();
+  await expect(page.locator("[data-mark]")).toHaveText("the quick");
+  await expect(threadTranscript(page).locator("li")).toHaveCount(2);
+  await deeper(page).click();
+  await expect(page.locator("[data-mark]")).toHaveText("alpha");
+  await deeper(page).click();
+  await expect(page.getByText("Layer 3")).toBeVisible();
+  expect(backend.started).toHaveLength(sent);
+});
+test("nesting goes three deep", async ({ page }) => {
+  const backend = await transcript(page, [REPLY]);
+  await selectRange(page, 0, 0, 9);
+  await explainButton(page).click();
+  await expect(threadTranscript(page).locator("li")).toHaveCount(2);
+  await deeper(page).click();
+  await selectRange(page, 1, 0, 5);
+  await quizButton(page).click();
+  await expect(threadTranscript(page).locator("li")).toHaveCount(2);
+  await deeper(page).click();
+  const sent = backend.started.length;
+exit code 0

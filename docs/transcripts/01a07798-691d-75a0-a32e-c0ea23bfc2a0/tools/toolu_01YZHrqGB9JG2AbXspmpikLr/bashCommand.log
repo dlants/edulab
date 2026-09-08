@@ -1,0 +1,14 @@
+$ cd /Users/denis.lantsman/src/edulab && grep -rn "failed" packages/ --include=*.ts -l && git status --short
+stdout:
+packages/frontend/view.ts
+packages/frontend/prototypes/chat.ts
+packages/frontend/thread.ts
+packages/e2e/tests/persistence.spec.ts
+packages/e2e/tests/graph.spec.ts
+ M packages/e2e/tests/chat.spec.ts
+ M packages/e2e/tests/persistence.spec.ts
+ M packages/frontend/graph-view.ts
+ M packages/frontend/persistence.ts
+ M packages/frontend/prototypes/chat.ts
+ M packages/frontend/view.ts
+exit code 0

@@ -1,0 +1,26 @@
+$ grep -n "updates\b\|updateClass\|GraphUpdate\|split" packages/frontend/view.ts
+stdout:
+41: * same turns updates nodes rather than teaching us anything new. */
+60:export type GraphUpdate =
+68:/** The updates over one thread, keyed by the index of the turn that triggered
+70:export type Updates = ReadonlyMap<number, GraphUpdate>;
+78:  /** False at layer 0 (the bare task transcript); true for the two-pane split. */
+79:  split: boolean;
+103:  /** The background graph updates over this transcript. */
+104:  updates: Updates;
+170:const updateClass = cls("update");
+198:.${appClass}[data-split="true"] .${bodyClass} {
+420:.${updateClass} {
+568:  update: GraphUpdate | null;
+585:    .flatMap((block) => block.split("\n"))
+635:      <div class="${updateClass}" data-update data-ref="${updateRef}">
+731:function updateStatus(update: GraphUpdate | null): string {
+757:  updates: Updates;
+843:            update: s.updates.get(i) ?? null,
+1060:            update: s.updates.get(i) ?? null,
+1083:      if (!s.split) return undefined;
+1279:    this.b.bindContainerAttr("data-split", (s) => (s.split ? "true" : "false"));
+1281:    this.b.bindDisabled(forwardRef, (s) => s.split && !s.canDescend);
+1283:    this.b.bindVisible(backRef, (s) => s.split && s.tab === "threads");
+1387:  // The message text is split across pre/mark/post spans, so a node-local
+exit code 0

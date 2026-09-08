@@ -1,0 +1,4 @@
+$ cd /Users/denis.lantsman/src/edulab && grep -n "keyed off" plans/2026-09-05-interaction-graph-updates.md
+stdout:
+251:- `RunThreadOpts` gains `onChange?: (messages) => void`, forwarded to the underlying `Thread`. `chat.ts` holds `Map<string, GraphUpdate>` keyed off `at` (the child thread for an opening, so the chip hangs on the origin header; thread and index for a turn), projects the update thread's tool calls into `GraphChange`s, and the transcript view renders the chip for the message at that address; a thread's opening hangs its chip on the origin header the pane already draws.
+exit code 0

@@ -1,0 +1,96 @@
+$ cd /Users/denis.lantsman/src/edulab && cat packages/backend/package.json packages/backend/app.ts vite.config.ts; ls ~/src/gatherus
+stdout:
+{
+  "name": "@edulab/backend",
+  "version": "0.0.1",
+  "license": "UNLICENSED",
+  "type": "module",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.115.0",
+    "@edulab/iso": "*",
+    "@fastify/websocket": "^11.3.0",
+    "dotenv": "^17.4.1",
+    "fastify": "^5.8.4"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/ws": "^8.18.1",
+    "typescript": "^5.9.3"
+  },
+  "scripts": {
+    "dev": "node --watch app.ts"
+  }
+}
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import dotenv from "dotenv";
+import Fastify from "fastify";
+import { registerSocket } from "./socket.ts";
+dotenv.config({
+  path: path.join(path.dirname(fileURLToPath(import.meta.url)), "../../.env"),
+});
+async function run() {
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) throw new Error("Missing required env var: ANTHROPIC_API_KEY");
+  const password = process.env.APP_PASSWORD;
+  if (!password) throw new Error("Missing required env var: APP_PASSWORD");
+  const app = Fastify({ logger: true });
+  await registerSocket(app, apiKey, password);
+  const port = Number(process.env.PORT ?? 3000);
+  await app.listen({ port, host: "0.0.0.0" });
+}
+run().catch((err: unknown) => {
+  console.error(err);
+  process.exit(1);
+});
+import { defineConfig, type Plugin } from "vite";
+// Prototype routes are real paths, so a deep link or a reload has to land on
+// index.html rather than a 404.
+function spaFallback(): Plugin {
+  return {
+    name: "spa-fallback",
+    configureServer(server) {
+      return () => {
+        server.middlewares.use((req, _res, next) => {
+          if (req.headers.accept?.includes("text/html") && req.url) {
+            req.url = "/index.html";
+          }
+          next();
+        });
+      };
+    },
+  };
+}
+export default defineConfig({
+  appType: "mpa",
+  plugins: [spaFallback()],
+  root: "packages/frontend",  base: "/",
+  build: {
+    target: "esnext",
+    outDir: "dist",
+    minify: true,
+  },
+  server: {
+    host: "localhost",
+    port: Number(process.env.VITE_PORT ?? 5173),
+    strictPort: true,
+    proxy: {
+      "/api/": {
+        target: process.env.API_TARGET ?? "http://localhost:3000",
+        secure: false,
+        ws: true,
+      },
+    },
+  },
+});
+context.md
+custom-fields-to-person-sheet
+example.txt
+export
+main
+new-worktree.sh
+sample-attendee-import.csv
+sheets
+sms-channel
+todo.md
+exit code 0

@@ -1,0 +1,25 @@
+$ cd ~/.claude/skills/browser && pkgx pnpm exec tsx scripts/browser.ts "
+load http://localhost:5173/?sample=74979366
+sleep 1500
+eval
+const app=document.querySelector('#app > div'); const body=app.children[1]; const pane=body.firstElementChild;
+const msgs=[...document.querySelectorAll('[data-role]')]; const last=msgs[msgs.length-1];
+const before=pane.scrollTop; pane.scrollTop=400;
+return JSON.stringify({
+ bodyH:Math.round(body.getBoundingClientRect().height), bodyOverflow:getComputedStyle(body).overflowY,
+ paneScrolls: pane.scrollHeight>pane.clientHeight, paneScrollTop: pane.scrollTop,
+ pageScroll: document.documentElement.scrollHeight<=innerHeight,
+ lastClipped:last.dataset.clipped, lastOverflowing:last.dataset.overflowing, lastMore:last.querySelector('[data-more]').textContent,
+ lastToggle:getComputedStyle(last.querySelector('button')).display,
+ firstClipped:msgs[0].dataset.clipped});
+endeval
+screenshot edulab3.png
+"
+stdout:
+Loading http://localhost:5173/?sample=74979366...
+Sleeping for 1500ms...
+Evaluating code in page context...
+Eval result: {"bodyH":673,"bodyOverflow":"hidden","paneScrolls":true,"paneScrollTop":400,"pageScroll":true,"lastOverflowing":"true","lastMore":"","lastToggle":"block","firstClipped":"true"}
+Taking screenshot /tmp/magenta/edulab3.png...
+Script completed successfully!
+exit code 0

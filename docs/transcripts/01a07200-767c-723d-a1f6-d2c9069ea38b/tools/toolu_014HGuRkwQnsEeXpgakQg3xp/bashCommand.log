@@ -1,0 +1,41 @@
+$ cd /Users/denis.lantsman/src/edulab && grep -rn "new Thread\|from \"./thread\|thread.ts\|yieldSchema" packages --include=*.ts | grep -v node_modules
+stdout:
+packages/frontend/prompt.ts:2:import type { Message } from "./thread.ts";
+packages/frontend/selection.ts:1:import { type Message, messageText } from "./thread.ts";
+packages/frontend/threads.ts:4:import type { Tool, TurnResult } from "./thread.ts";
+packages/frontend/threads.ts:5:import { type Socket, Thread } from "./thread.ts";
+packages/frontend/threads.ts:15:  yieldSchema?: Anthropic.Tool.InputSchema | "text";
+packages/frontend/threads.ts:58:    const thread = new Thread(this.socket, {
+packages/frontend/threads.ts:67:      yieldSchema: opts.yieldSchema,
+packages/frontend/view.ts:17:import { type Message, messageText } from "./thread.ts";
+packages/frontend/prototypes/chat.ts:4:import { Thread } from "../thread.ts";
+packages/frontend/prototypes/chat.ts:20:  const tree = new ThreadTree(
+packages/frontend/prototypes/chat.ts:22:    new Thread(socket, { initialTurns: selectedSample()?.turns }),
+packages/frontend/threads.test.ts:5:import { type Socket, Thread } from "./thread.ts";
+packages/frontend/threads.test.ts:6:import { ThreadTree } from "./threads.ts";
+packages/frontend/threads.test.ts:69:  const root = new Thread(socket, { initialTurns: [] });
+packages/frontend/threads.test.ts:70:  const tree = new ThreadTree(socket, root, () => {});
+packages/frontend/threads.test.ts:82:  const child = tree.open(anchor, { type: "quiz" }, { yieldSchema: SCHEMA });
+packages/frontend/thread.test.ts:5:import { type Socket, Thread, type Tool, type ToolResult } from "./thread.ts";
+packages/frontend/thread.test.ts:94:  return { socket, thread: new Thread(socket) };
+packages/frontend/thread.test.ts:194:  const thread = new Thread(socket, {
+packages/frontend/thread.test.ts:287:  const thread = new Thread(socket, {
+packages/frontend/thread.test.ts:370:  const thread = new Thread(socket, {
+packages/frontend/thread.test.ts:399:  const thread = new Thread(socket, {
+packages/frontend/thread.test.ts:435:  const thread = new Thread(socket, {
+packages/frontend/thread.test.ts:463:  const thread = new Thread(socket, { tools: { read } });
+packages/frontend/thread.test.ts:474:  const thread = new Thread(socket, {
+packages/frontend/thread.test.ts:506:  void new Thread(structured, { yieldSchema: REVIEW_SCHEMA }).send("hi");
+packages/frontend/thread.test.ts:512:  void new Thread(text, { yieldSchema: "text" }).send("hi");
+packages/frontend/thread.test.ts:521:  const thread = new Thread(socket, { yieldSchema: REVIEW_SCHEMA });
+packages/frontend/thread.test.ts:536:  const thread = new Thread(socket, { yieldSchema: "text" });
+packages/frontend/thread.test.ts:547:  const thread = new Thread(socket, {
+packages/frontend/thread.test.ts:548:    yieldSchema: REVIEW_SCHEMA,
+packages/frontend/thread.ts:60:  yieldSchema?: Anthropic.Tool.InputSchema | "text";
+packages/frontend/thread.ts:138:  private readonly yieldSchema: Anthropic.Tool.InputSchema | "text" | undefined;
+packages/frontend/thread.ts:147:    this.yieldSchema = opts.yieldSchema;
+packages/frontend/thread.ts:238:    return this.yieldSchema !== undefined && name === YIELD;
+packages/frontend/thread.ts:242:    return this.yieldSchema === "text"
+packages/frontend/thread.ts:249:    if (this.yieldSchema !== undefined) {
+packages/frontend/thread.ts:255:          this.yieldSchema === "text" ? DEFAULT_YIELD_SCHEMA : this.yieldSchema,
+exit code 0

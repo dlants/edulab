@@ -1,0 +1,5 @@
+$ cd /Users/denis.lantsman/src/edulab && perl -0pi -e 's/\{ role: "(user|assistant)", text: ([^}]*) \}/{ type: "text" as const, role: "$1" as const, text: $2 }/g' packages/frontend/prompt.test.ts && npm run typecheck
+stdout:
+> edulab@0.0.1 typecheck
+> npm -w @edulab/iso exec tsc -- --noEmit && npm -w @edulab/frontend exec tsc -- --noEmit && npm -w @edulab/backend exec tsc -- --noEmit && npm -w @edulab/e2e exec tsc -- --noEmit
+exit code 0

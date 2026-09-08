@@ -1,0 +1,43 @@
+$ cd /Users/denis.lantsman/src/edulab && npm run typecheck && npm run lint:fix && npm test
+stdout:
+> edulab@0.0.1 typecheck
+> npm -w @edulab/iso exec tsc -- --noEmit && npm -w @edulab/frontend exec tsc -- --noEmit && npm -w @edulab/backend exec tsc -- --noEmit && npm -w @edulab/e2e exec tsc -- --noEmit
+> edulab@0.0.1 lint:fix
+> biome check --write .
+stderr:
+packages/frontend/prototypes/chat.ts:235:5 
+lint/nursery/noFloatingPromises ━━━━━━━━━━━━━━━━━━━━━━━━━
+  × A "floating" Promise was found, meaning it is not properly handled and could lead to ignored errors or unexpected behavior.
+    233 │       console.error(e);
+    234 │     });
+  > 235 │     queueGraphUpdate(id, index);
+        │     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    236 │   }
+    237 │ 
+  i This happens when a Promise is not awaited, lacks a `.catch` or `.then` rejection handler, or is not explicitly ignored using the `void` operator.
+  i This rule belongs to the nursery group, which means it is not yet stable and may change in the future. Visit https://biomejs.dev/linter/#nursery for more information.
+packages/frontend/prototypes/chat.ts:361:13 lint/nursery/noFloatingPromises ━━━━━━━━━━━━━━━━━━━━━━━━
+  × A "floating" Promise was found, meaning it is not properly handled and could lead to ignored errors or unexpected behavior.
+    359 │             state.anchor = null;
+    360 │      
+       state.query = "";
+  > 361 │             queueGraphUpdate(id, 0 as MessageIdx);
+        │             ^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^
+    362 │   
+          tree
+    363 │ 
+              .get(id)
+  i 
+This happens when a Promise is not awaited, lacks a `.catch` or `.then` rejection handler, or is not explicitly ignored using the `void` operator.
+  i This rule belongs to the nursery group, which means it is not yet stable and may change in the future. Visit https://biomejs.dev/linter/#nursery
+ for more information.
+stdout:
+Checked 52 files in 126ms. Fixed 1 file.
+Found 2 errors.
+stderr:
+check ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  × 
+Some errors were emitted while applying fixes.
+exit code 1

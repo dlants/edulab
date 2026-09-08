@@ -1,0 +1,4 @@
+$ cd /Users/denis.lantsman/src/edulab && (nohup npm run dev > /tmp/edulab-dev.log 2>/dev/null &) ; sleep 6; curl -s -o /dev/null -w "%{http_code}\n" http://localhost:5173/
+stdout:
+200
+exit code 0

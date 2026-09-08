@@ -1,0 +1,143 @@
+$ cd /Users/denis.lantsman/src/edulab && ls plans docs task-samples && git status --short && grep -rn "deploy\|fly.toml\|Dockerfile\|render" --include='*' -l . --exclude-dir=node_modules --exclude-dir=.git
+stdout:
+docs:
+assignment.md
+assignment.pdf
+transcripts
+plans:
+2026-09-04-prototype-scaffolding.md
+2026-09-05-domain-graph.md
+2026-09-05-interaction-graph-updates.md
+2026-09-05-localstorage-persistence.md
+2026-09-05-nested-learning-threads.md
+2026-09-05-thread-tools-yield.md
+2026-09-06-thread-level-interactions.md
+task-samples:
+357dee9a-statsforecast-zero-constraints.json
+37734816-colbert-raptor-rag-design.json
+3890541b-chiller-system-hysys-model.json
+44bbcae8-tile-adhesive-formulation.json
+5b878a60-solidity-guildtoken-audit.json
+72c7ec37-django-event-app-urls.json
+74979366-floating-dock-pontoon.json
+80e08978-quantum-espresso-burai-relaxation.json
+9833484b-c-heap-file-block-storage.json
+aa0cb918-statsforecast-polars-series-lengths.json
+ M notes/deliverable.md
+ M packages/backend/app.ts
+ M packages/backend/socket.ts
+ M packages/e2e/playwright.config.ts
+ M packages/e2e/tests/chat.spec.ts
+ M packages/e2e/tests/graph.spec.ts
+ M packages/e2e/tests/persistence.spec.ts
+ M packages/e2e/tests/smoke.spec.ts
+ M packages/frontend/main.ts
+ M packages/frontend/prototypes/chat.ts
+ M packages/frontend/view.ts
+?? packages/e2e/tests/fixture.ts
+?? packages/frontend/auth.ts
+./.magenta/skills/vamp/skill.md
+./plans/2026-09-05-domain-graph.md
+./plans/2026-09-05-nested-learning-threads.md
+./plans/2026-09-05-localstorage-persistence.md
+./plans/2026-09-05-thread-tools-yield.md
+./plans/2026-09-05-interaction-graph-updates.md
+./plans/2026-09-04-prototype-scaffolding.md
+./plans/2026-09-06-thread-level-interactions.md
+./task-samples/357dee9a-statsforecast-zero-constraints.json
+./task-samples/44bbcae8-tile-adhesive-formulation.json
+./task-samples/72c7ec37-django-event-app-urls.json
+./task-samples/5b878a60-solidity-guildtoken-audit.json
+./task-samples/37734816-colbert-raptor-rag-design.json
+./docs/transcripts/01a06fe2-028f-713c-9d93-de57b1631f51/conversation.jsonl
+./docs/transcripts/01a07039-f345-74ba-8ac2-66d6e0c92aed/conversation.jsonl
+./docs/transcripts/01a06fd9-f5c3-7160-9c5a-9346e82ba68a/conversation.jsonl
+./docs/transcripts/01a07044-33b9-76ef-9127-8aff3d6090ea/conversation.jsonl
+./docs/transcripts/01a07044-33b9-76ef-9127-8aff3d6090ea/tools/toolu_01KSYr9soNFLrcU5fU8nakAJ/bashCommand.log
+./docs/transcripts/01a07044-33b9-76ef-9127-8aff3d6090ea/tools/toolu_017NnMkofkq6mDg9RqPwa1fN/bashCommand.log
+./docs/transcripts/01a06fd9-e266-715c-87e4-4f62556eaab5/conversation.jsonl
+./docs/transcripts/01a071d2-d244-7009-b24a-5271da1b3361/conversation.jsonl
+./docs/transcripts/01a071d2-d244-7009-b24a-5271da1b3361/tools/toolu_011xhWpejMsFGQjEZzZPGaBa/bashCommand.log
+./docs/transcripts/01a071d2-d244-7009-b24a-5271da1b3361/tools/toolu_017X7MnDtU8euR41y5YB3sB4/bashCommand.log
+./docs/transcripts/01a071d2-d244-7009-b24a-5271da1b3361/tools/toolu_01JB2vBcuaBBGWUjvt1fE5an/bashCommand.log
+./docs/transcripts/01a071bf-597d-7589-838a-1dd82a5dabb5/conversation.jsonl
+./docs/transcripts/01a071bf-597d-7589-838a-1dd82a5dabb5/tools/toolu_01GmbscD1DSVdZNKJNSKtha7/bashCommand.log
+./docs/transcripts/01a071bf-597d-7589-838a-1dd82a5dabb5/tools/toolu_018tHH6TZXN99fxM7qt21ndq/bashCommand.log
+./docs/transcripts/01a071bf-597d-7589-838a-1dd82a5dabb5/tools/toolu_01BMVQVJDekoE3bCoCGHowmV/bashCommand.log
+./docs/transcripts/01a071bf-597d-7589-838a-1dd82a5dabb5/tools/toolu_01KywyjPJrgQFwscTMkejsxo/bashCommand.log
+./docs/transcripts/01a071bf-597d-7589-838a-1dd82a5dabb5/tools/toolu_019J5EsmJs7PVZ41YGMfYdNB/bashCommand.log
+./docs/transcripts/01a071bf-597d-7589-838a-1dd82a5dabb5/tools/toolu_01SELPvmqvqgrg9N1P5KdoLb/bashCommand.log
+./docs/transcripts/01a071bf-597d-7589-838a-1dd82a5dabb5/tools/toolu_01UtGSHU1pSaNvUq1hiY9ug6/bashCommand.log
+./docs/transcripts/01a06fb3-fd0b-7519-a8e5-a791777c1090/conversation.jsonl
+./docs/transcripts/01a06fb3-fd0b-7519-a8e5-a791777c1090/tools/toolu_013JBhKtBTKnFq3HXGWZBbhi/bashCommand.log
+./docs/transcripts/01a06fb3-fd0b-7519-a8e5-a791777c1090/tools/toolu_01TSExCvAnQn1yHbn2UmcAU1/bashCommand.log
+./docs/transcripts/01a06fb3-fd0b-7519-a8e5-a791777c1090/tools/toolu_019r329eZYF5Aixucwjk1Q5o/bashCommand.log
+./docs/transcripts/01a06fb3-fd0b-7519-a8e5-a791777c1090/tools/toolu_013qxR8rnfySt8MX6ySh7dE2/bashCommand.log
+./docs/transcripts/01a06fa0-2a7e-700c-a1d7-1d05876ee2bb/conversation.jsonl
+./docs/transcripts/01a07002-c45e-74bf-8535-1f74aeff3421/conversation.jsonl
+./docs/transcripts/01a06fe0-a518-720b-822b-7fe833daf692/conversation.jsonl
+./docs/transcripts/01a071d2-d246-7144-865d-9a403cc90cf5/conversation.jsonl
+./docs/transcripts/01a071d3-8170-760f-a2c8-767f91129f02/conversation.jsonl
+./docs/transcripts/01a071d3-8170-760f-a2c8-767f91129f02/tools/toolu_01EqWsoQWnGj7MDMRJBahA2G/bashCommand.log
+./docs/transcripts/01a071d3-8170-760f-a2c8-767f91129f02/tools/toolu_011W8eREX8waoA2YfnNV3u83/bashCommand.log
+./docs/transcripts/01a07039-cd76-72ec-b8e0-3dd95451c722/conversation.jsonl
+./docs/transcripts/01a071cd-d7cb-7540-8cff-8cdf36666435/conversation.jsonl
+./docs/transcripts/01a07040-9e4b-7168-9a48-4df8c29e793f/conversation.jsonl
+./docs/transcripts/01a07040-9e4b-7168-9a48-4df8c29e793f/tools/toolu_01VdR22kcEKDAq4tWNUkACpP/bashCommand.log
+./docs/transcripts/01a07040-9e4b-7168-9a48-4df8c29e793f/tools/toolu_01AtbHh1De5MLeS7PwP3ZPee/bashCommand.log
+./docs/transcripts/01a07040-9e4b-7168-9a48-4df8c29e793f/tools/toolu_01Rwt1wGPSPJq2VCPNLrWWje/bashCommand.log
+./docs/transcripts/01a07040-9e4b-7168-9a48-4df8c29e793f/tools/toolu_0144oDLRK2zDoT1EcXeH5YuV/bashCommand.log
+./docs/transcripts/01a06fb3-fd08-7079-b31e-d25f98902d2b/conversation.jsonl
+./docs/transcripts/01a06fb3-fd08-7079-b31e-d25f98902d2b/tools/toolu_01UsPyYUnt19eCzVyS2kFLon/bashCommand.log
+./docs/transcripts/01a0703b-86b6-7799-9b08-e51121690118/conversation.jsonl
+./docs/transcripts/01a0703b-86b6-7799-9b08-e51121690118/tools/toolu_01Xny4uFjuFwZPWiJoM7FtKD/bashCommand.log
+./docs/transcripts/01a0703b-86b6-7799-9b08-e51121690118/tools/toolu_01GZbyWRxQRmFofYZVt2Wrzp/bashCommand.log
+./docs/transcripts/01a0703b-86b6-7799-9b08-e51121690118/tools/toolu_01TmnHW2tGrjLvTT9zupprZQ/bashCommand.log
+./docs/transcripts/01a0703b-86b6-7799-9b08-e51121690118/tools/toolu_012uZFrbgvMPjeMfED7yiFqz/bashCommand.log
+./docs/transcripts/01a0700b-ae3b-7751-a85f-d886dd9fcfee/conversation.jsonl
+./docs/transcripts/01a0700b-ae3b-7751-a85f-d886dd9fcfee/tools/toolu_015RcfhL1cvHsnB2nUoMis8S/bashCommand.log
+./docs/transcripts/01a0700b-ae3b-7751-a85f-d886dd9fcfee/tools/toolu_01SKtLMAwtyMjpZ93E7HZPWP/bashCommand.log
+./docs/transcripts/01a0700b-ae3b-7751-a85f-d886dd9fcfee/tools/toolu_01QNvJwRf3q9JNMBLXSqakx6/bashCommand.log
+./docs/transcripts/01a0700b-ae3b-7751-a85f-d886dd9fcfee/tools/toolu_016yw5qAZcd6T1TZrncy9cDV/bashCommand.log
+./docs/transcripts/01a0700b-ae3b-7751-a85f-d886dd9fcfee/tools/toolu_01Ew5yNktWtkoTda6oi5ZAHc/bashCommand.log
+./docs/transcripts/01a0700b-ae3b-7751-a85f-d886dd9fcfee/tools/toolu_014cU4Trt3MfMXBBk7UmDDu6/bashCommand.log
+./docs/transcripts/01a0700b-ae3b-7751-a85f-d886dd9fcfee/tools/toolu_01QAeZQByxjEcW8kcKYUQiHp/bashCommand.log
+./docs/transcripts/01a0700b-ae3b-7751-a85f-d886dd9fcfee/tools/toolu_01KfMeaNUKppmLYwasZNkRPe/bashCommand.log
+./docs/transcripts/01a0700b-ae3b-7751-a85f-d886dd9fcfee/tools/toolu_01Q3mBfxjcqBnfVUESs7nuqo/bashCommand.log
+./docs/transcripts/01a06ed7-db07-72f9-a493-ce5b0518444a/conversation.jsonl
+./docs/transcripts/01a071d4-e04d-7288-9714-26caf5e424e0/conversation.jsonl
+./docs/transcripts/01a06fda-0cf1-7626-9b2d-8468390b6c69/conversation.jsonl
+./docs/transcripts/01a06fda-0cf1-7626-9b2d-8468390b6c69/tools/toolu_01HSLuUnbwH3s4pfEHjf2r3o/bashCommand.log
+./docs/transcripts/01a06fda-0cf1-7626-9b2d-8468390b6c69/tools/toolu_01QAANmFyE22UfbrVwA9wobr/bashCommand.log
+./docs/transcripts/01a06fda-0cf1-7626-9b2d-8468390b6c69/tools/toolu_01DDeY69Ug6tA9gVbsyg2TKw/bashCommand.log
+./docs/transcripts/01a071d2-d246-7144-865d-9d65df68851e/conversation.jsonl
+./docs/transcripts/01a071d2-d246-7144-865d-9d65df68851e/tools/toolu_01ARKASPuX9bkym3gth6WZiC/bashCommand.log
+./docs/transcripts/01a06eda-1fbe-74db-890c-0cfd8d8d98a1/conversation.jsonl
+./docs/assignment.md
+./packages/frontend/learning.ts
+./packages/frontend/prompt.test.ts
+./packages/frontend/prompt.ts
+./packages/frontend/threads.ts
+./packages/frontend/view.ts
+./packages/frontend/samples/357dee9a-statsforecast-zero-constraints.json
+./packages/frontend/samples/44bbcae8-tile-adhesive-formulation.json
+./packages/frontend/samples/72c7ec37-django-event-app-urls.json
+./packages/frontend/samples/5b878a60-solidity-guildtoken-audit.json
+./packages/frontend/samples/37734816-colbert-raptor-rag-design.json
+./packages/frontend/selection.test.ts
+./packages/frontend/prototypes/chat.ts
+./packages/frontend/graph.test.ts
+./packages/frontend/graph.ts
+./packages/frontend/threads.test.ts
+./packages/frontend/persistence.ts
+./packages/frontend/thread.test.ts
+./packages/frontend/vamp.ts
+./packages/frontend/thread.ts
+./packages/frontend/citation.ts
+./packages/frontend/graph-view.ts
+./packages/frontend/auth.ts
+./packages/backend/socket.ts
+./packages/e2e/tests/graph.spec.ts
+./packages/e2e/tests/chat.spec.ts
+./packages/e2e/test-results/chat-a-turn-shows-its-grap-ab735-orking-then-what-it-changed/error-context.md
+exit code 0

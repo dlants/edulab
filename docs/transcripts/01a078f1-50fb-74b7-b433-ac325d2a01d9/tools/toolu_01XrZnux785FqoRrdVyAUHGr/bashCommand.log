@@ -1,0 +1,8 @@
+$ grep -l "1569\|num_rows_total" /Users/denis.lantsman/src/edulab/docs/transcripts/01a06fe2-9750-7150-8898-a2438b7ee2e2/tools/*/bashCommand.log
+stdout:
+/Users/denis.lantsman/src/edulab/docs/transcripts/01a06fe2-9750-7150-8898-a2438b7ee2e2/tools/toolu_013y4v93yCZk1WHcz67KPQrL/bashCommand.log
+/Users/denis.lantsman/src/edulab/docs/transcripts/01a06fe2-9750-7150-8898-a2438b7ee2e2/tools/toolu_015naDjj1HhXR95VYU8rbdrd/bashCommand.log
+/Users/denis.lantsman/src/edulab/docs/transcripts/01a06fe2-9750-7150-8898-a2438b7ee2e2/tools/toolu_01ERHGrnSxdZ2kYZKSvG2dh1/bashCommand.log
+/Users/denis.lantsman/src/edulab/docs/transcripts/01a06fe2-9750-7150-8898-a2438b7ee2e2/tools/toolu_01QrDBQp1mZTa19etd7nwadp/bashCommand.log
+/Users/denis.lantsman/src/edulab/docs/transcripts/01a06fe2-9750-7150-8898-a2438b7ee2e2/tools/toolu_01ShxUuESqJ58Zu8bwy4oTuh/bashCommand.log
+exit code 0

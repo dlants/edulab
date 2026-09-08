@@ -1,0 +1,6 @@
+$ cd /Users/denis.lantsman/src/edulab && npm run lint:fix
+stdout:
+> edulab@0.0.1 lint:fix
+> biome check --write .
+Checked 55 files in 134ms. Fixed 1 file.
+exit code 0

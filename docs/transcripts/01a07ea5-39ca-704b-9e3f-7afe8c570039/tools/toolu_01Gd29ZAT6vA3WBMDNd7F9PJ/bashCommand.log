@@ -1,0 +1,12 @@
+$ cd ~/src/edulab && render workspace set tea-cskj07t6l47c73bkeek0 --confirm -o text && render services -o text
+stdout:
+Workspace set to: Denis Lantsman's Workspace (tea-cskj07t6l47c73bkeek0)
+NAME                 PROJECT              ENVIRONMENT    TYPE           ID                            
+climbcapacity        climbcapacity        Production     Web Service    srv-cskj5bqj1k6c73bic430      
+gatherus-prod        gatherus             Production     Postgres       dpg-d7ipmaqqqhas7398r1v0-a    
+gatherus             gatherus             Production     Static Site    srv-d7ipuaiqqhas7398vg90      
+gatherus-api         gatherus             Production     Web Service    srv-d7ips0ugvqtc739dj4pg      
+slo-events-deploy    slo-events-deploy    Production     Cron Job       crn-cs6pag88fa8c7390627g      
+dlants.me                                                Static Site    srv-cjjhbanjbvhs73ang5i0      
+goslo.events                                             Static Site    srv-cs6a90q3esus73b7nsjg      
+exit code 0

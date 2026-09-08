@@ -1,0 +1,4 @@
+$ cd /Users/denis.lantsman/src/edulab && git add -A packages plans && git commit -q -m "Stage 1: Origin as a union" && git status --short
+stdout:
+?? notes/deliverable.md
+exit code 0

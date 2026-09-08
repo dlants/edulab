@@ -1,0 +1,24 @@
+$ cd /Users/denis.lantsman/src/edulab && grep -n "PostRender\|scrollIntoView\|bindSlot\|export " packages/frontend/vamp.ts
+stdout:
+4: * bindChecked, bindSlot, bindList) or through child views composed via
+29:export type RequestStatus<T> =
+36:export interface View<State, _Message = never, _Ctx = unknown> {
+50:/** Opaque descriptor returned by show(). Pass to bindSlot; do not inspect. */
+51:export type SlotContent = {
+56:export type KeyedSlotContent = {
+76:export const noop = () => {};
+85:export function show<ChildState, ChildMsg, ChildCtx>(
+104:export function showKeyed<ChildState, ChildMsg, ChildCtx>(
+127:export class Binder<State> {
+281:  bindSlot(ref: Ref, fn: (s: State) => SlotContent | undefined): void {
+476:export class RawHtml {
+484:export function raw(html: string): RawHtml {
+493:export function sanitize(
+521:export class PostRenderEventBus<Event> {
+555:export type Ref = string & { readonly __brand: "Ref" };
+560:export function ref(prefix: string): Ref {
+567:export function cls(prefix: string): string {
+576:export function scrollIntoView(el: HTMLElement): void {
+577:  el.scrollIntoView({ behavior: "smooth", block: "start" });
+581:export function mountStyle(css: string): void {
+exit code 0

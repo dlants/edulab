@@ -1,0 +1,29 @@
+$ cd /Users/denis.lantsman/src/edulab && sed -n 290,315p packages/frontend/view.ts
+stdout:
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  border-left: 1px solid rgba(0, 0, 0, 0.1);
+}
+.${originQuoteClass} {
+  white-space: pre-wrap;
+  border-left: 3px solid #f0b429;
+  margin: 0.4rem 0 0;
+  padding-left: 0.75rem;
+  max-height: 8rem;
+  overflow-y: auto;
+  font-size: 0.9rem;
+  opacity: 0.8;
+}
+.${threadActionClass} {
+  white-space: pre-wrap;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+.${composerClass} textarea {
+  flex: 1;
+  font: inherit;
+  padding: 0.5rem;
+  resize: vertical;
+}
+exit code 0

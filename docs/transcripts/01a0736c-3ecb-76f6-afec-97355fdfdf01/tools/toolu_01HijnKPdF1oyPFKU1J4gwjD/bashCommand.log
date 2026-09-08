@@ -1,0 +1,632 @@
+$ cd /Users/denis.lantsman/src/edulab && python3 - <<'EOF'
+import re
+p='packages/frontend/thread.ts'; s=open(p).read()
+s=s.replace('''/** A tool the thread can run, client side. */''','''/** A tool the thread can run, client side. */''')
+s=s.replace('''export type Message =''','''/** Keys a set of tools by name. `Record<ToolName, Tool>` is a mapped type over
+ * a branded string, so an object literal cannot be written for it directly. */
+export function toolset(
+  ...tools: ReadonlyArray<Tool>
+): Record<ToolName, Tool> {
+  return Object.fromEntries(tools.map((t) => [t.spec.name, t]));
+}
+
+/** One entry of the derived transcript: a block, not a turn. A single agent
+ * turn can produce prose, a tool call, and more prose, and the transcript shows
+ * it that way. */
+export type Message =''',1)
+s=s.replace('''/** One entry of the derived transcript: a block, not a turn. A single agent
+ * turn can produce prose, a tool call, and more prose, and the transcript shows
+ * it that way. */
+/** Keys''','''/** Keys''')
+open(p,'w').write(s)
+
+p='packages/frontend/thread.test.ts'; s=open(p).read()
+s=s.replace('''    tools: {
+      read: tool("read", async () => ({ status: "ok", text: "contents" })),
+    },''','''    tools: toolset(
+      tool("read", async () => ({ status: "ok", text: "contents" })),
+    ),''')
+s=s.replace('''    tools: {
+      boom: tool("boom", () => Promise.reject(new Error("nope"))),
+    },''','''    tools: toolset(tool("boom", () => Promise.reject(new Error("nope")))),''')
+s=s.replace('''tools: { read: tool("read", async () => ({ status: "ok", text: "ok" })) },''','''tools: toolset(tool("read", async () => ({ status: "ok", text: "ok" }))),''')
+s=s.replace('''tools: { read } });''','''tools: toolset(read) });''')
+s=s.replace('''tools: { read: tool("read", async () => ({ status: "ok", text: "abc" })) },''','''tools: toolset(tool("read", async () => ({ status: "ok", text: "abc" }))),''')
+s=s.replace('''import { type Socket, Thread, type Tool, type ToolResult } from "./thread.ts";''','''import {
+  type Socket,
+  Thread,
+  type Tool,
+  type ToolResult,
+  toolset,
+} from "./thread.ts";''')
+open(p,'w').write(s)
+
+p='packages/frontend/graph-tools.ts'; s=open(p).read()
+s=s.replace('''const byName = (tools: ReadonlyArray<Tool>): Record<ToolName, Tool> =>
+  Object.fromEntries(tools.map((tool) => [tool.spec.name, tool]));
+
+''','')
+s=s.replace('byName([getTool(graph)])','toolset(getTool(graph))')
+s=s.replace('''byName([
+    getTool(graph),
+    putNodesTool(graph),
+    putEdgesTool(graph),
+    deleteTool(graph),
+  ])''','''toolset(
+    getTool(graph),
+    putNodesTool(graph),
+    putEdgesTool(graph),
+    deleteTool(graph),
+  )''')
+s=s.replace('''import type { Tool, ToolName, ToolResult } from "./thread.ts";''','''import { type Tool, type ToolName, type ToolResult, toolset } from "./thread.ts";''')
+open(p,'w').write(s)
+EOF
+sed -i '' 's/    "put_nodes",\n    "put_edges",//' packages/frontend/graph-tools.test.ts
+python3 - <<'EOF'
+p='packages/frontend/graph-tools.test.ts'; s=open(p).read()
+s=s.replace('''    "delete",
+    "get",
+    "put_nodes",
+    "put_edges",''','''    "delete",
+    "get",
+    "put_edges",
+    "put_nodes",''')
+open(p,'w').write(s)
+EOF
+npm run typecheck && npm test 2>/dev/null && npm run lint
+stdout:
+> edulab@0.0.1 typecheck
+> npm -w @edulab/iso exec tsc -- --noEmit && npm -w @edulab/frontend exec tsc -- --noEmit && npm -w @edulab/backend exec tsc -- --noEmit && npm -w @edulab/e2e exec tsc -- --noEmit
+> edulab@0.0.1 test
+> vitest run
+ RUN  v4.1.11 /Users/denis.lantsman/src/edulab
+ ✓ packages/frontend/graph.test.ts (9 tests) 3ms
+ ✓ packages/frontend/prompt.test.ts (5 tests) 2ms
+ ✓ packages/frontend/selection.test.ts (8 tests) 2ms
+ ✓ packages/frontend/graph-tools.test.ts (7 tests) 15ms
+ ✓ packages/frontend/threads.test.ts (2 tests) 11ms
+ ✓ packages/frontend/thread.test.ts (20 tests) 21ms
+ Test Files  6 passed (6)
+      Tests  51 passed (51)
+   Start at  14:16:28
+   Duration  181ms (transform 235ms, setup 0ms, import 468ms, tests 54ms, environment 0ms)
+> edulab@0.0.1 lint
+> biome check .
+stderr:
+packages/frontend/graph-tools.test.ts
+:1:1 assist/source/organizeImports  FIXABLE  ━━━━━━━━━━━━━━━━━━
+  × Sort these imports.
+  > 
+1 │ import 
+type Anthropic from "@anthropic-ai/sdk";
+      │ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 2 │ imp
+ort type { ClientMessage } from "@edul
+ab/iso/protocol.ts";
+  > 3 │ import { expect, it } 
+from "vitest";
+  > 4 │ import {
+ readTools, writeTools } from "./graph-tools.ts";
+  > 5 │ import { KnowledgeGr
+aph, type NodeId } from "./graph.ts";
+      │ ^^^
+^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^
+^^^^^^^^^^^^^
+^^^^
+    6 │ import { type
+ Socket, Thread, ty
+pe ToolName,
+ type ToolR
+esult } from "./
+thread.ts";
+  7 │ 
+  i
+ Safe fix: Organize imports and exports (Biome)
+      2   2 │   import t
+ype { ClientMessage } from "@ed
+ulab/iso/protocol
+.ts";
+      3   3
+ │   import { expect, i
+t } from "vit
+est";
+      4 
+    │ - import·{·readTools,·writeTools·}·
+from·"./graph-tools.ts";
+      5     │ 
+- imp
+ort·{·KnowledgeGra
+ph,·type·Nod
+eId·}·from
+·"./graph.
+ts";
+          4 │ 
++ im
+port·{·Kno
+wledgeGraph,·type·
+NodeId·}·fro
+m·"./graph
+.ts";
+     5 │ + import·{
+·readTool
+s,·writ
+eTools·}·f
+rom·"./graph-tools.
+ts";
+      6   6 │ 
+  import 
+{ type Socket, Thre
+ad, type To
+olName, typ
+e ToolResu
+lt } from "./threa
+d.ts";
+      7 
+  7 │   
+packages/frontend/graph-tools.test.ts format 
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  × Formatter would have printed the following content:
+      4   4 │   import { r
+eadTools, writeTools } from "./graph-tools.ts";
+      5   5 │   import { KnowledgeG
+raph, type NodeId } from "./grap
+h.ts";
+      6     │ - import·{·type·Socket,·Th
+read,·type·ToolName,·typ
+e·ToolResult·}·from·"./thread.ts
+";
+          6 │ + 
+import·{
+          7
+ │ + ··type·Socket,
+          8
+ │ + ··Thread,
+          9 │ + 
+··type·ToolName
+,
+         10 │ + 
+··type·Too
+lResult,
+         11 │ + 
+}·from·"./thr
+ead.ts";
+      7
+  12 │   
+      8  13 │   f
+unction setup() {
+    ······· │ 
+111 116 │   it("unusable 
+input comes b
+ack as an 
+error result rather t
+han throwing"
+, async
+ () => {
+    112 117 │  
+   const {
+ run } = s
+etup();
+    113     │ - 
+··expect(
+(await·run
+("put_nodes",·{·nod
+es:·"not·a·l
+ist"·})).s
+tatus).toBe("error")
+;
+        118 │ +
+ ··expe
+ct((await·run("put_n
+odes",·{·no
+des:·"not
+·a·list"·})).statu
+s).toBe(
+   119 │ + 
+····"error",
+120 │ + ··);
+    114 121 │   
+  expect((await run
+("get", {})
+).status).
+toBe("error");
+    115
+ 122 │     e
+xpect((awai
+t run("delete", { 
+ids: [] })).
+status).to
+Be("error");
+    ·······
+ │ 
+    188 195 │   
+    text: 'e
+ntry 0: created node
+ n0 "closu
+res"',
+    189 
+196 │     }
+);
+    190     │ - ··c
+onst·names·=·s
+ocket.sent
+[0]?.type·===·"sta
+rt"·?·socke
+t.sent[0]
+.params.tools?.map(
+(t)·=>·t.nam
+e)·:·[];
+        197 │ + ··con
+st·names·=
+        198 │ + 
+····socket.sent
+[0]?.type·==
+=·"start"
+        199 │ + ·····
+·?·socket.s
+ent[0].pa
+rams.tools?.map(
+(t)·=>·t.n
+ame)
+200 │ + ·
+·····:·[];
+    191 201 │  
+   expect(names).to
+Contain("put_nodes")
+;
+    192 202 │   
+});
+packages/frontend/graph-tools.ts format 
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  × Formatter would have printed the following content:
+     11  11 │     type N
+odeId,
+     12  12 │   } from "./graph.ts";
+     13     │ - i
+mport·{·type·Tool,·type
+·ToolName,·type
+·ToolResult,·
+toolset·}·from·"./thread.ts";
+         13
+ │ + import·{
+       14 │ + ··type·Tool,
+   15 │ + ··typ
+e·ToolName,
+         16 │ + 
+··type·ToolRes
+ult,
+         17 │ + ··to
+olset,
+         18
+ │ + }·from·"./thread
+.ts";
+     14  19 │   
+     15  20 │   /** Batch
+es are not tr
+ansactional: an entry 
+that fails is
+ reported on
+ its own
+    ······· │ 
+     37  42 │     id: {
+   38  43 │       t
+ype: "string",
+     39     │ - ····description:·"O
+mit·to·create·a·
+new·node;·g
+ive·it·to·u
+pdate·an·existing·one
+.",
+         44 │ +
+ ····de
+scription:
+         45 │ +
+ ······"Om
+it·to·create·a·new·n
+ode;·give·it·
+to·update·an·existi
+ng·one.",
+ 40  46 │     },
+     41 
+ 47 │     titl
+e: {
+    ······· │ 
+     59  65 │   
+  id: {
+     60 
+ 66 │       type: "str
+ing",
+     61   
+  │ - ····description:·"Omit·to·crea
+te·a·new·edge;
+·give·it·t
+o·update·an·existing
+·one.",
+    67 │ + 
+····description:
+   68 │ + ·
+·····"Omit·to·create·
+a·new·edge;
+·give·it·to·update
+·an·existing
+·one.",
+   62  69 │     },
+     63  70
+ │     from
+: { type: "string", d
+escription
+: "Source node id."
+ },
+    ······· │ 
+ 76  83 │   }
+     77  84 │   
+     78     │ - 
+function·
+entry(valu
+e:·unknown,·index:·
+number):·Re
+cord<string
+,·unknown>·|·string
+·{
+         85 │ 
++ function·entry(
+   86 │ + ··
+value:·unknown,
+   87 │ + ·
+·index:·numb
+er,
+         88 │ + ):
+·Record<strin
+g,·unknown>·|·strin
+g·{
+     79  89 │   
+  return typeof 
+value === "
+object" && value !=
+= null && !Ar
+ray.isArray(value)
+     80  90 │   
+    ? (val
+ue as Record<strin
+g, unknown>
+)
+    ······· │ 
+     82  92 │   
+}
+     83  93 │   
+     84     │ - const·te
+xt·=·(value:·
+unknown):·
+string·=>·(typeof·va
+lue·===·"str
+ing"·?·value·:·"");
+         94 │ + 
+const·text·=·(va
+lue:·unknow
+n):·string·=>
+         95 │ 
++ ··typeo
+f·value·===·"string"·?·value·:·"";
+   85  96 │   
+     86 
+ 97 │   function optio
+nalId(value:
+ unknown): string | 
+undefined |
+ null {
+  ······· │ 
+    113 124 │     
+    if (ids.som
+e((id) => typeof id 
+!== "string
+"))
+    114 125 │ 
+          return e
+rr("every i
+d must be
+ a string");
+    115    
+ │ - ····
+··if·(ids.length·===·
+0)·return·er
+r("\"ids\"
+·is·empty");
+126 │ + ··
+····if·(ids
+.length·===·0)·retu
+rn·err('"ids"·is·empty')
+;
+    116 127 │         ret
+urn { status:
+ "ok", text: graph.
+get(ids as 
+GraphId[])
+ };
+    117 128 │     
+  },
+    ······· │ 
+143 154 │         const n
+odes = list(
+input, "nodes");
+    144
+ 155 │      
+   if (typeof nodes 
+=== "string
+") return e
+rr(nodes);
+    145    
+ │ - ·····
+·if·(nodes.length·==
+=·0)·return
+·err("\"no
+des\"·is·empty");
+        156 │ + 
+······if·(nodes.l
+ength·===·0)·r
+eturn·err('"
+nodes"·is·empty');
+    146 157 │       
+  return ok(
+    147 158 │           
+nodes.map((va
+lue, index) => {
+  ······· │ 
+    149 160 │  
+           if (typ
+eof node ==
+= "string") return
+ node;
+    150 161
+ │             co
+nst id = op
+tionalId(node.id);
+    151     │ - 
+··········if·(
+id·===·null
+)·return·`entry·${
+index}:·err
+or:·"id"·must·be·a
+·string`;
+        162 │ + ····
+······if·(i
+d·===·null)
+163 │ + ···
+·········return·`ent
+ry·${index}:·error:·"id"·m
+ust·be·a·string`;
+152 164 │     
+        if (id !== u
+ndefined 
+&& !isNodeId(id))
+    153 165 │   
+            return
+ `entry ${i
+ndex}: error: ${id
+} is not a
+ node id`;
+    ······· │ 
+    195 207
+ │         const edges = list(inpu
+t, "edges");
+    196 208 │         if (t
+ypeof edges ===
+ "string") return er
+r(edges);
+  197     │ - ······
+if·(edges.le
+ngth·===·0)·retur
+n·err("\"ed
+ges\"·is·empty");
+        209 │ + 
+······if·(edge
+s.length·==
+=·0)·return·err('"
+edges"·is·
+empty');
+    198 210 │   
+      ret
+urn ok(
+    199 211 │   
+        edg
+es.map((value, ind
+ex) => {
+    ······· │ 
+    201 213 │             if (t
+ypeof edge === "string") r
+eturn edge;
+    202 214 │          
+   const id 
+= optionalId(edge.
+id);
+    203   
+  │ - ··········if·(id·===·null)·return·`e
+ntry·${index}:
+·error:·"id"·must
+·be·a·strin
+g`;
+        215
+ │ + ··
+········if·(id·===·n
+ull)
+216 │ + ·········
+···return·
+`entry·${index}:·e
+rror:·"id"·
+must·be·a·string`
+;
+    204 217 │   
+  if (id !== unde
+fined && !
+isEdgeId(id))
+    205 
+218 │       
+        return `en
+try ${inde
+x}: error: ${id} i
+s not an e
+dge id`;
+    ······· │ 
+233 246 │      
+   const ids = list
+(input, "id
+s");
+    234 247 │    
+     if (typ
+eof ids === "strin
+g") return
+ err(ids);
+    235   
+  │ - ···
+···if·(ids.length·
+===·0)·retu
+rn·err("\"ids\"·is
+·empty");
+        248 │ + ···
+···if·(ids.
+length·===·0)·ret
+urn·err('"
+ids"·is·empty');
+    236 249 │   
+      return ok(
+    237 250 │   
+        ids.map((
+id, index)
+ => {
+packages/frontend/thread.ts format 
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  × Formatter would have printed the following content:
+     90  90 │   /** Keys 
+a set of tools by name. `Record<ToolName, Tool>` i
+s a mapped type ove
+r
+     91  91 │    * a branded string, 
+so an object literal
+ cannot be w
+ritten for it directly. */
+     92     │ - 
+export·function·toolset(
+   93     │ - ··
+...tools:·ReadonlyArray
+<Tool>
+     94    
+ │ - ):·Record<ToolName,·Tool>·{
+         92 │ + 
+export·function
+·toolset(...tools:·ReadonlyAr
+ray<Tool>):·R
+ecord<ToolName,·Tool>
+·{
+     95  93 │   
+  return Object.fromE
+ntries(tools.
+map((t) => [t.spec.
+name, t]));
+     96  94 │   
+}
+stdout:
+Checked 44 files in 137ms. No fixes applied.
+Found 4 errors.
+stderr:
+check ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  × Some errors were emitted while running checks.
+exit code 1

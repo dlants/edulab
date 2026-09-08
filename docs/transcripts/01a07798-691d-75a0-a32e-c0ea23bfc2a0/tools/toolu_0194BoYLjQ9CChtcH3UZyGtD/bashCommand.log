@@ -1,0 +1,29 @@
+$ cd ~/.claude/skills/browser && pkgx pnpm exec tsx scripts/browser.ts "
+load http://localhost:5173
+sleep 1500
+eval
+window.__errs=[]; window.addEventListener('error',e=>window.__errs.push(String(e.message)));
+const g=window.__graph;
+g.putNode({title:'closures',description:'d',notes:'',level:2});
+g.putNode({title:'scope',description:'d',notes:'',level:3});
+Array.from(document.querySelectorAll('button')).find(b=>b.textContent==='Knowledge graph').click();
+await new Promise(r=>setTimeout(r,500));
+return {nodes:document.querySelectorAll('[data-node]').length, errs:window.__errs, html:document.querySelector('[class^=graph_]')?.outerHTML.slice(0,400)};
+endeval
+"
+stdout:
+Loading http://localhost:5173...
+Sleeping for 1500ms...
+Evaluating code in page context...
+Eval result: {
+  nodes: 0,
+  errs: [],
+  html: '<div data-ref="tab-slot_10" class="graph_0">\n' +
+    '      <div class="graph-canvas_1" data-graph-canvas="" data-ref="graph-canvas_16">\n' +
+    '        <p class="graph-empty_9" data-ref="graph-empty_22" style="display: none;">Nothing here yet.</p>\n' +
+    '        <p class="graph-empty_9" data-ref="graph-pending_23">Laying out the graph…</p>\n' +
+    '        <div data-ref="graph-edges_21"></div>\n' +
+    '        <div class="graph-controls_'
+}
+Script completed successfully!
+exit code 0

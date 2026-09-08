@@ -1,0 +1,38 @@
+$ cd /Users/denis.lantsman/src/edulab && npm run typecheck && npm run lint && cd ~/.claude/skills/browser && pkgx pnpm exec tsx scripts/browser.ts "
+load http://localhost:5173
+sleep 2000
+eval
+const nav=document.querySelector('[class^=nav_]');
+const btn=Array.from(nav.querySelectorAll('button')).find(b=>b.textContent==='?');
+btn.style.display='';
+nav.querySelector('[data-build-status]').textContent='built, 6 failed';
+await new Promise(r=>setTimeout(r,100));
+function d(e){const r=e.getBoundingClientRect();return {t:e.textContent.trim().slice(0,18),x:Math.round(r.x),w:Math.round(r.width),h:Math.round(r.height)}}
+return {scrollW:nav.scrollWidth,kids:Array.from(nav.children).map(d)};
+endeval
+"
+stdout:
+> edulab@0.0.1 typecheck
+> npm -w @edulab/iso exec tsc -- --noEmit && npm -w @edulab/frontend exec tsc -- --noEmit && npm -w @edulab/backend exec tsc -- --noEmit && npm -w @edulab/e2e exec tsc -- --noEmit
+> edulab@0.0.1 lint
+> biome check .
+Checked 55 files in 132ms. No fixes applied.
+Loading http://localhost:5173...
+Sleeping for 2000ms...
+Evaluating code in page context...
+Eval result: {
+  scrollW: 1280,
+  kids: [
+    { t: 'Write your ownFloa', x: 16, w: 299, h: 22 },
+    { t: 'Build knowledge gr', x: 323, w: 329, h: 26 },
+    { t: 'built, 6 failed\n  ', x: 660, w: 99, h: 16 },
+    { t: 'Threads\n          ', x: 767, w: 236, h: 26 },
+    { t: '', x: 1011, w: 35, h: 0 },
+    { t: 'Reset', x: 1053, w: 62, h: 26 },
+    { t: '← Back', x: 0, w: 0, h: 0 },
+    { t: 'Layer 0', x: 1124, w: 42, h: 15 },
+    { t: 'Reflect →', x: 1173, w: 91, h: 26 }
+  ]
+}
+Script completed successfully!
+exit code 0

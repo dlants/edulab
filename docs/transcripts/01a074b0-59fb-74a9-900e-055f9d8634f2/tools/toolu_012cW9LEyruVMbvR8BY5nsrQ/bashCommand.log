@@ -1,0 +1,28 @@
+$ cd /Users/denis.lantsman/src/edulab && sed -n 55,80p packages/frontend/threads.ts
+stdout:
+  get(id: ThreadId): TreeNode {
+    const node = this.threads.get(id);
+    if (!node) throw new Error(`unknown thread ${id}`);
+    return node;
+  }
+  /** Seeds a child thread from the parent's own seed plus its transcript
+   * up to `anchor`, links it in, and makes it the parent's active child. The
+   * caller starts it: the tree does not own the request lifecycle. */
+  open(anchor: Anchor, action: Action, opts: ChildOpts = {}): ThreadId {
+    const parent = this.get(anchor.thread);
+    const thread = new Thread(this.socket, {
+      system: LEARNING_SYSTEM,
+      seed: contextSeed(
+        parent.thread.seed,
+        parent.thread.messages,
+        anchor,
+        opts.graph,
+      ),
+      initialTurns: [
+        {
+          role: "user",
+          content: askTurn(anchor, parent.thread.messages, action),
+        },
+      ],
+      tools: opts.tools,
+exit code 0

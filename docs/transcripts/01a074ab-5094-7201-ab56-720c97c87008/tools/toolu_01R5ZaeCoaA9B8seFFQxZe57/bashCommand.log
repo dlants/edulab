@@ -1,0 +1,12 @@
+$ cd /Users/denis.lantsman/src/edulab && grep -rn "action" packages/frontend/view.ts
+stdout:
+packages/frontend/view.ts:60:  origin: { action: string; quote: string } | null;
+packages/frontend/view.ts:94:const threadActionClass = cls("thread-action");
+packages/frontend/view.ts:527:  action: string;
+packages/frontend/view.ts:551:    const actionRef = ref("thread-action");
+packages/frontend/view.ts:558:      <div class="${threadActionClass}" data-thread-action data-ref="${actionRef}"></div>
+packages/frontend/view.ts:582:    this.b.bindText(actionRef, (s) => s.action);
+packages/frontend/view.ts:637:    const originActionRef: Ref = ref("origin-action");
+packages/frontend/view.ts:661:          <div class="${threadActionClass}" data-focus-action data-ref="${originActionRef}"></div>
+packages/frontend/view.ts:793:    this.b.bindText(originActionRef, (s) => s.origin?.action ?? "");
+exit code 0

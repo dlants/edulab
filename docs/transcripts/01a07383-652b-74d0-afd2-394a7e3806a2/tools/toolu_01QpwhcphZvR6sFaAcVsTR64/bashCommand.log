@@ -1,0 +1,137 @@
+$ cd /Users/denis.lantsman/src/edulab && sed -n 55,120p packages/frontend/threads.ts && grep -n "expanded\|focus\|split\|scroll\|data-\|MARK_CLICKED" packages/frontend/view.ts
+stdout:
+  /** Seeds a child thread from the parent's own seed plus its transcript
+   * up to `anchor`, links it in, and makes it the parent's active child. The
+   * caller starts it: the tree does not own the request lifecycle. */
+  open(anchor: Anchor, action: Action, opts: ChildOpts = {}): ThreadId {
+    const parent = this.get(anchor.thread);
+    const thread = new Thread(this.socket, {
+      system: LEARNING_SYSTEM,
+      seed: seedTurn(
+        parent.thread.seed,
+        parent.thread.messages,
+        anchor,
+        action,
+        opts.graph,
+      ),
+      tools: opts.tools,
+      yieldSchema: opts.yieldSchema,
+    });
+    const id = this.add({ anchor, action }, thread);
+    parent.children.push(id);
+    parent.activeChild = id;
+    return id;
+  }
+  /** What a child thread settled with, once it has yielded. The parent renders
+   * threads it never awaited, so the settled value has to be readable here. */
+  result(id: ThreadId): TurnResult | undefined {
+    return this.get(id).thread.result;
+  }
+  /** The highlights to draw over `id`'s transcript: one per child. */
+  marks(id: ThreadId): Mark[] {
+    return this.get(id).children.map((child) => {
+      const origin = this.get(child).origin;
+      if (!origin) throw new Error("child thread without an origin");
+      return { thread: child, anchor: origin.anchor };
+    });
+  }
+  /** root -> id, for the depth indicator. */
+  path(id: ThreadId): ThreadId[] {
+    const out: ThreadId[] = [];
+    let at: ThreadId | undefined = id;
+    while (at) {
+      out.unshift(at);
+      at = this.get(at).origin?.anchor.thread;
+    }
+    return out;
+  }
+  private add(origin: Origin | null, thread: Thread): ThreadId {
+    const id = `t${this.nextId++}` as ThreadId;
+    thread.onChange = this.onChange;
+    this.threads.set(id, {
+      id,
+      origin,
+      thread,
+      children: [],
+      activeChild: null,
+      draft: "",
+    });
+    return id;
+  }
+}
+41:  /** False at layer 0 (the bare task transcript); true for the two-pane split. */
+42:  split: boolean;
+61:  /** Indices of messages the user has expanded past the collapsed height. */
+62:  expanded: ReadonlySet<number>;
+73:  | { type: "MARK_CLICKED"; thread: ThreadId }
+129:.${appClass}[data-split="true"] .${bodyClass} {
+133:/* Each layer column scrolls on its own: a long transcript on the left must not
+192:.${markClass}[data-live="true"] {
+195:.${markClass}[data-mark] {
+199:.${markClass}[data-mark][data-active="true"] {
+225:.${messageClass}[data-clipped="true"] .${clipClass} {
+242:.${messageClass}[data-overflowing="false"] > .${toggleClass},
+243:.${messageClass}[data-overflowing="false"] > .${moreClass} {
+253:.${messageClass}[data-role="user"] {
+274:.${toolResultClass}[data-status="error"] {
+344:    container.innerHTML = sanitize`<span data-ref="${textRef}"></span>`;
+353:    this.b.bindContainerAttr("data-mark", (s) => s.thread ?? undefined);
+354:    this.b.bindContainerAttr("data-live", (s) => (s.live ? "true" : undefined));
+355:    this.b.bindContainerAttr("data-active", (s) =>
+374:  expanded: boolean;
+406:      <span class="${roleClass}" data-ref="${roleRef}"></span>
+410:        data-ref="${toggleRef}"
+413:      <div class="${clipClass}" data-ref="${clipRef}">
+414:        <span class="${textClass}" data-text data-ref="${textRef}"></span>
+415:        <div class="${toolClass}" data-tool data-ref="${toolRef}">
+416:          <strong data-tool-name data-ref="${toolNameRef}"></strong>
+417:          <pre data-tool-input data-ref="${toolInputRef}"></pre>
+418:          <pre class="${toolResultClass}" data-tool-result data-ref="${toolResultRef}"></pre>
+421:      <div class="${moreClass}" data-more data-ref="${moreRef}"></div>
+453:    this.b.bindAttr(toolResultRef, "data-status", (s) =>
+456:    this.b.bindContainerAttr("data-role", (s) => s.message.role);
+464:    this.b.bindContainerAttr("data-clipped", (s) =>
+465:      s.expanded ? undefined : "true",
+467:    this.measure(initial.expanded);
+472:    this.measure(state.expanded);
+477:   * remembered while expanded, when there is nothing left to measure. */
+478:  private measure(expanded: boolean): void {
+483:        if (this.container.isConnected) this.measure(expanded);
+489:    // scrollHeight is the full content height whether or not the box is
+490:    // clipped, so this reads the same while expanded - which it must, since
+491:    // an expanded message still needs its collapse affordance.
+493:      this.clip.scrollHeight / lineHeight - MAX_MESSAGE_LINES,
+498:      clipped && !expanded ? `… ${this.hiddenLines} more lines` : "";
+507:/** The newest block is expanded by default - it is the one being written, and
+511:  expanded: ReadonlySet<number>,
+515:  return expanded.has(index) !== (index === count - 1);
+531:  expanded: ReadonlySet<number>;
+558:      <div class="${threadActionClass}" data-thread-action data-ref="${actionRef}"></div>
+559:      <ul class="${transcriptClass}" data-ref="${transcriptRef}"></ul>
+561:        <textarea data-ref="${inputRef}" rows="2" placeholder="Follow up…"></textarea>
+562:        <button type="button" data-ref="${sendRef}">Reply</button>
+590:            expanded: lastExpanded(s.expanded, i, s.messages.length),
+648:        <select class="${sampleClass}" data-ref="${sampleRef}"></select>
+650:          <button type="button" data-ref="${threadsTabRef}">Threads</button>
+651:          <button type="button" data-ref="${graphTabRef}">Knowledge graph</button>
+654:        <button type="button" data-ref="${backRef}">← Back</button>
+655:        <span class="${depthClass}" data-ref="${depthRef}"></span>
+656:        <button type="button" data-ref="${forwardRef}"></button>
+658:      <div class="${bodyClass}" data-ref="${bodyRef}">
+660:        <div data-ref="${originRef}">
+661:          <div class="${threadActionClass}" data-focus-action data-ref="${originActionRef}"></div>
+662:          <blockquote class="${originQuoteClass}" data-focus-quote data-ref="${originQuoteRef}"></blockquote>
+664:        <ul class="${transcriptClass}" data-ref="${transcriptRef}"></ul>
+665:        <div class="${composerClass}" data-ref="${composerRef}">
+666:          <textarea data-ref="${inputRef}" rows="2" placeholder="Ask something…"></textarea>
+667:          <button type="button" data-ref="${sendRef}">Send</button>
+670:        <div data-ref="${learningRef}"></div>
+672:      <div class="${graphTabClass}" data-ref="${graphSlotRef}"></div>
+735:            expanded: lastExpanded(s.expanded, i, s.messages.length),
+749:                : { type: "MARK_CLICKED", thread: msg.thread },
+784:    this.b.bindContainerAttr("data-split", (s) => (s.split ? "true" : "false"));
+786:    this.b.bindDisabled(forwardRef, (s) => s.split && !s.canDescend);
+788:    this.b.bindVisible(backRef, (s) => s.split && s.tab === "threads");
+796:      if (!s.split) return undefined;
+889:  // The message text is split across pre/mark/post spans, so a node-local
+exit code 0

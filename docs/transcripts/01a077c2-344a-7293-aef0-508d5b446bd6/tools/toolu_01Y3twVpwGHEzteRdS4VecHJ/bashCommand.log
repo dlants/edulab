@@ -1,0 +1,64 @@
+$ cd /Users/denis.lantsman/src/edulab/packages/frontend && grep -n "export type Mark\|export function anchorText\|export type ThreadId\|export type Anchor" -A 8 threads.ts selection.ts | sed -n 1,60p; sed -n '1095,1125p' view.ts
+stdout:
+selection.ts:5:export type ThreadId = string & { readonly __brand: "ThreadId" };
+selection.ts-6-
+selection.ts-7-/** A selection over the transcript, stored as character offsets into message
+selection.ts-8- * text rather than as a live DOM Range: the browser's Range dies the moment the
+selection.ts-9- * user clicks the learning pane, and the transcript is append-only, so offsets
+selection.ts-10- * stay valid while a message is still streaming.
+selection.ts-11- *
+selection.ts-12- * `msg` is an absolute index into the owning thread's turns, `offset` a
+selection.ts-13- * character offset into that turn's text. */
+--
+selection.ts:17:export type Anchor = { thread: ThreadId; start: Point; end: Point };
+selection.ts-18-
+selection.ts-19-/** A committed highlight: the passage, plus the thread it opens. The opened
+selection.ts-20- * thread's id cannot live on the anchor, because `anchor.thread` already names
+selection.ts-21- * the other end of the edge - the parent. */
+selection.ts:22:export type Mark = { thread: ThreadId; anchor: Anchor };
+selection.ts-23-
+selection.ts-24-/** A run of one message's text: plain, a committed mark, or the live selection
+selection.ts-25- * the user has just dragged and not yet acted on. */
+selection.ts-26-export type Segment = {
+selection.ts-27-  start: number;
+selection.ts-28-  end: number;
+selection.ts-29-  /** The thread this run opens, or null for plain text and the live range. */
+selection.ts-30-  thread: ThreadId | null;
+--
+selection.ts:105:export function anchorText(
+selection.ts-106-  anchor: Anchor,
+selection.ts-107-  messages: ReadonlyArray<Message>,
+selection.ts-108-): string {
+selection.ts-109-  const parts: string[] = [];
+selection.ts-110-  for (let i = anchor.start.msg; i <= anchor.end.msg; i++) {
+selection.ts-111-    const text = messages[i] ? messageText(messages[i]) : "";
+selection.ts-112-    const clip = clipToMessage(anchor, i, text.length);
+selection.ts-113-    if (clip) parts.push(text.slice(clip.start, clip.end));
+      // dispatch rather than return a wrapped message.
+      return show(LearningPane, learningState, ctx, (msg: LearningMsg) =>
+        dispatch({ type: "LEARNING_MSG", msg }),
+      );
+    });
+    this.b.bindValue(inputRef, (s) => s.draft);
+    this.b.bindDisabled(inputRef, (s) => s.inFlight);
+    this.b.bindDisabled(sendRef, (s) => s.inFlight || s.draft.trim() === "");
+  }
+  sync(state: State): void {
+    this.current = state;
+    this.b.sync(state);
+  }
+  destroy(): void {
+    this.unsubscribe();
+    this.b.cleanup();
+    this.container.innerHTML = "";
+  }
+}
+export class AppView implements View<State, Msg, AppCtx> {
+  container: HTMLElement;
+  private b: Binder<State>;
+  /** The latest state, for event handlers that need it outside a binding. */
+  private current: State;
+  private onDocumentClick: (e: MouseEvent) => void;
+  constructor(
+    container: HTMLElement,
+exit code 0

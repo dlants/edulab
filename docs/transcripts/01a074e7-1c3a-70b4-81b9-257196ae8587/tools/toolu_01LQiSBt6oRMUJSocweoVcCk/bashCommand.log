@@ -1,0 +1,102 @@
+$ cd /Users/denis.lantsman/src/edulab && sed -n 975,995p packages/frontend/view.ts && sed -n 100,140p packages/e2e/tests/chat.spec.ts && grep -n "taskTranscript\|threadTranscript\|async function transcript" -A6 packages/e2e/tests/chat.spec.ts | sed -n 1,40p
+stdout:
+/** A count rather than a spinner: this is one model call per turn and it takes
+ * as long as it takes. */
+function buildStatus(build: Build): string {
+  switch (build.type) {
+    case "idle":
+      return "";
+    case "running":
+      return `${build.done} / ${build.total} interactions`;
+    case "done":
+      return build.failed === 0 ? "built" : `built, ${build.failed} failed`;
+  }
+}
+/** Names the layer `→` leads to. */
+function descendLabel(destination: number): string {
+  switch (destination) {
+    case 1:
+      return "Reflect";
+    case 3:
+      return "We must go deeper";
+        for (const event of yieldEvents()) {
+          send({ type: "event", requestId: message.requestId, event });
+        }
+        return;
+      }
+      const first = requests++ === 0;
+      const stream: Anthropic.RawMessageStreamEvent[] = first
+        ? [
+            ...events([REPLY]).slice(0, -1),
+            {
+              type: "content_block_start",
+              index: 1,
+              content_block: {
+                type: "tool_use",
+                id: "call-1",
+                name: "read_file",
+                input: {},
+                caller: { type: "direct" },
+              },
+            },
+            {
+              type: "content_block_delta",
+              index: 1,
+              delta: {
+                type: "input_json_delta",
+                partial_json: '{"path":"a.ts"}',
+              },
+            },
+            { type: "content_block_stop", index: 1 },
+            { type: "message_stop" } as Anthropic.RawMessageStreamEvent,
+          ]
+        : events(["and then"]);
+      for (const event of stream) {
+        send({ type: "event", requestId: message.requestId, event });
+      }
+    });
+  });
+}
+/** Selects characters [start, end) of message `msg` and lets the app capture
+ * it, which it does on mouseup over the transcript. */
+174:  await taskTranscript(page).dispatchEvent("mouseup");
+175-}
+176-
+177-/** The right pane's transcript, present only while a thread is open there. */
+178:function threadTranscript(page: Page) {
+179-  return page.locator("ul").nth(1);
+180-}
+181-
+182-/** The left pane's transcript. The right pane renders its own <ul>. */
+183:function taskTranscript(page: Page) {
+184-  return page.locator("ul").first();
+185-}
+186-
+187-const SENTENCE = "the quick brown fox jumps over the lazy dog";
+188-
+189-/** A transcript with one user message of known text, in learning mode. */
+190:async function transcript(page: Page, chunks: string[] = ["ok"]) {
+191-  const backend = await fakeBackend(page, chunks);
+192-  backend.release();
+193-  await page.goto("/");
+194-  await page.getByRole("textbox").fill(SENTENCE);
+195-  await page.getByRole("textbox").press("Enter");
+196:  await expect(taskTranscript(page).locator("li")).toHaveCount(2);
+197-  await page.getByRole("button", { name: "Reflect" }).click();
+198-  return backend;
+199-}
+200-
+201-test("streams a response into the transcript", async ({ page }) => {
+202-  const backend = await fakeBackend(page, ["Hello", ", world"]);
+--
+214:  await expect(taskTranscript(page).locator("li")).toHaveCount(2);
+215-});
+216-
+217-test("the composer is disabled while a turn is in flight", async ({ page }) => {
+218-  const backend = await fakeBackend(page, ["ok"]);
+219-  await page.goto("/");
+220-
+--
+239:  await expect(taskTranscript(page).locator("li")).toHaveCount(2);
+240-
+exit code 0

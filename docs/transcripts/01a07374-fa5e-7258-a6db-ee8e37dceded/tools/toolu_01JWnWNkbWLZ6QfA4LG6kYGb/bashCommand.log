@@ -1,0 +1,32 @@
+$ cd /Users/denis.lantsman/src/edulab && grep -n "start\|onChange\|async send\|seed" packages/frontend/thread.ts | sed -n '1,60p'
+stdout:
+29:const restartNudge = (attempt: number, max: number) =>
+30:  `You stopped without yielding. Nobody read that message. Complete the task and call the yield tool when you are done. (auto-restart ${attempt}/${max})`;
+69:  seed?: string;
+138:  maxRestarts?: number;
+141:/** Runs a thread to completion with no user in the loop: the seed prompt goes
+143: * ends without yielding is restarted rather than accepted. */
+156:  const maxRestarts = opts.maxRestarts ?? MAX_RESTARTS;
+159:    seed: opts.prompt,
+163:  let result = await thread.start();
+165:    if (attempt > maxRestarts) {
+168:        error: `thread stopped without yielding after ${maxRestarts} restarts`,
+171:    result = await thread.send(restartNudge(attempt, maxRestarts));
+210:  onChange: (() => void) | undefined;
+219:  readonly seed: string | undefined;
+226:    this.seed = opts.seed;
+227:    this.turns = opts.seed
+228:      ? [{ role: "user", content: opts.seed }]
+241:      this.seed ? this.turns.slice(1) : this.turns,
+264:  /** Requests a reply to the turns already present - the seeded first turn of
+266:  start(): Promise<TurnResult> {
+294:        this.onChange?.();
+311:      this.onChange?.();
+363:      type: "start",
+375:    this.onChange?.();
+397:    this.onChange?.();
+407:      case "content_block_start": {
+408:        const block = startBlock(event.content_block);
+429:      case "message_start":
+588:function startBlock(block: Anthropic.ContentBlock): PendingBlock | undefined {
+exit code 0

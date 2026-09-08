@@ -1,0 +1,174 @@
+$ cd /Users/denis.lantsman/src/edulab && npm run typecheck && npm run lint
+stdout:
+> edulab@0.0.1 typecheck
+> npm -w @edulab/iso exec tsc -- --noEmit && npm -w @edulab/frontend exec tsc -- --noEmit && npm -w @edulab/backend exec tsc -- --noEmit && npm -w @edulab/e2e exec tsc -- --noEmit
+> edulab@0.0.1 lint
+> biome check .
+stderr:
+packages/frontend/samples/index.ts
+:1:1 assist/source/organizeImports  FIXABLE  ━━━━━━━━━━━━━━━━━━━━━
+  × Sort these imports.
+   > 1 │ import typ
+e Anthropic from "@anthropic-ai/sdk";
+       │ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^
+   > 2 │ import
+ chiller from "./3890
+541b-chiller-system-hysys-model.json"
+;
+   > 3 │ impo
+rt adhesive from
+ "./44bbcae8-tile-adhesive-fo
+rmulation.json";
+   > 4 │ 
+import guildToken from "./5b87
+8a60-solidity-g
+uildtoken-audit
+.json";
+        ...
+  > 
+10 │ import z
+eroConstraints
+ from "./357dee9a-stats
+forecast-zero-
+constraints.j
+son";
+  > 11 │ impor
+t rag from "./377
+34816-colber
+t-raptor-rag-design.jso
+n";
+       │ ^^^^
+^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^
+^^^^^^
+  12 │ 
+    13 │ /*
+* A canned task tran
+script, so a prototype 
+can be exerc
+ised without
+ spending a
+  i Safe fix: Organize imports and exports (Biome)
+     1  1 │ 
+  import type Anth
+ropic from "@
+anthropic-ai/sdk";
+     2
+    │ - imp
+ort·chiller·from·"./389
+0541b-chiller-sy
+stem-hysys-m
+odel.json";
+        2 │ + impor
+t·guildToken·f
+rom·"./5b878a
+60-solidity-guildtoken-
+audit.json";
+     3  3 │   import 
+adhesive from 
+"./44bbcae8-t
+ile-adhesive-formulation.json";
+     4    │ - import·guildToke
+n·from·"./5b878a
+60-solidity-guildtoken
+-audit.js
+on";
+     5 
+   │ - import·django·
+from·"./72c7ec3
+7-django-ev
+ent-app-urls.json";
+ 6    │ - i
+mport·pontoon
+·from·"./74979366-fl
+oating-dock-p
+ontoon.json";
+     7    │ 
+- import·q
+uantumEspresso·from·".
+/80e08978-quan
+tum-espresso-bu
+rai-relaxati
+on.json";
+    4 │ + import·dj
+ango·from·"./7
+2c7ec37-django-event-
+app-urls.jso
+n";
+        5
+ │ + import·quantumE
+spresso·from
+·"./80e08978-quantum-
+espresso-bur
+ai-relaxati
+on.json";
+        6 │ + 
+import·z
+eroConstraints·f
+rom·"./357de
+e9a-statsfor
+ecast-zero-constraint
+s.json";
+   7 │ + i
+mport·chiller·from·".
+/3890541b-chi
+ller-system
+-hysys-model.json";
+     8  8 │   
+import heapFile from 
+"./9833484b-c
+-heap-fi
+le-block-storage.j
+son";
+     9    │ 
+- import·polarsSe
+ries·from·"
+./aa0cb918-s
+tatsforecast-polars-
+series-lengt
+hs.json";
+    10    │ - 
+import·zeroCo
+nstraints·f
+rom·"./357dee9a-statsfor
+ecast-zero-co
+nstraints.json";
+    11 
+   │ - import·
+rag·from·"./37734816-c
+olbert-raptor
+-rag-design.json";
+        9 │ + 
+import·rag·
+from·"./37734816-colbe
+rt-raptor-rag-des
+ign.json";
+       10 │ + 
+import·pont
+oon·from·"./
+74979366-floating-dock
+-pontoon.json
+";
+       11 │ + 
+import·polarsSeries
+·from·"./aa0
+cb918-statsf
+orecast-polars-serie
+s-lengths.js
+on";
+    12 12 │   
+13 13 │   /** A 
+canned task transcrip
+t, so a prot
+otype can be exercise
+d without sp
+ending a
+stdout:
+Checked 39 files in 109ms. No fixes applied.
+Found 1 error.
+stderr:
+check ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  × Some errors were emitted while running checks.
+exit code 1

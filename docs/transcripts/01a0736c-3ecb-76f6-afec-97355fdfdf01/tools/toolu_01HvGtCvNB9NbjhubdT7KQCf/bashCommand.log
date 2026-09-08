@@ -1,0 +1,13 @@
+$ cd /Users/denis.lantsman/src/edulab && grep -n '\\\$\|\\`' packages/frontend/graph-tools.ts
+stdout:
+151:          if (id === null) return \`entry \${index}: error: "id" must be a string\`;
+153:            return \`entry \${index}: error: \${id} is not a node id\`;
+156:            return \`entry \${index}: error: "level" must be 1, 2, 3 or 4\`;
+203:          if (id === null) return \`entry \${index}: error: "id" must be a string\`;
+205:            return \`entry \${index}: error: \${id} is not an edge id\`;
+207:            return \`entry \${index}: error: "from" and "to" must be node ids\`;
+239:            return \`entry \${index}: error: id must be a string\`;
+242:          return \`entry \${index}: error: \${id} is not a node or edge id\`;
+252:/** \`get\` only: what a learning thread gets. It reads the student model, it
+258:/** \`get\`, \`put_nodes\`, \`put_edges\`, \`delete\`: what the extraction thread gets. */
+exit code 0

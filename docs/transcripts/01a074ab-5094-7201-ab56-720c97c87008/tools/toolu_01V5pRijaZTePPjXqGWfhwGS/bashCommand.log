@@ -1,0 +1,87 @@
+$ cd /Users/denis.lantsman/src/edulab && sed -n 515,600p packages/frontend/view.ts; echo === ; grep -rn "thread-action\|focus-action\|focus-quote\|origin" packages/e2e/tests/*.spec.ts packages/frontend/learning.ts
+stdout:
+  return expanded.has(index) !== (index === count - 1);
+}
+function resultText(message: Message): string {
+  if (message.type !== "tool_use") return "";
+  const result = message.call.result;
+  if (!result) return "";
+  return result.status === "ok" ? result.text : result.error;
+}
+export type ThreadPaneState = {
+  /** What the user asked for when they opened this thread. */
+  action: string;
+  messages: ReadonlyArray<Message>;
+  inFlight: boolean;
+  draft: string;
+  expanded: ReadonlySet<number>;
+};
+export type ThreadPaneMsg =
+  | { type: "DRAFT_CHANGED"; draft: string }
+  | { type: "SUBMIT" }
+  | { type: "TOGGLE_EXPANDED"; index: number };
+/** A learning thread on the right: the passage it came from, its transcript,
+ * and a composer. Read-only as far as selection goes - only the left pane
+ * captures one. */
+class ThreadPane implements View<ThreadPaneState, ThreadPaneMsg> {
+  container: HTMLElement;
+  private b: Binder<ThreadPaneState>;
+  constructor(
+    container: HTMLElement,
+    dispatch: (msg: ThreadPaneMsg) => void,
+    initial: ThreadPaneState,
+  ) {
+    const actionRef = ref("thread-action");
+    const transcriptRef = ref("thread-transcript");
+    const inputRef = ref("thread-input");
+    const sendRef = ref("thread-send");
+    container.className = threadPaneClass;
+    container.innerHTML = sanitize`
+      <div class="${threadActionClass}" data-thread-action data-ref="${actionRef}"></div>
+      <ul class="${transcriptClass}" data-ref="${transcriptRef}"></ul>
+      <div class="${composerClass}">
+        <textarea data-ref="${inputRef}" rows="2" placeholder="Follow up…"></textarea>
+        <button type="button" data-ref="${sendRef}">Reply</button>
+      </div>
+    `;
+    this.container = container;
+    this.b = new Binder(container, initial);
+    const input = this.b.ref<HTMLTextAreaElement>(inputRef);
+    input.addEventListener("input", () => {
+      dispatch({ type: "DRAFT_CHANGED", draft: input.value });
+    });
+    input.addEventListener("keydown", (e: KeyboardEvent) => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        dispatch({ type: "SUBMIT" });
+      }
+    });
+    this.b
+      .ref(sendRef)
+      .addEventListener("click", () => dispatch({ type: "SUBMIT" }));
+    this.b.bindText(actionRef, (s) => s.action);
+    this.b.bindList(transcriptRef, "li", (s) =>
+      s.messages.map((message, i) =>
+        showKeyed(
+          String(i),
+          MessageView,
+          {
+            message,
+            expanded: lastExpanded(s.expanded, i, s.messages.length),
+            segments: segments([], null, i, messageText(message).length),
+            active: null,
+          },
+          {},
+          (msg: MessageMsg) => {
+            if (msg.type === "TOGGLE_EXPANDED")
+              dispatch({ type: "TOGGLE_EXPANDED", index: i });
+          },
+        ),
+      ),
+===
+packages/e2e/tests/chat.spec.ts:229:  const openedWith = page.locator("[data-thread-action]");
+packages/e2e/tests/chat.spec.ts:302:  await expect(page.locator("[data-thread-action]")).toHaveText(
+packages/e2e/tests/chat.spec.ts:397:  await expect(page.locator("[data-focus-action]")).toBeHidden();
+packages/e2e/tests/chat.spec.ts:399:  await expect(page.locator("[data-focus-action]")).toHaveText(
+packages/e2e/tests/chat.spec.ts:402:  await expect(page.locator("[data-focus-quote]")).toHaveText("the quick");
+exit code 0

@@ -1,0 +1,24 @@
+$ cd /Users/denis.lantsman/src/edulab && cat > /tmp/dbg.spec.ts <<'EOF'
+import { test } from "./fixture.ts";
+test("dbg", async ({ page }) => {
+  page.on("console", (m) => console.log("CONSOLE", m.type(), m.text()));
+  page.on("pageerror", (e) => console.log("PAGEERROR", e.message));
+  await page.routeWebSocket("**/api/socket", (ws) => {
+    ws.onMessage((raw) => console.log("WS", String(raw).slice(0, 120)));
+  });
+  await page.goto("/");
+  await page.getByRole("textbox").fill("hi");
+  await page.getByRole("textbox").press("Enter");
+  await page.waitForTimeout(1500);
+});
+EOF
+cp /tmp/dbg.spec.ts packages/e2e/tests/dbg.spec.ts && npx playwright test -c packages/e2e/playwright.config.ts dbg; rm packages/e2e/tests/dbg.spec.ts
+stdout:
+Running 1 test using 1 worker
+CONSOLE debug [vite] connecting...
+CONSOLE debug [vite] connected.
+WS {"type":"start","requestId":"57cc516e-a1c5-4f09-a919-0b3d94922e36","password":"test-password","params":{"model":"claude-
+WS {"type":"start","requestId":"0cc994e1-faf8-4718-8bbd-35a2c8ea72b6","password":"test-password","params":{"model":"claude-
+  ✓  1 packages/e2e/tests/dbg.spec.ts:2:1 › dbg (1.7s)
+  1 passed (5.9s)
+exit code 0

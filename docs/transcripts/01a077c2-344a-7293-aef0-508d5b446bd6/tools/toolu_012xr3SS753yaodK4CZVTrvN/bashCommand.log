@@ -1,0 +1,22 @@
+$ cd /Users/denis.lantsman/src/edulab/packages/e2e && sed -n '141,160p' tests/chat.spec.ts
+stdout:
+async function selectRange(
+  page: Page,
+  msg: number,
+  start: number,
+  end: number,
+) {
+  await selectRangeIn(page, 0, msg, start, end);
+}
+/** As `selectRange`, but over the transcript in the `ul`th pane: 0 is the left
+ * pane, 1 the thread on the right. */
+async function selectRangeIn(
+  page: Page,
+  ul: number,
+  msg: number,
+  start: number,
+  end: number,
+) {
+  await page.evaluate(
+    ({ ul, msg, start, end }) => {
+exit code 0

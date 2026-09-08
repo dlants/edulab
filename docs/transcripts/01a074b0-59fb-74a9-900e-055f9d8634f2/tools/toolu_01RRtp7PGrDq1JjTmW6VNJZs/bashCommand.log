@@ -1,0 +1,11 @@
+$ cd /Users/denis.lantsman/src/edulab && grep -n "walk\|^import\|ThreadTree\|anchorText" packages/frontend/prompt.ts
+stdout:
+1:import { type Anchor, anchorText, type ThreadId } from "./selection.ts";
+2:import type { Message } from "./thread.ts";
+3:import type { ThreadTree } from "./threads.ts";
+57:  const quote = anchorText(anchor, visibleTo(messages, anchor));
+71:function walk(
+72:  tree: ThreadTree,
+80:    ? anchorText(origin.anchor, tree.get(origin.anchor.thread).thread.messages)
+86:  for (const child of node.children) walk(tree, child, depth + 1, out);
+exit code 0

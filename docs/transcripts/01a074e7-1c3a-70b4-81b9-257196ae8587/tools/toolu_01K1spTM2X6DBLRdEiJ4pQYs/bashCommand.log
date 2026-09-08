@@ -1,0 +1,255 @@
+$ cd /Users/denis.lantsman/src/edulab && sed -n 60,110p packages/frontend/thread.ts && sed -n 260,310p packages/frontend/thread.ts && sed -n 30,95p packages/frontend/view.ts && cat packages/frontend/persistence.test.ts
+stdout:
+export type TurnResult =
+  | { type: "completed" }
+  | { type: "yielded"; value: YieldValue }
+  | { type: "error"; message: string };
+export type ThreadOpts = {
+  system?: string;
+  /** Sent after the seed, and rendered: a learning thread's opening ask is
+   * one of these, not part of the seed. */
+  initialTurns?: Anthropic.MessageParam[];
+  /** Content blocks rather than a string when the caller needs `cache_control`
+   * on part of it - a graph update marks its stable prefix. */
+  seed?: string | Anthropic.ContentBlockParam[];
+  tools?: Record<ToolName, Tool>;
+  /** Present => the yield tool is offered. `"text"` uses the default
+   * `{ result: string }` schema and settles with a text value; a schema
+   * settles with the whole input object. */
+  yieldSchema?: Anthropic.Tool.InputSchema | "text";
+};
+/** The key of a tool in the record handed to a thread; also what the model
+ * sends back as `tool_use.name`. */
+export type ToolName = string & { readonly __brand: "ToolName" };
+export type ToolResult =
+  | { status: "ok"; text: string }
+  | { status: "error"; error: string };
+/** A tool the thread can run, client side. */
+export type Tool = {
+  spec: Anthropic.Tool;
+  execute(input: Record<string, unknown>): Promise<ToolResult>;
+};
+/** Keys a set of tools by name. `Record<ToolName, Tool>` is a mapped type over
+ * a branded string, so an object literal cannot be written for it directly. */
+export function toolset(...tools: ReadonlyArray<Tool>): Record<ToolName, Tool> {
+  return Object.fromEntries(tools.map((t) => [t.spec.name, t]));
+}
+/** One entry of the derived transcript: a block, not a turn. A single agent
+ * turn can produce prose, a tool call, and more prose, and the transcript shows
+ * it that way. */
+export type Message =
+  | { type: "text"; role: "user" | "assistant"; text: string }
+  | { type: "tool_use"; role: "assistant"; call: ToolCall };
+/** A position in a thread's `messages`. Branded because it is an identifier -
+ * half of the `(thread, index)` address an interaction and a citation are
+ * written as - and only ever produced by reading a real position. */
+export type MessageIdx = number & { readonly __brand: "MessageIdx" };
+  private readonly socket: Socket;
+  private readonly system: string;
+  private readonly tools: Record<ToolName, Tool>;
+  /** Present => the yield tool is offered and the turn can settle with data. */
+  private readonly yieldSchema: Anthropic.Tool.InputSchema | "text" | undefined;
+  private settled: TurnResult | undefined;
+  /** Turn 0 when present: sent like any other turn, never rendered. */
+  readonly seed: string | Anthropic.ContentBlockParam[] | undefined;
+  constructor(socket: Socket, opts: ThreadOpts = {}) {
+    this.socket = socket;
+    this.system = opts.system ?? SYSTEM;
+    this.tools = opts.tools ?? {};
+    this.yieldSchema = opts.yieldSchema;
+    this.seed = opts.seed;
+    this.turns = [
+      ...(opts.seed ? [{ role: "user" as const, content: opts.seed }] : []),
+      ...(opts.initialTurns ?? []),
+    ];
+    socket.addEventListener("message", (e: MessageEvent<string>) => {
+      this.handleFrame(JSON.parse(e.data) as ServerFrame);
+    });
+  }
+  /** The derived transcript: the log flattened into blocks, plus whatever is
+   * currently streaming. The log stays the wire format; nothing is ever
+   * converted back out of `Message`. */
+  get messages(): ReadonlyArray<Message> {
+    if (this.cache?.version === this.version) return this.cache.messages;
+    const messages = project(
+      this.seed ? this.turns.slice(1) : this.turns,
+      this.pending?.blocks,
+    );
+    this.cache = { version: this.version, messages };
+    return messages;
+  }
+  /** The committed wire log minus the seed turn: what a snapshot stores and
+   * what `initialTurns` restores. Turns still streaming are not in it. */
+  get log(): ReadonlyArray<Anthropic.MessageParam> {
+    return this.seed ? this.turns.slice(1) : this.turns;
+  }
+  get systemPrompt(): string {
+    return this.system;
+  }
+  get inFlight(): boolean {
+    return this.running;
+  }
+  /** The settled yield, once the thread has produced one. */
+  get result(): TurnResult | undefined {
+  ref,
+  sanitize,
+  scrollIntoView,
+  show,
+  showKeyed,
+  type View,
+} from "./vamp.ts";
+/** The sample-transcript batch. `done` is terminal: a second pass over the
+ * same turns updates nodes rather than teaching us anything new. */
+export type Build =
+  | { type: "idle" }
+  | { type: "running"; done: number; total: number; failed: number }
+  | { type: "done"; failed: number };
+/** What the background graph update for one interaction is doing, shown under
+ * the turn that triggered it: a system quietly building a model of the user is
+ * exactly the thing that should be visible where it happened. */
+export type GraphUpdate =
+  | { type: "running" }
+  | { type: "done"; changes: ReadonlyArray<GraphChange> };
+/** The updates over one thread, keyed by the index of the turn that triggered
+ * each. Derived: losing it loses nothing the graph does not already hold. */
+export type Updates = ReadonlyMap<number, GraphUpdate>;
+export type State = {
+  messages: ReadonlyArray<Message>;
+  /** The id of the canned transcript in play, empty for a hand-written one. */
+  sample: string;
+  inFlight: boolean;
+  draft: string;
+  /** False at layer 0 (the bare task transcript); true for the two-pane split. */
+  split: boolean;
+  /** How deep in the tree the left pane is: 0 at layer 0. */
+  depth: number;
+  /** Whether `→` can move deeper, i.e. there is something to move left. */
+  canDescend: boolean;
+  /** The thread whose transcript this pane shows; the live selection is over it. */
+  thread: ThreadId;
+  /** Committed highlights over this transcript. */
+  marks: ReadonlyArray<Mark>;
+  /** The mark whose thread the right pane is showing, drawn emphasized. */
+  activeMark: ThreadId | null;
+  anchor: Anchor | null;
+  query: string;
+  /** Which top-level tab is showing. State, not a route: a page load would
+   * discard the graph. */
+  tab: "threads" | "graph";
+  graph: GraphState;
+  /** The sample-transcript batch: one graph update per loaded user turn. */
+  build: Build;
+  /** Indices of messages the user has expanded past the collapsed height. */
+  expanded: ReadonlySet<number>;
+  /** The background graph updates over this transcript. */
+  updates: Updates;
+  /** The active child thread, shown on the right when nothing is selected. */
+  child: ThreadPaneState | null;
+};
+export type Msg =
+  | { type: "DRAFT_CHANGED"; draft: string }
+  | { type: "SUBMIT" }
+  | { type: "BUILD" }
+  | { type: "GO_DEEPER" }
+  | { type: "GO_BACK" }
+import { expect, it } from "vitest";
+import {
+  interactionAddresses,
+  type ThreadSnapshot,
+  threadSnapshots,
+} from "./persistence.ts";
+import type { Anchor, ThreadId } from "./selection.ts";
+import { type Socket, Thread } from "./thread.ts";
+import { ThreadTree } from "./threads.ts";
+const socket: Socket = { send() {}, addEventListener() {} };
+function anchorInto(thread: ThreadId, msg: number): Anchor {
+  return {
+    thread,
+    start: { msg, offset: 0 },
+    end: { msg, offset: 5 },
+  };
+}
+/** A root with three committed turns and two learning children, the second
+ * of them active. */
+function setup() {
+  const root = new Thread(socket, {
+    initialTurns: [
+      { role: "user", content: "sample ask" },
+      { role: "assistant", content: "sample reply" },
+      { role: "user", content: "my own follow up" },
+    ],
+  });
+  const tree = new ThreadTree(socket, root, () => {});
+  const first = tree.open(anchorInto(tree.root, 1), { type: "explain" });
+  const second = tree.open(anchorInto(tree.root, 2), { type: "quiz" });
+  tree.get(tree.root).activeChild = second;
+  tree.get(tree.root).draft = "half typed";
+  return { tree, first, second };
+}
+function restore(tree: ThreadTree): {
+  tree: ThreadTree;
+  snapshots: ThreadSnapshot[];
+} {
+  const snapshots = JSON.parse(
+    JSON.stringify(threadSnapshots(tree)),
+  ) as ThreadSnapshot[];
+  return {
+    snapshots,
+    tree: ThreadTree.restore(
+      socket,
+      snapshots,
+      tree.root,
+      tree.nextThreadId,
+      () => {},
+      (s) =>
+        new Thread(socket, {
+          system: s.system,
+          seed: s.seed,
+          initialTurns: s.log,
+        }),
+    ),
+  };
+}
+it("round-trips a tree with its structure, drafts and transcripts", () => {
+  const { tree, first, second } = setup();
+  const restored = restore(tree).tree;
+  expect(restored.root).toBe(tree.root);
+  expect(restored.path(second)).toEqual(tree.path(second));
+  expect(restored.marks(tree.root)).toEqual(tree.marks(tree.root));
+  expect(restored.get(tree.root).activeChild).toBe(second);
+  expect(restored.get(tree.root).draft).toBe("half typed");
+  for (const id of [tree.root, first, second]) {
+    expect(restored.get(id).thread.messages).toEqual(
+      tree.get(id).thread.messages,
+    );
+    expect(restored.get(id).thread.seed).toEqual(tree.get(id).thread.seed);
+  }
+});
+it("does not re-mint an id over a restored one", () => {
+  const { tree } = setup();
+  const restored = restore(tree).tree;
+  const child = restored.open(anchorInto(restored.root, 0), {
+    type: "explain",
+  });
+  expect(child).toBe("t3");
+});
+it("lists the root's interactions first, then each child's seeded ask", () => {
+  const { tree, first, second } = setup();
+  const { snapshots } = restore(tree);
+  expect(interactionAddresses(snapshots, tree.root, true, 1)).toEqual([
+    { thread: tree.root, index: 0 },
+    { thread: tree.root, index: 2 },
+    { thread: first, index: 0 },
+    { thread: second, index: 0 },
+  ]);
+});
+it("excludes the sample's own turns unless a build was started", () => {
+  const { tree, first, second } = setup();
+  const { snapshots } = restore(tree);
+  expect(interactionAddresses(snapshots, tree.root, false, 1)).toEqual([
+    { thread: tree.root, index: 2 },
+    { thread: first, index: 0 },
+    { thread: second, index: 0 },
+  ]);
+});
+exit code 0

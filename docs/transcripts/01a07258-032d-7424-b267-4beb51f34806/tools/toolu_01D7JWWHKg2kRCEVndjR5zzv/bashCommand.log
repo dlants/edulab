@@ -1,0 +1,139 @@
+$ cd /Users/denis.lantsman/src/edulab && grep -n "^export\|^  bind\|^  ref\|^  sync\|^  cleanup\|^export function\|^export class\|^export type" packages/frontend/vamp.ts && echo "=== VIEW.TS ===" && grep -n "^export\|^class\|^const .*Class = cls\|^function\|  private b" packages/frontend/view.ts && echo "=== samples ===" && cat packages/frontend/samples/index.ts && echo "=== selection ===" && grep -n "^export" packages/frontend/selection.ts
+stdout:
+29:export type RequestStatus<T> =
+36:export interface View<State, _Message = never, _Ctx = unknown> {
+38:  sync(state: State): void;
+51:export type SlotContent = {
+56:export type KeyedSlotContent = {
+76:export const noop = () => {};
+85:export function show<ChildState, ChildMsg, ChildCtx>(
+104:export function showKeyed<ChildState, ChildMsg, ChildCtx>(
+127:export class Binder<State> {
+140:  ref<T extends HTMLElement = HTMLElement>(name: Ref): T {
+148:  sync(state: State): void {
+153:  cleanup(): void {
+160:  bindText(ref: Ref, fn: (s: State) => string): void {
+169:  bindClass(refOrEl: Ref | HTMLElement, fn: (s: State) => string): void {
+179:  bindVisible(ref: Ref, fn: (s: State) => boolean): void {
+189:  bindStyle(ref: Ref, fn: (s: State) => Record<string, string>): void {
+209:  bindValue(ref: Ref, fn: (s: State) => string): void {
+225:  bindChecked(ref: Ref, fn: (s: State) => boolean): void {
+234:  bindDisabled(ref: Ref, fn: (s: State) => boolean): void {
+245:  bindAttr(ref: Ref, attr: string, fn: (s: State) => string | undefined): void {
+257:  bindContainerAttr(attr: string, fn: (s: State) => string | undefined): void {
+269:  bindSlot(ref: Ref, fn: (s: State) => SlotContent | undefined): void {
+311:  bindList(
+464:export class RawHtml {
+472:export function raw(html: string): RawHtml {
+481:export function sanitize(
+509:export class PostRenderEventBus<Event> {
+543:export type Ref = string & { readonly __brand: "Ref" };
+548:export function ref(prefix: string): Ref {
+555:export function cls(prefix: string): string {
+564:export function scrollIntoView(el: HTMLElement): void {
+569:export function mountStyle(css: string): void {
+=== VIEW.TS ===
+30:export type State = {
+56:export type Msg =
+67:const appClass = cls("app");
+68:const transcriptClass = cls("transcript");
+69:const messageClass = cls("message");
+70:const roleClass = cls("role");
+71:const composerClass = cls("composer");
+72:const paneClass = cls("pane");
+73:const navClass = cls("nav");
+74:const depthClass = cls("depth");
+75:const markClass = cls("mark");
+76:const textClass = cls("text");
+77:const toolClass = cls("tool");
+78:const toolResultClass = cls("tool-result");
+79:const threadPaneClass = cls("thread-pane");
+80:const threadActionClass = cls("thread-action");
+81:const bodyClass = cls("body");
+82:const originQuoteClass = cls("origin-quote");
+83:const sampleClass = cls("sample");
+84:const spacerClass = cls("spacer");
+254:class SegmentView implements View<SegmentState, SegmentMsg> {
+256:  private b: Binder<SegmentState>;
+299:class MessageView implements View<MessageState, SegmentMsg> {
+301:  private b: Binder<MessageState>;
+372:function resultText(message: Message): string {
+379:export type ThreadPaneState = {
+387:export type ThreadPaneMsg =
+394:class ThreadPane implements View<ThreadPaneState, ThreadPaneMsg> {
+396:  private b: Binder<ThreadPaneState>;
+465:export class AppView implements View<State, Msg> {
+467:  private b: Binder<State>;
+637:function descendLabel(destination: number): string {
+652:function paneSelection(s: State): string | null {
+660:function readAnchor(
+678:function resolvePoint(
+=== samples ===
+import type Anthropic from "@anthropic-ai/sdk";
+import guildToken from "./5b878a60-solidity-guildtoken-audit.json";
+import adhesive from "./44bbcae8-tile-adhesive-formulation.json";
+import django from "./72c7ec37-django-event-app-urls.json";
+import quantumEspresso from "./80e08978-quantum-espresso-burai-relaxation.json";
+import zeroConstraints from "./357dee9a-statsforecast-zero-constraints.json";
+import chiller from "./3890541b-chiller-system-hysys-model.json";
+import heapFile from "./9833484b-c-heap-file-block-storage.json";
+import rag from "./37734816-colbert-raptor-rag-design.json";
+import pontoon from "./74979366-floating-dock-pontoon.json";
+import polarsSeries from "./aa0cb918-statsforecast-polars-series-lengths.json";
+/** A canned task transcript, so a prototype can be exercised without spending a
+ * turn of real work first. The files are verbatim exports: a flat array of
+ * strictly alternating string-content turns, which is exactly MessageParam. */
+export type Sample = {
+  id: string;
+  label: string;
+  turns: Anthropic.MessageParam[];
+};
+type SampleFile = {
+  hash: string;
+  messages: { role: string; content: string }[];
+};
+function sample(label: string, file: SampleFile): Sample {
+  return {
+    id: file.hash.slice(0, 8),
+    label,
+    turns: file.messages.map((m) => ({
+      role: m.role === "assistant" ? "assistant" : "user",
+      content: m.content,
+    })),
+  };
+}
+export const samples: Sample[] = [
+  sample("Floating dock pontoon", pontoon),
+  sample("Tile adhesive formulation", adhesive),
+  sample("Django event app URLs", django),
+  sample("C heap file block storage", heapFile),
+  sample("Chiller system HYSYS model", chiller),
+  sample("Solidity GuildToken audit", guildToken),
+  sample("Quantum ESPRESSO BURAI relaxation", quantumEspresso),
+  sample("StatsForecast zero constraints", zeroConstraints),
+  sample("StatsForecast polars series lengths", polarsSeries),
+  sample("ColBERT/RAPTOR RAG design", rag),
+];
+export const SAMPLE_PARAM = "sample";
+export function selectedSample(): Sample | undefined {
+  const id = new URLSearchParams(window.location.search).get(SAMPLE_PARAM);
+  return samples.find((s) => s.id === id);
+}
+/** Switching samples has to discard every scrap of prototype state, so it is a
+ * real navigation rather than a re-mount. */
+export function selectSample(id: string | undefined): void {
+  const url = new URL(window.location.href);
+  if (id === undefined) url.searchParams.delete(SAMPLE_PARAM);
+  else url.searchParams.set(SAMPLE_PARAM, id);
+  window.location.assign(url.toString());
+}
+=== selection ===
+5:export type ThreadId = string & { readonly __brand: "ThreadId" };
+14:export type Point = { msg: number; offset: number };
+17:export type Anchor = { thread: ThreadId; start: Point; end: Point };
+22:export type Mark = { thread: ThreadId; anchor: Anchor };
+26:export type Segment = {
+36:export function overlaps(marks: ReadonlyArray<Mark>, live: Anchor): boolean {
+49:export function segments(
+105:export function anchorText(
+exit code 0

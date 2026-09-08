@@ -1,0 +1,26 @@
+$ cd /Users/denis.lantsman/src/edulab && sed -n 40,120p packages/frontend/samples/index.ts; grep -rn "sample" packages/e2e/tests/*.spec.ts
+stdout:
+  sample("Tile adhesive formulation", adhesive),
+  sample("Django event app URLs", django),
+  sample("C heap file block storage", heapFile),
+  sample("Chiller system HYSYS model", chiller),
+  sample("Solidity GuildToken audit", guildToken),
+  sample("Quantum ESPRESSO BURAI relaxation", quantumEspresso),
+  sample("StatsForecast zero constraints", zeroConstraints),
+  sample("StatsForecast polars series lengths", polarsSeries),
+  sample("ColBERT/RAPTOR RAG design", rag),
+];
+export const SAMPLE_PARAM = "sample";
+export function selectedSample(): Sample | undefined {
+  const id = new URLSearchParams(window.location.search).get(SAMPLE_PARAM);
+  return samples.find((s) => s.id === id);
+}
+/** Switching samples has to discard every scrap of prototype state, so it is a
+ * real navigation rather than a re-mount. */
+export function selectSample(id: string | undefined): void {
+  const url = new URL(window.location.href);
+  if (id === undefined) url.searchParams.delete(SAMPLE_PARAM);
+  else url.searchParams.set(SAMPLE_PARAM, id);
+  window.location.assign(url.toString());
+}
+exit code 1

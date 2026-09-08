@@ -1,0 +1,25 @@
+$ cd ~/src/dotfiles && ls && grep -n "packages\|cli\|render" flake.nix
+stdout:
+context.md
+dprint
+fish
+flake.lock
+flake.nix
+ghostty
+hammerspoon
+magenta-context.md
+magenta-scripts
+magenta-skills
+nix
+notes
+nvim
+pkb.db
+plans
+README.md
+scripts
+setup.sh
+starship.toml
+tmux.conf
+todo.md
+zsh
+exit code 1

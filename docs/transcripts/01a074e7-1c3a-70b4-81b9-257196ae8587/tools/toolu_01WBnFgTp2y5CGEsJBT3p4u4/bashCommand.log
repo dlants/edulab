@@ -1,0 +1,14 @@
+$ cd /Users/denis.lantsman/src/edulab && grep -n "function runBuild\|function drain\|sampleInteractions: MessageIdx\|const view = new AppView\|function save\|refresh();" packages/frontend/prototypes/chat.ts && npm run typecheck
+stdout:
+89:    refresh();
+138:  function save(): void {
+292:    refresh();
+350:  const sampleInteractions: MessageIdx[] = tree
+376:  function runBuild(): void {
+388:  async function drain(
+608:    refresh();
+630:  refresh();
+631:  const view = new AppView(container, dispatch, state, { bus });
+> edulab@0.0.1 typecheck
+> npm -w @edulab/iso exec tsc -- --noEmit && npm -w @edulab/frontend exec tsc -- --noEmit && npm -w @edulab/backend exec tsc -- --noEmit && npm -w @edulab/e2e exec tsc -- --noEmit
+exit code 0

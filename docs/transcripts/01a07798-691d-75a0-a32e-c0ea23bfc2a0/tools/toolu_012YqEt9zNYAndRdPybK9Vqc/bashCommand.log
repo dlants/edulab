@@ -1,0 +1,157 @@
+$ lsof -ti:3100,5174 | xargs -r kill; sleep 2; cd /Users/denis.lantsman/src/edulab/packages/e2e && npx playwright test tests/graph.spec.ts --reporter=line
+stdout:
+Running 17 tests using 7 workers
+[1/17] tests/graph.spec.ts:199:1 › dragging the canvas pans the graph but still selects on a click
+[2/17] tests/graph.spec.ts:149:1 › deleting a node takes its edges with it
+[3/17] tests/graph.spec.ts:180:1 › zooming spreads the nodes without resizing them, and reset restores
+[4/17] tests/graph.spec.ts:159:1 › an edge is selectable and editable
+[5/17] tests/graph.spec.ts:113:1 › clicking a node fills the sidebar and a retitle keeps its edges
+[6/17] tests/graph.spec.ts:92:1 › switching tabs leaves the transcript and the graph intact
+[7/17] tests/graph.spec.ts:136:1 › a duplicate title is rejected without losing the draft
+  1) tests/graph.spec.ts:180:1 › zooming spreads the nodes without resizing them, and reset restores 
+    Error: nodes are not laid out
+      174 |   const boxes = await nodes(page).all();
+      175 |   const [a, b] = await Promise.all(boxes.map((n) => n.boundingBox()));
+    > 176 |   if (!a || !b) throw new Error("nodes are not laid out");
+          |                       ^
+      177 |   return Math.hypot(a.x - b.x, a.y - b.y);
+      178 | }
+      179 |
+        at spread (/Users/denis.lantsman/src/edulab/packages/e2e/tests/graph.spec.ts:176:23)
+        at /Users/denis.lantsman/src/edulab/packages/e2e/tests/graph.spec.ts:184:18
+    Error Context: test-results/graph-zooming-spreads-the--a2696-ing-them-and-reset-restores/error-context.md
+[8/17] tests/graph.spec.ts:339:1 › every interaction updates the graph, one update at a time
+[9/17] tests/graph.spec.ts:365:1 › opening a learning thread updates the graph from its ask
+[10/17] tests/graph.spec.ts:396:1 › a failed graph update leaves the app usable
+[11/17] tests/graph.spec.ts:416:1 › building from a sample transcript walks its turns once
+  2) tests/graph.spec.ts:136:1 › a duplicate title is rejected without losing the draft ────────────
+    TimeoutError: locator.click: Timeout 5000ms exceeded.
+    Call log:
+      - waiting for locator('[data-node]').filter({ hasText: 'closures' })
+      138 | }) => {
+      139 |   await open(page);
+    > 140 |   await nodes(page).filter({ hasText: "closures" }).click();
+          |                                                     ^
+      141 |   await page.locator("[data-graph-title]").fill("scope");
+      142 |   await page.getByRole("button", { name: "Save" }).click();
+      143 |
+        at /Users/denis.lantsman/src/edulab/packages/e2e/tests/graph.spec.ts:140:53
+    Error Context: test-results/graph-a-duplicate-title-is-rejected-without-losing-the-draft/error-context.md
+  3) tests/graph.spec.ts:113:1 › clicking a node fills the sidebar and a retitle keeps its edges ───
+    TimeoutError: locator.click: Timeout 5000ms exceeded.
+    Call log:
+      - waiting for locator('[data-node]').filter({ hasText: 'closures' })
+      115 | }) => {
+      116 |   await open(page);
+    > 117 |   await nodes(page).filter({ hasText: "closures" }).click();
+          |                                                     ^
+      118 |
+      119 |   await expect(page.locator("[data-graph-title]")).toHaveValue("closures");
+      120 |   await expect(page.locator("[data-graph-description]")).toHaveValue(
+        at /Users/denis.lantsman/src/edulab/packages/e2e/tests/graph.spec.ts:117:53
+    Error Context: test-results/graph-clicking-a-node-fill-5a1f2-d-a-retitle-keeps-its-edges/error-context.md
+  4) tests/graph.spec.ts:149:1 › deleting a node takes its edges with it ───────────────────────────
+    TimeoutError: locator.click: Timeout 5000ms exceeded.
+    Call log:
+      - waiting for locator('[data-node]').filter({ hasText: 'closures' })
+      149 | test("deleting a node takes its edges with it", async ({ page }) => {
+      150 |   await open(page);
+    > 151 |   await nodes(page).filter({ hasText: "closures" }).click();
+          |                                                     ^
+      152 |   await page.getByRole("button", { name: "Delete" }).click();
+      153 |
+      154 |   await expect(nodes(page)).toHaveText(["scope"]);
+        at /Users/denis.lantsman/src/edulab/packages/e2e/tests/graph.spec.ts:151:53
+    Error Context: test-results/graph-deleting-a-node-takes-its-edges-with-it/error-context.md
+  5) tests/graph.spec.ts:199:1 › dragging the canvas pans the graph but still selects on a click ───
+    TimeoutError: locator.boundingBox: Timeout 5000ms exceeded.
+    Call log:
+      - waiting for locator('[data-node]').filter({ hasText: 'closures' })
+      202 |   await open(page);
+      203 |   const node = nodes(page).filter({ hasText: "closures" });
+    > 204 |   const from = await node.boundingBox();
+          |                           ^
+      205 |   if (!from) throw new Error("node is not laid out");
+      206 |
+      207 |   const canvas = page.locator("[data-graph-canvas]");
+        at /Users/denis.lantsman/src/edulab/packages/e2e/tests/graph.spec.ts:204:27
+    Error Context: test-results/graph-dragging-the-canvas--1a9a0-ut-still-selects-on-a-click/error-context.md
+  6) tests/graph.spec.ts:92:1 › switching tabs leaves the transcript and the graph intact ──────────
+    Error: expect(locator).toHaveCount(expected) failed
+    Locator:  locator('[data-node]')
+    Expected: 2
+    Received: 0
+    Timeout:  5000ms
+    Call log:
+      - Expect "toHaveCount" locator('[data-node]') with timeout 5000ms
+      - waiting for locator('[data-node]')
+        14 × locator resolved to 0 elements
+           - unexpected value "0"
+      101 |
+      102 |   await graphTab(page).click();
+    > 103 |   await expect(nodes(page)).toHaveCount(2);
+          |                             ^
+      104 |   await expect(page.locator("[data-edge]")).toHaveCount(1);
+      105 |
+      106 |   await threadsTab(page).click();
+        at /Users/denis.lantsman/src/edulab/packages/e2e/tests/graph.spec.ts:103:29
+    Error Context: test-results/graph-switching-tabs-leave-5f267-script-and-the-graph-intact/error-context.md
+  7) tests/graph.spec.ts:159:1 › an edge is selectable and editable ────────────────────────────────
+    TimeoutError: locator.click: Timeout 5000ms exceeded.
+    Call log:
+      - waiting for locator('[data-edge-label]')
+      159 | test("an edge is selectable and editable", async ({ page }) => {
+      160 |   await open(page);
+    > 161 |   await page.locator("[data-edge-label]").click();
+          |                                           ^
+      162 |
+      163 |   await expect(page.locator("[data-graph-title]")).toHaveValue("builds on");
+      164 |   await expect(page.locator("[data-graph-notes]")).toBeHidden();
+        at /Users/denis.lantsman/src/edulab/packages/e2e/tests/graph.spec.ts:161:43
+    Error Context: test-results/graph-an-edge-is-selectable-and-editable/error-context.md
+[12/17] tests/graph.spec.ts:433:1 › a failed update mid-build does not stop the ones after it
+[13/17] tests/graph.spec.ts:515:1 › a citation that does not resolve is left as text
+[14/17] tests/graph.spec.ts:445:1 › interacting mid-build interleaves rather than races
+[15/17] tests/graph.spec.ts:647:1 › clicking a change opens the graph tab with that node selected
+[16/17] tests/graph.spec.ts:493:1 › a cited message is one click away from the note that rests on it
+[17/17] tests/graph.spec.ts:628:1 › an address written by a graph update navigates back to its turn
+  8) tests/graph.spec.ts:515:1 › a citation that does not resolve is left as text ──────────────────
+    TimeoutError: locator.click: Timeout 5000ms exceeded.
+    Call log:
+      - waiting for locator('[data-node]').first()
+      470 |   }, notes);
+      471 |   await graphTab(page).click();
+    > 472 |   await nodes(page).first().click();
+          |                             ^
+      473 | }
+      474 |
+      475 | /** Opens a learning thread off the first message of the root transcript, which
+        at seedNote (/Users/denis.lantsman/src/edulab/packages/e2e/tests/graph.spec.ts:472:29)
+        at /Users/denis.lantsman/src/edulab/packages/e2e/tests/graph.spec.ts:518:3
+    Error Context: test-results/graph-a-citation-that-does-not-resolve-is-left-as-text/error-context.md
+  9) tests/graph.spec.ts:493:1 › a cited message is one click away from the note that rests on it ──
+    TimeoutError: locator.click: Timeout 5000ms exceeded.
+    Call log:
+      - waiting for locator('[data-node]').first()
+      470 |   }, notes);
+      471 |   await graphTab(page).click();
+    > 472 |   await nodes(page).first().click();
+          |                             ^
+      473 | }
+      474 |
+      475 | /** Opens a learning thread off the first message of the root transcript, which
+        at seedNote (/Users/denis.lantsman/src/edulab/packages/e2e/tests/graph.spec.ts:472:29)
+        at /Users/denis.lantsman/src/edulab/packages/e2e/tests/graph.spec.ts:502:3
+    Error Context: test-results/graph-a-cited-message-is-o-8b0f7-m-the-note-that-rests-on-it/error-context.md
+  9 failed
+    tests/graph.spec.ts:92:1 › switching tabs leaves the transcript and the graph intact ───────────
+    tests/graph.spec.ts:113:1 › clicking a node fills the sidebar and a retitle keeps its edges ────
+    tests/graph.spec.ts:136:1 › a duplicate title is rejected without losing the draft ─────────────
+    tests/graph.spec.ts:149:1 › deleting a node takes its edges with it ────────────────────────────
+    tests/graph.spec.ts:159:1 › an edge is selectable and editable ─────────────────────────────────
+    tests/graph.spec.ts:180:1 › zooming spreads the nodes without resizing them, and reset restores 
+    tests/graph.spec.ts:199:1 › dragging the canvas pans the graph but still selects on a click ────
+    tests/graph.spec.ts:493:1 › a cited message is one click away from the note that rests on it ───
+    tests/graph.spec.ts:515:1 › a citation that does not resolve is left as text ───────────────────
+  8 passed (12.9s)
+exit code 1

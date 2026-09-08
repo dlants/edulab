@@ -1,0 +1,50 @@
+$ cd packages/frontend && grep -n "SAMPLE_CHANGED\|Msg\b\|nav\|sample" view.ts
+stdout:
+3:  type Msg as GraphMsg,
+8:  type Msg as LearningMsg,
+12:import { samples } from "./samples/index.ts";
+38:/** The sample-transcript batch. `done` is terminal: a second pass over the
+59:  sample: string;
+80:  /** The sample-transcript batch: one graph update per loaded user turn. */
+90:export type Msg =
+98:  | { type: "LEARNING_MSG"; msg: LearningMsg }
+99:  | { type: "SAMPLE_CHANGED"; id: string }
+101:  | { type: "GRAPH_MSG"; msg: GraphMsg }
+104:  | { type: "CHILD_MSG"; msg: ThreadPaneMsg };
+112:const navClass = cls("nav");
+120:const sampleClass = cls("sample");
+177:.${navClass} {
+186:.${navClass} button {
+194:.${navClass} button:disabled {
+202:.${sampleClass} {
+374:type SegmentMsg = { type: "CLICKED"; thread: ThreadId };
+379:class SegmentView implements View<SegmentState, SegmentMsg> {
+386:    dispatch: (msg: SegmentMsg) => void,
+419:type ChangeMsg = { type: "CLICKED" };
+423:class ChangeView implements View<ChangeState, ChangeMsg> {
+429:    dispatch: (msg: ChangeMsg) => void,
+462:type MessageMsg =
+463:  | SegmentMsg
+467:class MessageView implements View<MessageState, MessageMsg> {
+476:    dispatch: (msg: MessageMsg) => void,
+646:export type ThreadPaneMsg =
+655:class ThreadPane implements View<ThreadPaneState, ThreadPaneMsg> {
+661:    dispatch: (msg: ThreadPaneMsg) => void,
+706:          (msg: MessageMsg) => {
+737:export class AppView implements View<State, Msg, AppCtx> {
+746:    dispatch: (msg: Msg) => void,
+758:    const sampleRef: Ref = ref("sample");
+768:      <div class="${navClass}">
+769:        <select class="${sampleClass}" data-ref="${sampleRef}"></select>
+811:    // bound; switching sample is a page navigation anyway.
+812:    const picker = this.b.ref<HTMLSelectElement>(sampleRef);
+817:    for (const sample of samples) {
+819:      option.value = sample.id;
+820:      option.textContent = sample.label;
+824:      dispatch({ type: "SAMPLE_CHANGED", id: picker.value });
+877:          (msg: MessageMsg) => {
+899:    this.b.bindValue(sampleRef, (s) => s.sample);
+924:        ? show(GraphView, s.graph, {}, (msg: GraphMsg) =>
+944:        return show(ThreadPane, child, {}, (msg: ThreadPaneMsg) =>
+955:      return show(LearningPane, learningState, {}, (msg: LearningMsg) =>
+exit code 0

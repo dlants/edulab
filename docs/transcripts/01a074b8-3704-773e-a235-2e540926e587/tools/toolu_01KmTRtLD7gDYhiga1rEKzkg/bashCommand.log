@@ -1,0 +1,94 @@
+$ cd /Users/denis.lantsman/src/edulab && sed -n '30,60p' packages/frontend/graph.test.ts; echo ====; sed -n '1,60p' packages/frontend/graph-tools.test.ts; echo ==== ; grep -rn "message" packages/frontend/graph-tools.test.ts
+stdout:
+  const result = graph.putEdge({ from, to, title, description: "" });
+  expect(result.status).toBe("ok");
+  const added = graph.edges.find((e) => !before.has(e.id));
+  if (!added) throw new Error("edge was not added");
+  return added.id;
+};
+it("cascades a node delete to the edges on both sides of it", () => {
+  const graph = new KnowledgeGraph();
+  const a = addNode(graph, "a");
+  const b = addNode(graph, "b");
+  const c = addNode(graph, "c");
+  addEdge(graph, a, b, "in");
+  addEdge(graph, b, c, "out");
+  const result = graph.deleteNode(b);
+  expect(result).toEqual({
+    status: "ok",
+    message: expect.stringContaining("2 incident edge(s)"),
+  });
+  expect(graph.edges).toEqual([]);
+  expect(graph.nodes.map((n) => n.id)).toEqual([a, c]);
+});
+it("keeps the id and the edges when a node is retitled", () => {
+  const graph = new KnowledgeGraph();
+  const a = addNode(graph, "a");
+  const b = addNode(graph, "b");
+  const edge = addEdge(graph, a, b, "rel");
+  expect(
+    graph.putNode({
+      id: a,
+====
+import type Anthropic from "@anthropic-ai/sdk";
+import type { ClientMessage } from "@edulab/iso/protocol.ts";
+import { expect, it } from "vitest";
+import { KnowledgeGraph, type NodeId } from "./graph.ts";
+import { readTools, writeTools } from "./graph-tools.ts";
+import {
+  type Socket,
+  Thread,
+  type ToolName,
+  type ToolResult,
+} from "./thread.ts";
+function setup() {
+  const graph = new KnowledgeGraph();
+  const tools = writeTools(graph);
+  const run = (name: string, input: Record<string, unknown>) => {
+    const tool = tools[name as ToolName];
+    if (!tool) throw new Error(`no tool ${name}`);
+    return tool.execute(input);
+  };
+  return { graph, tools, run };
+}
+const text = (result: ToolResult) =>
+  result.status === "ok" ? result.text : result.error;
+it("readTools offers only get; writeTools offers the mutations too", () => {
+  const graph = new KnowledgeGraph();
+  expect(Object.keys(readTools(graph))).toEqual(["get"]);
+  expect(Object.keys(writeTools(graph)).sort()).toEqual([
+    "delete",
+    "get",
+    "put_edges",
+    "put_nodes",
+  ]);
+});
+it("applies a batch of nodes in one call and reports each new id", async () => {
+  const { graph, run } = setup();
+  const result = await run("put_nodes", {
+    nodes: [
+      { title: "closures", description: "d", notes: "n", level: 2 },
+      { title: "scope", description: "d", notes: "n", level: 1 },
+    ],
+  });
+  expect(result.status).toBe("ok");
+  expect(text(result)).toContain("n0");
+  expect(text(result)).toContain("n1");
+  expect(graph.nodes.map((n) => n.title)).toEqual(["closures", "scope"]);
+});
+it("edges, get over a mixed list, and delete", async () => {
+  const { graph, run } = setup();
+  await run("put_nodes", {
+    nodes: [
+      { title: "a", description: "d", notes: "n", level: 1 },
+      { title: "b", description: "d", notes: "n", level: 1 },
+    ],
+  });
+  const edges = await run("put_edges", {
+====
+packages/frontend/graph-tools.test.ts:136:    _type: "message",
+packages/frontend/graph-tools.test.ts:145:      new MessageEvent("message", {
+packages/frontend/graph-tools.test.ts:172:    this.deliver({ type: "message_stop" } as Anthropic.RawMessageStreamEvent);
+packages/frontend/graph-tools.test.ts:175:    this.deliver({ type: "message_stop" } as Anthropic.RawMessageStreamEvent);
+packages/frontend/graph-tools.test.ts:192:  const call = thread.messages.find((m) => m.type === "tool_use");
+exit code 0

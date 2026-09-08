@@ -1,0 +1,16 @@
+$ cd /Users/denis.lantsman/src/edulab && sed -n 18,30p packages/frontend/prototypes/chat.ts
+stdout:
+import { IDENTITY_VIEWPORT, panZoom } from "../graph-view.ts";
+import { interactionAt } from "../interactions.ts";
+import { layout, type Position } from "../layout.ts";
+import {
+  type InteractionAddress,
+  interactionAddresses,
+  loadSnapshot,
+  saveSnapshot,
+  toSnapshot,
+} from "../persistence.ts";
+import { GRAPH_UPDATE_SYSTEM, graphUpdatePrompt } from "../prompt.ts";
+import {
+  type SampleId,
+exit code 0

@@ -1,0 +1,14 @@
+$ cd /Users/denis.lantsman/src/edulab && git add packages/frontend/vamp.ts && git commit -m "Only touch the DOM when a binding's value actually changed
+
+Assigning textContent builds a fresh text node even when the string is
+unchanged, so every streamed token tore out the text nodes under a live
+selection and the user's in-progress drag flickered. Guard every scalar
+binding on the current value, and give bindText an append path so the
+message being streamed grows its existing node in place." && git push
+stdout:
+[main b97781d] Only touch the DOM when a binding's value actually changed
+ 1 file changed, 28 insertions(+), 8 deletions(-)
+stderr:
+To github.com:dlants/edulab.git
+   43b58f1..b97781d  main -> main
+exit code 0

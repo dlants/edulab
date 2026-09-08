@@ -1,0 +1,4 @@
+$ KEY=$(awk '/^api:/{f=1} f&&/key:/{print $2; exit}' ~/.render/cli.yaml); curl -s -H "Authorization: Bearer $KEY" "https://api.render.com/v1/owners?limit=20"
+stdout:
+[{"cursor":"wgbWnlqCENgwN3Q2bDQ3YzczYmtlZWsw","owner":{"email":"denis.lantsman@gmail.com","id":"tea-cskj07t6l47c73bkeek0","name":"Denis Lantsman's Workspace","type":"team"}}]
+exit code 0

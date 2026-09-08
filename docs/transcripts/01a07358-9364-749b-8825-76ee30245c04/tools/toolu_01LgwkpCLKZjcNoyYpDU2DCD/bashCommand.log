@@ -1,0 +1,7 @@
+$ cd /Users/denis.lantsman/src/edulab && grep -n "read_graph" plans/2026-09-05-domain-graph.md
+stdout:
+67:There is deliberately **no `read_graph` tool**. `graph.render()` is a plain function, and the caller injects its output into the thread's seed. The agent should never have to spend a turn asking what it already needs to know, and a graph this small costs less to include unconditionally than a tool round-trip costs to make. Progressive disclosure, if the graph ever outgrows the context, is a change to `render()` and its call sites, not a new tool.
+135:  /** The whole graph as text, for read_graph and for seeding a thread. */
+143:// keys: read_graph, put_node, delete_node, put_edge, delete_edge
+242:- `EXTRACT_SYSTEM`: extract the domains this session touched; one node per concept, not per file or per message; edges for the relationships that matter; set `level` from what the user's own questions and answers reveal, defaulting to `1 unfamiliar` for concepts they never engaged with; put misconceptions in `notes`. Call `read_graph` first so a re-run extends rather than duplicates.
+exit code 0

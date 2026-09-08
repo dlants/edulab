@@ -1,0 +1,49 @@
+$ cd /Users/denis.lantsman/src/edulab && grep -n "updateStatusRef" -A 20 packages/frontend/view.ts | sed -n 20,70p
+stdout:
+631-          <pre class="${toolResultClass}" data-tool-result data-ref="${toolResultRef}"></pre>
+632-        </div>
+--
+636:        <span data-update-status data-ref="${updateStatusRef}"></span>
+637-        <span class="${changeListClass}" data-ref="${changesRef}"></span>
+638-        <button
+639-          class="${changeClass}"
+640-          type="button"
+641-          data-update-thread
+642-          data-ref="${updateThreadRef}"
+643-        >transcript</button>
+644-      </div>
+645-    `;
+646-    this.container = container;
+647-    this.b = new Binder(container, initial);
+648-    this.b.bindText(roleRef, (s) => s.message.role);
+649-    // Keyed by start offset: the transcript is append-only, so a run keeps its
+650-    // start while the message grows and while marks are added after it.
+651-    this.b.bindList(textRef, "span", (s) =>
+652-      s.segments.map((seg) =>
+653-        showKeyed(
+654-          String(seg.start),
+655-          SegmentView,
+656-          {
+--
+680:    this.b.bindText(updateStatusRef, (s) => updateStatus(s.update));
+681-    this.b.bindList(changesRef, "button", (s) =>
+682-      (s.update?.type === "done" ? s.update.changes : []).map((change, i) =>
+683-        showKeyed(`${change.id}:${i}`, ChangeView, { change }, {}, () =>
+684-          dispatch({ type: "CHANGE_CLICKED", id: change.id }),
+685-        ),
+686-      ),
+687-    );
+688-    this.b
+689-      .ref(updateThreadRef)
+690-      .addEventListener("click", () => dispatch({ type: "SHOW_UPDATE" }));
+691-    this.b.bindContainerAttr("data-role", (s) => s.message.role);
+692-    const toggle = () => dispatch({ type: "TOGGLE_EXPANDED" });
+693-    this.b.ref(toggleRef).addEventListener("click", toggle);
+694-    this.b.ref(moreRef).addEventListener("click", toggle);
+695-    this.b.bindContainerAttr("data-clipped", (s) =>
+696-      s.expanded ? undefined : "true",
+697-    );
+698-    this.b.bindContainerAttr("data-overflowing", (s) =>
+699-      hiddenLines(s.message) > 0 ? "true" : "false",
+700-    );
+exit code 0

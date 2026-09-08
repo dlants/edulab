@@ -1,0 +1,5 @@
+$ cd /Users/denis.lantsman/src/edulab && grep -n "clearSnapshot\|persistence.ts" packages/frontend/prototypes/chat.ts
+stdout:
+27:} from "../persistence.ts";
+518:        clearSnapshot(sample?.id);
+exit code 0

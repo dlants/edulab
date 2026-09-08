@@ -1,0 +1,5 @@
+$ cd /Users/denis.lantsman/src/edulab && grep -n "edulab:v" packages/e2e/tests/persistence.spec.ts
+stdout:
+5:const KEY = "edulab:v1:own";
+241:  const key = `edulab:v1:${sample}`;
+exit code 0

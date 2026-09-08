@@ -1,0 +1,161 @@
+$ cd /Users/denis.lantsman/src/edulab && cat >> packages/e2e/tests/graph.spec.ts <<'EOF'
+
+/** Answers the extraction thread's requests with a `put_nodes` call, then a
+ * `put_edges` call, then prose - the shape of a real extraction pass, so the
+ * spec exercises tools -> graph -> layout -> canvas end to end. */
+async function extractionBackend(page: Page) {
+  await page.routeWebSocket("**/api/socket", (ws) => {
+    let calls = 0;
+    ws.onMessage((raw) => {
+      const message = JSON.parse(String(raw)) as ClientMessage;
+      const send = (frame: ServerFrame) => ws.send(JSON.stringify(frame));
+      const extraction = (message.params.tools ?? []).some(
+        (t) => t.name === "put_nodes",
+      );
+      const step = extraction ? calls++ : -1;
+      const call =
+        step === 0
+          ? {
+              name: "put_nodes",
+              input: {
+                nodes: [
+                  {
+                    title: "closures",
+                    description: "a function plus its environment",
+                    notes: "asked twice",
+                    level: 2,
+                  },
+                  {
+                    title: "scope",
+                    description: "where a binding is visible",
+                    notes: "",
+                    level: 3,
+                  },
+                ],
+              },
+            }
+          : step === 1
+            ? {
+                name: "put_edges",
+                input: {
+                  edges: [
+                    {
+                      from: "n0",
+                      to: "n1",
+                      title: "builds on",
+                      description: "a closure captures a scope",
+                    },
+                  ],
+                },
+              }
+            : null;
+      if (call) {
+        send({
+          type: "event",
+          requestId: message.requestId,
+          event: {
+            type: "content_block_start",
+            index: 0,
+            content_block: {
+              type: "tool_use",
+              id: `call-${step}`,
+              name: call.name,
+              input: {},
+            },
+          } as never,
+        });
+        send({
+          type: "event",
+          requestId: message.requestId,
+          event: {
+            type: "content_block_delta",
+            index: 0,
+            delta: {
+              type: "input_json_delta",
+              partial_json: JSON.stringify(call.input),
+            },
+          },
+        });
+      } else {
+        send({
+          type: "event",
+          requestId: message.requestId,
+          event: {
+            type: "content_block_start",
+            index: 0,
+            content_block: { type: "text", text: "ok", citations: null },
+          },
+        });
+      }
+      send({
+        type: "event",
+        requestId: message.requestId,
+        event: { type: "content_block_stop", index: 0 },
+      });
+      send({ type: "done", requestId: message.requestId });
+    });
+  });
+}
+
+test("building from the session fills the canvas and leaves the threads alone", async ({
+  page,
+}) => {
+  await extractionBackend(page);
+  await page.goto("/");
+  await page.getByRole("textbox").fill("hello");
+  await page.getByRole("textbox").press("Enter");
+  await expect(page.locator("ul").first().locator("li")).toHaveCount(2);
+
+  await graphTab(page).click();
+  await page.getByRole("button", { name: "Build from this session" }).click();
+
+  await expect(nodes(page)).toHaveText(["closures", "scope"]);
+  await expect(page.locator("[data-edge-label]")).toHaveText("builds on");
+  await expect(
+    page.getByRole("button", { name: "Rebuild" }),
+  ).toBeVisible();
+
+  await threadsTab(page).click();
+  await expect(page.locator("ul").first().locator("li")).toHaveCount(2);
+});
+EOF
+npx biome check --write packages/e2e/tests/graph.spec.ts && npm run typecheck && npx playwright test --config packages/e2e/playwright.config.ts graph 2>/dev/null
+stdout:
+Checked 1 file in 124ms. Fixed 1 file.
+> edulab@0.0.1 typecheck
+> npm -w @edulab/iso exec tsc -- --noEmit && npm -w @edulab/frontend exec tsc -- --noEmit && npm -w @edulab/backend exec tsc -- --noEmit && npm -w @edulab/e2e exec tsc -- --noEmit
+Running 6 tests using 6 workers
+  ✓  4 packages/e2e/tests/graph.spec.ts:149:1 › deleting a node takes its edges with it (523ms)
+  ✓  3 packages/e2e/tests/graph.spec.ts:136:1 › a duplicate title is rejected without losing the draft (513ms)
+  ✓  1 packages/e2e/tests/graph.spec.ts:159:1 › an edge is selectable and editable (528ms)
+  ✓  6 packages/e2e/tests/graph.spec.ts:92:1 › switching tabs leaves the transcript and the graph intact (540ms)
+  ✓  5 packages/e2e/tests/graph.spec.ts:113:1 › clicking a node fills the sidebar and a retitle keeps its edges (529ms)
+  ✘  2 packages/e2e/tests/graph.spec.ts:268:1 › building from the session fills the canvas and leaves the threads alone (5.5s)
+  1) packages/e2e/tests/graph.spec.ts:268:1 › building from the session fills the canvas and leaves the threads alone 
+    Error: expect(locator).toHaveText(expected) failed
+    Locator: locator('[data-node]')
+    Timeout: 5000ms
+    - Expected  - 4
+    + Received  + 1
+    - Array [
+    -   "closures",
+    -   "scope",
+    - ]
+    + Array []
+    Call log:
+      - Expect "toHaveText" locator('[data-node]') with timeout 5000ms
+      - waiting for locator('[data-node]')
+        14 × locator resolved to 0 elements
+      278 |   await page.getByRole("button", { name: "Build from this session" }).click();
+      279 |
+    > 280 |   await expect(nodes(page)).toHaveText(["closures", "scope"]);
+          |                             ^
+      281 |   await expect(page.locator("[data-edge-label]")).toHaveText("builds on");
+      282 |   await expect(page.getByRole("button", { name: "Rebuild" })).toBeVisible();
+      283 |
+        at /Users/denis.lantsman/src/edulab/packages/e2e/tests/graph.spec.ts:280:29
+    Error Context: packages/e2e/test-results/graph-building-from-the-se-9fe0a-nd-leaves-the-threads-alone/error-context.md
+  1 failed
+    packages/e2e/tests/graph.spec.ts:268:1 › building from the session fills the canvas and leaves the threads alone 
+  5 passed (9.5s)
+exit code 1

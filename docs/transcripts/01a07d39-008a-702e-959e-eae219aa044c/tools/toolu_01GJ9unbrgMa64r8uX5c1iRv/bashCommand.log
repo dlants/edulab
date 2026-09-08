@@ -1,0 +1,320 @@
+$ cd /Users/denis.lantsman/src/edulab && sed -n 1,80p packages/frontend/thread.ts && echo ---- && sed -n 150,260p packages/frontend/thread.ts && echo ----AUTH && cat packages/frontend/auth.ts && echo ----README && cat README.md && echo ---- && cat packages/iso/protocol.ts && cat packages/backend/socket.ts && npm run typecheck
+stdout:
+import type Anthropic from "@anthropic-ai/sdk";
+import type { ClientMessage, ServerFrame } from "@edulab/iso/protocol.ts";
+const MODEL = "claude-opus-4-5";
+const MAX_TOKENS = 16384;
+// Task mode: the agent is here to get the user's work done. Learning mode is
+// the secondary mode we layer on top of a transcript this produces, so this
+// prompt must not pre-emptively tutor - the whole premise of the prototype is
+// that a user watching a capable agent work becomes a passive observer.
+const SYSTEM = [
+  "You are a capable engineering assistant helping the user complete a task.",
+  "Work the problem directly: make concrete decisions, write real code, and",
+  "state your reasoning as you go rather than asking the user to supply it.",
+  "Be concise. Do not quiz the user, do not pad explanations for a beginner,",
+  "and do not check whether they are following - just do the work well.",
+].join(" ");
+// Unattended mode: nobody is reading the transcript as it streams, so a
+// question to the user is a dead end. The only exit is the yield tool.
+const AUTONOMOUS_SYSTEM = [
+  "You are a capable engineering assistant running unattended: there is no",
+  "user to answer questions, and nothing you say outside the yield tool will",
+  "be read. Work the problem to completion, making whatever decisions you",
+  "need without asking, and finish by calling the yield tool exactly once",
+  "with your result. Do not stop for confirmation and do not ask questions.",
+].join(" ");
+const MAX_RESTARTS = 5;
+const restartNudge = (attempt: number, max: number) =>
+  `You stopped without yielding. Nobody read that message. Complete the task and call the yield tool when you are done. (auto-restart ${attempt}/${max})`;
+const YIELD = "yield";
+const DEFAULT_YIELD_SCHEMA: Anthropic.Tool.InputSchema = {
+  type: "object",
+  properties: {
+    result: {
+      type: "string",
+      description: "The result to return to whoever spawned this thread.",
+    },
+  },
+  required: ["result"],
+};
+const VOID_YIELD_SCHEMA: Anthropic.Tool.InputSchema = {
+  type: "object",
+  properties: {},
+};
+function yieldInputSchema(
+  schema: Anthropic.Tool.InputSchema | "text" | "void",
+): Anthropic.Tool.InputSchema {
+  if (schema === "text") return DEFAULT_YIELD_SCHEMA;
+  if (schema === "void") return VOID_YIELD_SCHEMA;
+  return schema;
+}
+function yieldResult(
+  value: YieldValue,
+): string | Record<string, unknown> | undefined {
+  switch (value.type) {
+    case "void":
+      return;
+    case "text":
+      return value.text;
+    case "structured":
+      return value.value;
+  }
+}
+export type ToolCall = {
+  id: string;
+  name: string;
+  /** Parsed from the streamed json; undefined while still streaming or if it
+   * never parsed. */
+  input: Record<string, unknown> | undefined;
+  /** Raw accumulated json, so a partial call is still renderable. */
+  inputJson: string;
+  /** Derived from the paired tool_result block in the next user turn; absent
+   * while the tool is still running. */
+  result: ToolResult | undefined;
+};
+----
+      name: string;
+      inputJson: string;
+      input: Record<string, unknown> | undefined;
+    };
+/** The subset of WebSocket the thread uses, so tests can stand in for it. */
+export type Socket = {
+  send(data: string): void;
+  addEventListener(
+    type: "message",
+    listener: (e: MessageEvent<string>) => void,
+  ): void;
+};
+export type ThreadResult<Value> =
+  | { status: "ok"; result: Value }
+  | { status: "error"; error: string };
+export type RunThreadOpts = {
+  prompt: string | Anthropic.ContentBlockParam[];
+  tools?: Record<ToolName, Tool>;
+  yieldSchema: Anthropic.Tool.InputSchema | "text" | "void";
+  system?: string;
+  /** How many times a turn that ends without a yield is nudged back to work. */
+  maxRestarts?: number;
+  /** Fires whenever the thread's transcript changes, so a caller can watch an
+   * unattended thread work rather than only awaiting its result. */
+  onChange?: (messages: ReadonlyArray<Message>) => void;
+};
+/** Runs a thread to completion with no user in the loop: the seed prompt goes
+ * in, tools run client side, and the settled yield comes back. A turn that
+ * ends without yielding is restarted rather than accepted. */
+export function runThread(
+  socket: Socket,
+  opts: RunThreadOpts & { yieldSchema: "text" },
+): Promise<ThreadResult<string>>;
+export function runThread(
+  socket: Socket,
+  opts: RunThreadOpts & { yieldSchema: "void" },
+): Promise<ThreadResult<undefined>>;
+export function runThread<Value extends Record<string, unknown>>(
+  socket: Socket,
+  opts: RunThreadOpts & { yieldSchema: Anthropic.Tool.InputSchema },
+): Promise<ThreadResult<Value>>;
+export async function runThread(
+  socket: Socket,
+  opts: RunThreadOpts,
+): Promise<ThreadResult<string | Record<string, unknown> | undefined>> {
+  const maxRestarts = opts.maxRestarts ?? MAX_RESTARTS;
+  const thread = new Thread(socket, {
+    system: opts.system ?? AUTONOMOUS_SYSTEM,
+    seed: opts.prompt,
+    tools: opts.tools,
+    yieldSchema: opts.yieldSchema,
+  });
+  const onChange = opts.onChange;
+  if (onChange) thread.onChange = () => onChange(thread.messages);
+  let result = await thread.start();
+  for (let attempt = 1; result.type === "completed"; attempt++) {
+    if (attempt > maxRestarts) {
+      return {
+        status: "error",
+        error: `thread stopped without yielding after ${maxRestarts} restarts`,
+      };
+    }
+    result = await thread.send(restartNudge(attempt, maxRestarts));
+  }
+  return result.type === "yielded"
+    ? {
+        status: "ok",
+        result: yieldResult(result.value),
+      }
+    : { status: "error", error: result.message };
+}
+/** Drops trailing turns until every `tool_use` in the log is answered by a
+ * `tool_result`: the API rejects a log with a dangling call, which is exactly
+ * what a refresh mid-tool-call leaves behind. A trailing user turn that simply
+ * never got a reply is well-formed and is kept. */
+/** The transcript a committed log projects to, for callers that hold a log
+ * without a live `Thread` (persistence addresses interactions by message
+ * index, and the index has to mean the same thing on both sides). */
+export function projectLog(
+  turns: ReadonlyArray<Anthropic.MessageParam>,
+): ReadonlyArray<Message> {
+  return project(turns, undefined);
+}
+export function trimUnansweredTools(
+  log: ReadonlyArray<Anthropic.MessageParam>,
+): Anthropic.MessageParam[] {
+  const out = [...log];
+  while (out.length > 0 && !answered(out)) out.pop();
+  return out;
+}
+function answered(log: ReadonlyArray<Anthropic.MessageParam>): boolean {
+  const results = new Set<string>();
+  for (const turn of log) {
+    if (typeof turn.content === "string") continue;
+    for (const block of turn.content)
+      if (block.type === "tool_result") results.add(block.tool_use_id);
+  }
+  for (const turn of log) {
+    if (typeof turn.content === "string") continue;
+    for (const block of turn.content)
+      if (block.type === "tool_use" && !results.has(block.id)) return false;
+  }
+  return true;
+}
+export class Thread {
+----AUTH
+/** The deployment is public and the API key is not, so every inference request
+ * carries a password the backend checks. It is held in memory for the session
+ * and in localStorage so a reload does not re-prompt. */
+const KEY = "edulab:password";
+let current = "";
+export function password(): string {
+  return current;
+}
+export function socketUrl(candidate = current): string {
+  const proto = window.location.protocol === "https:" ? "wss:" : "ws:";
+  const query = new URLSearchParams({ password: candidate });
+  return `${proto}//${window.location.host}/api/socket?${query.toString()}`;
+}
+/** The only thing the password gates is the socket, so the check is opening
+ * one: the backend closes it at the upgrade if the password is wrong. */
+function check(candidate: string): Promise<boolean> {
+  const socket = new WebSocket(socketUrl(candidate));
+  return new Promise<boolean>((resolve) => {
+    socket.addEventListener("open", () => {
+      socket.close();
+      resolve(true);
+    });
+    socket.addEventListener("close", () => {
+      resolve(false);
+    });
+  });
+}
+/** Resolves once a password the backend accepts is in hand. A stored one is
+ * tried first, so the form is only shown when there is nothing to go on. */
+export async function unlock(container: HTMLElement): Promise<void> {
+  const stored = window.localStorage.getItem(KEY);
+  if (stored !== null && (await check(stored))) {
+    current = stored;
+    return;
+  }
+  window.localStorage.removeItem(KEY);
+  return new Promise<void>((resolve) => {
+    const form = document.createElement("form");
+    form.style.cssText =
+      "display:flex;gap:8px;align-items:center;justify-content:center;height:100%;font:14px system-ui";
+    const input = document.createElement("input");
+    input.type = "password";
+    input.placeholder = "password";
+    input.autofocus = true;
+    const button = document.createElement("button");
+    button.type = "submit";
+    button.textContent = "Enter";
+    const error = document.createElement("span");
+    error.style.color = "#c00";
+    form.append(input, button, error);
+    container.append(form);
+    input.focus();
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      error.textContent = "";
+      button.disabled = true;
+      void check(input.value).then((ok) => {
+        button.disabled = false;
+        if (!ok) {
+          error.textContent = "nope";
+          return;
+        }
+        current = input.value;
+        window.localStorage.setItem(KEY, current);
+        form.remove();
+        resolve();
+      });
+    });
+  });
+}
+----README
+# edulab
+----
+import type Anthropic from "@anthropic-ai/sdk";
+export type ClientMessage = {
+  type: "start";
+  requestId: string;
+  params: Anthropic.MessageCreateParamsStreaming;
+};
+export type ServerFrame =
+  | { type: "event"; requestId: string; event: Anthropic.RawMessageStreamEvent }
+  | { type: "done"; requestId: string }
+  | { type: "error"; requestId: string; message: string };
+import Anthropic from "@anthropic-ai/sdk";
+import type { ClientMessage, ServerFrame } from "@edulab/iso/protocol.ts";
+import websocket from "@fastify/websocket";
+import type { FastifyInstance } from "fastify";
+export async function registerSocket(
+  app: FastifyInstance,
+  apiKey: string,
+  password: string,
+) {
+  const client = new Anthropic({ apiKey });
+  await app.register(websocket);
+  // The gate for the backend's API key: the deployment is public, inference is
+  // not. Checked once, at the upgrade, because the socket is the only way in.
+  app.get("/api/socket", { websocket: true }, (socket, request) => {
+    const query = request.query as { password?: unknown };
+    if (query.password !== password) {
+      socket.close(4401, "unauthorized");
+      return;
+    }
+    const send = (frame: ServerFrame) => {
+      if (socket.readyState === socket.OPEN) socket.send(JSON.stringify(frame));
+    };
+    socket.on("message", (data: Buffer) => {
+      let message: ClientMessage;
+      try {
+        message = JSON.parse(data.toString()) as ClientMessage;
+      } catch {
+        socket.close(4400, "bad_request");
+        return;
+      }
+      void run(message);
+    });
+    // The server is a pipe: it forwards every event to the client tagged with
+    // the request id, and always terminates the request with done | error.
+    async function run(message: ClientMessage) {
+      const { requestId } = message;
+      try {
+        const stream = client.messages.stream(message.params);
+        for await (const event of stream) {
+          send({ type: "event", requestId, event });
+        }
+        send({ type: "done", requestId });
+      } catch (err) {
+        send({
+          type: "error",
+          requestId,
+          message: err instanceof Error ? err.message : String(err),
+        });
+      }
+    }
+  });
+}
+> edulab@0.0.1 typecheck
+> npm -w @edulab/iso exec tsc -- --noEmit && npm -w @edulab/frontend exec tsc -- --noEmit && npm -w @edulab/backend exec tsc -- --noEmit && npm -w @edulab/e2e exec tsc -- --noEmit
+exit code 0

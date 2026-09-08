@@ -1,0 +1,10 @@
+$ cd /Users/denis.lantsman/src/edulab && grep -n "tools" packages/frontend/threads.test.ts && grep -n "requestId\|tools" packages/iso/protocol.ts
+stdout:
+85:  expect(socket.last.params.tools).toEqual([
+100:it("offers no tools to a child opened without any", () => {
+104:  expect(socket.last.params.tools).toBeUndefined();
+5:  requestId: string;
+10:  | { type: "event"; requestId: string; event: Anthropic.RawMessageStreamEvent }
+11:  | { type: "done"; requestId: string }
+12:  | { type: "error"; requestId: string; message: string };
+exit code 0

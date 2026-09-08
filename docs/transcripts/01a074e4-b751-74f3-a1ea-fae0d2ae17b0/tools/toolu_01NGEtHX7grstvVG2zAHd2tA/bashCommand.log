@@ -1,0 +1,17 @@
+$ cd /Users/denis.lantsman/src/edulab && sed -n 415,428p packages/frontend/prototypes/chat.ts
+stdout:
+  function update(state: State, msg: Msg): void {
+    const node = tree.get(focus);
+    switch (msg.type) {
+      case "DRAFT_CHANGED":
+        node.draft = msg.draft;
+        break;
+      case "SAMPLE_CHANGED":
+        selectSample(msg.id === "" ? undefined : msg.id);
+        break;
+      case "TAB_CHANGED":
+        state.tab = msg.tab;
+        break;
+      case "CHANGE_CLICKED":
+        state.tab = "graph";
+exit code 0

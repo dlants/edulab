@@ -1,0 +1,5 @@
+$ cd /Users/denis.lantsman/src/edulab/packages/e2e && git stash -u -- ../../packages ../../notes 2>/dev/null; cd /Users/denis.lantsman/src/edulab && git stash list
+stdout:
+Saved working directory and index state WIP on main: 3af4d3c Stage 3: The pane and the dispatch loop
+stash@{0}: WIP on main: 3af4d3c Stage 3: The pane and the dispatch loop
+exit code 0

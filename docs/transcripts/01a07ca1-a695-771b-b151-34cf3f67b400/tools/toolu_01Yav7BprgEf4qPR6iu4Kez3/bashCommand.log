@@ -1,0 +1,31 @@
+$ cd /Users/denis.lantsman/src/edulab && npx playwright test -c packages/e2e/playwright.config.ts -g "an update that writes nothing says so"; git stash pop
+stdout:
+Running 1 test using 1 worker
+  ✓  1 packages/e2e/tests/chat.spec.ts:827:1 › an update that writes nothing says so (146ms)
+  1 passed (1.4s)
+On branch main
+Your branch is ahead of 'origin/main' by 3 commits.
+  (use "git push" to publish your local commits)
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	modified:   notes/deliverable.md
+	modified:   packages/backend/app.ts
+	modified:   packages/backend/socket.ts
+	modified:   packages/e2e/playwright.config.ts
+	modified:   packages/e2e/tests/chat.spec.ts
+	modified:   packages/e2e/tests/graph.spec.ts
+	modified:   packages/e2e/tests/persistence.spec.ts
+	modified:   packages/e2e/tests/smoke.spec.ts
+	modified:   packages/frontend/main.ts
+	modified:   packages/frontend/prototypes/chat.ts
+	modified:   packages/frontend/thread.ts
+	modified:   packages/frontend/view.ts
+	modified:   packages/iso/protocol.ts
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	packages/e2e/tests/fixture.ts
+	packages/frontend/auth.ts
+no changes added to commit (use "git add" and/or "git commit -a")
+Dropped refs/stash@{0} (4b9d87c065e8c8aa651850ad698bb61e3abd69ce)
+exit code 0

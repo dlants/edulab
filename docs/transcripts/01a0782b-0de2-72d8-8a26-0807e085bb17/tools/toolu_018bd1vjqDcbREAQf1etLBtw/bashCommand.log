@@ -1,0 +1,21 @@
+$ cd /Users/denis.lantsman/src/edulab && sed -n 1024,1042p packages/frontend/view.ts
+stdout:
+    transcript.addEventListener("mouseup", capture);
+    transcript.addEventListener("keyup", capture);
+    // Scroll and flash are facts about the rendered box, so they can only run
+    // once the pane is already showing the cited thread.
+    this.unsubscribe = ctx.bus.subscribe((event) => {
+      if (event.type === "mark:reveal") {
+        const mark = transcript.querySelector(`[data-mark="${event.thread}"]`);
+        if (mark instanceof HTMLElement) scrollIntoView(mark);
+        return;
+      }
+      if (event.type !== "transcript:reveal") return;
+      const li = transcript.children[event.index];
+      if (!(li instanceof HTMLElement)) return;
+      scrollIntoView(li);
+      li.classList.remove(flashClass);
+      // Restarting the animation needs a frame with the class off.
+      requestAnimationFrame(() => li.classList.add(flashClass));
+    });
+exit code 0

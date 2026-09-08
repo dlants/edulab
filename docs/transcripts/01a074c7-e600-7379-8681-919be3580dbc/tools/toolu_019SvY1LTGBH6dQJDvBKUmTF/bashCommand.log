@@ -1,0 +1,63 @@
+$ cd /Users/denis.lantsman/src/edulab && grep -n -i "graph" packages/frontend/prototypes/chat.ts
+stdout:
+3:  type GraphChange,
+4:  type GraphEdge,
+5:  type GraphNode,
+7:  KnowledgeGraph,
+9:} from "../graph.ts";
+10:import { changesIn, readTools, writeTools } from "../graph-tools.ts";
+14:  Msg as GraphMsg,
+16:} from "../graph-view.ts";
+19:import { GRAPH_UPDATE_SYSTEM, graphUpdatePrompt } from "../prompt.ts";
+28:  type GraphUpdate,
+36:function draftOf(node: GraphNode): Omit<GraphNode, "id">;
+37:function draftOf(edge: GraphEdge): Omit<GraphEdge, "id">;
+48:): ReadonlyArray<GraphChange> {
+70:  const graph = new KnowledgeGraph();
+82:  // Graph updates run one at a time: two in flight would each be handed the
+83:  // pre-update graph and mint rival nodes for the same concept. Appending to
+89:  const graphUpdates = new Map<string, GraphUpdate>();
+92:    const out = new Map<number, GraphUpdate>();
+93:    for (const [key, update] of graphUpdates) {
+100:  // keystroke, so it is recomputed only when the shape of the graph changes.
+128:    graph: {
+143:  /** The graph projected onto view state: positions from `layout`, and the
+145:  function refreshGraph(): void {
+146:    const nodes = graph.nodes;
+147:    const edges = graph.edges;
+153:      placement = layout(graph);
+158:    state.graph = {
+167:   * off the graph rather than the draft: a half-typed address is not a
+180:        const edge = graph.edge(sidebar.id);
+184:        const node = graph.node(sidebar.id);
+194:    refreshGraph();
+226:  /** One detached thread per user interaction, writing straight into the graph
+230:  function queueGraphUpdate(
+236:    graphUpdates.set(key, { type: "running" });
+243:        // writes rather than the graph as it stood when it was enqueued.
+245:          system: GRAPH_UPDATE_SYSTEM,
+246:          prompt: graphUpdatePrompt(interaction, graph.render()),
+247:          tools: writeTools(graph),
+264:        graphUpdates.set(key, { type: "done", changes: changesOf(transcript) });
+274:   * after these came from an interaction that updated the graph itself, so
+291:        const ok = await queueGraphUpdate(tree.root, index);
+322:    void queueGraphUpdate(id, index);
+345:  /** The graph tab's own reducer. It writes to the graph and to `sidebar`;
+346:   * everything the canvas shows is re-derived in refreshGraph(). */
+347:  function updateGraph(msg: GraphMsg): void {
+350:        const node = graph.node(msg.id);
+361:        const edge = graph.edge(msg.id);
+387:            ? graph.putNode({ id: sidebar.id, ...sidebar.draft })
+388:            : graph.putEdge({ id: sidebar.id, ...sidebar.draft });
+395:        if (sidebar.type === "node") graph.deleteNode(sidebar.id);
+396:        else graph.deleteEdge(sidebar.id);
+416:        state.tab = "graph";
+417:        updateGraph(
+423:      case "GRAPH_MSG":
+426:        else updateGraph(msg.msg);
+473:              tools: readTools(graph),
+474:              graph: graph.render(),
+478:            void queueGraphUpdate(id, 0 as MessageIdx);
+531:  // e2e specs seed a known graph through this handle rather than driving the
+533:  (window as unknown as { __graph?: KnowledgeGraph }).__graph = graph;
+exit code 0

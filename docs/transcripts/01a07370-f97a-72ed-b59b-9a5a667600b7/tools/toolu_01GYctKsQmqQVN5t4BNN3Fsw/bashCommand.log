@@ -1,0 +1,50 @@
+$ ls packages/frontend packages/e2e/tests; wc -l packages/frontend/*.ts
+stdout:
+packages/e2e/tests:
+chat.spec.ts
+smoke.spec.ts
+packages/frontend:
+graph-tools.test.ts
+graph-tools.ts
+graph.test.ts
+graph.ts
+index.html
+layout.test.ts
+layout.ts
+learning.ts
+main.ts
+node_modules
+package.json
+prompt.test.ts
+prompt.ts
+prototypes
+samples
+selection.test.ts
+selection.ts
+thread.test.ts
+thread.ts
+threads.test.ts
+threads.ts
+tsconfig.json
+vamp.ts
+view.ts
+     202 packages/frontend/graph-tools.test.ts
+     276 packages/frontend/graph-tools.ts
+     176 packages/frontend/graph.test.ts
+     203 packages/frontend/graph.ts
+      86 packages/frontend/layout.test.ts
+     106 packages/frontend/layout.ts
+     137 packages/frontend/learning.ts
+      20 packages/frontend/main.ts
+     136 packages/frontend/prompt.test.ts
+      86 packages/frontend/prompt.ts
+      97 packages/frontend/selection.test.ts
+     116 packages/frontend/selection.ts
+     596 packages/frontend/thread.test.ts
+     620 packages/frontend/thread.ts
+     124 packages/frontend/threads.test.ts
+     118 packages/frontend/threads.ts
+     573 packages/frontend/vamp.ts
+     698 packages/frontend/view.ts
+    4370 total
+exit code 0

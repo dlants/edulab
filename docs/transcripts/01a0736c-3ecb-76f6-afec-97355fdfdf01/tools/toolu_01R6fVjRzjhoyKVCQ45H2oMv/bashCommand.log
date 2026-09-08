@@ -1,0 +1,8 @@
+$ cd /Users/denis.lantsman/src/edulab && perl -pi -e 's/\\`/`/g; s/\\\$\{/\$\{/g' packages/frontend/graph-tools.ts && grep -n '\\' packages/frontend/graph-tools.ts
+stdout:
+20:  text: lines.join("\n"),
+115:      if (ids.length === 0) return err("\"ids\" is empty");
+145:      if (nodes.length === 0) return err("\"nodes\" is empty");
+197:      if (edges.length === 0) return err("\"edges\" is empty");
+235:      if (ids.length === 0) return err("\"ids\" is empty");
+exit code 0

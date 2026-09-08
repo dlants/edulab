@@ -1,0 +1,169 @@
+$ cd packages/frontend && sed -n 40,110p view.ts && echo ---- && sed -n 750,830p view.ts && echo --- && sed -n 890,910p view.ts
+stdout:
+export type Build =
+  | { type: "idle" }
+  | { type: "running"; done: number; total: number; failed: number }
+  | { type: "done"; failed: number };
+/** What the background graph update for one interaction is doing, shown under
+ * the turn that triggered it: a system quietly building a model of the user is
+ * exactly the thing that should be visible where it happened. */
+export type GraphUpdate =
+  | { type: "running" }
+  | { type: "done"; changes: ReadonlyArray<GraphChange> };
+/** The updates over one thread, keyed by the index of the turn that triggered
+ * each. Derived: losing it loses nothing the graph does not already hold. */
+export type Updates = ReadonlyMap<number, GraphUpdate>;
+export type State = {
+  messages: ReadonlyArray<Message>;
+  /** The id of the canned transcript in play, empty for a hand-written one. */
+  sample: string;
+  inFlight: boolean;
+  draft: string;
+  /** False at layer 0 (the bare task transcript); true for the two-pane split. */
+  split: boolean;
+  /** How deep in the tree the left pane is: 0 at layer 0. */
+  depth: number;
+  /** Whether `→` can move deeper, i.e. there is something to move left. */
+  canDescend: boolean;
+  /** The thread whose transcript this pane shows; the live selection is over it. */
+  thread: ThreadId;
+  /** Committed highlights over this transcript. */
+  marks: ReadonlyArray<Mark>;
+  /** The mark whose thread the right pane is showing, drawn emphasized. */
+  activeMark: ThreadId | null;
+  anchor: Anchor | null;
+  query: string;
+  /** Which top-level tab is showing. State, not a route: a page load would
+   * discard the graph. */
+  tab: "threads" | "graph";
+  graph: GraphState;
+  /** The sample-transcript batch: one graph update per loaded user turn. */
+  build: Build;
+  /** Indices of messages the user has expanded past the collapsed height. */
+  expanded: ReadonlySet<number>;
+  /** The background graph updates over this transcript. */
+  updates: Updates;
+  /** The active child thread, shown on the right when nothing is selected. */
+  child: ThreadPaneState | null;
+};
+export type Msg =
+  | { type: "DRAFT_CHANGED"; draft: string }
+  | { type: "SUBMIT" }
+  | { type: "BUILD" }
+  | { type: "GO_DEEPER" }
+  | { type: "GO_BACK" }
+  | { type: "SELECTION_CHANGED"; anchor: Anchor | null }
+  | { type: "MARK_CLICKED"; thread: ThreadId }
+  | { type: "LEARNING_MSG"; msg: LearningMsg }
+  | { type: "SAMPLE_CHANGED"; id: string }
+  | { type: "TAB_CHANGED"; tab: "threads" | "graph" }
+  | { type: "GRAPH_MSG"; msg: GraphMsg }
+  | { type: "TOGGLE_EXPANDED"; index: number }
+  | { type: "CHANGE_CLICKED"; id: GraphId }
+  | { type: "CHILD_MSG"; msg: ThreadPaneMsg };
+const appClass = cls("app");
+const transcriptClass = cls("transcript");
+const messageClass = cls("message");
+const roleClass = cls("role");
+const composerClass = cls("composer");
+----
+    const transcriptRef: Ref = ref("transcript");
+    const inputRef: Ref = ref("input");
+    const sendRef: Ref = ref("send");
+    const backRef: Ref = ref("back");
+    const forwardRef: Ref = ref("forward");
+    const depthRef: Ref = ref("depth");
+    const composerRef: Ref = ref("composer");
+    const learningRef: Ref = ref("learning");
+    const sampleRef: Ref = ref("sample");
+    const buildRef: Ref = ref("build");
+    const buildStatusRef: Ref = ref("build-status");
+    const threadsTabRef: Ref = ref("threads-tab");
+    const graphTabRef: Ref = ref("graph-tab");
+    const bodyRef: Ref = ref("body");
+    const graphSlotRef: Ref = ref("graph-slot");
+    container.className = appClass;
+    container.innerHTML = sanitize`
+      <div class="${navClass}">
+        <select class="${sampleClass}" data-ref="${sampleRef}"></select>
+        <button type="button" data-build data-ref="${buildRef}">Build knowledge graph from this transcript</button>
+        <span class="${buildStatusClass}" data-build-status data-ref="${buildStatusRef}"></span>
+        <span class="${tabsClass}">
+          <button type="button" data-ref="${threadsTabRef}">Threads</button>
+          <button type="button" data-ref="${graphTabRef}">Knowledge graph</button>
+        </span>
+        <span class="${spacerClass}"></span>
+        <button type="button" data-ref="${backRef}">← Back</button>
+        <span class="${depthClass}" data-ref="${depthRef}"></span>
+        <button type="button" data-ref="${forwardRef}"></button>
+      </div>
+      <div class="${bodyClass}" data-ref="${bodyRef}">
+      <div class="${paneClass}">
+        <ul class="${transcriptClass}" data-ref="${transcriptRef}"></ul>
+        <div class="${composerClass}" data-ref="${composerRef}">
+          <textarea data-ref="${inputRef}" rows="2" placeholder="Ask something…"></textarea>
+          <button type="button" data-ref="${sendRef}">Send</button>
+        </div>
+      </div>
+        <div data-ref="${learningRef}"></div>
+      </div>
+      <div class="${graphTabClass}" data-ref="${graphSlotRef}"></div>
+    `;
+    this.container = container;
+    this.current = initialState;
+    this.b = new Binder(container, initialState);
+    const input = this.b.ref<HTMLTextAreaElement>(inputRef);
+    input.addEventListener("input", () => {
+      dispatch({ type: "DRAFT_CHANGED", draft: input.value });
+    });
+    input.addEventListener("keydown", (e: KeyboardEvent) => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        dispatch({ type: "SUBMIT" });
+      }
+    });
+    this.b
+      .ref(sendRef)
+      .addEventListener("click", () => dispatch({ type: "SUBMIT" }));
+    // The option list is a module constant, so it is built once rather than
+    // bound; switching sample is a page navigation anyway.
+    const picker = this.b.ref<HTMLSelectElement>(sampleRef);
+    const own = document.createElement("option");
+    own.value = "";
+    own.textContent = "Write your own";
+    picker.append(own);
+    for (const sample of samples) {
+      const option = document.createElement("option");
+      option.value = sample.id;
+      option.textContent = sample.label;
+      picker.append(option);
+    }
+    picker.addEventListener("change", () => {
+      dispatch({ type: "SAMPLE_CHANGED", id: picker.value });
+    });
+    this.b
+      .ref(backRef)
+      .addEventListener("click", () => dispatch({ type: "GO_BACK" }));
+    this.b
+---
+        ),
+      ),
+    );
+    this.b
+      .ref(buildRef)
+      .addEventListener("click", () => dispatch({ type: "BUILD" }));
+    this.b.bindDisabled(buildRef, (s) => s.build.type !== "idle");
+    this.b.bindText(buildStatusRef, (s) => buildStatus(s.build));
+    this.b.bindValue(sampleRef, (s) => s.sample);
+    this.b
+      .ref(threadsTabRef)
+      .addEventListener("click", () =>
+        dispatch({ type: "TAB_CHANGED", tab: "threads" }),
+      );
+    this.b
+      .ref(graphTabRef)
+      .addEventListener("click", () =>
+        dispatch({ type: "TAB_CHANGED", tab: "graph" }),
+      );
+    this.b.bindAttr(threadsTabRef, "aria-pressed", (s) =>
+exit code 0

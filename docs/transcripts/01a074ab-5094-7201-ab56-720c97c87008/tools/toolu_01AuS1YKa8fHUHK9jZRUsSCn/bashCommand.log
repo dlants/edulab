@@ -1,0 +1,18 @@
+$ cd /Users/denis.lantsman/src/edulab && sed -n 80,95p packages/frontend/prototypes/chat.ts
+stdout:
+    thread: focus,
+    marks: [],
+    activeMark: null,
+    anchor: null,
+    tab: "threads",
+    graph: { nodes: [], edges: [], sidebar, build },
+    query: "",
+    origin: null,
+    expanded: new Set(),
+    child: null,
+  };
+  /** Re-projects the tree onto the view's state. Everything but the fields the
+   * user is editing is derived, so this runs after every dispatch. */
+  /** The graph projected onto view state: positions from `layout`, and the
+   * sidebar the user is editing. */
+exit code 0

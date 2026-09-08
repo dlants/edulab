@@ -1,0 +1,59 @@
+$ cd ~/.claude/skills/browser && pkgx pnpm exec tsx scripts/browser.ts "
+load http://localhost:5173
+sleep 2000
+eval
+function d(e){const r=e.getBoundingClientRect();return {tag:e.tagName,cls:e.className,disp:getComputedStyle(e).display,x:Math.round(r.x),y:Math.round(r.y),w:Math.round(r.width),h:Math.round(r.height)}}
+const app=document.body.firstElementChild;
+return {win:[window.innerWidth,window.innerHeight],app:d(app),kids:Array.from(app.children).map(d),body:Array.from(app.children).flatMap(c=>Array.from(c.children).map(d))};
+endeval
+"
+stdout:
+Loading http://localhost:5173...
+Sleeping for 2000ms...
+Evaluating code in page context...
+Eval result: {
+  win: [ 1280, 720 ],
+  app: { tag: 'DIV', cls: '', disp: 'block', x: 0, y: 0, w: 1280, h: 720 },
+  kids: [
+    {
+      tag: 'DIV',
+      cls: 'app_19',
+      disp: 'flex',
+      x: 0,
+      y: 0,
+      w: 1280,
+      h: 720
+    }
+  ],
+  body: [
+    {
+      tag: 'DIV',
+      cls: 'nav_25',
+      disp: 'flex',
+      x: 0,
+      y: 0,
+      w: 1280,
+      h: 47
+    },
+    {
+      tag: 'DIV',
+      cls: 'body_32',
+      disp: 'grid',
+      x: 272,
+      y: 47,
+      w: 736,
+      h: 673
+    },
+    {
+      tag: 'DIV',
+      cls: 'graph-tab_37',
+      disp: 'none',
+      x: 0,
+      y: 0,
+      w: 0,
+      h: 0
+    }
+  ]
+}
+Script completed successfully!
+exit code 0

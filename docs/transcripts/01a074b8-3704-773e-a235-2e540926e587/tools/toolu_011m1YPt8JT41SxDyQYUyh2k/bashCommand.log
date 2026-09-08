@@ -1,0 +1,53 @@
+$ cd /Users/denis.lantsman/src/edulab && sed -n '60,115p' packages/frontend/graph-tools.test.ts
+stdout:
+  const edges = await run("put_edges", {
+    edges: [{ from: "n0", to: "n1", title: "uses", description: "d" }],
+  });
+  expect(edges.status).toBe("ok");
+  expect(graph.edges).toHaveLength(1);
+  const got = await run("get", { ids: ["n0", "e2", "zz"] });
+  expect(got.status).toBe("ok");
+  expect(text(got)).toContain('node n0 "a"');
+  expect(text(got)).toContain('edge e2 "uses"');
+  expect(text(got)).toContain("zz: not found");
+  const deleted = await run("delete", { ids: ["n0"] });
+  expect(deleted.status).toBe("ok");
+  expect(text(deleted)).toContain("1 incident edge");
+  expect(graph.nodes).toHaveLength(1);
+  expect(graph.edges).toHaveLength(0);
+});
+it("updates in place when an id is given", async () => {
+  const { graph, run } = setup();
+  await run("put_nodes", {
+    nodes: [{ title: "a", description: "d", notes: "n", level: 1 }],
+  });
+  await run("put_nodes", {
+    nodes: [{ id: "n0", title: "a", description: "d2", notes: "n2", level: 4 }],
+  });
+  expect(graph.nodes).toHaveLength(1);
+  expect(graph.node("n0" as NodeId)?.level).toBe(4);
+});
+it("a bad entry does not stop its neighbours, and the call is still ok", async () => {
+  const { graph, run } = setup();
+  await run("put_nodes", {
+    nodes: [{ title: "a", description: "d", notes: "n", level: 1 }],
+  });
+  const result = await run("put_nodes", {
+    nodes: [
+      { title: "a", description: "d", notes: "n", level: 1 },
+      { id: "n99", title: "x", description: "d", notes: "n", level: 1 },
+      { title: "b", description: "d", notes: "n", level: 1 },
+    ],
+  });
+  expect(result.status).toBe("ok");
+  expect(text(result)).toContain("entry 0: error:");
+  expect(text(result)).toContain("entry 1: error:");
+  expect(text(result)).toContain("entry 2: created");
+  expect(graph.nodes.map((n) => n.title)).toEqual(["a", "b"]);
+  const bad = await run("put_edges", {
+    edges: [{ from: "n0", to: "n99", title: "t", description: "d" }],
+  });
+  expect(bad.status).toBe("ok");
+  expect(text(bad)).toContain("entry 0: error:");
+});
+exit code 0

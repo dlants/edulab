@@ -1,0 +1,15 @@
+$ cd /Users/denis.lantsman/src/edulab && git add -A && git commit -q -m "Pin the composers, move the setup controls behind a gear, and make marks navigable
+
+The panes are now fixed-height flex columns with their own scrollback, so
+the composer sits at the bottom of the viewport rather than scrolling away
+with a long transcript. The sample picker, the build button and Reset move
+into a gear menu at the top left; the tab switch is centred and marked by
+weight rather than by a pill.
+
+Clicking a mark opens the reflect column onto its thread wherever it is
+clicked from, the learning pane lists the passages that already have
+threads when nothing is selected, and both those and a climb back out
+scroll the highlight into view." && git push -q && git log --oneline -1
+stdout:
+3ea37cb Pin the composers, move the setup controls behind a gear, and make marks navigable
+exit code 0

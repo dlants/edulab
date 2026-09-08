@@ -1,0 +1,64 @@
+$ cd ~/src/dotfiles && home-manager switch --flake .#macos && which render && render --version
+stderr:
+warning: Git tree '/Users/denis.lantsman/src/dotfiles' is dirty
+evaluation warning: The xorg package set has been deprecated, 'xorg.lndir' has been renamed to 'lndir'
+these 12 derivations will be built:
+  /nix/store/7z9dqjmsrjwmcnp5cqx936vxd3rkzj3m-man-paths.drv
+  /nix/store/04y85dhvlqg4zsyl0i0mc9dgr1rf88bk-man-cache.drv
+  /nix/store/f0ls3s3mklym7h4y7v20l87k8zqcllqx-home-manager-path.drv
+  /nix/store/vkbl18jfvijb39rw9yg2gq72gh26q2c4-render-cli-2.15.1-fish-completions.drv
+  /nix/store/9hszz2avfsvym3bs6bgphb33d9y6h600-denis.lantsman-fish-completions.drv
+  /nix/store/q6y5d7i3q57wpihy6lhib1x48isl4vcw-home-manager-fonts.drv
+  /nix/store/c4hllzxscw88b76q20fbdc4z3r4jx64z-hm_LibraryFonts.homemanagerfontsversion.drv
+  /nix/store/hlmqpfwqs2mi1c1f446a5s7bl2vc500m-home-manager-applications.drv
+  /nix/store/qbhi7xzfanqlgmi9swqz77bi8xw0d7yd-hm_.manpath.drv
+  /nix/store/hximcax84xbz0zzzk3y22fbln15z1mq9-home-manager-files.drv
+  /nix/store/qfyhlbf0p0ln209hrzrad1kzdby3ygny-activation-script.drv
+  /nix/store/3wmxbr8qcpr8ps8zsrn8jpqsp9amfcy3-home-manager-generation.drv
+this path will be fetched (4.9 MiB download, 19.9 MiB unpacked):
+  /nix/store/qf1iyndwdhmsdsk8ra52hf5bh33hy0r0-render-cli-2.15.1
+copying path '/nix/store/qf1iyndwdhmsdsk8ra52hf5bh33hy0r0-render-cli-2.15.1' from 'https://cache.nixos.org'...
+building '/nix/store/hlmqpfwqs2mi1c1f446a5s7bl2vc500m-home-manager-applications.drv'...
+building '/nix/store/q6y5d7i3q57wpihy6lhib1x48isl4vcw-home-manager-fonts.drv'...
+building '/nix/store/f0ls3s3mklym7h4y7v20l87k8zqcllqx-home-manager-path.drv'...
+building '/nix/store/c4hllzxscw88b76q20fbdc4z3r4jx64z-hm_LibraryFonts.homemanagerfontsversion.drv'...
+building '/nix/store/7z9dqjmsrjwmcnp5cqx936vxd3rkzj3m-man-paths.drv'...
+building '/nix/store/qfyhlbf0p0ln209hrzrad1kzdby3ygny-activation-script.drv'...
+building '/nix/store/04y85dhvlqg4zsyl0i0mc9dgr1rf88bk-man-cache.drv'...
+building '/nix/store/vkbl18jfvijb39rw9yg2gq72gh26q2c4-render-cli-2.15.1-fish-completions.drv'...
+building '/nix/store/qbhi7xzfanqlgmi9swqz77bi8xw0d7yd-hm_.manpath.drv'...
+building '/nix/store/9hszz2avfsvym3bs6bgphb33d9y6h600-denis.lantsman-fish-completions.drv'...
+building '/nix/store/hximcax84xbz0zzzk3y22fbln15z1mq9-home-manager-files.drv'...
+building '/nix/store/3wmxbr8qcpr8ps8zsrn8jpqsp9amfcy3-home-manager-generation.drv'...
+stdout:
+Starting Home Manager activation
+Activating checkLinkTargets
+Activating writeBoundary
+Activating brewInstall
+Activating checkFilesChanged
+Activating cloneLocalPlugins
+Activating linkMagentaSdk
+Activating installMagentaScriptDeps
+Activating installPackages
+stderr:
+replacing old 'home-manager-path'
+installing 'home-manager-path'
+building '/nix/store/w2y8g3f6fz23ir1fzaarg5zbbvachq64-user-environment.drv'...
+stdout:
+Activating installPkb
+Activating linkGeneration
+Cleaning up orphan links from /Users/denis.lantsman
+Creating home file links in /Users/denis.lantsman
+Activating onFilesChange
+Activating setupLaunchAgents
+Activating setupMagentaSkills
+stderr:
+warning: Git tree '/Users/denis.lantsman/src/dotfiles' is dirty
+There are 223 unread and relevant news items.
+Read them by running the command "home-manager news".
+stdout:
+/Users/denis.lantsman/.nix-profile/bin/render
+render v2.15.1
+A new version is available: v2.26.0                              
+To upgrade, see: https://render.com/docs/cli#1-install-or-upgrade
+exit code 0

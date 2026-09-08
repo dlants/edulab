@@ -1,0 +1,10 @@
+$ cd /Users/denis.lantsman/src/edulab && npm run lint:fix && npx playwright test graph.spec.ts --config packages/e2e/playwright.config.ts -g "zoom|pans"
+stdout:
+> edulab@0.0.1 lint:fix
+> biome check --write .
+Checked 52 files in 128ms. Fixed 1 file.
+Running 2 tests using 2 workers
+  ✓  1 packages/e2e/tests/graph.spec.ts:199:1 › dragging the canvas pans the graph but still selects on a click (357ms)
+  ✓  2 packages/e2e/tests/graph.spec.ts:180:1 › zooming spreads the nodes without resizing them, and reset restores (367ms)
+  2 passed (1.6s)
+exit code 0

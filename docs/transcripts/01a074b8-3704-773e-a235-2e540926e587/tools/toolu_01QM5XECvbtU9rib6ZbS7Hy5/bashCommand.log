@@ -1,0 +1,28 @@
+$ cd /Users/denis.lantsman/src/edulab && sed -n '95,120p' packages/frontend/graph.ts
+stdout:
+      status: "ok",
+      change: {
+        op: node.id === undefined ? "created" : "updated",
+        kind: "node",
+        id,
+        title,
+      },
+    };
+  }
+  /** Cascades to incident edges. */
+  deleteNode(id: NodeId): GraphResult {
+    const node = this.#nodes.get(id);
+    if (!node) return { status: "error", error: `no node with id ${id}` };
+    let removed = 0;
+    for (const edge of [...this.#edges.values()])
+      if (edge.from === id || edge.to === id) {
+        this.#edges.delete(edge.id);
+        removed++;
+      }
+    this.#nodes.delete(id);
+    void removed;
+    return {
+      status: "ok",
+      change: { op: "deleted", kind: "node", id, title: node.title },
+    };
+exit code 0

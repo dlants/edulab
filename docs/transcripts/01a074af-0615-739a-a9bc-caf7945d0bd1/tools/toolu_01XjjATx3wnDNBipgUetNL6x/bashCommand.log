@@ -1,0 +1,86 @@
+$ cd /Users/denis.lantsman/src/edulab/packages/frontend && sed -n 250,340p thread.ts
+stdout:
+      this.pending?.blocks,
+    );
+    this.cache = { version: this.version, messages };
+    return messages;
+  }
+  get inFlight(): boolean {
+    return this.running;
+  }
+  /** The settled yield, once the thread has produced one. */
+  get result(): TurnResult | undefined {
+    return this.settled;
+  }
+  send(text: string): Promise<TurnResult> {
+    if (this.running) return Promise.resolve({ type: "completed" });
+    this.turns.push({ role: "user", content: text });
+    this.version++;
+    return this.run();
+  }
+  /** Requests a reply to the turns already present - the seeded first turn of
+   * a learning thread, which the user never typed. */
+  start(): Promise<TurnResult> {
+    if (this.running || this.turns.length === 0)
+      return Promise.resolve({ type: "completed" });
+    return this.run();
+  }
+  /** One agent turn: request, execute whatever tools the model asked for,
+   * request again, until it replies without calling any. */
+  private async run(): Promise<TurnResult> {
+    this.running = true;
+    this.failed = false;
+    try {
+      for (;;) {
+        const content = await this.request();
+        if (this.failed) return { type: "error", message: "request ended" };
+        const calls = content.filter(
+          (block): block is Anthropic.ToolUseBlockParam =>
+            block.type === "tool_use",
+        );
+        if (calls.length === 0) return { type: "completed" };
+        // Every tool_use must be answered by exactly one tool_result in the
+        // immediately following user turn, in request order, or the next
+        // request is rejected outright.
+        const results = await Promise.all(
+          calls.map((call) => this.execute(call)),
+        );
+        this.turns.push({ role: "user", content: results });
+        this.version++;
+        this.onChange?.();
+        // Yield is not special-cased during execution: the whole batch runs and
+        // every result lands in the log, and only then does the turn stop.
+        const yielded = calls.find((call) => this.isYield(call.name));
+        if (yielded) {
+          const result: TurnResult = {
+            type: "yielded",
+            value: this.yieldValue(
+              (yielded.input ?? {}) as Record<string, unknown>,
+            ),
+          };
+          this.settled = result;
+          return result;
+        }
+      }
+    } finally {
+      this.running = false;
+      this.onChange?.();
+    }
+  }
+  private isYield(name: string): boolean {
+    return this.yieldSchema !== undefined && name === YIELD;
+  }
+  private yieldValue(input: Record<string, unknown>): YieldValue {
+    return this.yieldSchema === "text"
+      ? { type: "text", text: String(input.result ?? "") }
+      : { type: "structured", value: input };
+  }
+  private toolSpecs(): Anthropic.Tool[] {
+    const specs = Object.values(this.tools).map((tool) => tool.spec);
+    if (this.yieldSchema !== undefined) {
+      specs.push({
+        name: YIELD,
+        description:
+          "Finish this thread and return your result to whoever spawned it. Call this exactly once, when you are done; do not call it before you have finished the work.",
+        input_schema:
+exit code 0

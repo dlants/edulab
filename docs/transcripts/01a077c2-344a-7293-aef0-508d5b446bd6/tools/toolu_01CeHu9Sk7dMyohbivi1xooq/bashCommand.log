@@ -1,0 +1,13 @@
+$ cd /Users/denis.lantsman/src/edulab/packages/frontend && grep -n "private current: State;" view.ts && sed -n '1274,1282p' view.ts
+stdout:
+954:  private current: State;
+1110:  private current: State;
+  return build.type === "idle" ? [] : build.failures;
+}
+function buildStatus(build: Build): string {
+  switch (build.type) {
+    case "idle":
+      return "";
+    case "running":
+      return `${build.done} / ${build.total} interactions`;
+exit code 0

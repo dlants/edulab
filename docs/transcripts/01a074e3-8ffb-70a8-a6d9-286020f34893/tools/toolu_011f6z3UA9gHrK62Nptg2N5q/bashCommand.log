@@ -1,0 +1,5 @@
+$ cd /Users/denis.lantsman/src/edulab && npm run lint:fix --silent && npm run lint --silent
+stdout:
+Checked 52 files in 139ms. Fixed 1 file.
+Checked 52 files in 129ms. No fixes applied.
+exit code 0

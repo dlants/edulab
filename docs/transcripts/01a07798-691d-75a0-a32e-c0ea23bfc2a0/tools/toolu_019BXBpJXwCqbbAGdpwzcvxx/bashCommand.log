@@ -1,0 +1,28 @@
+$ cd /Users/denis.lantsman/src/edulab && sed -n '168,198p' packages/e2e/tests/graph.spec.ts
+stdout:
+  await expect(page.locator("[data-edge-label]")).toHaveText("requires");
+});
+/** The distance between the two seeded nodes: zooming changes the spacing on
+ * the canvas, and nothing else about them. */
+async function spread(page: Page): Promise<number> {
+  const boxes = await nodes(page).all();
+  const [a, b] = await Promise.all(boxes.map((n) => n.boundingBox()));
+  if (!a || !b) throw new Error("nodes are not laid out");
+  return Math.hypot(a.x - b.x, a.y - b.y);
+}
+test("zooming spreads the nodes without resizing them, and reset restores", async ({
+  page,
+}) => {
+  await open(page);
+  const before = await spread(page);
+  const size = await nodes(page).first().boundingBox();
+  await page.locator("[data-graph-zoom-in]").click();
+  await expect.poll(() => spread(page)).toBeGreaterThan(before * 1.2);
+  expect((await nodes(page).first().boundingBox())?.height).toBe(size?.height);
+  await page.locator("[data-graph-zoom-out]").click();
+  await page.locator("[data-graph-zoom-out]").click();
+  await expect.poll(() => spread(page)).toBeLessThan(before);
+  await page.locator("[data-graph-reset-view]").click();
+  await expect.poll(() => spread(page)).toBeCloseTo(before, 1);
+});
+exit code 0

@@ -1,0 +1,14 @@
+$ cd /Users/denis.lantsman/src/edulab/packages/frontend && grep -n "ThreadId" threads.ts | grep -i "as ThreadId\|nextId\|counter" ; grep -n "export function scrollIntoView" -A 12 vamp.ts
+stdout:
+164:    const id = `t${this.nextId++}` as ThreadId;
+596:export function scrollIntoView(el: HTMLElement): void {
+597-  el.scrollIntoView({ behavior: "smooth", block: "start" });
+598-}
+599-
+600-/** Inject a raw CSS string into the page via a <style> tag. */
+601-export function mountStyle(css: string): void {
+602-  const el = document.createElement("style");
+603-  el.textContent = css;
+604-  document.head.appendChild(el);
+605-}
+exit code 0

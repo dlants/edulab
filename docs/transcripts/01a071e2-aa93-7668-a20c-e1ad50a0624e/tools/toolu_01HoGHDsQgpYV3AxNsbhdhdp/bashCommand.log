@@ -1,0 +1,64 @@
+$ cd /Users/denis.lantsman/src/edulab && grep -rn "onversation\|Thread\b\|TreeNode" --include=*.ts packages/ | grep -v node_modules
+stdout:
+packages/frontend/threads.ts:1:import { Conversation, type Socket } from "./conversation.ts";
+packages/frontend/threads.ts:10:export type Thread = {
+packages/frontend/threads.ts:14:  conversation: Conversation;
+packages/frontend/threads.ts:21:/** The tree of conversations. Every thread but the root was opened from a
+packages/frontend/threads.ts:25:  private readonly threads = new Map<ThreadId, Thread>();
+packages/frontend/threads.ts:29:  /** Attached to every conversation the tree owns, so a stream anywhere in the
+packages/frontend/threads.ts:33:  constructor(socket: Socket, root: Conversation, onChange: () => void) {
+packages/frontend/threads.ts:39:  get(id: ThreadId): Thread {
+packages/frontend/threads.ts:45:  /** Seeds a child conversation from the parent's own seed plus its transcript
+packages/frontend/threads.ts:50:    const conversation = new Conversation(this.socket, {
+packages/frontend/threads.ts:53:        parent.conversation.seed,
+packages/frontend/threads.ts:54:        parent.conversation.messages,
+packages/frontend/threads.ts:59:    const id = this.add({ anchor, action }, conversation);
+packages/frontend/threads.ts:85:  private add(origin: Origin | null, conversation: Conversation): ThreadId {
+packages/frontend/threads.ts:87:    conversation.onChange = this.onChange;
+packages/frontend/threads.ts:91:      conversation,
+packages/frontend/view.ts:1:import type { Message } from "./conversation.ts";
+packages/frontend/prototypes/chat.ts:1:import { Conversation } from "../conversation.ts";
+packages/frontend/prototypes/chat.ts:16:  // One socket for the whole app: every thread's Conversation adds its own
+packages/frontend/prototypes/chat.ts:22:    new Conversation(socket, { initialTurns: selectedSample()?.turns }),
+packages/frontend/prototypes/chat.ts:55:    state.messages = thread.conversation.messages;
+packages/frontend/prototypes/chat.ts:56:    state.inFlight = thread.conversation.inFlight;
+packages/frontend/prototypes/chat.ts:65:            tree.get(own.anchor.thread).conversation.messages,
+packages/frontend/prototypes/chat.ts:79:      messages: child.conversation.messages,
+packages/frontend/prototypes/chat.ts:80:      inFlight: child.conversation.inFlight,
+packages/frontend/prototypes/chat.ts:88:    if (text === "" || thread.conversation.inFlight) return;
+packages/frontend/prototypes/chat.ts:90:    thread.conversation.send(text).then(undefined, (e: unknown) => {
+packages/frontend/prototypes/chat.ts:145:              .conversation.start()
+packages/frontend/conversation.ts:20:/** The subset of WebSocket the conversation uses, so tests can stand in for it. */
+packages/frontend/conversation.ts:29:export class Conversation {
+packages/frontend/conversation.test.ts:4:import { Conversation, type Socket } from "./conversation.ts";
+packages/frontend/conversation.test.ts:61:  return { socket, conversation: new Conversation(socket) };
+packages/frontend/conversation.test.ts:65:  const { socket, conversation } = setup();
+packages/frontend/conversation.test.ts:66:  const turn = conversation.send("hi");
+packages/frontend/conversation.test.ts:67:  expect(conversation.messages).toEqual([{ role: "user", text: "hi" }]);
+packages/frontend/conversation.test.ts:79:  expect(conversation.messages[1]).toEqual({ role: "assistant", text: "he" });
+packages/frontend/conversation.test.ts:89:  expect(conversation.inFlight).toBe(false);
+packages/frontend/conversation.test.ts:90:  expect(conversation.messages).toEqual([
+packages/frontend/conversation.test.ts:96:it("sends the whole conversation with alternating roles on the second turn", async () => {
+packages/frontend/conversation.test.ts:97:  const { socket, conversation } = setup();
+packages/frontend/conversation.test.ts:98:  const first = conversation.send("one");
+packages/frontend/conversation.test.ts:102:  const second = conversation.send("two");
+packages/frontend/conversation.test.ts:106:  expect(conversation.messages).toEqual([
+packages/frontend/conversation.test.ts:120:  const { socket, conversation } = setup();
+packages/frontend/conversation.test.ts:121:  void conversation.send("one");
+packages/frontend/conversation.test.ts:122:  void conversation.send("two");
+packages/frontend/conversation.test.ts:124:  expect(conversation.messages).toEqual([{ role: "user", text: "one" }]);
+packages/frontend/conversation.test.ts:128:  const { socket, conversation } = setup();
+packages/frontend/conversation.test.ts:129:  const turn = conversation.send("hi");
+packages/frontend/conversation.test.ts:140:  conversation.handleFrame({
+packages/frontend/conversation.test.ts:147:  expect(conversation.messages).toEqual([
+packages/frontend/conversation.test.ts:155:  const conversation = new Conversation(socket, {
+packages/frontend/conversation.test.ts:159:  expect(conversation.messages).toEqual([]);
+packages/frontend/conversation.test.ts:161:  const first = conversation.start();
+packages/frontend/conversation.test.ts:164:  expect(conversation.messages).toEqual([{ role: "assistant", text: "hello" }]);
+packages/frontend/conversation.test.ts:166:  const second = conversation.send("more");
+packages/frontend/conversation.test.ts:179:  const { socket, conversation } = setup();
+packages/frontend/conversation.test.ts:180:  const turn = conversation.send("hi");
+packages/frontend/conversation.test.ts:181:  conversation.handleFrame({ type: "done", requestId: socket.requestId });
+packages/frontend/conversation.test.ts:183:  expect(conversation.messages).toEqual([{ role: "user", text: "hi" }]);
+packages/e2e/tests/chat.spec.ts:140:test("a second turn sends the full conversation", async ({ page }) => {
+exit code 0

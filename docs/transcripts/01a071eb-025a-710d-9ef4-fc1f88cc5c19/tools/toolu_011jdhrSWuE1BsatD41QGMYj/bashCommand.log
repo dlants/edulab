@@ -1,0 +1,150 @@
+$ cd /Users/denis.lantsman/src/edulab && sed -n 1,90p packages/frontend/thread.test.ts && cat packages/frontend/prompt.ts | sed -n 1,80p
+stdout:
+import type Anthropic from "@anthropic-ai/sdk";
+import type { ClientMessage } from "@edulab/iso/protocol.ts";
+import { expect, it } from "vitest";
+import { anchorText, type ThreadId } from "./selection.ts";
+import { type Socket, Thread, type Tool, type ToolResult } from "./thread.ts";
+class FakeSocket implements Socket {
+  readonly sent: ClientMessage[] = [];
+  private listener: ((e: MessageEvent<string>) => void) | undefined;
+  send(data: string) {
+    this.sent.push(JSON.parse(data) as ClientMessage);
+  }
+  addEventListener(
+    _type: "message",
+    listener: (e: MessageEvent<string>) => void,
+  ) {
+    this.listener = listener;
+  }
+  get requestId(): string {
+    const last = this.sent[this.sent.length - 1];
+    if (!last) throw new Error("nothing sent");
+    return last.requestId;
+  }
+  deliver(event: Anthropic.RawMessageStreamEvent) {
+    this.listener?.(
+      new MessageEvent("message", {
+        data: JSON.stringify({
+          type: "event",
+          requestId: this.requestId,
+          event,
+        }),
+      }),
+    );
+  }
+  stream(chunks: string[]) {
+    this.deliver({
+      type: "content_block_start",
+      index: 0,
+      content_block: { type: "text", text: "", citations: null },
+    });
+    for (const text of chunks) {
+      this.deliver({
+        type: "content_block_delta",
+        index: 0,
+        delta: { type: "text_delta", text },
+      });
+    }
+    this.deliver({ type: "content_block_stop", index: 0 });
+    this.deliver({
+      type: "message_stop",
+    } as Anthropic.RawMessageStreamEvent);
+  }
+}
+function toolCall(
+  socket: FakeSocket,
+  index: number,
+  id: string,
+  name: string,
+  chunks: string[],
+) {
+  socket.deliver({
+    type: "content_block_start",
+    index,
+    content_block: {
+      type: "tool_use",
+      id,
+      name,
+      input: {},
+      caller: { type: "direct" },
+    },
+  });
+  for (const partial_json of chunks) {
+    socket.deliver({
+      type: "content_block_delta",
+      index,
+      delta: { type: "input_json_delta", partial_json },
+    });
+  }
+}
+/** Lets the thread's tool execution and follow-up request run. */
+function flush(): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, 0));
+}
+import { type Anchor, anchorText } from "./selection.ts";
+import type { Message } from "./thread.ts";
+export type Action =
+  | { type: "explain" }
+  | { type: "quiz" }
+  | { type: "query"; text: string };
+/** Learning mode: the agent is explaining work that already happened, to a
+ * user who chose the passage they are stuck on. */
+export const LEARNING_SYSTEM = [
+  "You are helping a user understand engineering work that was done for them.",
+  "They will show you a transcript and point at a passage they picked out.",
+  "Answer about that passage specifically, in plain language, and assume the",
+  "user has not followed the reasoning that produced it. Be concise, and do",
+  "not restate the whole transcript back to them.",
+].join(" ");
+/** The single synthetic user turn seeding a learning thread. `seed` is the
+ * parent's own seed and is emitted verbatim - wrapping or re-labelling it
+ * would nest the framing one layer deeper at every level. */
+export function seedTurn(
+  seed: string | undefined,
+  messages: ReadonlyArray<Message>,
+  anchor: Anchor,
+  action: Action,
+): string {
+  const visible = messages.slice(0, anchor.end.msg + 1);
+  const sections = [];
+  if (seed) sections.push(seed);
+  sections.push(transcript(visible));
+  sections.push(
+    `The user then selected: "${anchorText(anchor, visible)}"\n${question(action)}`,
+  );
+  return sections.join("\n\n");
+}
+function transcript(messages: ReadonlyArray<Message>): string {
+  return messages
+    .map((m) => `${m.role === "user" ? "User" : "Assistant"}: ${line(m)}`)
+    .join("\n\n");
+}
+function line(message: Message): string {
+  return message.type === "text"
+    ? message.text
+    : `[called tool ${message.call.name} with ${message.call.inputJson}]`;
+}
+/** How the thread was opened, shown at the top of its pane so the user can see
+ * what they asked for. */
+export function actionLabel(action: Action): string {
+  switch (action.type) {
+    case "explain":
+      return "I don't understand this.";
+    case "quiz":
+      return "Quiz me on this.";
+    case "query":
+      return action.text;
+  }
+}
+function question(action: Action): string {
+  switch (action.type) {
+    case "explain":
+      return "They said they don't understand this. Explain what it means and why it is there.";
+    case "quiz":
+      return "They asked to be quizzed on this. Ask one question that checks whether they understand it, and wait for their answer.";
+    case "query":
+      return `They asked: ${action.text}`;
+  }
+}
+exit code 0

@@ -1,0 +1,4 @@
+$ cd /Users/denis.lantsman/src/edulab && git add -A && git commit -q -m "Stage 3: The tool loop" && git log --oneline -1
+stdout:
+e7350c5 Stage 3: The tool loop
+exit code 0

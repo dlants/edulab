@@ -1,0 +1,43 @@
+$ cd ~/src/edulab && grep -c . .env && render services create --name edulab --type web_service --runtime node --repo https://github.com/dlants/edulab --branch main --plan starter --region oregon --build-command "npm ci && npm run build" --start-command "node packages/backend/app.ts" --env-var "NODE_VERSION=24" --env-var "ANTHROPIC_API_KEY=$(grep ANTHROPIC_API_KEY .env | cut -d= -f2-)" --env-var "APP_PASSWORD=$(grep APP_PASSWORD .env | cut -d= -f2-)" --auto-deploy --confirm -o json
+stdout:
+2
+stderr:
+Error: received response code 400: passed in repository URL is invalid or unfetchable: https://github.com/dlants/edulab. Accepted formats are: https://github.com/{namespace}/{repository}, https://gitlab.com/{namespace}/{repository}, https://bitbucket.org/{namespace}/{repository}, or https://cursor.com/codebase/{namespace}/{repository}. You may pass in a branch in the branch field.
+Usage:
+  render services create [flags]
+Flags:
+      --auto-deploy                             Enable auto-deploy (default true)
+      --branch string                           Git branch
+      --build-command string                    Build command
+      --build-filter-ignored-path stringArray   Build filter ignored path (can be specified multiple times)
+      --build-filter-path stringArray           Build filter path (can be specified multiple times)
+      --cron-command string                     Cron command
+      --cron-schedule string                    Cron schedule
+      --env-var stringArray                     Environment variable in KEY=VALUE format (can be specified multiple times)
+      --environment-id string                   Environment ID
+      --from string                             Clone configuration from existing service (ID or name). Other flags override cloned values.
+      --health-check-path string                Health check path
+  -h, --help                                    help for create
+      --image string                            Docker image URL
+      --ip-allow-list stringArray               IP allow list entry in cidr=...,description=... format (can be specified multiple times)
+      --maintenance-mode                        Enable maintenance mode
+      --maintenance-mode-uri string             Maintenance mode URI
+      --max-shutdown-delay int                  Max shutdown delay in seconds
+      --name string                             Service name
+      --num-instances int                       Number of instances
+      --plan string                             Service plan
+      --pre-deploy-command string               Pre-deploy command
+      --previews enum                           Preview generation mode
+      --publish-directory string                Publish directory
+      --region enum                             Deployment region (default )
+      --registry-credential string              Registry credential
+      --repo string                             Git repository URL
+      --root-directory string                   Root directory
+      --runtime enum                            Runtime environment (default )
+      --secret-file stringArray                 Secret file in NAME:LOCAL_PATH format (can be specified multiple times)
+      --start-command string                    Start command
+      --type enum                               Service type (default )
+Global Flags:
+      --confirm         Skip all confirmation prompts
+  -o, --output string   Output format: interactive, json, yaml, or text (auto: text in non-TTY contexts unless explicitly set) (default "interactive")
+exit code 1

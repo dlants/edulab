@@ -1,0 +1,16 @@
+$ render workspace set --help
+stdout:
+Render CLI v2.15.1
+Set the CLI's active workspace
+USAGE
+  render workspace set [workspaceName|workspaceID] [flags]
+FLAGS
+  -h, --help              help for set
+      --confirm           Skip all confirmation prompts
+  -o, --output <FORMAT>   Output format: interactive, json, yaml, or text (auto: text in non-TTY contexts unless explicitly set) (default "interactive")
+DETAILS
+Set the CLI's active workspace. All CLI commands run against the active
+workspace.
+	The active workspace is saved in a config file specified by the RENDER_CLI_CONFIG_PATH environment variable.
+	If unspecified, the config file is saved in $HOME/.render/cli.yaml.
+exit code 0

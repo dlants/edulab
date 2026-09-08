@@ -1,0 +1,34 @@
+$ cd /Users/denis.lantsman/src/edulab && grep -rn "runThread" packages --include=*.test.ts packages/frontend/prompt.test.ts; grep -n "^import\|^function\|^it(\|^class" packages/frontend/thread.test.ts
+stdout:
+1:import type Anthropic from "@anthropic-ai/sdk";
+2:import type { ClientMessage } from "@edulab/iso/protocol.ts";
+3:import { expect, it } from "vitest";
+4:import { anchorText, type ThreadId } from "./selection.ts";
+5:import {
+13:class FakeSocket implements Socket {
+66:function toolCall(
+94:function flush(): Promise<void> {
+98:function setup() {
+103:it("accumulates deltas into the streaming assistant message", async () => {
+139:it("sends the whole thread with alternating roles on the second turn", async () => {
+162:it("ignores send while a turn is in flight", () => {
+172:it("commits partial text when a turn ends in error", async () => {
+198:it("sends the seed as turn 0 but never renders it", async () => {
+225:it("surfaces a streamed tool call with its json parsed", async () => {
+250:it("projects text and a tool call in one turn as two entries", async () => {
+291:it("pairs a tool_result in the next user turn onto its call", async () => {
+325:it("leaves input undefined while the json is still streaming", async () => {
+348:function tool(
+363:function toolTurn(
+374:it("answers a tool call and re-requests with the result", async () => {
+403:it("turns a throwing tool and an unknown tool into error results", async () => {
+437:it("reports a tool call whose input never parsed as an error", async () => {
+464:it("sends the configured tool specs, and none when there are none", async () => {
+476:it("ends the turn when a request errors mid tool call", async () => {
+494:it("drops the assistant turn when no text arrived", async () => {
+508:it("offers the yield tool with the supplied schema, and the default for text", () => {
+523:it("settles on a yield without issuing another request", async () => {
+538:it("yields text when constructed without a schema", async () => {
+549:it("runs tools called alongside a yield, then stops at the yield", async () => {
+577:it("does not offer yield when no schema was given", async () => {
+exit code 0

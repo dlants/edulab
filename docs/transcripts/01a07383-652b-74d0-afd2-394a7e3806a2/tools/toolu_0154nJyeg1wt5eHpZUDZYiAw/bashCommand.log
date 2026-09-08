@@ -1,0 +1,285 @@
+$ cd /Users/denis.lantsman/src/edulab && cat packages/frontend/threads.ts && grep -n "runBuild" -A 60 packages/frontend/prototypes/chat.ts && sed -n 1,60p packages/frontend/selection.ts
+stdout:
+import type Anthropic from "@anthropic-ai/sdk";
+import { type Action, LEARNING_SYSTEM, seedTurn } from "./prompt.ts";
+import type { Anchor, Mark, ThreadId } from "./selection.ts";
+import type { Tool, ToolName, TurnResult } from "./thread.ts";
+import { type Socket, Thread } from "./thread.ts";
+export type { Action };
+/** `anchor.thread` is the parent, so the link upward is the highlight itself. */
+export type Origin = { anchor: Anchor; action: Action };
+/** What a child thread is given beyond its seed. */
+export type ChildOpts = {
+  tools?: Record<ToolName, Tool>;
+  /** The rendered knowledge graph, injected into the seed of a top-level
+   * learning thread. */
+  graph?: string;
+  yieldSchema?: Anthropic.Tool.InputSchema | "text";
+};
+export type TreeNode = {
+  id: ThreadId;
+  /** null only for the root task thread. */
+  origin: Origin | null;
+  thread: Thread;
+  /** Creation order; each child's `origin.anchor` is its highlight. */
+  children: ThreadId[];
+  activeChild: ThreadId | null;
+  draft: string;
+};
+/** The tree of threads. Every thread but the root was opened from a
+ * passage of its parent, so a thread and the highlight over its parent are the
+ * same edge seen from either end. Threads are never destroyed or reparented. */
+export class ThreadTree {
+  private readonly threads = new Map<ThreadId, TreeNode>();
+  private nextId = 0;
+  readonly root: ThreadId;
+  private readonly socket: Socket;
+  /** Attached to every thread the tree owns, so a stream anywhere in the
+   * tree re-syncs the app. */
+  private readonly onChange: () => void;
+  constructor(socket: Socket, root: Thread, onChange: () => void) {
+    this.socket = socket;
+    this.onChange = onChange;
+    this.root = this.add(null, root);
+  }
+  get(id: ThreadId): TreeNode {
+    const node = this.threads.get(id);
+    if (!node) throw new Error(`unknown thread ${id}`);
+    return node;
+  }
+  /** Seeds a child thread from the parent's own seed plus its transcript
+   * up to `anchor`, links it in, and makes it the parent's active child. The
+   * caller starts it: the tree does not own the request lifecycle. */
+  open(anchor: Anchor, action: Action, opts: ChildOpts = {}): ThreadId {
+    const parent = this.get(anchor.thread);
+    const thread = new Thread(this.socket, {
+      system: LEARNING_SYSTEM,
+      seed: seedTurn(
+        parent.thread.seed,
+        parent.thread.messages,
+        anchor,
+        action,
+        opts.graph,
+      ),
+      tools: opts.tools,
+      yieldSchema: opts.yieldSchema,
+    });
+    const id = this.add({ anchor, action }, thread);
+    parent.children.push(id);
+    parent.activeChild = id;
+    return id;
+  }
+  /** What a child thread settled with, once it has yielded. The parent renders
+   * threads it never awaited, so the settled value has to be readable here. */
+  result(id: ThreadId): TurnResult | undefined {
+    return this.get(id).thread.result;
+  }
+  /** The highlights to draw over `id`'s transcript: one per child. */
+  marks(id: ThreadId): Mark[] {
+    return this.get(id).children.map((child) => {
+      const origin = this.get(child).origin;
+      if (!origin) throw new Error("child thread without an origin");
+      return { thread: child, anchor: origin.anchor };
+    });
+  }
+  /** root -> id, for the depth indicator. */
+  path(id: ThreadId): ThreadId[] {
+    const out: ThreadId[] = [];
+    let at: ThreadId | undefined = id;
+    while (at) {
+      out.unshift(at);
+      at = this.get(at).origin?.anchor.thread;
+    }
+    return out;
+  }
+  private add(origin: Origin | null, thread: Thread): ThreadId {
+    const id = `t${this.nextId++}` as ThreadId;
+    thread.onChange = this.onChange;
+    this.threads.set(id, {
+      id,
+      origin,
+      thread,
+      children: [],
+      activeChild: null,
+      draft: "",
+    });
+    return id;
+  }
+}
+168:  function runBuild(): void {
+169-    if (build.type === "running") return;
+170-    build = { type: "running" };
+171-    const thread = new Thread(socket, {
+172-      system: EXTRACT_SYSTEM,
+173-      seed: renderTree(tree, graph.render()),
+174-      tools: writeTools(graph),
+175-    });
+176-    const sync = () => {
+177-      refresh();
+178-      view.sync(state);
+179-    };
+180-    thread.onChange = sync;
+181-    thread.start().then(
+182-      (result) => {
+183-        build =
+184-          result.type === "error"
+185-            ? { type: "error", error: result.message }
+186-            : { type: "done" };
+187-        sync();
+188-      },
+189-      (e: unknown) => {
+190-        build = { type: "error", error: String(e) };
+191-        sync();
+192-      },
+193-    );
+194-  }
+195-  /** The graph tab's own reducer. It writes to the graph and to `sidebar`;
+196-   * everything the canvas shows is re-derived in refreshGraph(). */
+197-  function updateGraph(msg: GraphMsg): void {
+198-    switch (msg.type) {
+199-      case "SELECT_NODE": {
+200-        const node = graph.node(msg.id);
+201-        if (!node) break;
+202-        sidebar = {
+203-          type: "node",
+204-          id: node.id,
+205-          draft: draftOf(node),
+206-          error: null,
+207-        };
+208-        break;
+209-      }
+210-      case "SELECT_EDGE": {
+211-        const edge = graph.edge(msg.id);
+212-        if (!edge) break;
+213-        sidebar = {
+214-          type: "edge",
+215-          id: edge.id,
+216-          draft: draftOf(edge),
+217-          error: null,
+218-        };
+219-        break;
+220-      }
+221-      case "CLOSE":
+222-        sidebar = { type: "closed" };
+223-        break;
+224-      case "NODE_FIELD":
+225-        if (sidebar.type === "node") sidebar.draft[msg.field] = msg.value;
+226-        break;
+227-      case "LEVEL_CHANGED":
+228-        if (sidebar.type === "node") sidebar.draft.level = msg.level;
+--
+244:        runBuild();
+245-        break;
+246-      case "DELETE": {
+247-        if (sidebar.type === "closed") break;
+248-        if (sidebar.type === "node") graph.deleteNode(sidebar.id);
+249-        else graph.deleteEdge(sidebar.id);
+250-        sidebar = { type: "closed" };
+251-        break;
+252-      }
+253-    }
+254-  }
+255-
+256-  function update(state: State, msg: Msg): void {
+257-    const node = tree.get(focus);
+258-    switch (msg.type) {
+259-      case "DRAFT_CHANGED":
+260-        node.draft = msg.draft;
+261-        break;
+262-      case "SAMPLE_CHANGED":
+263-        selectSample(msg.id === "" ? undefined : msg.id);
+264-        break;
+265-      case "TAB_CHANGED":
+266-        state.tab = msg.tab;
+267-        break;
+268-      case "GRAPH_MSG":
+269-        updateGraph(msg.msg);
+270-        break;
+271-      case "SUBMIT":
+272-        send(focus);
+273-        break;
+274-      case "GO_DEEPER": {
+275-        if (!state.split) {
+276-          state.split = true;
+277-          break;
+278-        }
+279-        const child = node.activeChild;
+280-        if (!child) break;
+281-        focus = child;
+282-        state.anchor = null;
+283-        state.query = "";
+284-        break;
+285-      }
+286-      case "GO_BACK": {
+287-        const parent = node.origin?.anchor.thread;
+288-        if (parent === undefined) state.split = false;
+289-        else focus = parent;
+290-        state.anchor = null;
+291-        state.query = "";
+292-        break;
+293-      }
+294-      case "TOGGLE_EXPANDED": {
+295-        const set = expandedFor(focus);
+296-        if (!set.delete(msg.index)) set.add(msg.index);
+297-        break;
+298-      }
+299-      case "SELECTION_CHANGED":
+300-        state.anchor = msg.anchor;
+301-        node.activeChild = null;
+302-        break;
+303-      case "MARK_CLICKED":
+304-        state.anchor = null;
+import { type Message, messageText } from "./thread.ts";
+/** Declared here rather than in threads.ts because an anchor is meaningless
+ * without one, and threads.ts will import this module. */
+export type ThreadId = string & { readonly __brand: "ThreadId" };
+/** A selection over the transcript, stored as character offsets into message
+ * text rather than as a live DOM Range: the browser's Range dies the moment the
+ * user clicks the learning pane, and the transcript is append-only, so offsets
+ * stay valid while a message is still streaming.
+ *
+ * `msg` is an absolute index into the owning thread's turns, `offset` a
+ * character offset into that turn's text. */
+export type Point = { msg: number; offset: number };
+/** `start` precedes `end` in document order; `thread` is the thread whose
+ * transcript the range indexes, i.e. the parent of whatever it opens. */
+export type Anchor = { thread: ThreadId; start: Point; end: Point };
+/** A committed highlight: the passage, plus the thread it opens. The opened
+ * thread's id cannot live on the anchor, because `anchor.thread` already names
+ * the other end of the edge - the parent. */
+export type Mark = { thread: ThreadId; anchor: Anchor };
+/** A run of one message's text: plain, a committed mark, or the live selection
+ * the user has just dragged and not yet acted on. */
+export type Segment = {
+  start: number;
+  end: number;
+  /** The thread this run opens, or null for plain text and the live range. */
+  thread: ThreadId | null;
+  live: boolean;
+};
+/** True when `live` intersects any committed mark, which makes it unusable:
+ * a passage owned by two threads has no honest meaning as an edge in the tree. */
+export function overlaps(marks: ReadonlyArray<Mark>, live: Anchor): boolean {
+  return marks.some(
+    (m) => before(m.anchor.start, live.end) && before(live.start, m.anchor.end),
+  );
+}
+function before(a: Point, b: Point): boolean {
+  return a.msg !== b.msg ? a.msg < b.msg : a.offset < b.offset;
+}
+/** Splits message `i` into plain, marked and live runs, left to right.
+ * `marks` are pairwise disjoint; `live` may overlap them, and wins where it
+ * does, so the user still sees what they dragged. */
+export function segments(
+  marks: ReadonlyArray<Mark>,
+  live: Anchor | null,
+  i: number,
+  length: number,
+): Segment[] {
+  const liveClip = clipToMessage(live, i, length);
+  const runs: Segment[] = [];
+  for (const mark of marks) {
+    const clip = clipToMessage(mark.anchor, i, length);
+    if (!clip) continue;
+    for (const part of subtract(clip, liveClip)) {
+exit code 0

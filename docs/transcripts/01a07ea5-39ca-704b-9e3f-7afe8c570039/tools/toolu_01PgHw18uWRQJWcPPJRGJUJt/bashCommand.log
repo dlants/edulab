@@ -1,0 +1,59 @@
+$ cd ~/src/edulab && render services create --name edulab --type web_service --runtime node --repo https://github.com/dlants/edulab --branch main --plan starter --region oregon --build-command "npm ci && npm run build" --start-command "node packages/backend/app.ts" --env-var "NODE_VERSION=24" --env-var "ANTHROPIC_API_KEY=$(grep ANTHROPIC_API_KEY .env | cut -d= -f2-)" --env-var "APP_PASSWORD=$(grep APP_PASSWORD .env | cut -d= -f2-)" --auto-deploy --confirm -o json
+stdout:
+{
+  "autoDeploy": "yes",
+  "autoDeployTrigger": "commit",
+  "branch": "main",
+  "createdAt": "2026-09-08T03:17:21.407703Z",
+  "dashboardUrl": "https://dashboard.render.com/web/srv-dafnsg740ujc73c43ceg",
+  "id": "srv-dafnsg740ujc73c43ceg",
+  "name": "edulab",
+  "notifyOnFail": "default",
+  "ownerId": "tea-cskj07t6l47c73bkeek0",
+  "repo": "https://github.com/dlants/edulab",
+  "rootDir": "",
+  "serviceDetails": {
+    "buildPlan": "starter",
+    "cache": {
+      "profile": "no-cache"
+    },
+    "env": "node",
+    "envSpecificDetails": {
+      "buildCommand": "npm ci \u0026\u0026 npm run build",
+      "startCommand": "node packages/backend/app.ts"
+    },
+    "healthCheckPath": "",
+    "ipAllowList": [
+      {
+        "cidrBlock": "0.0.0.0/0",
+        "description": "everywhere"
+      }
+    ],
+    "maintenanceMode": {
+      "enabled": false,
+      "uri": ""
+    },
+    "numInstances": 1,
+    "openPorts": [
+      {
+        "port": 10000,
+        "protocol": "TCP"
+      }
+    ],
+    "plan": "starter",
+    "previews": {
+      "generation": "off"
+    },
+    "pullRequestPreviewsEnabled": "no",
+    "region": "oregon",
+    "runtime": "node",
+    "sshAddress": "srv-dafnsg740ujc73c43ceg@ssh.oregon.render.com",
+    "url": "https://edulab-bt36.onrender.com"
+  },
+  "slug": "edulab-bt36",
+  "suspended": "not_suspended",
+  "suspenders": [],
+  "type": "web_service",
+  "updatedAt": "2026-09-08T03:17:21.407703Z"
+}
+exit code 0

@@ -1,0 +1,48 @@
+$ cd /Users/denis.lantsman/src/edulab && sed -n 60,200p packages/frontend/persistence.test.ts
+stdout:
+    ),
+  };
+}
+it("round-trips a tree with its structure, drafts and transcripts", () => {
+  const { tree, first, second } = setup();
+  const restored = restore(tree).tree;
+  expect(restored.root).toBe(tree.root);
+  expect(restored.path(second)).toEqual(tree.path(second));
+  expect(restored.marks(tree.root)).toEqual(tree.marks(tree.root));
+  expect(restored.get(tree.root).activeChild).toBe(second);
+  expect(restored.get(tree.root).draft).toBe("half typed");
+  for (const id of [tree.root, first, second]) {
+    expect(restored.get(id).thread.messages).toEqual(
+      tree.get(id).thread.messages,
+    );
+    expect(restored.get(id).thread.seed).toEqual(tree.get(id).thread.seed);
+  }
+});
+it("does not re-mint an id over a restored one", () => {
+  const { tree } = setup();
+  const restored = restore(tree).tree;
+  const child = restored.open(anchorInto(restored.root, 0), {
+    type: "explain",
+  });
+  expect(child).toBe("t3");
+});
+it("lists the root's interactions first, then each child's seeded ask", () => {
+  const { tree, first, second } = setup();
+  const { snapshots } = restore(tree);
+  expect(interactionAddresses(snapshots, tree.root, true, 1)).toEqual([
+    { thread: tree.root, index: 0 },
+    { thread: tree.root, index: 2 },
+    { thread: first, index: 0 },
+    { thread: second, index: 0 },
+  ]);
+});
+it("excludes the sample's own turns unless a build was started", () => {
+  const { tree, first, second } = setup();
+  const { snapshots } = restore(tree);
+  expect(interactionAddresses(snapshots, tree.root, false, 1)).toEqual([
+    { thread: tree.root, index: 2 },
+    { thread: first, index: 0 },
+    { thread: second, index: 0 },
+  ]);
+});
+exit code 0

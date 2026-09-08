@@ -1,0 +1,26 @@
+$ cd /Users/denis.lantsman/src/edulab && sed -n 80,120p packages/frontend/threads.test.ts
+stdout:
+it("passes a yield schema to a child and surfaces its settled value", async () => {
+  const { socket, tree, anchor } = setup();
+  const child = tree.open(anchor, { type: "quiz" }, { yieldSchema: SCHEMA });
+  const turn = tree.get(child).thread.start();
+  expect(socket.last.params.tools).toEqual([
+    { name: "yield", description: expect.any(String), input_schema: SCHEMA },
+  ]);
+  socket.yields({ grade: "got it" });
+  expect(await turn).toEqual({
+    type: "yielded",
+    value: { type: "structured", value: { grade: "got it" } },
+  });
+  expect(tree.result(child)).toEqual({
+    type: "yielded",
+    value: { type: "structured", value: { grade: "got it" } },
+  });
+});
+it("offers no tools to a child opened without any", () => {
+  const { socket, tree, anchor } = setup();
+  const child = tree.open(anchor, { type: "explain" });
+  void tree.get(child).thread.start();
+  expect(socket.last.params.tools).toBeUndefined();
+});
+exit code 0

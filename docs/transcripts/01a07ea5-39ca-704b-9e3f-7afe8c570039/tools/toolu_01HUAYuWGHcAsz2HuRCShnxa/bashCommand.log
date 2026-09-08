@@ -1,0 +1,5 @@
+$ cd /Users/denis.lantsman/src/edulab && grep -rn "opus\|MODEL" --include=*.ts packages/
+stdout:
+packages/frontend/thread.ts:4:const MODEL = "claude-opus-4-5";
+packages/frontend/thread.ts:459:        model: MODEL,
+exit code 0

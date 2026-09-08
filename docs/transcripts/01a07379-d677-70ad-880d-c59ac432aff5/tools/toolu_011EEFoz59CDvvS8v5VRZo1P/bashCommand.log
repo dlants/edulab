@@ -1,0 +1,8 @@
+$ cd /Users/denis.lantsman/src/edulab && git add -A && git commit -m "Fill the viewport, scroll layers independently, keep the newest block open" -m "The empty graph slot was claiming a flex share of the column, so the transcript only got half the height. Columns now scroll on their own rather than sharing one page scroller, message overflow is measured from scrollHeight so the affordance survives expansion, and the newest block starts expanded." && git push
+stdout:
+[main 76084e7] Fill the viewport, scroll layers independently, keep the newest block open
+ 1 file changed, 47 insertions(+), 14 deletions(-)
+stderr:
+To github.com:dlants/edulab.git
+   e7473b9..76084e7  main -> main
+exit code 0

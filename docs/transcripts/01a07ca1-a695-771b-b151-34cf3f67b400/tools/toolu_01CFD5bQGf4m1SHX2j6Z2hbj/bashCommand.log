@@ -1,0 +1,18 @@
+$ cd /Users/denis.lantsman/src/edulab && grep -n "split" packages/frontend/prototypes/chat.ts
+stdout:
+165:          const [thread, index] = key.split(":");
+182:      const [id, index] = key.split(":");
+222:    split: false,
+317:    state.depth = state.split ? tree.path(focus).length : 0;
+357:    if (anchor.thread === focus) return state.split ? null : anchorAt;
+524:    state.split = path.length > 1;
+603:    state.split = true;
+644:        if (!state.split) {
+645:          state.split = true;
+659:        if (parent === undefined) state.split = false;
+683:        // was there gives way - but only while the split is showing; at layer 0
+686:        if (state.split) node.activeChild = null;
+696:        state.split = true;
+724:            state.split = true;
+750:            state.split = true;
+exit code 0

@@ -1,0 +1,76 @@
+$ cd /Users/denis.lantsman/src/edulab && sed -n 1,60p packages/frontend/threads.test.ts; ls packages/frontend
+stdout:
+import type Anthropic from "@anthropic-ai/sdk";
+import type { ClientMessage } from "@edulab/iso/protocol.ts";
+import { expect, it } from "vitest";
+import type { Anchor } from "./selection.ts";
+import { type Socket, Thread } from "./thread.ts";
+import { ThreadTree } from "./threads.ts";
+class FakeSocket implements Socket {
+  readonly sent: ClientMessage[] = [];
+  private readonly listeners: ((e: MessageEvent<string>) => void)[] = [];
+  send(data: string) {
+    this.sent.push(JSON.parse(data) as ClientMessage);
+  }
+  addEventListener(
+    _type: "message",
+    listener: (e: MessageEvent<string>) => void,
+  ) {
+    this.listeners.push(listener);
+  }
+  get last(): ClientMessage {
+    const last = this.sent[this.sent.length - 1];
+    if (!last) throw new Error("nothing sent");
+    return last;
+  }
+  deliver(event: Anthropic.RawMessageStreamEvent) {
+    const requestId = this.last.requestId;
+    const data = JSON.stringify({ type: "event", requestId, event });
+    for (const listener of [...this.listeners]) {
+      listener(new MessageEvent("message", { data }));
+    }
+  }
+  yields(input: Record<string, unknown>) {
+    this.deliver({
+      type: "content_block_start",
+      index: 0,
+      content_block: {
+        type: "tool_use",
+        id: "call-1",
+        name: "yield",
+        input: {},
+        caller: { type: "direct" },
+      },
+    });
+    this.deliver({
+      type: "content_block_delta",
+      index: 0,
+      delta: { type: "input_json_delta", partial_json: JSON.stringify(input) },
+    });
+    this.deliver({ type: "content_block_stop", index: 0 });
+    this.deliver({ type: "message_stop" } as Anthropic.RawMessageStreamEvent);
+  }
+}
+const SCHEMA: Anthropic.Tool.InputSchema = {
+  type: "object",
+graph.test.ts
+graph.ts
+index.html
+learning.ts
+main.ts
+node_modules
+package.json
+prompt.test.ts
+prompt.ts
+prototypes
+samples
+selection.test.ts
+selection.ts
+thread.test.ts
+thread.ts
+threads.test.ts
+threads.ts
+tsconfig.json
+vamp.ts
+view.ts
+exit code 0

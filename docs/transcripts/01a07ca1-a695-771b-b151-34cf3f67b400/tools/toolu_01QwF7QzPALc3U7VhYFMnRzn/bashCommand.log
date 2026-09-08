@@ -1,0 +1,33 @@
+$ cd /Users/denis.lantsman/src/edulab && grep -rn "goto\|addInitScript" packages/e2e/tests
+stdout:
+packages/e2e/tests/smoke.spec.ts:10:  await page.goto("/");
+packages/e2e/tests/persistence.spec.ts:157:  await page.goto("/");
+packages/e2e/tests/persistence.spec.ts:182:  await page.goto("/");
+packages/e2e/tests/persistence.spec.ts:206:  await page.goto("/");
+packages/e2e/tests/persistence.spec.ts:232:  await page.goto("/");
+packages/e2e/tests/persistence.spec.ts:237:  await page.goto(`/?sample=${sample}`);
+packages/e2e/tests/persistence.spec.ts:274:  await page.addInitScript(
+packages/e2e/tests/persistence.spec.ts:280:  await page.goto("/");
+packages/e2e/tests/persistence.spec.ts:291:  await page.goto("/");
+packages/e2e/tests/graph.spec.ts:87:  await page.goto("/");
+packages/e2e/tests/graph.spec.ts:96:  await page.goto("/");
+packages/e2e/tests/graph.spec.ts:346:  await page.goto("/");
+packages/e2e/tests/graph.spec.ts:372:  await page.goto("/");
+packages/e2e/tests/graph.spec.ts:401:  await page.goto("/");
+packages/e2e/tests/graph.spec.ts:429:  await page.goto(`/?sample=${SAMPLE}`);
+packages/e2e/tests/graph.spec.ts:447:  await page.goto(`/?sample=${SAMPLE}`);
+packages/e2e/tests/graph.spec.ts:460:  await page.goto(`/?sample=${SAMPLE}`);
+packages/e2e/tests/graph.spec.ts:509:  await page.goto("/");
+packages/e2e/tests/graph.spec.ts:529:  await page.goto("/");
+packages/e2e/tests/graph.spec.ts:644:  await page.goto("/");
+packages/e2e/tests/graph.spec.ts:663:  await page.goto("/");
+packages/e2e/tests/chat.spec.ts:209:  await page.goto("/");
+packages/e2e/tests/chat.spec.ts:219:  await page.goto("/");
+packages/e2e/tests/chat.spec.ts:235:  await page.goto("/");
+packages/e2e/tests/chat.spec.ts:250:  await page.goto("/");
+packages/e2e/tests/chat.spec.ts:516:  await page.goto("/");
+packages/e2e/tests/chat.spec.ts:680:  await page.goto("/");
+packages/e2e/tests/chat.spec.ts:792:  await page.goto("/");
+packages/e2e/tests/chat.spec.ts:809:  await page.goto("/");
+packages/e2e/tests/chat.spec.ts:830:  await page.goto("/");
+exit code 0

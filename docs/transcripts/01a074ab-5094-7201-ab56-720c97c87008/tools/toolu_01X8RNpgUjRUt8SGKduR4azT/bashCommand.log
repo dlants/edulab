@@ -1,0 +1,26 @@
+$ cd /Users/denis.lantsman/src/edulab && grep -n "originQuoteClass\|threadActionClass" packages/frontend/view.ts && npm run lint && npm run typecheck && npm test
+stdout:
+92:const threadActionClass = cls("thread-action");
+94:const originQuoteClass = cls("origin-quote");
+295:.${originQuoteClass} {
+305:.${threadActionClass} {
+> edulab@0.0.1 lint
+> biome check .
+Checked 48 files in 121ms. No fixes applied.
+> edulab@0.0.1 typecheck
+> npm -w @edulab/iso exec tsc -- --noEmit && npm -w @edulab/frontend exec tsc -- --noEmit && npm -w @edulab/backend exec tsc -- --noEmit && npm -w @edulab/e2e exec tsc -- --noEmit
+> edulab@0.0.1 test
+> vitest run
+ RUN  v4.1.11 /Users/denis.lantsman/src/edulab
+ ✓ packages/frontend/graph.test.ts (9 tests) 3ms
+ ✓ packages/frontend/selection.test.ts (8 tests) 2ms
+ ✓ packages/frontend/layout.test.ts (7 tests) 11ms
+ ✓ packages/frontend/graph-tools.test.ts (7 tests) 15ms
+ ✓ packages/frontend/thread.test.ts (20 tests) 23ms
+ ✓ packages/frontend/prompt.test.ts (10 tests) 4ms
+ ✓ packages/frontend/threads.test.ts (4 tests) 11ms
+ Test Files  7 passed (7)
+      Tests  65 passed (65)
+   Start at  20:06:24
+   Duration  389ms (transform 361ms, setup 0ms, import 683ms, tests 69ms, environment 0ms)
+exit code 0

@@ -1,0 +1,11 @@
+$ cd /Users/denis.lantsman/src/edulab && grep -rln "sample" packages --include=*.ts | grep -v node_modules && git status --short
+stdout:
+packages/frontend/view.ts
+packages/frontend/samples/index.ts
+packages/frontend/prototypes/chat.ts
+RM packages/frontend/conversation.test.ts -> packages/frontend/thread.test.ts
+RM packages/frontend/conversation.ts -> packages/frontend/thread.ts
+ M packages/frontend/threads.ts
+ M packages/frontend/view.ts
+ M plans/2026-09-05-thread-tools-yield.md
+exit code 0

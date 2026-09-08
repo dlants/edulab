@@ -1,0 +1,39 @@
+$ cat -n /tmp/deliv/2.md
+stdout:
+     1	# design considerations
+     2	
+     3	When embarking on the endeavor of helping people learn with technology, we must understand that such efforts have a long history of failure. I enjoy Audrey Watters' [blog](https://hackeducation.com/), and her book [Teaching Machines](https://teachingmachin.es/), or the work of education historians like [Larry Cuban](https://larrycuban.wordpress.com/). There have been many, many pronouncements about how novel technology would revolutionize education. Most of these did not pan out because they started with the technology and tried to twist the idea of education into such a shape that the given technology was the solution.
+     4	
+     5	Instead we must start with an appreciation for the incredible complexity and nuance of the teaching and learning process. Our particular technology may have very little to do with the challenge of learning. We may be offering people chat tutors, when what they actually need is a person who [cares about them](https://danmeyer.substack.com/p/five-friends-make-school-matter-to), or a work environment that treats them with dignity.
+     6	
+     7	## user agency and motivation
+     8	
+     9	> humans can become passive observers rather than active learners
+    10	
+    11	> Ensure users grow their capabilities, not just complete tasks
+    12	
+    13	The brief doesn't really speak to the user's agency. What is the user's motivation when they are engaging with the AI system? How do they relate to becoming passive observers? Are they invested in growing their capabilities?
+    14	
+    15	To grow capabilities, we may choose to introduce friction into a task, like asking the user do certain steps themselves. We may divert the user from the task in order to explore a related topic - to generalize a concept or make a connection. We may ask the user to do some additional work for us to demonstrate their understanding. If the user is coming to us with the sole goal of completing their task, these sorts of diversions will not be well recieved. How would the "C heap" user react if the agent responded "To ensure that you grow your capabilities, I think it's best if you implement this piece yourself"?
+    16	
+    17	In order to learn, the user has to engage with unfamiliar topics and wade through confusion. Sustained, effortful attention on a learning task requires the user to provide the motivation.
+    18	
+    19	So I think we can invite the user to engage with growing their capabilities, but the user has to be the one bringing the motivation, and so they have to be the one making the decision to opt into it.
+    20	
+    21	## learning as a human endeavor
+    22	
+    23	The idea of people interacting with an agent to improve their domain knowledge feels pretty depressing to me... and I think it is likely to eventually feel pretty depressing to the user as well. One of the main ways we find motivation to learn is through relationships - people who care about us and our learning journey.
+    24	
+    25	Users have access to peers, mentors, coworkers, etc... outside of our system. I really think it would be good to keep an eye out for opportunities for human connection. Can our system encourage the user to engage in learning with others?
+    26	
+    27	## consent, surveillance, context
+    28	
+    29	A system that records everything a person does and distills it into artifacts is - in fact if not by intent - a surveillance system. There is a lot of potential for abuse. For example, such an artifact may be used by a company to algorithmically evaluate and fire employees (See weapons of Math Destruction by Cathy O'Neil).
+    30	
+    31	Interaction with such systems should be elective and explicit: the user opts in, can transparently see the information the system holds about them, and have the ability to choose how they share it, edit it, or delete it.
+    32	
+    33	There is a second-order cost to getting this wrong. The fact that I am having to submit all my LLM transcripts as part of this interview definitely makes me second-guess the way I write my prompts - "does me asking this question to the LLM reflect poorly on me as an engineer?". This is distracting and undermines how I would normally engage with these tools. So we also have to be mindful of the effects of being recorded and observed on the users' behavior and attention.
+    34	
+    35	And finally, we must pay attention to the broader context surrounding the human-AI interaction. A support agent using AI may be getting measured on the speed and throughput of their ticket queue. Such a person is unlikely to want to deepen their understanding. In such a context it's likely that efforts taken by the system to ensure that they grow their capabilities may merely worsen a hostile work environment.
+    36	
+exit code 0

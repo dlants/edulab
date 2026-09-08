@@ -1,0 +1,118 @@
+$ cd packages/frontend && sed -n 60,200p threads.test.ts; echo ---; grep -rn "Point\b\|msg:" --include=*.ts . | grep -v node_modules
+stdout:
+const SCHEMA: Anthropic.Tool.InputSchema = {
+  type: "object",
+  properties: { grade: { type: "string" } },
+  required: ["grade"],
+};
+/** A tree whose root has one committed user turn, so there is something to
+ * anchor a child onto. */
+function setup() {
+  const socket = new FakeSocket();
+  const root = new Thread(socket, { initialTurns: [] });
+  const tree = new ThreadTree(socket, root, () => {});
+  void root.send("the quick brown fox");
+  const anchor: Anchor = {
+    thread: tree.root,
+    start: { msg: 0, offset: 0 },
+    end: { msg: 0, offset: 9 },
+  };
+  return { socket, tree, anchor };
+}
+it("passes a yield schema to a child and surfaces its settled value", async () => {
+  const { socket, tree, anchor } = setup();
+  const child = tree.open(anchor, { type: "quiz" }, { yieldSchema: SCHEMA });
+  const turn = tree.get(child).thread.start();
+  expect(socket.last.params.tools).toEqual([
+    { name: "yield", description: expect.any(String), input_schema: SCHEMA },
+  ]);
+  socket.yields({ grade: "got it" });
+  expect(await turn).toEqual({
+    type: "yielded",
+    value: { type: "structured", value: { grade: "got it" } },
+  });
+  expect(tree.result(child)).toEqual({
+    type: "yielded",
+    value: { type: "structured", value: { grade: "got it" } },
+  });
+});
+it("seeds a child with context and sends the ask as its first visible turn", () => {
+  const { socket, tree, anchor } = setup();
+  const child = tree.open(anchor, { type: "explain" });
+  const node = tree.get(child);
+  void node.thread.start();
+  const turns = socket.last.params.messages;
+  expect(turns).toHaveLength(2);
+  expect(turns[0]?.content).toBe(node.thread.seed);
+  expect(turns[0]?.content).not.toContain("Selected:");
+  expect(turns[1]?.content).toContain('Selected: "the quick"');
+  // The seed stays hidden; the ask is the thread's own message 0.
+  expect(node.thread.messages).toHaveLength(1);
+  expect(node.thread.messages[0]).toMatchObject({
+    role: "user",
+    text: turns[1]?.content,
+  });
+});
+it("offers no tools to a child opened without any", () => {
+  const { socket, tree, anchor } = setup();
+  const child = tree.open(anchor, { type: "explain" });
+  void tree.get(child).thread.start();
+  expect(socket.last.params.tools).toBeUndefined();
+});
+it("sends a child's tools on its first request, and none for the root task thread", () => {
+  const { socket, tree, anchor } = setup();
+  expect(socket.last.params.tools).toBeUndefined();
+  const graph = new KnowledgeGraph();
+  const child = tree.open(
+    anchor,
+    { type: "explain" },
+    {
+      tools: readTools(graph),
+      graph: graph.render(),
+    },
+  );
+  void tree.get(child).thread.start();
+  expect(socket.last.params.tools?.map((t) => t.name)).toEqual(["get"]);
+  expect(tree.get(child).thread.seed).toContain(graph.render());
+});
+---
+./learning.ts:74:    dispatch: (msg: Msg) => void,
+./prompt.test.ts:32:  start: { msg: startMsg, offset: start },
+./prompt.test.ts:33:  end: { msg: endMsg, offset: end },
+./prompt.test.ts:149:    start: { msg: 0, offset: 6 },
+./prompt.test.ts:150:    end: { msg: 0, offset: 14 },
+./selection.ts:14:export type Point = { msg: number; offset: number };
+./selection.ts:17:export type Anchor = { thread: ThreadId; start: Point; end: Point };
+./selection.ts:42:function before(a: Point, b: Point): boolean {
+./view.ts:17:  type Point,
+./view.ts:72:  | { type: "LEARNING_MSG"; msg: LearningMsg }
+./view.ts:75:  | { type: "GRAPH_MSG"; msg: GraphMsg }
+./view.ts:77:  | { type: "CHILD_MSG"; msg: ThreadPaneMsg };
+./view.ts:321:    dispatch: (msg: SegmentMsg) => void,
+./view.ts:371:    dispatch: (msg: MessageMsg) => void,
+./view.ts:384:    // The tool block sits outside the .text span on purpose: resolvePoint only
+./view.ts:527:    dispatch: (msg: ThreadPaneMsg) => void,
+./view.ts:571:          (msg: MessageMsg) => {
+./view.ts:601:    dispatch: (msg: Msg) => void,
+./view.ts:714:          (msg: MessageMsg) =>
+./view.ts:748:        ? show(GraphView, s.graph, {}, (msg: GraphMsg) =>
+./view.ts:768:        return show(ThreadPane, child, {}, (msg: ThreadPaneMsg) =>
+./view.ts:779:      return show(LearningPane, learningState, {}, (msg: LearningMsg) =>
+./view.ts:830:  const start = resolvePoint(
+./view.ts:835:  const end = resolvePoint(transcript, range.endContainer, range.endOffset);
+./view.ts:841:function resolvePoint(
+./view.ts:845:): Point | null {
+./selection.test.ts:19:  start: { msg: startMsg, offset: start },
+./selection.test.ts:20:  end: { msg: endMsg, offset: end },
+./prototypes/chat.ts:184:  function updateGraph(msg: GraphMsg): void {
+./prototypes/chat.ts:243:  function update(state: State, msg: Msg): void {
+./prototypes/chat.ts:341:  function dispatch(msg: Msg): void {
+./threads.test.ts:76:    start: { msg: 0, offset: 0 },
+./threads.test.ts:77:    end: { msg: 0, offset: 9 },
+./thread.test.ts:283:        start: { msg: 1, offset: 0 },
+./thread.test.ts:284:        end: { msg: 1, offset: 7 },
+./vamp.ts:45:  dispatch: (msg: Message) => void,
+./graph-view.ts:202:    dispatch: (msg: { type: "CLICKED" }) => void,
+./graph-view.ts:249:    dispatch: (msg: { type: "CLICKED" }) => void,
+./graph-view.ts:304:    dispatch: (msg: Msg) => void,
+exit code 0

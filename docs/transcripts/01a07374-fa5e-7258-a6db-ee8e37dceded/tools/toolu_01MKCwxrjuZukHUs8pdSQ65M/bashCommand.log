@@ -1,0 +1,50 @@
+$ cd /Users/denis.lantsman/src/edulab && npm run typecheck && npm run lint && npm test 2>/dev/null && npm run test:e2e 2>/dev/null
+stdout:
+> edulab@0.0.1 typecheck
+> npm -w @edulab/iso exec tsc -- --noEmit && npm -w @edulab/frontend exec tsc -- --noEmit && npm -w @edulab/backend exec tsc -- --noEmit && npm -w @edulab/e2e exec tsc -- --noEmit
+> edulab@0.0.1 lint
+> biome check .
+Checked 48 files in 138ms. No fixes applied.
+> edulab@0.0.1 test
+> vitest run
+ RUN  v4.1.11 /Users/denis.lantsman/src/edulab
+ ✓ packages/frontend/graph.test.ts (9 tests) 3ms
+ ✓ packages/frontend/selection.test.ts (8 tests) 2ms
+ ✓ packages/frontend/layout.test.ts (7 tests) 7ms
+ ✓ packages/frontend/prompt.test.ts (9 tests) 4ms
+ ✓ packages/frontend/graph-tools.test.ts (7 tests) 14ms
+ ✓ packages/frontend/threads.test.ts (3 tests) 10ms
+ ✓ packages/frontend/thread.test.ts (20 tests) 22ms
+ Test Files  7 passed (7)
+      Tests  63 passed (63)
+   Start at  14:27:29
+   Duration  200ms (transform 288ms, setup 0ms, import 652ms, tests 62ms, environment 0ms)
+> edulab@0.0.1 test:e2e
+> npm -w @edulab/e2e run test
+> @edulab/e2e@0.0.1 test
+> playwright test
+Running 22 tests using 7 workers
+  ✓   1 tests/chat.spec.ts:184:1 › a second turn sends the full thread (326ms)
+  ✓   5 tests/chat.spec.ts:170:1 › the composer is disabled while a turn is in flight (352ms)
+  ✓   6 tests/chat.spec.ts:247:1 › an action opens a thread seeded with the selected passage (449ms)
+  ✓   2 tests/chat.spec.ts:202:1 › a live selection overlapping a mark offers no actions (476ms)
+  ✓   3 tests/chat.spec.ts:269:1 › a follow-up in the thread pane re-sends the seed (476ms)
+  ✓   7 tests/chat.spec.ts:154:1 › streams a response into the transcript (478ms)
+  ✓   9 tests/chat.spec.ts:340:1 › the arrows name the layer and stop at the ends (279ms)
+  ✓   4 tests/chat.spec.ts:224:1 › two marks in one message are both clickable (604ms)
+  ✓   8 tests/chat.spec.ts:288:1 › clicking a mark reopens its thread without a new request (395ms)
+  ✓  11 tests/chat.spec.ts:391:1 › a descended thread shows what it was opened from (323ms)
+  ✓  10 tests/chat.spec.ts:357:1 › a thread opened at depth carries both selections once (389ms)
+  ✓  14 tests/chat.spec.ts:451:1 › a tool call is rendered and text above it stays selectable (277ms)
+  ✓  15 tests/chat.spec.ts:476:1 › a new selection leaves committed marks rendered (259ms)
+  ✓  12 tests/chat.spec.ts:405:1 › ← climbs back without losing threads or highlights (453ms)
+  ✓  13 tests/chat.spec.ts:429:1 › nesting goes three deep (465ms)
+  ✓  16 tests/graph.spec.ts:92:1 › switching tabs leaves the transcript and the graph intact (245ms)
+  ✓  17 tests/graph.spec.ts:113:1 › clicking a node fills the sidebar and a retitle keeps its edges (234ms)
+  ✓  18 tests/graph.spec.ts:136:1 › a duplicate title is rejected without losing the draft (242ms)
+  ✓  20 tests/graph.spec.ts:159:1 › an edge is selectable and editable (233ms)
+  ✓  19 tests/graph.spec.ts:149:1 › deleting a node takes its edges with it (242ms)
+  ✓  21 tests/graph.spec.ts:276:1 › building from the session fills the canvas and leaves the threads alone (301ms)
+  ✓  22 tests/smoke.spec.ts:9:1 › streams a real response end to end (1.4s)
+  22 passed (3.8s)
+exit code 0

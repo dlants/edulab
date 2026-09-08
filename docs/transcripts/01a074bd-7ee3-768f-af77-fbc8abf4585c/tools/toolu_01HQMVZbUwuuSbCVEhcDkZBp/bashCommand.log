@@ -1,0 +1,87 @@
+$ cd /Users/denis.lantsman/src/edulab && npm test && npm run test:e2e
+stdout:
+> edulab@0.0.1 test
+> vitest run
+ RUN  v4.1.11 /Users/denis.lantsman/src/edulab
+ ✓ packages/frontend/graph.test.ts (9 tests) 3ms
+ ✓ packages/frontend/selection.test.ts (8 tests) 2ms
+ ✓ packages/frontend/layout.test.ts (7 tests) 7ms
+ ✓ packages/frontend/prompt.test.ts (14 tests) 3ms
+ ✓ packages/frontend/graph-tools.test.ts (8 tests) 16ms
+ ✓ packages/frontend/citation.test.ts (4 tests) 12ms
+ ✓ packages/frontend/thread.test.ts (21 tests) 26ms
+ ✓ packages/frontend/threads.test.ts (4 tests) 12ms
+ ✓ packages/frontend/interactions.test.ts (4 tests) 12ms
+ Test Files  9 passed (9)
+      Tests  79 passed (79)
+   Start at  20:25:49
+   Duration  248ms (transform 422ms, setup 0ms, import 832ms, tests 94ms, environment 1ms)
+> edulab@0.0.1 test:e2e
+> npm -w @edulab/e2e run test
+> @edulab/e2e@0.0.1 test
+> playwright test
+Running 33 tests using 7 workers
+  ✓   4 tests/chat.spec.ts:231:1 › a second turn sends the full thread (351ms)
+  ✓   5 tests/chat.spec.ts:217:1 › the composer is disabled while a turn is in flight (523ms)
+  ✓   1 tests/chat.spec.ts:201:1 › streams a response into the transcript (519ms)
+  ✓   2 tests/chat.spec.ts:294:1 › an action opens a thread seeded with the selected passage (577ms)
+  ✓   6 tests/chat.spec.ts:321:1 › a follow-up in the thread pane re-sends the seed (615ms)
+  ✓   7 tests/chat.spec.ts:249:1 › a live selection overlapping a mark offers no actions (593ms)
+  ✓   8 tests/chat.spec.ts:340:1 › clicking a mark reopens its thread without a new request (308ms)
+  ✓   3 tests/chat.spec.ts:271:1 › two marks in one message are both clickable (736ms)
+  ✓   9 tests/chat.spec.ts:392:1 › the arrows name the layer and stop at the ends (218ms)
+  ✓  10 tests/chat.spec.ts:409:1 › a thread opened at depth carries both selections once (382ms)
+  ✓  11 tests/chat.spec.ts:445:1 › a descended thread shows what it was opened from, in its transcript (337ms)
+  ✓  16 tests/chat.spec.ts:622:1 › a turn shows its graph update working, then what it changed (196ms)
+  ✓  14 tests/chat.spec.ts:510:1 › a tool call is rendered and text above it stays selectable (312ms)
+  ✓  15 tests/chat.spec.ts:535:1 › a new selection leaves committed marks rendered (304ms)
+  ✓  17 tests/chat.spec.ts:638:1 › an update that writes nothing says so (148ms)
+  ✓  13 tests/chat.spec.ts:488:1 › nesting goes three deep (503ms)
+  ✓  12 tests/chat.spec.ts:464:1 › ← climbs back without losing threads or highlights (558ms)
+  ✓  18 tests/graph.spec.ts:92:1 › switching tabs leaves the transcript and the graph intact (258ms)
+  ✓  19 tests/graph.spec.ts:113:1 › clicking a node fills the sidebar and a retitle keeps its edges (288ms)
+  ✓  20 tests/graph.spec.ts:136:1 › a duplicate title is rejected without losing the draft (316ms)
+  ✓  21 tests/graph.spec.ts:149:1 › deleting a node takes its edges with it (314ms)
+  ✓  22 tests/graph.spec.ts:159:1 › an edge is selectable and editable (286ms)
+  ✓  23 tests/graph.spec.ts:288:1 › every interaction updates the graph, one update at a time (277ms)
+  ✓  24 tests/graph.spec.ts:345:1 › a failed graph update leaves the app usable (216ms)
+  ✓  25 tests/graph.spec.ts:314:1 › opening a learning thread updates the graph from its ask (393ms)
+  ✓  30 tests/graph.spec.ts:464:1 › a citation that does not resolve is left as text (230ms)
+  ✓  31 tests/graph.spec.ts:577:1 › an address written by a graph update navigates back to its turn (330ms)
+  ✓  32 tests/graph.spec.ts:596:1 › clicking a change opens the graph tab with that node selected (190ms)
+  ✓  29 tests/graph.spec.ts:442:1 › a cited message is one click away from the note that rests on it (432ms)
+  ✓  26 tests/graph.spec.ts:365:1 › building from a sample transcript walks its turns once (1.2s)
+  ✓  27 tests/graph.spec.ts:382:1 › a failed update mid-build does not stop the ones after it (1.2s)
+  ✓  28 tests/graph.spec.ts:394:1 › interacting mid-build interleaves rather than races (1.5s)
+  ✘  33 tests/smoke.spec.ts:9:1 › streams a real response end to end (30.0s)
+  1) tests/smoke.spec.ts:9:1 › streams a real response end to end ──────────────────────────────────
+    Test timeout of 30000ms exceeded.
+    Error: expect(locator).toContainText(expected) failed
+    Locator: locator('[data-role="assistant"]')
+    Expected substring: "pong"
+    Error: element(s) not found
+    Call log:
+      - Expect "toContainText" locator('[data-role="assistant"]') with timeout 30000ms
+      - waiting for locator('[data-role="assistant"]')
+      - Test timeout of 30000ms exceeded.
+      13 |   await input.press("Enter");
+      14 |
+    > 15 |   await expect(page.locator('[data-role="assistant"]')).toContainText("pong", {
+         |                                                         ^
+      16 |     timeout: 30_000,
+      17 |   });
+      18 |   await expect(input).toBeEnabled({ timeout: 30_000 });
+        at /Users/denis.lantsman/src/edulab/packages/e2e/tests/smoke.spec.ts:15:57
+    Error Context: test-results/smoke-streams-a-real-response-end-to-end/error-context.md
+  1 failed
+    tests/smoke.spec.ts:9:1 › streams a real response end to end ───────────────────────────────────
+  32 passed (33.1s)
+stderr:
+npm error Lifecycle script `test` failed with error:
+npm error code 1
+npm error path /Users/denis.lantsman/src/edulab/packages/e2e
+npm error workspace @edulab/e2e@0.0.1
+npm error location /Users/denis.lantsman/src/edulab/packages/e2e
+npm error command failed
+npm error command sh -c playwright test
+exit code 1

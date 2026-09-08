@@ -1,0 +1,4 @@
+$ cd /Users/denis.lantsman/src/edulab && grep -n "test:e2e" package.json
+stdout:
+16:    "test:e2e": "npm -w @edulab/e2e run test",
+exit code 0

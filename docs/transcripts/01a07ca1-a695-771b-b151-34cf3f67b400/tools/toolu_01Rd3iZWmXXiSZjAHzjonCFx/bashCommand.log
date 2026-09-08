@@ -1,0 +1,78 @@
+$ cd /Users/denis.lantsman/src/edulab && grep -n "function updateStatus" -A 15 packages/frontend/view.ts && grep -n "update:" -B5 -A5 packages/frontend/view.ts | sed -n 1,60p
+stdout:
+731:function updateStatus(update: GraphUpdate | null): string {
+732-  if (!update) return "";
+733-  if (update.type === "running") return "updating the knowledge graph…";
+734-  return update.changes.length === 0
+735-    ? "no knowledge graph changes"
+736-    : "knowledge graph:";
+737-}
+738-
+739-function resultText(message: Message): string {
+740-  if (message.type !== "tool_use") return "";
+741-  const result = message.call.result;
+742-  if (!result) return "";
+743-  return result.status === "ok" ? result.text : result.error;
+744-}
+745-
+746-export type ThreadPaneState = {
+563-  message: Message;
+564-  expanded: boolean;
+565-  segments: ReadonlyArray<Segment>;
+566-  active: ThreadId | null;
+567-  /** The background graph update this turn triggered, if it triggered one. */
+568:  update: GraphUpdate | null;
+569-};
+570-
+571-type MessageMsg =
+572-  | SegmentMsg
+573-  | { type: "TOGGLE_EXPANDED" }
+--
+726-}
+727-
+728-/** The account, next to the turn that caused it, of what the system just
+729- * concluded about the user. "No changes" is the common case and is worth saying
+730- * out loud rather than leaving a chip to vanish. */
+731:function updateStatus(update: GraphUpdate | null): string {
+732-  if (!update) return "";
+733-  if (update.type === "running") return "updating the knowledge graph…";
+734-  return update.changes.length === 0
+735-    ? "no knowledge graph changes"
+736-    : "knowledge graph:";
+--
+840-            ),
+841-            active: null,
+842-            // The chips report what a turn taught the graph, and are only
+843-            // legible next to the reflect pane that explains them. This pane
+844-            // *is* that pane: nothing hangs to its right, so it shows none.
+845:            update: null,
+846-          },
+847-          {},
+848-          (msg: MessageMsg) => {
+849-            if (msg.type === "TOGGLE_EXPANDED")
+850-              dispatch({ type: "TOGGLE_EXPANDED", index: i });
+--
+925-          {
+926-            message,
+927-            expanded: lastExpanded(s.expanded, i, s.messages.length),
+928-            segments: segments([], null, i, messageText(message).length),
+929-            active: null,
+930:            update: null,
+931-          },
+932-          {},
+933-          (msg: MessageMsg) => {
+934-            if (msg.type === "TOGGLE_EXPANDED")
+935-              dispatch({ type: "TOGGLE_EXPANDED", index: i });
+--
+1059-              messageText(message).length,
+1060-            ),
+1061-            active: s.activeMark,
+1062-            // Only worth showing while the reflect pane is beside this one:
+1063-            // at layer 0 there is nowhere for a chip to lead.
+1064:            update: s.split ? (s.updates.get(i) ?? null) : null,
+1065-          },
+1066-          {},
+1067-          (msg: MessageMsg) => {
+1068-            switch (msg.type) {
+1069-              case "TOGGLE_EXPANDED":
+exit code 0

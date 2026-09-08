@@ -1,0 +1,40 @@
+$ cd /Users/denis.lantsman/src/edulab && npm test -- --run packages/frontend/interactions.test.ts
+stdout:
+> edulab@0.0.1 test
+> vitest run --run packages/frontend/interactions.test.ts
+ RUN  v4.1.11 /Users/denis.lantsman/src/edulab
+ ❯ packages/frontend/interactions.test.ts (4 tests | 2 failed) 12ms
+   × captures a root turn with everything before it and nothing after 10ms
+   ✓ captures a learning thread's ask as its message 0, with only the seed as prefix 1ms
+   × shares a prefix between two interactions in the same thread 0ms
+   ✓ refuses an address that is not a user turn 0ms
+stderr:
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  packages/frontend/interactions.test.ts > captures a root turn with everything before it and nothing after
+Error: no message 2 in thread t0
+ ❯ interactionAt packages/frontend/interactions.ts:35:11
+     33|   const message = messages[index];
+     34|   if (!message) {
+     35|     throw new Error(`no message ${index} in thread ${thread}`);
+       |           ^
+     36|   }
+     37|   if (message.role !== "user") {
+ ❯ packages/frontend/interactions.test.ts:72:23
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+ FAIL  packages/frontend/interactions.test.ts > shares a prefix between two interactions in the same thread
+Error: no message 4 in thread t0
+ ❯ interactionAt packages/frontend/interactions.ts:35:11
+     33|   const message = messages[index];
+     34|   if (!message) {
+     35|     throw new Error(`no message ${index} in thread ${thread}`);
+       |           ^
+     36|   }
+     37|   if (message.role !== "user") {
+ ❯ packages/frontend/interactions.test.ts:109:18
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+stdout:
+ Test Files  1 failed (1)
+      Tests  2 failed | 2 passed (4)
+   Start at  20:07:50
+   Duration  198ms (transform 48ms, setup 0ms, import 108ms, tests 12ms, environment 0ms)
+exit code 1

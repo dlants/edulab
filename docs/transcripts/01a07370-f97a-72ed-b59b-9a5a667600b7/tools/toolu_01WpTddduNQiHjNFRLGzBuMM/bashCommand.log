@@ -1,0 +1,12 @@
+$ cd packages/frontend && grep -n "navClass}\">\|bodyClass}\"\|spacerClass\|bindContainerAttr(\"data-split\|bindVisible(backRef\|const sampleRef\|learningRef}\"" view.ts
+stdout:
+87:const spacerClass = cls("spacer");
+150:.${spacerClass} {
+587:    const sampleRef: Ref = ref("sample");
+591:      <div class="${navClass}">
+593:        <span class="${spacerClass}"></span>
+598:      <div class="${bodyClass}">
+610:        <div data-ref="${learningRef}"></div>
+694:    this.b.bindContainerAttr("data-split", (s) => (s.split ? "true" : "false"));
+698:    this.b.bindVisible(backRef, (s) => s.split);
+exit code 0

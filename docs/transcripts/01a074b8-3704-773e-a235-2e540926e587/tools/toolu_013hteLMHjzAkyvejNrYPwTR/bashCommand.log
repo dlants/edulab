@@ -1,0 +1,42 @@
+$ cd /Users/denis.lantsman/src/edulab && grep -n "REPLY\|^test(\|^async function\|^function" packages/e2e/tests/chat.spec.ts
+stdout:
+5:function events(chunks: string[]): Anthropic.RawMessageStreamEvent[] {
+27:function isGraphUpdate(message: ClientMessage): boolean {
+31:function yieldEvents(): Anthropic.RawMessageStreamEvent[] {
+55:async function fakeBackend(page: Page, chunks: string[]) {
+93:async function toolBackend(page: Page) {
+108:            ...events([REPLY]).slice(0, -1),
+141:async function selectRange(
+178:function threadTranscript(page: Page) {
+183:function taskTranscript(page: Page) {
+190:async function transcript(page: Page, chunks: string[] = ["ok"]) {
+201:test("streams a response into the transcript", async ({ page }) => {
+217:test("the composer is disabled while a turn is in flight", async ({ page }) => {
+231:test("a second turn sends the full thread", async ({ page }) => {
+249:test("a live selection overlapping a mark offers no actions", async ({
+271:test("two marks in one message are both clickable", async ({ page }) => {
+294:test("an action opens a thread seeded with the selected passage", async ({
+321:test("a follow-up in the thread pane re-sends the seed", async ({ page }) => {
+340:test("clicking a mark reopens its thread without a new request", async ({
+361:const REPLY = "alpha beta gamma delta";
+363:function explainButton(page: Page) {
+367:function quizButton(page: Page) {
+371:function deeper(page: Page) {
+375:function back(page: Page) {
+380:function seedOf(backend: { started: string[] }, i: number): string {
+388:function occurrences(text: string, needle: string): number {
+392:test("the arrows name the layer and stop at the ends", async ({ page }) => {
+409:test("a thread opened at depth carries both selections once", async ({
+412:  const backend = await transcript(page, [REPLY]);
+420:    new RegExp(REPLY),
+436:    new RegExp(REPLY),
+445:test("a descended thread shows what it was opened from, in its transcript", async ({
+448:  await transcript(page, [REPLY]);
+464:test("← climbs back without losing threads or highlights", async ({ page }) => {
+465:  const backend = await transcript(page, [REPLY]);
+488:test("nesting goes three deep", async ({ page }) => {
+489:  const backend = await transcript(page, [REPLY]);
+506:  expect(occurrences(seed, REPLY)).toBe(2);
+510:test("a tool call is rendered and text above it stays selectable", async ({
+535:test("a new selection leaves committed marks rendered", async ({ page }) => {
+exit code 0

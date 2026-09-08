@@ -1,0 +1,75 @@
+$ cd /Users/denis.lantsman/src/edulab && sed -i '' 's/page.locator("\[data-tool-name\]")/page.locator("[data-tool-name]:visible")/; s/page.locator("\[data-tool-input\]")/page.locator("[data-tool-input]:visible")/; s/page.locator("\[data-tool-result\]")/page.locator("[data-tool-result]:visible")/' packages/e2e/tests/chat.spec.ts && npx playwright test --grep "tool call is rendered"
+stdout:
+Error: Vitest failed to find the current suite. One of the following is possible:
+- "vitest" is imported directly without running "vitest" command
+- "vitest" is imported inside "globalSetup" (to fix this, use "setupFiles" instead, because "globalSetup" runs in a different context)
+- "vitest" is imported inside Vite / Vitest config file
+- Otherwise, it might be a Vitest bug. Please report it to https://github.com/vitest-dev/vitest/issues
+   at packages/frontend/prompt.test.ts:26
+  24 | });
+  25 |
+> 26 | it("quotes the selection verbatim", () => {
+     | ^
+  27 |   const seed = seedTurn(undefined, messages, at(1, 9, 1, 26), {
+  28 |     type: "explain",
+  29 |   });
+    at assert (/Users/denis.lantsman/src/edulab/node_modules/@vitest/runner/dist/chunk-artifact.js:1631:9)
+    at getCurrentSuite (/Users/denis.lantsman/src/edulab/node_modules/@vitest/runner/dist/chunk-artifact.js:1666:2)
+    at Object.<anonymous> (/Users/denis.lantsman/src/edulab/node_modules/@vitest/runner/dist/chunk-artifact.js:1563:2)
+    at it (/Users/denis.lantsman/src/edulab/node_modules/@vitest/runner/dist/chunk-artifact.js:599:14)
+    at /Users/denis.lantsman/src/edulab/packages/frontend/prompt.test.ts:26:1
+Error: Vitest failed to find the current suite. One of the following is possible:
+- "vitest" is imported directly without running "vitest" command
+- "vitest" is imported inside "globalSetup" (to fix this, use "setupFiles" instead, because "globalSetup" runs in a different context)
+- "vitest" is imported inside Vite / Vitest config file
+- Otherwise, it might be a Vitest bug. Please report it to https://github.com/vitest-dev/vitest/issues
+   at packages/frontend/selection.test.ts:31
+  29 |   segs.map((s) => [s.start, s.end, s.thread ?? (s.live ? "live" : null)]);
+  30 |
+> 31 | it("renders one plain run when there is nothing to mark", () => {
+     | ^
+  32 |   expect(shape(segments([], null, 0, 10))).toEqual([[0, 10, null]]);
+  33 | });
+  34 |
+    at assert (/Users/denis.lantsman/src/edulab/node_modules/@vitest/runner/dist/chunk-artifact.js:1631:9)
+    at getCurrentSuite (/Users/denis.lantsman/src/edulab/node_modules/@vitest/runner/dist/chunk-artifact.js:1666:2)
+    at Object.<anonymous> (/Users/denis.lantsman/src/edulab/node_modules/@vitest/runner/dist/chunk-artifact.js:1563:2)
+    at it (/Users/denis.lantsman/src/edulab/node_modules/@vitest/runner/dist/chunk-artifact.js:599:14)
+    at /Users/denis.lantsman/src/edulab/packages/frontend/selection.test.ts:31:1
+Error: Vitest failed to find the current suite. One of the following is possible:
+- "vitest" is imported directly without running "vitest" command
+- "vitest" is imported inside "globalSetup" (to fix this, use "setupFiles" instead, because "globalSetup" runs in a different context)
+- "vitest" is imported inside Vite / Vitest config file
+- Otherwise, it might be a Vitest bug. Please report it to https://github.com/vitest-dev/vitest/issues
+   at packages/frontend/thread.test.ts:97
+   95 | }
+   96 |
+>  97 | it("accumulates deltas into the streaming assistant message", async () => {
+      | ^
+   98 |   const { socket, thread } = setup();
+   99 |   const turn = thread.send("hi");
+  100 |   expect(thread.messages).toEqual([{ type: "text", role: "user", text: "hi" }]);
+    at assert (/Users/denis.lantsman/src/edulab/node_modules/@vitest/runner/dist/chunk-artifact.js:1631:9)
+    at getCurrentSuite (/Users/denis.lantsman/src/edulab/node_modules/@vitest/runner/dist/chunk-artifact.js:1666:2)
+    at Object.<anonymous> (/Users/denis.lantsman/src/edulab/node_modules/@vitest/runner/dist/chunk-artifact.js:1563:2)
+    at it (/Users/denis.lantsman/src/edulab/node_modules/@vitest/runner/dist/chunk-artifact.js:599:14)
+    at /Users/denis.lantsman/src/edulab/packages/frontend/thread.test.ts:97:1
+Error: Vitest failed to find the current suite. One of the following is possible:
+- "vitest" is imported directly without running "vitest" command
+- "vitest" is imported inside "globalSetup" (to fix this, use "setupFiles" instead, because "globalSetup" runs in a different context)
+- "vitest" is imported inside Vite / Vitest config file
+- Otherwise, it might be a Vitest bug. Please report it to https://github.com/vitest-dev/vitest/issues
+   at packages/frontend/threads.test.ts:80
+  78 | }
+  79 |
+> 80 | it("passes a yield schema to a child and surfaces its settled value", async () => {
+     | ^
+  81 |   const { socket, tree, anchor } = setup();
+  82 |   const child = tree.open(anchor, { type: "quiz" }, { yieldSchema: SCHEMA });
+  83 |   const turn = tree.get(child).thread.start();
+    at assert (/Users/denis.lantsman/src/edulab/node_modules/@vitest/runner/dist/chunk-artifact.js:1631:9)
+    at getCurrentSuite (/Users/denis.lantsman/src/edulab/node_modules/@vitest/runner/dist/chunk-artifact.js:1666:2)
+    at Object.<anonymous> (/Users/denis.lantsman/src/edulab/node_modules/@vitest/runner/dist/chunk-artifact.js:1563:2)
+    at it (/Users/denis.lantsman/src/edulab/node_modules/@vitest/runner/dist/chunk-artifact.js:599:14)
+    at /Users/denis.lantsman/src/edulab/packages/frontend/threads.test.ts:80:1
+exit code 1

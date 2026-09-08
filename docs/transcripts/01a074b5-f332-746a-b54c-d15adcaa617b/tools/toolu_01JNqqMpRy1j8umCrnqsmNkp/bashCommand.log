@@ -1,0 +1,240 @@
+$ cd /Users/denis.lantsman/src/edulab && npm run test:e2e
+stdout:
+> edulab@0.0.1 test:e2e
+> npm -w @edulab/e2e run test
+> @edulab/e2e@0.0.1 test
+> playwright test
+Running 27 tests using 7 workers
+  ✓   3 tests/chat.spec.ts:231:1 › a second turn sends the full thread (410ms)
+  ✓   7 tests/chat.spec.ts:217:1 › the composer is disabled while a turn is in flight (440ms)
+  ✓   4 tests/chat.spec.ts:201:1 › streams a response into the transcript (431ms)
+  ✓   1 tests/chat.spec.ts:294:1 › an action opens a thread seeded with the selected passage (511ms)
+  ✓   2 tests/chat.spec.ts:321:1 › a follow-up in the thread pane re-sends the seed (576ms)
+  ✓   6 tests/chat.spec.ts:249:1 › a live selection overlapping a mark offers no actions (625ms)
+  ✓   9 tests/chat.spec.ts:392:1 › the arrows name the layer and stop at the ends (252ms)
+  ✓   5 tests/chat.spec.ts:271:1 › two marks in one message are both clickable (720ms)
+  ✓   8 tests/chat.spec.ts:340:1 › clicking a mark reopens its thread without a new request (355ms)
+  ✓  11 tests/chat.spec.ts:445:1 › a descended thread shows what it was opened from, in its transcript (327ms)
+  ✓  10 tests/chat.spec.ts:409:1 › a thread opened at depth carries both selections once (374ms)
+  ✓  14 tests/chat.spec.ts:510:1 › a tool call is rendered and text above it stays selectable (286ms)
+  ✓  15 tests/chat.spec.ts:535:1 › a new selection leaves committed marks rendered (267ms)
+  ✘  16 tests/graph.spec.ts:92:1 › switching tabs leaves the transcript and the graph intact (163ms)
+  ✘  17 tests/graph.spec.ts:113:1 › clicking a node fills the sidebar and a retitle keeps its edges (113ms)
+  ✓  13 tests/chat.spec.ts:488:1 › nesting goes three deep (434ms)
+  ✓  12 tests/chat.spec.ts:464:1 › ← climbs back without losing threads or highlights (451ms)
+  ✘  18 tests/graph.spec.ts:136:1 › a duplicate title is rejected without losing the draft (135ms)
+  ✘  20 tests/graph.spec.ts:159:1 › an edge is selectable and editable (132ms)
+  ✘  19 tests/graph.spec.ts:149:1 › deleting a node takes its edges with it (151ms)
+  ✘  21 tests/graph.spec.ts:345:1 › a failed graph update leaves the app usable (170ms)
+  ✘  23 tests/graph.spec.ts:314:1 › opening a learning thread updates the graph from its ask (217ms)
+  ✘  24 tests/graph.spec.ts:288:1 › every interaction updates the graph, one update at a time (243ms)
+  ✘  25 tests/graph.spec.ts:382:1 › a failed update mid-build does not stop the ones after it (1.3s)
+  ✘  26 tests/graph.spec.ts:394:1 › interacting mid-build interleaves rather than races (1.4s)
+  ✓  27 tests/smoke.spec.ts:9:1 › streams a real response end to end (1.5s)
+  ✘  22 tests/graph.spec.ts:365:1 › building from a sample transcript walks its turns once (5.3s)
+  1) tests/graph.spec.ts:92:1 › switching tabs leaves the transcript and the graph intact ──────────
+    Error: locator.click: Error: strict mode violation: getByRole('button', { name: 'Knowledge graph' }) resolved to 2 elements:
+        1) <button type="button" data-build="" data-ref="build_9">Build knowledge graph from this transcript</button> aka getByRole('button', { name: 'Build knowledge graph from' })
+        2) <button type="button" aria-pressed="false" data-ref="graph-tab_12">Knowledge graph</button> aka getByRole('button', { name: 'Knowledge graph', exact: true })
+    Call log:
+      - waiting for getByRole('button', { name: 'Knowledge graph' })
+      100 |   await seed(page);
+      101 |
+    > 102 |   await graphTab(page).click();
+          |                        ^
+      103 |   await expect(nodes(page)).toHaveCount(2);
+      104 |   await expect(page.locator("[data-edge]")).toHaveCount(1);
+      105 |
+        at /Users/denis.lantsman/src/edulab/packages/e2e/tests/graph.spec.ts:102:24
+    Error Context: test-results/graph-switching-tabs-leave-5f267-script-and-the-graph-intact/error-context.md
+  2) tests/graph.spec.ts:113:1 › clicking a node fills the sidebar and a retitle keeps its edges ───
+    Error: locator.click: Error: strict mode violation: getByRole('button', { name: 'Knowledge graph' }) resolved to 2 elements:
+        1) <button type="button" data-build="" data-ref="build_9">Build knowledge graph from this transcript</button> aka getByRole('button', { name: 'Build knowledge graph from' })
+        2) <button type="button" aria-pressed="false" data-ref="graph-tab_12">Knowledge graph</button> aka getByRole('button', { name: 'Knowledge graph', exact: true })
+    Call log:
+      - waiting for getByRole('button', { name: 'Knowledge graph' })
+      87 |   await page.goto("/");
+      88 |   await seed(page);
+    > 89 |   await graphTab(page).click();
+         |                        ^
+      90 | }
+      91 |
+      92 | test("switching tabs leaves the transcript and the graph intact", async ({
+        at open (/Users/denis.lantsman/src/edulab/packages/e2e/tests/graph.spec.ts:89:24)
+        at /Users/denis.lantsman/src/edulab/packages/e2e/tests/graph.spec.ts:116:3
+    Error Context: test-results/graph-clicking-a-node-fill-5a1f2-d-a-retitle-keeps-its-edges/error-context.md
+  3) tests/graph.spec.ts:136:1 › a duplicate title is rejected without losing the draft ────────────
+    Error: locator.click: Error: strict mode violation: getByRole('button', { name: 'Knowledge graph' }) resolved to 2 elements:
+        1) <button type="button" data-build="" data-ref="build_9">Build knowledge graph from this transcript</button> aka getByRole('button', { name: 'Build knowledge graph from' })
+        2) <button type="button" aria-pressed="false" data-ref="graph-tab_12">Knowledge graph</button> aka getByRole('button', { name: 'Knowledge graph', exact: true })
+    Call log:
+      - waiting for getByRole('button', { name: 'Knowledge graph' })
+      87 |   await page.goto("/");
+      88 |   await seed(page);
+    > 89 |   await graphTab(page).click();
+         |                        ^
+      90 | }
+      91 |
+      92 | test("switching tabs leaves the transcript and the graph intact", async ({
+        at open (/Users/denis.lantsman/src/edulab/packages/e2e/tests/graph.spec.ts:89:24)
+        at /Users/denis.lantsman/src/edulab/packages/e2e/tests/graph.spec.ts:139:3
+    Error Context: test-results/graph-a-duplicate-title-is-rejected-without-losing-the-draft/error-context.md
+  4) tests/graph.spec.ts:149:1 › deleting a node takes its edges with it ───────────────────────────
+    Error: locator.click: Error: strict mode violation: getByRole('button', { name: 'Knowledge graph' }) resolved to 2 elements:
+        1) <button type="button" data-build="" data-ref="build_9">Build knowledge graph from this transcript</button> aka getByRole('button', { name: 'Build knowledge graph from' })
+        2) <button type="button" aria-pressed="false" data-ref="graph-tab_12">Knowledge graph</button> aka getByRole('button', { name: 'Knowledge graph', exact: true })
+    Call log:
+      - waiting for getByRole('button', { name: 'Knowledge graph' })
+      87 |   await page.goto("/");
+      88 |   await seed(page);
+    > 89 |   await graphTab(page).click();
+         |                        ^
+      90 | }
+      91 |
+      92 | test("switching tabs leaves the transcript and the graph intact", async ({
+        at open (/Users/denis.lantsman/src/edulab/packages/e2e/tests/graph.spec.ts:89:24)
+        at /Users/denis.lantsman/src/edulab/packages/e2e/tests/graph.spec.ts:150:3
+    Error Context: test-results/graph-deleting-a-node-takes-its-edges-with-it/error-context.md
+  5) tests/graph.spec.ts:159:1 › an edge is selectable and editable ────────────────────────────────
+    Error: locator.click: Error: strict mode violation: getByRole('button', { name: 'Knowledge graph' }) resolved to 2 elements:
+        1) <button type="button" data-build="" data-ref="build_9">Build knowledge graph from this transcript</button> aka getByRole('button', { name: 'Build knowledge graph from' })
+        2) <button type="button" aria-pressed="false" data-ref="graph-tab_12">Knowledge graph</button> aka getByRole('button', { name: 'Knowledge graph', exact: true })
+    Call log:
+      - waiting for getByRole('button', { name: 'Knowledge graph' })
+      87 |   await page.goto("/");
+      88 |   await seed(page);
+    > 89 |   await graphTab(page).click();
+         |                        ^
+      90 | }
+      91 |
+      92 | test("switching tabs leaves the transcript and the graph intact", async ({
+        at open (/Users/denis.lantsman/src/edulab/packages/e2e/tests/graph.spec.ts:89:24)
+        at /Users/denis.lantsman/src/edulab/packages/e2e/tests/graph.spec.ts:160:3
+    Error Context: test-results/graph-an-edge-is-selectable-and-editable/error-context.md
+  6) tests/graph.spec.ts:288:1 › every interaction updates the graph, one update at a time ─────────
+    Error: locator.click: Error: strict mode violation: getByRole('button', { name: 'Knowledge graph' }) resolved to 2 elements:
+        1) <button type="button" data-build="" data-ref="build_9">Build knowledge graph from this transcript</button> aka getByRole('button', { name: 'Build knowledge graph from' })
+        2) <button type="button" aria-pressed="false" data-ref="graph-tab_12">Knowledge graph</button> aka getByRole('button', { name: 'Knowledge graph', exact: true })
+    Call log:
+      - waiting for getByRole('button', { name: 'Knowledge graph' })
+      296 |   await expect(page.locator("ul").first().locator("li")).toHaveCount(2);
+      297 |
+    > 298 |   await graphTab(page).click();
+          |                        ^
+      299 |   await expect(nodes(page)).toHaveText(["concept-1"]);
+      300 |
+      301 |   await threadsTab(page).click();
+        at /Users/denis.lantsman/src/edulab/packages/e2e/tests/graph.spec.ts:298:24
+    Error Context: test-results/graph-every-interaction-up-e6dc9--graph-one-update-at-a-time/error-context.md
+  7) tests/graph.spec.ts:314:1 › opening a learning thread updates the graph from its ask ──────────
+    Error: locator.click: Error: strict mode violation: getByRole('button', { name: 'Knowledge graph' }) resolved to 2 elements:
+        1) <button type="button" data-build="" data-ref="build_9">Build knowledge graph from this transcript</button> aka getByRole('button', { name: 'Build knowledge graph from' })
+        2) <button type="button" aria-pressed="false" data-ref="graph-tab_12">Knowledge graph</button> aka getByRole('button', { name: 'Knowledge graph', exact: true })
+    Call log:
+      - waiting for getByRole('button', { name: 'Knowledge graph' })
+      319 |   await turn(page, "the quick brown fox");
+      320 |   await expect(page.locator("ul").first().locator("li")).toHaveCount(2);
+    > 321 |   await graphTab(page).click();
+          |                        ^
+      322 |   await expect(nodes(page)).toHaveText(["concept-1"]);
+      323 |   await threadsTab(page).click();
+      324 |
+        at /Users/denis.lantsman/src/edulab/packages/e2e/tests/graph.spec.ts:321:24
+    Error Context: test-results/graph-opening-a-learning-t-4873e-ates-the-graph-from-its-ask/error-context.md
+  8) tests/graph.spec.ts:345:1 › a failed graph update leaves the app usable ───────────────────────
+    Error: locator.click: Error: strict mode violation: getByRole('button', { name: 'Knowledge graph' }) resolved to 2 elements:
+        1) <button type="button" data-build="" data-ref="build_9">Build knowledge graph from this transcript</button> aka getByRole('button', { name: 'Build knowledge graph from' })
+        2) <button type="button" aria-pressed="false" data-ref="graph-tab_12">Knowledge graph</button> aka getByRole('button', { name: 'Knowledge graph', exact: true })
+    Call log:
+      - waiting for getByRole('button', { name: 'Knowledge graph' })
+      352 |   await expect(page.locator("ul").first().locator("li")).toHaveCount(4);
+      353 |
+    > 354 |   await graphTab(page).click();
+          |                        ^
+      355 |   await expect(nodes(page)).toHaveText(["concept-2"]);
+      356 | });
+      357 |
+        at /Users/denis.lantsman/src/edulab/packages/e2e/tests/graph.spec.ts:354:24
+    Error Context: test-results/graph-a-failed-graph-update-leaves-the-app-usable/error-context.md
+  9) tests/graph.spec.ts:365:1 › building from a sample transcript walks its turns once ────────────
+    Error: expect(locator).toHaveText(expected) failed
+    Locator:  locator('[data-build-status]')
+    Expected: "20 / 20 interactions"
+    Received: "built"
+    Timeout:  5000ms
+    Call log:
+      - Expect "toHaveText" locator('[data-build-status]') with timeout 5000ms
+      - waiting for locator('[data-build-status]')
+        - locator resolved to <span data-build-status="" class="build-status_30" data-ref="build-status_10">2 / 20 interactions</span>
+        - unexpected value "2 / 20 interactions"
+        - locator resolved to <span data-build-status="" class="build-status_30" data-ref="build-status_10">3 / 20 interactions</span>
+        - unexpected value "3 / 20 interactions"
+        - locator resolved to <span data-build-status="" class="build-status_30" data-ref="build-status_10">5 / 20 interactions</span>
+        - unexpected value "5 / 20 interactions"
+        - locator resolved to <span data-build-status="" class="build-status_30" data-ref="build-status_10">8 / 20 interactions</span>
+        - unexpected value "8 / 20 interactions"
+        - locator resolved to <span data-build-status="" class="build-status_30" data-ref="build-status_10">11 / 20 interactions</span>
+        - unexpected value "11 / 20 interactions"
+        9 × locator resolved to <span data-build-status="" class="build-status_30" data-ref="build-status_10">built</span>
+          - unexpected value "built"
+      370 |   await buildButton(page).click();
+      371 |   await expect(buildButton(page)).toBeDisabled();
+    > 372 |   await expect(page.locator("[data-build-status]")).toHaveText(
+          |                                                     ^
+      373 |     `${SAMPLE_TURNS} / ${SAMPLE_TURNS} interactions`,
+      374 |   );
+      375 |   await expect(page.locator("[data-build-status]")).toHaveText("built");
+        at /Users/denis.lantsman/src/edulab/packages/e2e/tests/graph.spec.ts:372:53
+    Error Context: test-results/graph-building-from-a-sample-transcript-walks-its-turns-once/error-context.md
+  10) tests/graph.spec.ts:382:1 › a failed update mid-build does not stop the ones after it ────────
+    Error: locator.click: Error: strict mode violation: getByRole('button', { name: 'Knowledge graph' }) resolved to 2 elements:
+        1) <button disabled type="button" data-build="" data-ref="build_9">Build knowledge graph from this transcript</button> aka getByRole('button', { name: 'Build knowledge graph from' })
+        2) <button type="button" aria-pressed="false" data-ref="graph-tab_12">Knowledge graph</button> aka getByRole('button', { name: 'Knowledge graph', exact: true })
+    Call log:
+      - waiting for getByRole('button', { name: 'Knowledge graph' })
+      389 |     "built, 1 failed",
+      390 |   );
+    > 391 |   await graphTab(page).click();
+          |                        ^
+      392 |   await expect(nodes(page)).toHaveCount(SAMPLE_TURNS - 1);
+      393 | });
+      394 | test("interacting mid-build interleaves rather than races", async ({
+        at /Users/denis.lantsman/src/edulab/packages/e2e/tests/graph.spec.ts:391:24
+    Error Context: test-results/graph-a-failed-update-mid--ca4d9--not-stop-the-ones-after-it/error-context.md
+  11) tests/graph.spec.ts:394:1 › interacting mid-build interleaves rather than races ──────────────
+    Error: locator.click: Error: strict mode violation: getByRole('button', { name: 'Knowledge graph' }) resolved to 2 elements:
+        1) <button disabled type="button" data-build="" data-ref="build_9">Build knowledge graph from this transcript</button> aka getByRole('button', { name: 'Build knowledge graph from' })
+        2) <button type="button" aria-pressed="false" data-ref="graph-tab_12">Knowledge graph</button> aka getByRole('button', { name: 'Knowledge graph', exact: true })
+    Call log:
+      - waiting for getByRole('button', { name: 'Knowledge graph' })
+      400 |   await turn(page, "and what about fragmentation");
+      401 |   await expect(page.locator("[data-build-status]")).toHaveText("built");
+    > 402 |   await graphTab(page).click();
+          |                        ^
+      403 |   await expect(nodes(page)).toHaveCount(SAMPLE_TURNS + 1);
+      404 |   expect(backend.overlapped()).toBe(false);
+      405 | });
+        at /Users/denis.lantsman/src/edulab/packages/e2e/tests/graph.spec.ts:402:24
+    Error Context: test-results/graph-interacting-mid-build-interleaves-rather-than-races/error-context.md
+  11 failed
+    tests/graph.spec.ts:92:1 › switching tabs leaves the transcript and the graph intact ───────────
+    tests/graph.spec.ts:113:1 › clicking a node fills the sidebar and a retitle keeps its edges ────
+    tests/graph.spec.ts:136:1 › a duplicate title is rejected without losing the draft ─────────────
+    tests/graph.spec.ts:149:1 › deleting a node takes its edges with it ────────────────────────────
+    tests/graph.spec.ts:159:1 › an edge is selectable and editable ─────────────────────────────────
+    tests/graph.spec.ts:288:1 › every interaction updates the graph, one update at a time ──────────
+    tests/graph.spec.ts:314:1 › opening a learning thread updates the graph from its ask ───────────
+    tests/graph.spec.ts:345:1 › a failed graph update leaves the app usable ────────────────────────
+    tests/graph.spec.ts:365:1 › building from a sample transcript walks its turns once ─────────────
+    tests/graph.spec.ts:382:1 › a failed update mid-build does not stop the ones after it ──────────
+    tests/graph.spec.ts:394:1 › interacting mid-build interleaves rather than races ────────────────
+  16 passed (7.8s)
+stderr:
+npm error Lifecycle script `test` failed with error:
+npm error code 1
+npm error path /Users/denis.lantsman/src/edulab/packages/e2e
+npm error workspace @edulab/e2e@0.0.1
+npm error location /Users/denis.lantsman/src/edulab/packages/e2e
+npm error command failed
+npm error command sh -c playwright test
+exit code 1

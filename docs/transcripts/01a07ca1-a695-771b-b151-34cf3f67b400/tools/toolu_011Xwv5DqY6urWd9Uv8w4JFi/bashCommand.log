@@ -1,0 +1,37 @@
+$ cd /Users/denis.lantsman/src/edulab && npm run typecheck && npx playwright test -c packages/e2e/playwright.config.ts packages/e2e/tests/chat.spec.ts -g "streams a response"
+stdout:
+> edulab@0.0.1 typecheck
+> npm -w @edulab/iso exec tsc -- --noEmit && npm -w @edulab/frontend exec tsc -- --noEmit && npm -w @edulab/backend exec tsc -- --noEmit && npm -w @edulab/e2e exec tsc -- --noEmit
+Running 1 test using 1 worker
+  ✘  1 packages/e2e/tests/chat.spec.ts:218:1 › streams a response into the transcript (5.6s)
+  1) packages/e2e/tests/chat.spec.ts:218:1 › streams a response into the transcript ────────────────
+    Error: expect(locator).toHaveText(expected) failed
+    Locator: locator('[data-role="assistant"]')
+    Timeout: 5000ms
+    Expected pattern: /Hello, world/
+    Received string:  "
+          assistant··············
+            Hi! What are you working on?··························································································
+            transcript·······
+        "
+    Call log:
+      - Expect "toHaveText" locator('[data-role="assistant"]') with timeout 5000ms
+      - waiting for locator('[data-role="assistant"]')
+        7 × locator resolved to <li class="message_23" data-role="assistant" data-overflowing="false">…</li>
+          - unexpected value "
+          assistant
+            Hi! What are you working on?
+            transcript
+        "
+      226 |   backend.release();
+      227 |
+    > 228 |   await expect(page.locator('[data-role="assistant"]')).toHaveText(
+          |                                                         ^
+      229 |     /Hello, world/,
+      230 |   );
+      231 |   await expect(taskTranscript(page).locator("li")).toHaveCount(2);
+        at /Users/denis.lantsman/src/edulab/packages/e2e/tests/chat.spec.ts:228:57
+    Error Context: packages/e2e/test-results/chat-streams-a-response-into-the-transcript/error-context.md
+  1 failed
+    packages/e2e/tests/chat.spec.ts:218:1 › streams a response into the transcript ─────────────────
+exit code 1

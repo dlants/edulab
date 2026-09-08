@@ -1,0 +1,52 @@
+$ cd /Users/denis.lantsman/src/edulab && npm run lint && npm run typecheck && cd packages/e2e && npx playwright test
+stdout:
+> edulab@0.0.1 lint
+> biome check .
+Checked 55 files in 124ms. No fixes applied.
+> edulab@0.0.1 typecheck
+> npm -w @edulab/iso exec tsc -- --noEmit && npm -w @edulab/frontend exec tsc -- --noEmit && npm -w @edulab/backend exec tsc -- --noEmit && npm -w @edulab/e2e exec tsc -- --noEmit
+Running 42 tests using 7 workers
+  ✓   1 tests/chat.spec.ts:231:1 › a second turn sends the full thread (291ms)
+  ✓   4 tests/chat.spec.ts:201:1 › streams a response into the transcript (360ms)
+  ✓   6 tests/chat.spec.ts:217:1 › the composer is disabled while a turn is in flight (362ms)
+  ✓   3 tests/chat.spec.ts:249:1 › a live selection overlapping a mark offers no actions (369ms)
+  ✓   5 tests/chat.spec.ts:294:1 › an action opens a thread seeded with the selected passage (500ms)
+  ✓   8 tests/chat.spec.ts:340:1 › clicking a mark reopens its thread without a new request (425ms)
+  ✓   2 tests/chat.spec.ts:321:1 › a follow-up in the thread pane re-sends the seed (538ms)
+  ✓   7 tests/chat.spec.ts:271:1 › two marks in one message are both clickable (540ms)
+  ✓   9 tests/chat.spec.ts:392:1 › the arrows name the layer and stop at the ends (292ms)
+  ✓  11 tests/chat.spec.ts:445:1 › a descended thread shows what it was opened from, in its transcript (348ms)
+  ✓  10 tests/chat.spec.ts:409:1 › a thread opened at depth carries both selections once (465ms)
+  ✓  16 tests/chat.spec.ts:622:1 › a turn shows its graph update working, then what it changed (206ms)
+  ✓  15 tests/chat.spec.ts:535:1 › a new selection leaves committed marks rendered (332ms)
+  ✓  14 tests/chat.spec.ts:510:1 › a tool call is rendered and text above it stays selectable (354ms)
+  ✓  12 tests/chat.spec.ts:464:1 › ← climbs back without losing threads or highlights (484ms)
+  ✓  18 tests/chat.spec.ts:661:1 › an update that writes nothing says so (167ms)
+  ✓  13 tests/chat.spec.ts:488:1 › nesting goes three deep (497ms)
+  ✓  17 tests/chat.spec.ts:638:1 › the update behind a turn opens its own transcript on the right (315ms)
+  ✓  19 tests/graph.spec.ts:92:1 › switching tabs leaves the transcript and the graph intact (312ms)
+  ✓  21 tests/graph.spec.ts:136:1 › a duplicate title is rejected without losing the draft (292ms)
+  ✓  20 tests/graph.spec.ts:113:1 › clicking a node fills the sidebar and a retitle keeps its edges (311ms)
+  ✓  22 tests/graph.spec.ts:149:1 › deleting a node takes its edges with it (258ms)
+  ✓  23 tests/graph.spec.ts:159:1 › an edge is selectable and editable (240ms)
+  ✓  24 tests/graph.spec.ts:180:1 › zooming spreads the nodes without resizing them, and reset restores (364ms)
+  ✓  28 tests/graph.spec.ts:396:1 › a failed graph update leaves the app usable (210ms)
+  ✓  25 tests/graph.spec.ts:199:1 › dragging the canvas pans the graph but still selects on a click (362ms)
+  ✓  26 tests/graph.spec.ts:339:1 › every interaction updates the graph, one update at a time (270ms)
+  ✓  27 tests/graph.spec.ts:365:1 › opening a learning thread updates the graph from its ask (332ms)
+  ✓  33 tests/graph.spec.ts:515:1 › a citation that does not resolve is left as text (184ms)
+  ✓  35 tests/graph.spec.ts:647:1 › clicking a change opens the graph tab with that node selected (193ms)
+  ✓  34 tests/graph.spec.ts:628:1 › an address written by a graph update navigates back to its turn (292ms)
+  ✓  32 tests/graph.spec.ts:493:1 › a cited message is one click away from the note that rests on it (412ms)
+  ✓  36 tests/persistence.spec.ts:153:1 › a reload keeps the transcript, the graph and the update chips (1.7s)
+  ✓  38 tests/persistence.spec.ts:202:1 › an interaction whose update never finished is re-enqueued (1.6s)
+  ✓  40 tests/persistence.spec.ts:270:1 › an unreadable snapshot is dropped and the app comes up bare (157ms)
+  ✓  37 tests/persistence.spec.ts:180:1 › a reload keeps a learning thread behind its mark (1.8s)
+  ✓  42 tests/smoke.spec.ts:9:1 › streams a real response end to end (1.4s)
+  ✓  41 tests/persistence.spec.ts:289:1 › Reset clears this sample's state for good (1.7s)
+  ✓  30 tests/graph.spec.ts:433:1 › a failed update mid-build does not stop the ones after it (4.9s)
+  ✓  29 tests/graph.spec.ts:416:1 › building from a sample transcript walks its turns once (5.2s)
+  ✓  31 tests/graph.spec.ts:445:1 › interacting mid-build interleaves rather than races (5.6s)
+  ✓  39 tests/persistence.spec.ts:228:1 › a build interrupted by a refresh resumes where it stopped (6.2s)
+  42 passed (9.6s)
+exit code 0

@@ -1,0 +1,11 @@
+$ cd /Users/denis.lantsman/src/edulab && grep -rn "Reset\|Build knowledge\|select\b\|selectOption\|data-build" packages/e2e --include=*.ts
+stdout:
+packages/e2e/tests/persistence.spec.ts:234:    .locator("select option")
+packages/e2e/tests/persistence.spec.ts:289:test("Reset clears this sample's state for good", async ({ page }) => {
+packages/e2e/tests/persistence.spec.ts:297:  await page.getByRole("button", { name: "Reset", exact: true }).click();
+packages/e2e/tests/graph.spec.ts:413:  return page.getByRole("button", { name: /Build knowledge graph/ });
+packages/e2e/tests/graph.spec.ts:426:  await expect(page.locator("[data-build-status]")).toHaveText(
+packages/e2e/tests/graph.spec.ts:429:  await expect(page.locator("[data-build-status]")).toHaveText("built");
+packages/e2e/tests/graph.spec.ts:442:  await expect(page.locator("[data-build-status]")).toHaveText(
+packages/e2e/tests/graph.spec.ts:455:  await expect(page.locator("[data-build-status]")).toHaveText("built");
+exit code 0

@@ -1,0 +1,6 @@
+$ cd ~/src/edulab && render deploys list srv-dafnsg740ujc73c43ceg -o text
+stdout:
+STATUS      COMMIT/IMAGE                                TRIGGER       CREATED                 FINISHED                ID                          
+Live        cb8e8d4c0765b6251bb590d775848798af83dec2    new commit    2026-09-08T03:17:29Z    2026-09-08T03:18:03Z    dep-dafnsieq1p3s73e6sbgg    
+Canceled    7499cf9f53be82b6fd49e536bb25878a587d2a11    manual        2026-09-08T03:17:22Z    2026-09-08T03:17:30Z    dep-dafnsgn40ujc73c43dd0    
+exit code 0

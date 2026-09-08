@@ -1,0 +1,9 @@
+$ cd /Users/denis.lantsman/src/edulab && grep -n "message" packages/frontend/graph.test.ts packages/frontend/graph-tools.test.ts
+stdout:
+packages/frontend/graph.test.ts:47:    message: expect.stringContaining("2 incident edge(s)"),
+packages/frontend/graph-tools.test.ts:136:    _type: "message",
+packages/frontend/graph-tools.test.ts:145:      new MessageEvent("message", {
+packages/frontend/graph-tools.test.ts:172:    this.deliver({ type: "message_stop" } as Anthropic.RawMessageStreamEvent);
+packages/frontend/graph-tools.test.ts:175:    this.deliver({ type: "message_stop" } as Anthropic.RawMessageStreamEvent);
+packages/frontend/graph-tools.test.ts:192:  const call = thread.messages.find((m) => m.type === "tool_use");
+exit code 0

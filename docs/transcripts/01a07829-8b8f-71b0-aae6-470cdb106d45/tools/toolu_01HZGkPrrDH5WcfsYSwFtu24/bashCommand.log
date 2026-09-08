@@ -1,0 +1,15 @@
+$ cd /Users/denis.lantsman/src/edulab && perl -0pi -e 's/## Opening a thread-level child\n — DONE/## Opening a thread-level child — DONE/' plans/2026-09-06-thread-level-interactions.md && sed -n '138,152p' plans/2026-09-06-thread-level-interactions.md
+stdout:
+## Opening a thread-level child — DONE
+Landed as designed. `threadSeed` / `threadAskTurn` sit beside `contextSeed` /
+`askTurn` in `prompt.ts`; `threadAskTurn` takes only the action, since a
+thread-level ask carries no quote and so needs neither anchor nor messages.
+`LEARNING_SYSTEM` now says the user either points at a passage or asks about
+the thread as a whole. `openThread` / `threadChildren` mirror `open` / `marks`
+on `ThreadTree`. Nothing calls them yet — the pane wiring is stage 3.
+- Goal: `ThreadTree.openThread` exists; `threadSeed`, `threadAskTurn` and the `review` / `ideas` actions exist; `LEARNING_SYSTEM` covers whole-thread scope.
+- Tests:
+  - `prompt.test.ts`: `threadSeed` includes the last message of the parent transcript (where `contextSeed` truncated at the anchor), and carries the graph only when the parent has no seed of its own.
+  - `prompt.test.ts`: `threadAskTurn` contains no `Selected:` block, and differs per action.
+  - `threads.test.ts`: two `openThread` calls on the same parent both succeed, both appear in `threadChildren`, and neither appears in `marks()`.
+exit code 0

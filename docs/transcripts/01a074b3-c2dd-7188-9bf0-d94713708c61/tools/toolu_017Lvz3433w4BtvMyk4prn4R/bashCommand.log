@@ -1,0 +1,38 @@
+$ cd /Users/denis.lantsman/src/edulab && npm run typecheck && npm run lint:fix && npm run test:e2e
+stdout:
+> edulab@0.0.1 typecheck
+> npm -w @edulab/iso exec tsc -- --noEmit && npm -w @edulab/frontend exec tsc -- --noEmit && npm -w @edulab/backend exec tsc -- --noEmit && npm -w @edulab/e2e exec tsc -- --noEmit
+> edulab@0.0.1 lint:fix
+> biome check --write .
+Checked 52 files in 132ms. No fixes applied.
+> edulab@0.0.1 test:e2e
+> npm -w @edulab/e2e run test
+> @edulab/e2e@0.0.1 test
+> playwright test
+Running 24 tests using 7 workers
+  ✓   2 tests/chat.spec.ts:231:1 › a second turn sends the full thread (401ms)
+  ✓   5 tests/chat.spec.ts:249:1 › a live selection overlapping a mark offers no actions (491ms)
+  ✓   3 tests/chat.spec.ts:217:1 › the composer is disabled while a turn is in flight (519ms)
+  ✓   7 tests/chat.spec.ts:201:1 › streams a response into the transcript (517ms)
+  ✓   6 tests/chat.spec.ts:294:1 › an action opens a thread seeded with the selected passage (536ms)
+  ✓   1 tests/chat.spec.ts:271:1 › two marks in one message are both clickable (667ms)
+  ✓   4 tests/chat.spec.ts:321:1 › a follow-up in the thread pane re-sends the seed (626ms)
+  ✓   9 tests/chat.spec.ts:392:1 › the arrows name the layer and stop at the ends (268ms)
+  ✓   8 tests/chat.spec.ts:340:1 › clicking a mark reopens its thread without a new request (403ms)
+  ✓  11 tests/chat.spec.ts:445:1 › a descended thread shows what it was opened from, in its transcript (398ms)
+  ✓  10 tests/chat.spec.ts:409:1 › a thread opened at depth carries both selections once (438ms)
+  ✓  14 tests/chat.spec.ts:510:1 › a tool call is rendered and text above it stays selectable (339ms)
+  ✓  15 tests/chat.spec.ts:535:1 › a new selection leaves committed marks rendered (307ms)
+  ✓  12 tests/chat.spec.ts:464:1 › ← climbs back without losing threads or highlights (539ms)
+  ✓  13 tests/chat.spec.ts:488:1 › nesting goes three deep (473ms)
+  ✓  16 tests/graph.spec.ts:92:1 › switching tabs leaves the transcript and the graph intact (305ms)
+  ✓  17 tests/graph.spec.ts:113:1 › clicking a node fills the sidebar and a retitle keeps its edges (279ms)
+  ✓  18 tests/graph.spec.ts:136:1 › a duplicate title is rejected without losing the draft (292ms)
+  ✓  19 tests/graph.spec.ts:149:1 › deleting a node takes its edges with it (271ms)
+  ✓  20 tests/graph.spec.ts:159:1 › an edge is selectable and editable (287ms)
+  ✓  23 tests/graph.spec.ts:345:1 › a failed graph update leaves the app usable (206ms)
+  ✓  21 tests/graph.spec.ts:288:1 › every interaction updates the graph, one update at a time (307ms)
+  ✓  22 tests/graph.spec.ts:314:1 › opening a learning thread updates the graph from its ask (350ms)
+  ✓  24 tests/smoke.spec.ts:9:1 › streams a real response end to end (1.4s)
+  24 passed (4.3s)
+exit code 0

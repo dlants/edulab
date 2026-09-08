@@ -1,0 +1,28 @@
+$ cd /Users/denis.lantsman/src/edulab/packages/frontend && grep -n "reveal\|AppEvent\|flashClass\|data-mark\|activeMark\|scrollIntoView" view.ts prototypes/chat.ts
+stdout:
+view.ts:34:  scrollIntoView,
+view.ts:89:  activeMark: ThreadId | null;
+view.ts:172:const flashClass = cls("flash");
+view.ts:313:.${markClass}[data-mark] {
+view.ts:317:.${markClass}[data-mark][data-active="true"] {
+view.ts:427:@keyframes ${flashClass}-pulse {
+view.ts:431:.${flashClass} {
+view.ts:432:  animation: ${flashClass}-pulse 1.2s ease-out;
+view.ts:505:    this.b.bindContainerAttr("data-mark", (s) => s.thread ?? undefined);
+view.ts:950:export type AppEvent =
+view.ts:951:  | { type: "transcript:reveal"; index: number }
+view.ts:956:export type AppCtx = { bus: PostRenderEventBus<AppEvent> };
+view.ts:1024:      if (event.type !== "transcript:reveal") return;
+view.ts:1027:      scrollIntoView(li);
+view.ts:1028:      li.classList.remove(flashClass);
+view.ts:1030:      requestAnimationFrame(() => li.classList.add(flashClass));
+view.ts:1048:            active: s.activeMark,
+view.ts:1322:  const active = s.marks.find((m) => m.thread === s.activeMark);
+prototypes/chat.ts:40:  type AppEvent,
+prototypes/chat.ts:223:    activeMark: null,
+prototypes/chat.ts:321:    state.activeMark = node.activeChild;
+prototypes/chat.ts:509:  function reveal(state: State, citation: Citation): void {
+prototypes/chat.ts:522:    bus.emit({ type: "transcript:reveal", index: citation.index });
+prototypes/chat.ts:626:          reveal(state, msg.msg.citation);
+prototypes/chat.ts:787:  const bus = new PostRenderEventBus<AppEvent>();
+exit code 0

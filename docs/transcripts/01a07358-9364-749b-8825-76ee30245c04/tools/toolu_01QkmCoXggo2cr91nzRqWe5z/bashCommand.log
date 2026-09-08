@@ -1,0 +1,6 @@
+$ cd /Users/denis.lantsman/src/edulab && grep -n "read it before\|names the tools\|Each tool's" plans/2026-09-05-domain-graph.md
+stdout:
+209:  - Each tool's `execute` returns an ok result and the graph reflects it.
+216:- `LEARNING_SYSTEM` gains: maintain the graph as you talk to the user; read it before answering so you know what they already know; record misconceptions in the notes rather than by lowering the score; keep titles short and unique.
+218:  - `prompt.test.ts`: the learning system prompt names the tools and the scale.
+exit code 0

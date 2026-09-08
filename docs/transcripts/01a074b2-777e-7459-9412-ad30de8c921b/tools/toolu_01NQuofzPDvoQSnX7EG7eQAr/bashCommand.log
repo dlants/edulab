@@ -1,0 +1,4 @@
+$ cd /Users/denis.lantsman/src/edulab && git add -A && git commit -m "Stage 4: citations" -q && git log --oneline -1
+stdout:
+63d40b6 Stage 4: citations
+exit code 0

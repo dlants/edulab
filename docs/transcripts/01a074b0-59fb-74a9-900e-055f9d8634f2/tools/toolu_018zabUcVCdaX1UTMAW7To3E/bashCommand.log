@@ -1,0 +1,11 @@
+$ cd /Users/denis.lantsman/src/edulab && npm run typecheck && npm test 2>&1
+stdout:
+> edulab@0.0.1 typecheck
+> npm -w @edulab/iso exec tsc -- --noEmit && npm -w @edulab/frontend exec tsc -- --noEmit && npm -w @edulab/backend exec tsc -- --noEmit && npm -w @edulab/e2e exec tsc -- --noEmit
+prompt.test.ts(133,28): error TS2352: Conversion of type '{ type: string; }' to type '{ text: string; }' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+  Property 'text' is missing in type '{ type: string; }' but required in type '{ text: string; }'.
+prompt.test.ts(155,21): error TS2339: Property 'cache_control' does not exist on type 'ContentBlockParam'.
+  Property 'cache_control' does not exist on type 'ThinkingBlockParam'.
+threads.ts(69,9): error TS2345: Argument of type 'string | ContentBlockParam[] | undefined' is not assignable to parameter of type 'string | undefined'.
+  Type 'ContentBlockParam[]' is not assignable to type 'string'.
+exit code 2

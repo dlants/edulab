@@ -1,0 +1,50 @@
+$ cd /Users/denis.lantsman/src/edulab && sed -n '60,115p' packages/e2e/tests/graph.spec.ts
+stdout:
+      description: "where a binding is visible",
+      notes: "",
+      level: 3,
+    });
+    graph.putEdge({
+      from: "n0",
+      to: "n1",
+      title: "builds on",
+      description: "a closure captures a scope",
+    });
+  });
+}
+function graphTab(page: Page) {
+  return page.getByRole("button", { name: "Knowledge graph", exact: true });
+}
+function threadsTab(page: Page) {
+  return page.getByRole("button", { name: "Threads", exact: true });
+}
+function nodes(page: Page) {
+  return page.locator("[data-node]");
+}
+async function open(page: Page) {
+  await backend(page);
+  await page.goto("/");
+  await seed(page);
+  await graphTab(page).click();
+}
+test("switching tabs leaves the transcript and the graph intact", async ({
+  page,
+}) => {
+  await backend(page);
+  await page.goto("/");
+  await page.getByRole("textbox").fill("hello");
+  await page.getByRole("textbox").press("Enter");
+  await expect(page.locator("ul").first().locator("li")).toHaveCount(2);
+  await seed(page);
+  await graphTab(page).click();
+  await expect(nodes(page)).toHaveCount(2);
+  await expect(page.locator("[data-edge]")).toHaveCount(1);
+  await threadsTab(page).click();
+  await expect(page.locator("ul").first().locator("li")).toHaveCount(2);
+  await graphTab(page).click();
+  await expect(nodes(page)).toHaveCount(2);
+});
+test("clicking a node fills the sidebar and a retitle keeps its edges", async ({
+  page,
+}) => {
+exit code 0

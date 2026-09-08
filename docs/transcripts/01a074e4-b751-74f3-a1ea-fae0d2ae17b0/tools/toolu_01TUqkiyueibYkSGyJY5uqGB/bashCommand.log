@@ -1,0 +1,114 @@
+$ cd /Users/denis.lantsman/src/edulab && sed -n 230,300p packages/frontend/thread.ts && sed -n 40,90p packages/frontend/graph.ts
+stdout:
+  /** Bumped whenever the log or the streaming block changes, so `messages` can
+   * be recomputed lazily rather than on every delta. */
+  private version = 0;
+  private cache:
+    | { version: number; messages: ReadonlyArray<Message> }
+    | undefined;
+  private settle:
+    | ((content: Anthropic.ContentBlockParam[]) => void)
+    | undefined;
+  /** True for the whole agent turn, including while tools execute between
+   * requests - the UI and the send guard care about the turn, not the request. */
+  private running = false;
+  /** Set when a request ends in a done/error frame, which ends the turn even
+   * if tools were requested. */
+  private failed = false;
+  /** tool_use ids whose streamed json never parsed. The log has to carry an
+   * object the API would accept, so this is the only place that knowledge
+   * survives the commit. */
+  private readonly unparsed = new Set<string>();
+  onChange: (() => void) | undefined;
+  private readonly socket: Socket;
+  private readonly system: string;
+  private readonly tools: Record<ToolName, Tool>;
+  /** Present => the yield tool is offered and the turn can settle with data. */
+  private readonly yieldSchema: Anthropic.Tool.InputSchema | "text" | undefined;
+  private settled: TurnResult | undefined;
+  /** Turn 0 when present: sent like any other turn, never rendered. */
+  readonly seed: string | Anthropic.ContentBlockParam[] | undefined;
+  constructor(socket: Socket, opts: ThreadOpts = {}) {
+    this.socket = socket;
+    this.system = opts.system ?? SYSTEM;
+    this.tools = opts.tools ?? {};
+    this.yieldSchema = opts.yieldSchema;
+    this.seed = opts.seed;
+    this.turns = [
+      ...(opts.seed ? [{ role: "user" as const, content: opts.seed }] : []),
+      ...(opts.initialTurns ?? []),
+    ];
+    socket.addEventListener("message", (e: MessageEvent<string>) => {
+      this.handleFrame(JSON.parse(e.data) as ServerFrame);
+    });
+  }
+  /** The derived transcript: the log flattened into blocks, plus whatever is
+   * currently streaming. The log stays the wire format; nothing is ever
+   * converted back out of `Message`. */
+  get messages(): ReadonlyArray<Message> {
+    if (this.cache?.version === this.version) return this.cache.messages;
+    const messages = project(
+      this.seed ? this.turns.slice(1) : this.turns,
+      this.pending?.blocks,
+    );
+    this.cache = { version: this.version, messages };
+    return messages;
+  }
+  /** The committed wire log minus the seed turn: what a snapshot stores and
+   * what `initialTurns` restores. Turns still streaming are not in it. */
+  get log(): ReadonlyArray<Anthropic.MessageParam> {
+    return this.seed ? this.turns.slice(1) : this.turns;
+  }
+  get systemPrompt(): string {
+    return this.system;
+  }
+  get inFlight(): boolean {
+    return this.running;
+  }
+  /** The settled yield, once the thread has produced one. */
+  kind: "node" | "edge";
+  id: GraphId;
+  title: string;
+};
+export type GraphResult =
+  | { status: "ok"; change: GraphChange }
+  | { status: "error"; error: string };
+/** The graph, flattened for storage. `next` travels with it so ids minted on a
+ * restored graph cannot collide with restored ones. */
+export type GraphSnapshot = {
+  nodes: GraphNode[];
+  edges: GraphEdge[];
+  next: number;
+};
+export const isNodeId = (id: string): id is NodeId => id.startsWith("n");
+export const isEdgeId = (id: string): id is EdgeId => id.startsWith("e");
+export class KnowledgeGraph {
+  #nodes = new Map<NodeId, GraphNode>();
+  #edges = new Map<EdgeId, GraphEdge>();
+  #next = 0;
+  get nodes(): ReadonlyArray<GraphNode> {
+    return [...this.#nodes.values()];
+  }
+  get edges(): ReadonlyArray<GraphEdge> {
+    return [...this.#edges.values()];
+  }
+  snapshot(): GraphSnapshot {
+    return {
+      nodes: [...this.#nodes.values()],
+      edges: [...this.#edges.values()],
+      next: this.#next,
+    };
+  }
+  static from(snapshot: GraphSnapshot): KnowledgeGraph {
+    const graph = new KnowledgeGraph();
+    for (const node of snapshot.nodes) graph.#nodes.set(node.id, node);
+    for (const edge of snapshot.edges) graph.#edges.set(edge.id, edge);
+    graph.#next = snapshot.next;
+    return graph;
+  }
+  node(id: NodeId): GraphNode | undefined {
+    return this.#nodes.get(id);
+  }
+  edge(id: EdgeId): GraphEdge | undefined {
+    return this.#edges.get(id);
+exit code 0

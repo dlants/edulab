@@ -1,0 +1,8 @@
+$ cd /Users/denis.lantsman/src/edulab && git diff --stat HEAD -- packages/frontend/view.ts packages/frontend/prototypes/chat.ts notes/deliverable.md && git diff HEAD -- packages/frontend/view.ts | grep -n "split" 
+stdout:
+ notes/deliverable.md                 | 115 +++++++++++++++++++++++++++++++++++
+ packages/frontend/prototypes/chat.ts |   1 -
+ packages/frontend/view.ts            |  10 ++-
+ 3 files changed, 122 insertions(+), 4 deletions(-)
+32:+            update: s.split ? (s.updates.get(i) ?? null) : null,
+exit code 0

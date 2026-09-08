@@ -1,0 +1,26 @@
+$ cd /Users/denis.lantsman/src/edulab/packages/frontend && grep -n "mark:reveal" -B 6 prototypes/chat.ts
+stdout:
+650-        const parent = node.origin?.anchor.thread;
+651-        if (parent === undefined) state.split = false;
+652-        else focus = parent;
+653-        // Climbing out lands on the passage that was descended through, which
+654-        // may be far up a long transcript.
+655-        const active = tree.get(focus).activeChild;
+656:        if (active) bus.emit({ type: "mark:reveal", thread: active });
+--
+679-        anchor = null;
+680-        anchorAt = null;
+681-        node.activeChild = msg.thread;
+682-        // Clicking a mark at layer 0 is how the reflect column is opened onto
+683-        // the thread behind it: this thread stays on the left, its thread
+684-        // appears beside it.
+685:        bus.emit({ type: "mark:reveal", thread: msg.thread });
+--
+741-          }
+742-          case "MARK_CLICKED":
+743-            anchor = null;
+744-            anchorAt = null;
+745-            node.activeChild = msg.msg.thread;
+746-            updateFocus = null;
+747:            bus.emit({ type: "mark:reveal", thread: msg.msg.thread });
+exit code 0

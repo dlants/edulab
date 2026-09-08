@@ -1,0 +1,8 @@
+$ cd /Users/denis.lantsman/src/edulab && mkdir -p /tmp/deliv && sed -n '1,20p' notes/deliverable.md > /tmp/deliv/1.md && sed -n '21,56p' notes/deliverable.md > /tmp/deliv/2.md && sed -n '57,102p' notes/deliverable.md > /tmp/deliv/3.md && sed -n '103,142p' notes/deliverable.md > /tmp/deliv/4.md && wc -l /tmp/deliv/*.md
+stdout:
+      20 /tmp/deliv/1.md
+      36 /tmp/deliv/2.md
+      46 /tmp/deliv/3.md
+      39 /tmp/deliv/4.md
+     141 total
+exit code 0

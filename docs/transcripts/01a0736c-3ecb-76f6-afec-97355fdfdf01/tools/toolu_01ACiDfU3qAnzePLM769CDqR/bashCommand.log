@@ -1,0 +1,46 @@
+$ cd /Users/denis.lantsman/src/edulab && sed -n 365,375p packages/frontend/thread.test.ts; sed -n 398,404p packages/frontend/thread.test.ts; sed -n 433,438p packages/frontend/thread.test.ts; sed -n 461,478p packages/frontend/thread.test.ts; sed -n 546,552p packages/frontend/thread.test.ts
+stdout:
+  socket.deliver({ type: "message_stop" } as Anthropic.RawMessageStreamEvent);
+}
+it("answers a tool call and re-requests with the result", async () => {
+  const socket = new FakeSocket();
+  const thread = new Thread(socket, {
+    tools: {
+      read: tool("read", async () => ({ status: "ok", text: "contents" })),
+    },
+  });
+  const socket = new FakeSocket();
+  const thread = new Thread(socket, {
+    tools: {
+      boom: tool("boom", () => Promise.reject(new Error("nope"))),
+    },
+  });
+it("reports a tool call whose input never parsed as an error", async () => {
+  const socket = new FakeSocket();
+  const thread = new Thread(socket, {
+    tools: { read: tool("read", async () => ({ status: "ok", text: "ok" })) },
+  });
+  const socket = new FakeSocket();
+  const read = tool("read", async () => ({ status: "ok", text: "ok" }));
+  const thread = new Thread(socket, { tools: { read } });
+  void thread.send("hi");
+  expect(socket.sent[0]?.params.tools).toEqual([read.spec]);
+  const plain = setup();
+  void plain.thread.send("hi");
+  expect(plain.socket.sent[0]?.params.tools).toBeUndefined();
+});
+it("ends the turn when a request errors mid tool call", async () => {
+  const socket = new FakeSocket();
+  const thread = new Thread(socket, {
+    tools: { read: tool("read", async () => ({ status: "ok", text: "ok" })) },
+  });
+  const turn = thread.send("hi");
+  toolCall(socket, 0, "t1", "read", ['{"path":"a.txt"}']);
+  const socket = new FakeSocket();
+  const thread = new Thread(socket, {
+    yieldSchema: REVIEW_SCHEMA,
+    tools: { read: tool("read", async () => ({ status: "ok", text: "abc" })) },
+  });
+  const turn = thread.send("hi");
+  toolTurn(socket, [
+exit code 0

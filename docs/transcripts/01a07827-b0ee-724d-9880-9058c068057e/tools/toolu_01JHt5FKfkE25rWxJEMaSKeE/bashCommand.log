@@ -1,0 +1,9 @@
+$ cd /Users/denis.lantsman/src/edulab && grep -n "threads.ts\"\|from \"../threads" packages/frontend/prototypes/chat.ts && grep -n "TreeNode\|children's" packages/frontend/threads.ts
+stdout:
+37:import { ThreadTree } from "../threads.ts";
+35:export type TreeNode = {
+50:  private readonly threads = new Map<ThreadId, TreeNode>();
+64:  get(id: ThreadId): TreeNode {
+135:  nodes(): ReadonlyArray<TreeNode> {
+164:  private node(snapshot: ThreadSnapshot, thread: Thread): TreeNode {
+exit code 0

@@ -1,0 +1,19 @@
+$ sed -n 746,762p packages/frontend/view.ts
+stdout:
+export type ThreadPaneState = {
+  messages: ReadonlyArray<Message>;
+  /** The thread this pane shows: a selection over it anchors to it. */
+  thread: ThreadId;
+  /** Highlights over this transcript, one per thread opened from it. */
+  marks: ReadonlyArray<Mark>;
+  /** The live selection, when it is over this pane rather than the left one. */
+  anchor: Anchor | null;
+  inFlight: boolean;
+  draft: string;
+  expanded: ReadonlySet<number>;
+  updates: Updates;
+};
+export type ThreadPaneMsg =
+  | { type: "DRAFT_CHANGED"; draft: string }
+  | { type: "SUBMIT" }
+exit code 0

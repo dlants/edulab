@@ -1,0 +1,101 @@
+$ sed -n '1,40p' packages/frontend/graph.test.ts; echo ===; grep -n "tool" packages/frontend/thread.test.ts | sed -n '1,60p'
+stdout:
+import { expect, it } from "vitest";
+import {
+  type EdgeId,
+  KnowledgeGraph,
+  type Level,
+  type NodeId,
+} from "./graph.ts";
+const addNode = (graph: KnowledgeGraph, title: string, level: Level = 1) => {
+  const before = new Set(graph.nodes.map((n) => n.id));
+  const result = graph.putNode({
+    title,
+    description: `about ${title}`,
+    notes: "",
+    level,
+  });
+  expect(result.status).toBe("ok");
+  const added = graph.nodes.find((n) => !before.has(n.id));
+  if (!added) throw new Error("node was not added");
+  return added.id;
+};
+const addEdge = (
+  graph: KnowledgeGraph,
+  from: NodeId,
+  to: NodeId,
+  title: string,
+) => {
+  const before = new Set(graph.edges.map((e) => e.id));
+  const result = graph.putEdge({ from, to, title, description: "" });
+  expect(result.status).toBe("ok");
+  const added = graph.edges.find((e) => !before.has(e.id));
+  if (!added) throw new Error("edge was not added");
+  return added.id;
+};
+it("cascades a node delete to the edges on both sides of it", () => {
+  const graph = new KnowledgeGraph();
+  const a = addNode(graph, "a");
+  const b = addNode(graph, "b");
+===
+12:  toolset,
+68:function toolCall(
+79:      type: "tool_use",
+95:/** Lets the thread's tool execution and follow-up request run. */
+227:it("surfaces a streamed tool call with its json parsed", async () => {
+230:  toolCall(socket, 0, "t1", "read", ['{"path"', ':"a.txt"}']);
+233:  // No tool is configured, so the loop answers with an unknown-tool error and
+240:    type: "tool_use",
+247:      result: { status: "error", error: "unknown tool: read" },
+252:it("projects text and a tool call in one turn as two entries", async () => {
+266:  toolCall(socket, 1, "t1", "read", ['{"path":"a.txt"}']);
+276:    "tool_use",
+279:  // The tool entry that follows must not disturb the offsets an anchor into
+293:it("pairs a tool_result in the next user turn onto its call", async () => {
+300:        content: [{ type: "tool_use", id: "t1", name: "read", input: {} }],
+305:          { type: "tool_result", tool_use_id: "t1", content: "contents" },
+314:      type: "tool_use",
+330:  toolCall(socket, 0, "t1", "read", ['{"path"']);
+333:  if (streaming?.type !== "tool_use") throw new Error("expected a tool call");
+346:  if (committed?.type !== "tool_use") throw new Error("expected a tool call");
+350:function tool(
+364:/** Streams a complete tool call and ends the request. */
+365:function toolTurn(
+370:    toolCall(socket, index, call.id, call.name, [call.json]);
+376:it("answers a tool call and re-requests with the result", async () => {
+379:    tools: toolset(
+380:      tool("read", async () => ({ status: "ok", text: "contents" })),
+385:  toolTurn(socket, [{ id: "t1", name: "read", json: '{"path":"a.txt"}' }]);
+395:        type: "tool_result",
+396:        tool_use_id: "t1",
+405:it("turns a throwing tool and an unknown tool into error results", async () => {
+408:    tools: toolset(tool("boom", () => Promise.reject(new Error("nope")))),
+412:  toolTurn(socket, [
+424:        type: "tool_result",
+425:        tool_use_id: "t1",
+430:        type: "tool_result",
+431:        tool_use_id: "t2",
+432:        content: "unknown tool: ghost",
+439:it("reports a tool call whose input never parsed as an error", async () => {
+442:    tools: toolset(tool("read", async () => ({ status: "ok", text: "ok" }))),
+446:  toolCall(socket, 0, "t1", "read", ['{"path"']);
+457:        type: "tool_result",
+458:        tool_use_id: "t1",
+459:        content: "could not parse tool input",
+466:it("sends the configured tool specs, and none when there are none", async () => {
+468:  const read = tool("read", async () => ({ status: "ok", text: "ok" }));
+469:  const thread = new Thread(socket, { tools: toolset(read) });
+471:  expect(socket.sent[0]?.params.tools).toEqual([read.spec]);
+475:  expect(plain.socket.sent[0]?.params.tools).toBeUndefined();
+478:it("ends the turn when a request errors mid tool call", async () => {
+481:    tools: toolset(tool("read", async () => ({ status: "ok", text: "ok" }))),
+484:  toolCall(socket, 0, "t1", "read", ['{"path":"a.txt"}']);
+510:it("offers the yield tool with the supplied schema, and the default for text", () => {
+513:  expect(structured.sent[0]?.params.tools).toEqual([
+519:  expect(text.sent[0]?.params.tools?.[0]).toMatchObject({
+529:  toolTurn(socket, [{ id: "y1", name: "yield", json: '{"verdict":"good"}' }]);
+544:  toolTurn(socket, [{ id: "y1", name: "yield", json: '{"result":"done"}' }]);
+551:it("runs tools called alongside a yield, then stops at the yield", async () => {
+555:    tools: toolset(tool("read", async () => ({ status: "ok", text: "abc" }))),
+558:  toolTurn(socket, [
+exit code 0

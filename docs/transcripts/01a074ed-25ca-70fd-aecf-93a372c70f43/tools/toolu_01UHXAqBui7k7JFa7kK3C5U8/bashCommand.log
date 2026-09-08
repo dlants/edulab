@@ -1,0 +1,4 @@
+$ cd /Users/denis.lantsman/src/edulab && git add -A && git commit -q -m "Stage 4: Reset button" && git log --oneline -1
+stdout:
+0246a16 Stage 4: Reset button
+exit code 0

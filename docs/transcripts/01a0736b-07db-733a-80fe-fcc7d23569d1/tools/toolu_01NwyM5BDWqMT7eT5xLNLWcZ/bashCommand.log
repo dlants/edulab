@@ -1,0 +1,4 @@
+$ cd /Users/denis.lantsman/src/edulab && git add -A && git commit -m "Stage 1: the knowledge graph artifact" -q && git log --oneline -1 && git status --short
+stdout:
+4f208b2 Stage 1: the knowledge graph artifact
+exit code 0

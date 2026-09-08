@@ -1,0 +1,14 @@
+$ cd /Users/denis.lantsman/src/edulab && npm run typecheck && npx vitest run
+stdout:
+> edulab@0.0.1 typecheck
+> npm -w @edulab/iso exec tsc -- --noEmit && npm -w @edulab/frontend exec tsc -- --noEmit && npm -w @edulab/backend exec tsc -- --noEmit && npm -w @edulab/e2e exec tsc -- --noEmit
+ RUN  v4.1.11 /Users/denis.lantsman/src/edulab
+ ✓ packages/frontend/prompt.test.ts (5 tests) 2ms
+ ✓ packages/frontend/selection.test.ts (8 tests) 2ms
+ ✓ packages/frontend/threads.test.ts (2 tests) 10ms
+ ✓ packages/frontend/thread.test.ts (20 tests) 20ms
+ Test Files  4 passed (4)
+      Tests  35 passed (35)
+   Start at  07:14:54
+   Duration  157ms (transform 114ms, setup 0ms, import 238ms, tests 34ms, environment 0ms)
+exit code 0

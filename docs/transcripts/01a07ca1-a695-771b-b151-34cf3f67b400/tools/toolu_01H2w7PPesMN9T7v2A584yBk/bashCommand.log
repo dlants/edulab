@@ -1,0 +1,11 @@
+$ cd /Users/denis.lantsman/src/edulab/packages/e2e/tests && python3 - <<'EOF'
+p="chat.spec.ts"; s=open(p).read(); i=s.index('test("dbg copy"'); open(p,"w").write(s[:i].rstrip()+"\n")
+EOF
+cd /Users/denis.lantsman/src/edulab && git diff --stat -- packages/e2e/tests/chat.spec.ts && npx playwright test -c packages/e2e/playwright.config.ts packages/e2e/tests/chat.spec.ts -g "streams a response"
+stdout:
+ packages/e2e/tests/chat.spec.ts | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+Running 1 test using 1 worker
+  ✓  1 packages/e2e/tests/chat.spec.ts:218:1 › streams a response into the transcript (197ms)
+  1 passed (1.4s)
+exit code 0

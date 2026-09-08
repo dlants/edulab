@@ -1,0 +1,14 @@
+$ cd /Users/denis.lantsman/src/edulab/packages/frontend && sed -n '1263,1275p' view.ts
+stdout:
+  }
+  destroy(): void {
+    this.b.cleanup();
+    this.container.innerHTML = "";
+  }
+}
+/** A count rather than a spinner: this is one model call per turn and it takes
+ * as long as it takes. */
+function buildFailures(build: Build): ReadonlyArray<BuildFailure> {
+  return build.type === "idle" ? [] : build.failures;
+}
+exit code 0

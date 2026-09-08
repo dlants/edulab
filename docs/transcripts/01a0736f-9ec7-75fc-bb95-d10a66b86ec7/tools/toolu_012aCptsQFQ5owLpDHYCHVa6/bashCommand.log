@@ -1,0 +1,4 @@
+$ cd /Users/denis.lantsman/src/edulab && git add -A && git commit -m "Stage 4: layout" -q && git log --oneline -1
+stdout:
+b0fadc8 Stage 4: layout
+exit code 0

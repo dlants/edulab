@@ -1,0 +1,4 @@
+$ npm run sync:transcripts && git status --short
+stdout:
+> edulab@0.0.1 sync:transcripts
+> ./scripts/sync-transcripts.sh

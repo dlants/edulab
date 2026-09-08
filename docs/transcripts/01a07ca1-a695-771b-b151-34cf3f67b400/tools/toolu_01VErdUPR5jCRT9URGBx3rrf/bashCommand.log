@@ -1,0 +1,19 @@
+$ cd /Users/denis.lantsman/src/edulab/packages/backend && (node app.ts &) && sleep 2 && curl -s -o /dev/null -w "%{http_code} " -X POST localhost:3000/api/auth -H 'content-type: application/json' -d '{"password":"[REDACTED]"}' && curl -s -o /dev/null -w "%{http_code}\n" -X POST localhost:3000/api/auth -H 'content-type: application/json' -d '{"password":"nope"}'; pkill -f "node app.ts"
+stdout:
+◇ injected env (1) from ../../.env // tip: ◈ secrets for agents [www.dotenvx.com]
+stderr:
+Error: listen EADDRINUSE: address already in use 0.0.0.0:3000
+    at Server.setupListenHandle [as _listen2] (node:net:1948:16)
+    at listenInCluster (node:net:2005:12)
+    at node:net:2214:7
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21) {
+  code: 'EADDRINUSE',
+  errno: -48,
+  syscall: 'listen',
+  address: '0.0.0.0',
+  port: 3000
+}
+stdout:
+200 
+401
+exit code 1

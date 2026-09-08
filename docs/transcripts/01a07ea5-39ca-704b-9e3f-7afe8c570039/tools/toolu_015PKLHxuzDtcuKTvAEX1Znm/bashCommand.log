@@ -1,0 +1,35 @@
+$ cd /Users/denis.lantsman/src/edulab && git status && git diff --cached --stat
+stdout:
+On branch main
+Your branch is ahead of 'origin/main' by 3 commits.
+  (use "git push" to publish your local commits)
+Changes to be committed:
+  (use "git restore --staged <file>..." to unstage)
+	modified:   notes/deliverable.md
+	modified:   packages/backend/app.ts
+	modified:   packages/backend/socket.ts
+	modified:   packages/e2e/playwright.config.ts
+	modified:   packages/e2e/tests/chat.spec.ts
+	new file:   packages/e2e/tests/fixture.ts
+	modified:   packages/e2e/tests/graph.spec.ts
+	modified:   packages/e2e/tests/persistence.spec.ts
+	modified:   packages/e2e/tests/smoke.spec.ts
+	new file:   packages/frontend/auth.ts
+	modified:   packages/frontend/main.ts
+	modified:   packages/frontend/prototypes/chat.ts
+	modified:   packages/frontend/view.ts
+ notes/deliverable.md                   | 146 +++++++++++++++++++++++++++++++++
+ packages/backend/app.ts                |   4 +-
+ packages/backend/socket.ts             |  16 +++-
+ packages/e2e/playwright.config.ts      |   5 +-
+ packages/e2e/tests/chat.spec.ts        |   9 +-
+ packages/e2e/tests/fixture.ts          |  16 ++++
+ packages/e2e/tests/graph.spec.ts       |   9 +-
+ packages/e2e/tests/persistence.spec.ts |   5 +-
+ packages/e2e/tests/smoke.spec.ts       |   2 +-
+ packages/frontend/auth.ts              |  75 +++++++++++++++++
+ packages/frontend/main.ts              |   2 +
+ packages/frontend/prototypes/chat.ts   |   5 +-
+ packages/frontend/view.ts              |  10 ++-
+ 13 files changed, 283 insertions(+), 21 deletions(-)
+exit code 0

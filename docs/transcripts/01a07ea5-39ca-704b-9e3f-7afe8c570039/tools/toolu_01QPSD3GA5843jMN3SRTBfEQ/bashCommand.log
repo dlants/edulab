@@ -1,0 +1,9 @@
+$ cd ~/src/edulab && npm run lint:fix >/dev/null && git remote -v && gh repo view dlants/edulab 2>&1
+stdout:
+origin	git@github.com:dlants/edulab.git (fetch)
+origin	git@github.com:dlants/edulab.git (push)
+name:	dlants/edulab
+description:	
+--
+# edulab
+exit code 0

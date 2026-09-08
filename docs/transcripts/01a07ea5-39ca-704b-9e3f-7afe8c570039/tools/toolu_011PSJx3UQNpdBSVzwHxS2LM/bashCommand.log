@@ -1,0 +1,2 @@
+$ ls ~/.render 2>/dev/null; cat ~/.render/cli.yaml 2>/dev/null | sed 's/[A-Za-z0-9_-]\{20,\}/REDACTED/'; command -v render; brew list render 2>/dev/null | head -3; env | grep -i "RENDER_API"
+exit code 1

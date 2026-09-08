@@ -1,0 +1,4 @@
+$ cd /Users/denis.lantsman/src/edulab && find . -name '*.css' -o -name 'index.html' | grep -v node_modules
+stdout:
+./packages/frontend/index.html
+exit code 0

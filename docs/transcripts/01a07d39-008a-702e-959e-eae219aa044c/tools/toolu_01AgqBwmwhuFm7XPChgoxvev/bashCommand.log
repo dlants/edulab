@@ -1,0 +1,140 @@
+$ cd /Users/denis.lantsman/src/edulab && find packages scripts -type f -name '*.ts' | xargs wc -l | sort -n && ls && cat package.json && git log --oneline
+stdout:
+      12 packages/iso/protocol.ts
+      16 packages/e2e/tests/fixture.ts
+      19 packages/e2e/tests/smoke.spec.ts
+      22 packages/frontend/main.ts
+      27 packages/backend/app.ts
+      45 packages/e2e/playwright.config.ts
+      51 packages/frontend/interactions.ts
+      55 packages/frontend/citation.ts
+      57 packages/backend/socket.ts
+      69 packages/frontend/samples/index.ts
+      75 packages/frontend/auth.ts
+      86 packages/frontend/layout.test.ts
+      89 packages/frontend/citation.test.ts
+      97 packages/frontend/selection.test.ts
+     106 packages/frontend/layout.ts
+     116 packages/frontend/selection.ts
+     128 packages/frontend/interactions.test.ts
+     142 packages/frontend/persistence.test.ts
+     174 packages/frontend/threads.test.ts
+     190 packages/frontend/persistence.ts
+     195 packages/frontend/graph.test.ts
+     224 packages/frontend/graph-tools.test.ts
+     227 packages/frontend/threads.ts
+     230 packages/frontend/prompt.ts
+     242 packages/frontend/graph.ts
+     246 packages/frontend/prompt.test.ts
+     298 packages/frontend/graph-tools.ts
+     307 packages/e2e/tests/persistence.spec.ts
+     361 packages/frontend/learning.ts
+     605 packages/frontend/vamp.ts
+     671 packages/e2e/tests/graph.spec.ts
+     685 packages/frontend/thread.test.ts
+     713 packages/frontend/thread.ts
+     783 packages/frontend/graph-view.ts
+     835 packages/e2e/tests/chat.spec.ts
+     858 packages/frontend/prototypes/chat.ts
+    1397 packages/frontend/view.ts
+   10453 total
+biome.json
+context.md
+docs
+node_modules
+notes
+package-lock.json
+package.json
+packages
+plans
+README.md
+scripts
+task-samples
+test-results
+tsconfig.base.json
+vite.config.ts
+vitest.config.ts
+{
+  "name": "edulab",
+  "version": "0.0.1",
+  "description": "Learning-mode agent prototypes",
+  "type": "module",
+  "license": "UNLICENSED",
+  "private": true,
+  "engines": { "node": ">=24" },
+  "workspaces": ["packages/*"],
+  "scripts": {
+    "dev:frontend": "vite",
+    "dev:backend": "npm -w @edulab/backend run dev",
+    "dev": "npm run dev:frontend & npm run dev:backend",
+    "build": "vite build",
+    "test": "vitest run",
+    "test:e2e": "npm -w @edulab/e2e run test",
+    "typecheck": "npm -w @edulab/iso exec tsc -- --noEmit && npm -w @edulab/frontend exec tsc -- --noEmit && npm -w @edulab/backend exec tsc -- --noEmit && npm -w @edulab/e2e exec tsc -- --noEmit",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
+    "sync:transcripts": "./scripts/sync-transcripts.sh"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.4.11",
+    "typescript": "^5.9.3",
+    "vite": "^6.0.0",
+    "vitest": "^4.1.4"
+  }
+}
+3af4d3c Stage 3: The pane and the dispatch loop
+f679dad Stage 2: Opening a thread-level child
+a7bf872 Stage 1: Origin as a union
+3ea37cb Pin the composers, move the setup controls behind a gear, and make marks navigable
+ac23079 Yield nothing from graph update threads
+b97781d Only touch the DOM when a binding's value actually changed
+43b58f1 Estimate the clamp affordance, and mount one tab at a time
+0246a16 Stage 4: Reset button
+041e160 Stage 3: Wire persistence into the chat prototype
+3fe727b Stage 2: Tree snapshot and restore
+c90d3a3 Stage 1: Graph and thread snapshots
+3ec923f Graph tab: pan/zoom, two-column layout, level styling, edge arrowheads
+d2bfd95 Stage 8: citation chips and navigation
+3324451 Stage 7: surfacing the update in the transcript
+85a2686 Stage 6: building from a sample transcript
+0663110 Stage 5: update the graph on every interaction
+63d40b6 Stage 4: citations
+7139e22 Stage 3: the graph update prompt
+de8a5b0 Stage 2: capturing an interaction
+4adfbe6 Stage 1: the ask becomes message 0
+76084e7 Fill the viewport, scroll layers independently, keep the newest block open
+a9e5d4c Stage 6: seeding the graph from the thread tree
+20413e8 Stage 5: the graph tab
+b0fadc8 Stage 4: layout
+7add28b Stage 3: prompt and wiring
+ba7fb1a Stage 2: graph tools
+4f208b2 Stage 1: the knowledge graph artifact
+e7473b9 notes: fold prototype ladder into exploration.md, add literature review
+32e5787 Add runThread: programmatic thread API with yield restarts
+c92a27e Stage 5: Rendering and the tree
+b8ec34c Plan: restore stage 4 goal line
+48d8be2 Stage 4: Yield
+e7350c5 Stage 3: The tool loop
+71fff9b Stage 2: Tool use in the stream accumulator
+3c16ce5 Stage 1: Rename Conversation to Thread
+251d673 Sync transcripts
+41226d7 Collapse the prototype tabs into one page, sample picker in the header
+25874b6 Show the opening action, and pin the bars around a scrolling transcript
+9b0ab1d Add five more task samples
+343ff8d Stage 4: Nesting and the arrows
+20be80b Stage 3: Threads on the right pane
+e5dc95a Stage 2: Multiple, clickable marks
+0d8ca2c Stage 1: Prompt construction
+c58e4dc Add learning mode with transcript selection to prototype 1
+ee3c295 Add chiller/HYSYS task sample
+b1e8b93 Tint user messages in the transcript
+d92c239 Add canned transcript picker to the nav
+8a96d76 Add prototype routing tabs and repo context.md
+4fd1a5a Handle stream events explicitly; switch to opus with a task-mode prompt
+6e31f43 Stage 3: Chat UI
+dde2fc6 Stage 2: Conversation
+96b0825 Stage 1: End to end pipe
+5473f07 Add prototype scaffolding plan and vamp skill
+3b9c59a Add assignment PDF and markdown extraction
+1473e3a Initial commit
+exit code 0

@@ -1,0 +1,9 @@
+$ cd /Users/denis.lantsman/src/edulab && cat /tmp/deliv/1.md /tmp/deliv/2.md /tmp/deliv/3.md /tmp/deliv/4.md > notes/deliverable.md && grep -c 'TK -' notes/deliverable.md && grep -n '^# ' notes/deliverable.md
+stdout:
+39
+3:# ecological grounding
+21:# design considerations
+57:# the prototype
+103:# evaluation
+129:# scaling
+exit code 0

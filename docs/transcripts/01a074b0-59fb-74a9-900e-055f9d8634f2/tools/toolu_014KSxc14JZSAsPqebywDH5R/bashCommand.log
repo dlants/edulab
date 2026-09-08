@@ -1,0 +1,40 @@
+$ cd /Users/denis.lantsman/src/edulab && sed -n 155,200p packages/frontend/prompt.ts
+stdout:
+  "the user is missing? Update the graph so it reflects that, and nothing",
+  "else - then yield.",
+].join(" ");
+function transcript(messages: ReadonlyArray<Message>): string {
+  return messages
+    .map((m) => `${m.role === "user" ? "User" : "Assistant"}: ${line(m)}`)
+    .join("\n\n");
+}
+function line(message: Message): string {
+  return message.type === "text"
+    ? message.text
+    : `[called tool ${message.call.name} with ${message.call.inputJson}]`;
+}
+/** How the thread was opened, shown at the top of its pane so the user can see
+ * what they asked for. */
+export function actionLabel(action: Action): string {
+  switch (action.type) {
+    case "explain":
+      return "I don't understand this.";
+    case "quiz":
+      return "Quiz me on this.";
+    case "query":
+      return action.text;
+  }
+}
+/** What the user is asking for, in their own voice: this is a user turn now,
+ * not a briefing written about them. */
+function ask(action: Action): string {
+  switch (action.type) {
+    case "explain":
+      return "I don't understand this. Explain what it means and why it is there.";
+    case "quiz":
+      return "Quiz me on this. Ask one question that checks whether I understand it, and wait for my answer.";
+    case "query":
+      return action.text;
+  }
+}
+exit code 0

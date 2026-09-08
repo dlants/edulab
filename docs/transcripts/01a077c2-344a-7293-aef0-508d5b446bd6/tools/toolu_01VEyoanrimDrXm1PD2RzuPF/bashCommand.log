@@ -1,0 +1,45 @@
+$ cd /Users/denis.lantsman/src/edulab && sed -n '228,240p;285,300p' packages/e2e/tests/persistence.spec.ts && sed -n '405,420p' packages/e2e/tests/graph.spec.ts
+stdout:
+test("a build interrupted by a refresh resumes where it stopped", async ({
+  page,
+}) => {
+  const counts = await backend(page);
+  await page.goto("/");
+  const sample = await page
+    .locator("select option")
+    .nth(1)
+    .getAttribute("value");
+  await page.goto(`/?sample=${sample}`);
+  const turns = await taskTranscript(page).locator("li").count();
+  // Nothing is saved until something happens, so nudge one dispatch through.
+  await graphTab(page).click();
+    "{ not json",
+  );
+});
+test("Reset clears this sample's state for good", async ({ page }) => {
+  await backend(page);
+  await page.goto("/");
+  await page.getByRole("textbox").fill(SENTENCE);
+  await page.getByRole("textbox").press("Enter");
+  await expect(taskTranscript(page).locator("li")).toHaveCount(2);
+  await seedGraph(page);
+  await settled(page);
+  await page.getByRole("button", { name: "Reset", exact: true }).click();
+  await expect(taskTranscript(page).locator("li")).toHaveCount(0);
+  await graphTab(page).click();
+  await expect(page.locator("[data-node]")).toHaveCount(0);
+  await turn(page, "second");
+  await expect(page.locator("ul").first().locator("li")).toHaveCount(4);
+  await graphTab(page).click();
+  await expect(nodes(page)).toHaveText(["concept-2"]);
+});
+function buildButton(page: Page) {
+  return page.getByRole("button", { name: /Build knowledge graph/ });
+}
+/** The smallest canned transcript, and the count of user turns in it: the
+ * build covers exactly the turns the sample was loaded with. */
+const SAMPLE = "9833484b";
+const SAMPLE_TURNS = 20;
+test("building from a sample transcript walks its turns once", async ({
+  page,
+exit code 0

@@ -1,0 +1,33 @@
+$ cd /Users/denis.lantsman/src/edulab && sed -n 80,110p packages/e2e/tests/chat.spec.ts
+stdout:
+            },
+            { type: "content_block_stop", index: 1 },
+            { type: "message_stop" } as Anthropic.RawMessageStreamEvent,
+          ]
+        : events(["and then"]);
+      for (const event of stream) {
+        send({ type: "event", requestId: message.requestId, event });
+      }
+    });
+  });
+}
+/** Selects characters [start, end) of message `msg` and lets the app capture
+ * it, which it does on mouseup over the transcript. */
+async function selectRange(
+  page: Page,
+  msg: number,
+  start: number,
+  end: number,
+) {
+  await page.evaluate(
+    ({ msg, start, end }) => {
+      const li = document.querySelectorAll("ul")[0].children[msg];
+      // role span, text span, tool block: the text span is where the offsets
+      // the app anchors into live.
+      const root = li.children[1] as HTMLElement;
+      const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+      let at = 0;
+      let from: [Node, number] | null = null;
+      let to: [Node, number] | null = null;
+      let node = walker.nextNode();
+exit code 0

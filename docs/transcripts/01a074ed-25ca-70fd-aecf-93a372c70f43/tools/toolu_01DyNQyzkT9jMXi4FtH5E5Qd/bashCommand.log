@@ -1,0 +1,35 @@
+$ cd /Users/denis.lantsman/src/edulab && cat >> packages/e2e/tests/persistence.spec.ts <<'EOF'
+
+test("Reset clears this sample's state for good", async ({ page }) => {
+  await backend(page);
+  await page.goto("/");
+  await page.getByRole("textbox").fill(SENTENCE);
+  await page.getByRole("textbox").press("Enter");
+  await expect(taskTranscript(page).locator("li")).toHaveCount(2);
+  await seedGraph(page);
+  await settled(page);
+  await page.getByRole("button", { name: "Reset", exact: true }).click();
+  await expect(taskTranscript(page).locator("li")).toHaveCount(0);
+  await graphTab(page).click();
+  await expect(page.locator("[data-node]")).toHaveCount(0);
+  await page.reload();
+  await expect(taskTranscript(page).locator("li")).toHaveCount(0);
+  await graphTab(page).click();
+  await expect(page.locator("[data-node]")).toHaveCount(0);
+});
+EOF
+npm run test:e2e -- persistence.spec.ts
+stdout:
+> edulab@0.0.1 test:e2e
+> npm -w @edulab/e2e run test persistence.spec.ts
+> @edulab/e2e@0.0.1 test
+> playwright test persistence.spec.ts
+Running 6 tests using 6 workers
+  ✓  3 tests/persistence.spec.ts:270:1 › an unreadable snapshot is dropped and the app comes up bare (328ms)
+  ✓  2 tests/persistence.spec.ts:202:1 › an interaction whose update never finished is re-enqueued (1.8s)
+  ✓  6 tests/persistence.spec.ts:153:1 › a reload keeps the transcript, the graph and the update chips (1.9s)
+  ✓  5 tests/persistence.spec.ts:289:1 › Reset clears this sample's state for good (1.9s)
+  ✓  1 tests/persistence.spec.ts:180:1 › a reload keeps a learning thread behind its mark (2.0s)
+  ✓  4 tests/persistence.spec.ts:228:1 › a build interrupted by a refresh resumes where it stopped (3.2s)
+  6 passed (4.5s)
+exit code 0

@@ -1,0 +1,21 @@
+$ cd /Users/denis.lantsman/src/edulab/packages/e2e && npx playwright test
+stdout:
+Running 16 tests using 7 workers
+  ✓   3 tests/chat.spec.ts:185:1 › a second turn sends the full thread (417ms)
+  ✓   6 tests/chat.spec.ts:171:1 › the composer is disabled while a turn is in flight (412ms)
+  ✓   7 tests/chat.spec.ts:155:1 › streams a response into the transcript (426ms)
+  ✓   1 tests/chat.spec.ts:248:1 › an action opens a thread seeded with the selected passage (577ms)
+  ✓   4 tests/chat.spec.ts:270:1 › a follow-up in the thread pane re-sends the seed (583ms)
+  ✓   2 tests/chat.spec.ts:203:1 › a live selection overlapping a mark offers no actions (593ms)
+  ✓   9 tests/chat.spec.ts:341:1 › the arrows name the layer and stop at the ends (227ms)
+  ✓   5 tests/chat.spec.ts:225:1 › two marks in one message are both clickable (700ms)
+  ✓   8 tests/chat.spec.ts:289:1 › clicking a mark reopens its thread without a new request (322ms)
+  ✓  10 tests/chat.spec.ts:358:1 › a thread opened at depth carries both selections once (388ms)
+  ✓  11 tests/chat.spec.ts:392:1 › a descended thread shows what it was opened from (310ms)
+  ✓  14 tests/chat.spec.ts:452:1 › a tool call is rendered and text above it stays selectable (268ms)
+  ✓  15 tests/chat.spec.ts:473:1 › a new selection leaves committed marks rendered (278ms)
+  ✓  13 tests/chat.spec.ts:430:1 › nesting goes three deep (425ms)
+  ✓  12 tests/chat.spec.ts:406:1 › ← climbs back without losing threads or highlights (463ms)
+  ✓  16 tests/smoke.spec.ts:9:1 › streams a real response end to end (1.4s)
+  16 passed (3.6s)
+exit code 0

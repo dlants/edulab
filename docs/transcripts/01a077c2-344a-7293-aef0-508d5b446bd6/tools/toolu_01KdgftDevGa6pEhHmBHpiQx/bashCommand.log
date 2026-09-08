@@ -1,0 +1,12 @@
+$ cd /Users/denis.lantsman/src/edulab/packages/frontend && grep -n "export function ref" -A 8 vamp.ts
+stdout:
+580:export function ref(prefix: string): Ref {
+581-  return `${prefix}_${refCounter++}` as Ref;
+582-}
+583-
+584-let clsCounter = 0;
+585-
+586-/** Generate a unique CSS class name. Avoids style collisions between components. */
+587-export function cls(prefix: string): string {
+588-  return `${prefix}_${clsCounter++}`;
+exit code 0

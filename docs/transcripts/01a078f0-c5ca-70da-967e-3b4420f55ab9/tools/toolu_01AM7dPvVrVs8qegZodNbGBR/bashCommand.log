@@ -1,0 +1,28 @@
+$ cd /Users/denis.lantsman/src/edulab && grep -rl -i "wildchat" docs/transcripts/ notes/ plans/ | sort -u
+stdout:
+docs/transcripts/01a06fe2-9750-7150-8898-a2438b7ee2e2/conversation.jsonl
+docs/transcripts/01a06fe2-9750-7150-8898-a2438b7ee2e2/tools/toolu_012WZjKRHYokVMnLiv4e44xw/bashCommand.log
+docs/transcripts/01a06fe2-9750-7150-8898-a2438b7ee2e2/tools/toolu_013edtDQpi39CZfv2ew49dQY/bashCommand.log
+docs/transcripts/01a06fe2-9750-7150-8898-a2438b7ee2e2/tools/toolu_013y4v93yCZk1WHcz67KPQrL/bashCommand.log
+docs/transcripts/01a06fe2-9750-7150-8898-a2438b7ee2e2/tools/toolu_015naDjj1HhXR95VYU8rbdrd/bashCommand.log
+docs/transcripts/01a06fe2-9750-7150-8898-a2438b7ee2e2/tools/toolu_015rnQaWGNoqH3bjTCnaQS8x/bashCommand.log
+docs/transcripts/01a06fe2-9750-7150-8898-a2438b7ee2e2/tools/toolu_016k59BvWWGjSCbQ5wxfdcdZ/bashCommand.log
+docs/transcripts/01a06fe2-9750-7150-8898-a2438b7ee2e2/tools/toolu_0178Fa1Bh4BnLVgBxarzyqDF/bashCommand.log
+docs/transcripts/01a06fe2-9750-7150-8898-a2438b7ee2e2/tools/toolu_017ZKi4zmVsETP31Yet4aBug/bashCommand.log
+docs/transcripts/01a06fe2-9750-7150-8898-a2438b7ee2e2/tools/toolu_018iMGuLwvjTz3aZrMX7y23b/bashCommand.log
+docs/transcripts/01a06fe2-9750-7150-8898-a2438b7ee2e2/tools/toolu_019PznEboJTdtfxoS1tvNwLB/bashCommand.log
+docs/transcripts/01a06fe2-9750-7150-8898-a2438b7ee2e2/tools/toolu_019rUvkP7jWzVZAwo2n4JzM9/bashCommand.log
+docs/transcripts/01a06fe2-9750-7150-8898-a2438b7ee2e2/tools/toolu_019YSS1yTUULcYzhFRjWsh3C/bashCommand.log
+docs/transcripts/01a06fe2-9750-7150-8898-a2438b7ee2e2/tools/toolu_01A3C3ouGoAcZi6e6Rd9CfKE/bashCommand.log
+docs/transcripts/01a06fe2-9750-7150-8898-a2438b7ee2e2/tools/toolu_01E6RYCpSHhXnvuLWJH44S6v/bashCommand.log
+docs/transcripts/01a06fe2-9750-7150-8898-a2438b7ee2e2/tools/toolu_01ERHGrnSxdZ2kYZKSvG2dh1/bashCommand.log
+docs/transcripts/01a06fe2-9750-7150-8898-a2438b7ee2e2/tools/toolu_01G99o4nFWR2XyL3Wk5xs9vM/bashCommand.log
+docs/transcripts/01a06fe2-9750-7150-8898-a2438b7ee2e2/tools/toolu_01GYWqvva1LWyPHcU8X3EWpV/bashCommand.log
+docs/transcripts/01a06fe2-9750-7150-8898-a2438b7ee2e2/tools/toolu_01Jc4Xg62cCXCNyUkGwvR1hQ/bashCommand.log
+docs/transcripts/01a06fe2-9750-7150-8898-a2438b7ee2e2/tools/toolu_01KUxHysR5ScaZY2HRSRCpEv/bashCommand.log
+docs/transcripts/01a06fe2-9750-7150-8898-a2438b7ee2e2/tools/toolu_01QrDBQp1mZTa19etd7nwadp/bashCommand.log
+docs/transcripts/01a06fe2-9750-7150-8898-a2438b7ee2e2/tools/toolu_01ShxUuESqJ58Zu8bwy4oTuh/bashCommand.log
+docs/transcripts/01a06fe2-9750-7150-8898-a2438b7ee2e2/tools/toolu_01SK5d6LTwFYQAPGNNn68gKS/bashCommand.log
+docs/transcripts/01a06fe2-9750-7150-8898-a2438b7ee2e2/tools/toolu_01T6DgSnYq1ioJTEXY5o9NKK/bashCommand.log
+docs/transcripts/01a06fe2-9750-7150-8898-a2438b7ee2e2/tools/toolu_01TdjkuMd4WVHvKzWQv9jLEG/bashCommand.log
+exit code 0

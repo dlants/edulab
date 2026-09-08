@@ -1,0 +1,117 @@
+$ cd /Users/denis.lantsman/src/edulab && npm run typecheck && npx biome check packages/frontend/thread.ts && npm test
+stdout:
+> edulab@0.0.1 typecheck
+> npm -w @edulab/iso exec tsc -- --noEmit && npm -w @edulab/frontend exec tsc -- --noEmit && npm -w @edulab/backend exec tsc -- --noEmit && npm -w @edulab/e2e exec tsc -- --noEmit
+stderr:
+packages/frontend/thread.ts
+:56:77 lint/suspicious/noConfusingVoidType  FIXABLE  ━━━━━━━━━━━━━━━━━━━━
+  ! void is confusing inside a union type.
+    54 │ }
+    55 │ 
+  > 56 │ function yieldResult(value: YieldValue): string | Record<string,
+ unknown> | void {
+       │                                                           
+                  ^^^^
+57 │   switch (va
+lue.type) {
+    58 │ 
+    case "void":
+  i Unsafe fix: Use undefined instead.
+     54  54 │   }
+     55 
+ 55 │   
+     56     │ - function·yieldResult(value:·YieldValue):·string
+·|·Record<string,·unknown>·|·v
+oid·{
+         56 │ + function·yieldRe
+sult(value:·YieldValue):
+·string·|·Record
+<string,·unknown
+>·|·undefined·{
+     57  57 │   
+  switch (value.t
+ype) {
+     58  58 │ 
+      case 
+"void":
+packages/frontend/thread.ts
+:196:60 lint/suspicious/noConfusingVoidType  FIXABLE  ━━━━━━━━━━━━━━━━━━━
+  ! void is confusing inside a union type.
+    194 │   soc
+ket: Socket,
+    195 │   opts: RunThreadOpts,
+  > 196 │ )
+: Promise<ThreadResult<string 
+| Record<string, unknown> | void>> {
+        │                
+                         ^^^
+^
+    197 │   const
+ maxRestarts = o
+pts.maxRestart
+s ?? MAX_RESTARTS;
+    198 │ 
+  con
+st thread
+ = new Thread(socket, {
+  i Unsafe fix: Use undefined instead.
+    194 194 │     socket: Socket,
+    195 195 │   
+  opts: RunThreadOpts,
+    196     │ - 
+):·Promise<ThreadRe
+sult<string·|·Record<string,
+·unknown>·|·voi
+d>>·{
+        196
+ │ + ):·Promise<ThreadR
+esult<string·|
+·Record<string
+,·unknown>·|·undefin
+ed>>·{
+    197
+ 197 │    
+ const maxRes
+tarts = opts.
+maxRestarts ?? MAX_RES
+TARTS;
+    198 198 │  
+   const th
+read = new Thread(soc
+ket, {
+packages/frontend/thread.ts 
+format ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  × Formatter would have printed the following content:
+     54  54 │   }
+     55  55 │   
+     56     │ - 
+function·yield
+Result(value:
+·YieldValue):·string·|
+·Record<string,
+·unknown>·|
+·void·{
+         56 │ + 
+function·yieldR
+esult(
+ 57 │ + ··
+value:·YieldValue,
+     58 │ + ):
+·string·|·R
+ecord<string,·
+unknown>·|·vo
+id·{
+     57  59 │  
+   switch (value.t
+ype) {
+     58  60
+ │       case 
+"void":
+stdout:
+Checked 1 file in 96ms. No fixes applied.
+Found 1 error.
+Found 2 warnings.
+stderr:
+check ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  × Some errors were emitted while running checks.
+exit code 1

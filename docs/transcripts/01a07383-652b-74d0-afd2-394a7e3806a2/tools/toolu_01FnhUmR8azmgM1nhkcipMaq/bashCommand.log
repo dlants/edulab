@@ -1,0 +1,41 @@
+$ cd /Users/denis.lantsman/src/edulab && grep -n "sidebar\|description\|notes" packages/frontend/graph-view.ts | sed -n 1,60p
+stdout:
+14:/** The sidebar is a small state machine: nothing selected, or a selection
+43:  sidebar: Sidebar;
+55:      field: "title" | "description" | "notes";
+59:  | { type: "EDGE_FIELD"; field: "title" | "description"; value: string }
+82:const sidebarClass = cls("graph-sidebar");
+156:.${sidebarClass} {
+164:.${sidebarClass} input,
+165:.${sidebarClass} textarea,
+166:.${sidebarClass} select {
+310:    const sidebarRef = ref("graph-sidebar");
+315:    const descriptionRef = ref("graph-description");
+316:    const notesRowRef = ref("graph-notes-row");
+317:    const notesRef = ref("graph-notes");
+337:      <div class="${sidebarClass}" data-ref="${sidebarRef}">
+342:          <label>Description<textarea rows="3" data-graph-description data-ref="${descriptionRef}"></textarea></label>
+343:          <label data-ref="${notesRowRef}">Notes<textarea rows="3" data-graph-notes data-ref="${notesRef}"></textarea></label>
+400:    const description = this.b.ref<HTMLTextAreaElement>(descriptionRef);
+401:    const notes = this.b.ref<HTMLTextAreaElement>(notesRef);
+404:      field: "title" | "description" | "notes",
+407:      if (current.sidebar.type === "node")
+409:      else if (current.sidebar.type === "edge" && field !== "notes")
+413:    description.addEventListener("input", () =>
+414:      edit("description", description.value),
+416:    notes.addEventListener("input", () => edit("notes", notes.value));
+441:    this.b.bindVisible(closedRef, (s) => s.sidebar.type === "closed");
+442:    this.b.bindVisible(openRef, (s) => s.sidebar.type !== "closed");
+443:    this.b.bindVisible(notesRowRef, (s) => s.sidebar.type === "node");
+444:    this.b.bindVisible(levelRowRef, (s) => s.sidebar.type === "node");
+446:      s.sidebar.type === "closed" ? "" : `${s.sidebar.type} ${s.sidebar.id}`,
+449:      s.sidebar.type === "closed" ? "" : s.sidebar.draft.title,
+451:    this.b.bindValue(descriptionRef, (s) =>
+452:      s.sidebar.type === "closed" ? "" : s.sidebar.draft.description,
+454:    this.b.bindValue(notesRef, (s) =>
+455:      s.sidebar.type === "node" ? s.sidebar.draft.notes : "",
+458:      s.sidebar.type === "node" ? String(s.sidebar.draft.level) : "1",
+461:      s.sidebar.type === "closed" ? "" : (s.sidebar.error ?? ""),
+464:      s.sidebar.type === "closed" ? false : s.sidebar.error !== null,
+495:  return s.sidebar.type === "closed" ? null : s.sidebar.id;
+exit code 0

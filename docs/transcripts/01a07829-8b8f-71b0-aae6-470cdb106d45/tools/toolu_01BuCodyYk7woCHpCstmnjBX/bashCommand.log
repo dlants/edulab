@@ -1,0 +1,4 @@
+$ cd /Users/denis.lantsman/src/edulab && git add -A && git commit -q -m "Stage 2: Opening a thread-level child" && git log --oneline -1
+stdout:
+f679dad Stage 2: Opening a thread-level child
+exit code 0

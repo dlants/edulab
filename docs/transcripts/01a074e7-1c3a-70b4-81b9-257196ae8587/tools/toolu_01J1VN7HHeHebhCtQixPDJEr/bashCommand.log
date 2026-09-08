@@ -1,0 +1,9 @@
+$ cd /Users/denis.lantsman/src/edulab && cat > /tmp/dbg.spec.ts <<'EOF'
+import { test } from "@playwright/test";
+EOF
+node -e "1" ; grep -n "webServer\|baseURL\|testDir" packages/e2e/playwright.config.ts
+stdout:
+12:  testDir: "./tests",
+17:    baseURL: `http://localhost:${frontendPort}`,
+20:  webServer: [
+exit code 0

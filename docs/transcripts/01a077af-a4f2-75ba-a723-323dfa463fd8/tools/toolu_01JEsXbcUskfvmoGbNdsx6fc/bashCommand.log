@@ -1,0 +1,80 @@
+$ cd /Users/denis.lantsman/src/edulab && npm run test:e2e
+stdout:
+> edulab@0.0.1 test:e2e
+> npm -w @edulab/e2e run test
+> @edulab/e2e@0.0.1 test
+> playwright test
+Running 42 tests using 7 workers
+  ✓   2 tests/chat.spec.ts:231:1 › a second turn sends the full thread (388ms)
+  ✓   6 tests/chat.spec.ts:217:1 › the composer is disabled while a turn is in flight (430ms)
+  ✓   1 tests/chat.spec.ts:201:1 › streams a response into the transcript (484ms)
+  ✓   3 tests/chat.spec.ts:294:1 › an action opens a thread seeded with the selected passage (506ms)
+  ✓   4 tests/chat.spec.ts:249:1 › a live selection overlapping a mark offers no actions (538ms)
+  ✓   5 tests/chat.spec.ts:321:1 › a follow-up in the thread pane re-sends the seed (566ms)
+  ✓   7 tests/chat.spec.ts:271:1 › two marks in one message are both clickable (680ms)
+  ✓   9 tests/chat.spec.ts:392:1 › the arrows name the layer and stop at the ends (281ms)
+  ✓   8 tests/chat.spec.ts:340:1 › clicking a mark reopens its thread without a new request (398ms)
+  ✓  11 tests/chat.spec.ts:445:1 › a descended thread shows what it was opened from, in its transcript (412ms)
+  ✓  10 tests/chat.spec.ts:409:1 › a thread opened at depth carries both selections once (498ms)
+  ✓  14 tests/chat.spec.ts:510:1 › a tool call is rendered and text above it stays selectable (294ms)
+  ✓  16 tests/chat.spec.ts:622:1 › a turn shows its graph update working, then what it changed (220ms)
+  ✓  15 tests/chat.spec.ts:535:1 › a new selection leaves committed marks rendered (297ms)
+  ✓  13 tests/chat.spec.ts:488:1 › nesting goes three deep (511ms)
+  ✘  12 tests/chat.spec.ts:464:1 › ← climbs back without losing threads or highlights (502ms)
+  ✓  18 tests/chat.spec.ts:661:1 › an update that writes nothing says so (152ms)
+  ✓  17 tests/chat.spec.ts:638:1 › the update behind a turn opens its own transcript on the right (257ms)
+  ✓  19 tests/graph.spec.ts:92:1 › switching tabs leaves the transcript and the graph intact (307ms)
+  ✓  20 tests/graph.spec.ts:113:1 › clicking a node fills the sidebar and a retitle keeps its edges (289ms)
+  ✓  21 tests/graph.spec.ts:136:1 › a duplicate title is rejected without losing the draft (292ms)
+  ✓  22 tests/graph.spec.ts:149:1 › deleting a node takes its edges with it (278ms)
+  ✓  27 tests/graph.spec.ts:399:1 › a failed graph update leaves the app usable (186ms)
+  ✓  24 tests/graph.spec.ts:202:1 › dragging the canvas pans the graph but still selects on a click (323ms)
+  ✓  23 tests/graph.spec.ts:183:1 › zooming spreads the nodes without resizing them, and reset restores (377ms)
+  ✓  25 tests/graph.spec.ts:342:1 › every interaction updates the graph, one update at a time (240ms)
+  ✓  26 tests/graph.spec.ts:368:1 › opening a learning thread updates the graph from its ask (361ms)
+  ✓  33 tests/graph.spec.ts:518:1 › a citation that does not resolve is left as text (332ms)
+  ✓  34 tests/graph.spec.ts:631:1 › an address written by a graph update navigates back to its turn (296ms)
+  ✓  29 tests/graph.spec.ts:159:1 › an edge is selectable and editable (325ms)
+  ✓  28 tests/graph.spec.ts:419:1 › building from a sample transcript walks its turns once (631ms)
+  ✓  32 tests/graph.spec.ts:496:1 › a cited message is one click away from the note that rests on it (509ms)
+  ✓  35 tests/graph.spec.ts:650:1 › clicking a change opens the graph tab with that node selected (175ms)
+  ✓  30 tests/graph.spec.ts:436:1 › a failed update mid-build does not stop the ones after it (638ms)
+  ✓  40 tests/persistence.spec.ts:270:1 › an unreadable snapshot is dropped and the app comes up bare (196ms)
+  ✓  31 tests/graph.spec.ts:448:1 › interacting mid-build interleaves rather than races (801ms)
+  ✓  38 tests/persistence.spec.ts:202:1 › an interaction whose update never finished is re-enqueued (1.7s)
+  ✓  36 tests/persistence.spec.ts:153:1 › a reload keeps the transcript, the graph and the update chips (1.7s)
+  ✓  37 tests/persistence.spec.ts:180:1 › a reload keeps a learning thread behind its mark (1.8s)
+  ✓  41 tests/persistence.spec.ts:289:1 › Reset clears this sample's state for good (1.7s)
+  ✓  39 tests/persistence.spec.ts:228:1 › a build interrupted by a refresh resumes where it stopped (2.1s)
+  ✓  42 tests/smoke.spec.ts:9:1 › streams a real response end to end (1.9s)
+  1) tests/chat.spec.ts:464:1 › ← climbs back without losing threads or highlights ─────────────────
+    Error: expect(locator).toHaveText(expected) failed
+    Locator: locator('[data-mark]')
+    Expected: "the quick"
+    Error: strict mode violation: locator('[data-mark]') resolved to 2 elements:
+        1) <span data-mark="t1" class="mark_28" data-active="true">…</span> aka locator('span').filter({ hasText: 'the quick' }).nth(1)
+        2) <span data-mark="t2" class="mark_28">…</span> aka locator('span').filter({ hasText: 'alpha' }).nth(4)
+    Call log:
+      - Expect "toHaveText" locator('[data-mark]') with timeout 5000ms
+      - waiting for locator('[data-mark]')
+      476 |   await back(page).click();
+      477 |   await expect(page.getByText("Layer 1")).toBeVisible();
+    > 478 |   await expect(page.locator("[data-mark]")).toHaveText("the quick");
+          |                                             ^
+      479 |   await expect(threadTranscript(page).locator("li")).toHaveCount(2);
+      480 |
+      481 |   await deeper(page).click();
+        at /Users/denis.lantsman/src/edulab/packages/e2e/tests/chat.spec.ts:478:45
+    Error Context: test-results/chat-←-climbs-back-without-losing-threads-or-highlights/error-context.md
+  1 failed
+    tests/chat.spec.ts:464:1 › ← climbs back without losing threads or highlights ──────────────────
+  41 passed (5.6s)
+stderr:
+npm error Lifecycle script `test` failed with error:
+npm error code 1
+npm error path /Users/denis.lantsman/src/edulab/packages/e2e
+npm error workspace @edulab/e2e@0.0.1
+npm error location /Users/denis.lantsman/src/edulab/packages/e2e
+npm error command failed
+npm error command sh -c playwright test
+exit code 1

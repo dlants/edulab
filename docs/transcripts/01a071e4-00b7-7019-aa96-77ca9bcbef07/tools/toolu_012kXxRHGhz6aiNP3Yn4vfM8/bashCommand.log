@@ -1,0 +1,39 @@
+$ cd /Users/denis.lantsman/src/edulab && perl -0pi -e 's/\{ role: "(user|assistant)", text: ([^}]*) \}/{ type: "text", role: "$1", text: $2 }/g' packages/frontend/thread.test.ts && npm run typecheck
+stdout:
+> edulab@0.0.1 typecheck
+> npm -w @edulab/iso exec tsc -- --noEmit && npm -w @edulab/frontend exec tsc -- --noEmit && npm -w @edulab/backend exec tsc -- --noEmit && npm -w @edulab/e2e exec tsc -- --noEmit
+prompt.test.ts(23,36): error TS2345: Argument of type 'readonly [{ readonly role: "user"; readonly text: "build a parser"; }, { readonly role: "assistant"; readonly text: "I used a recursive descent approach."; }, { readonly role: "user"; readonly text: "thanks"; }]' is not assignable to parameter of type 'readonly Message[]'.
+  Type '{ readonly role: "user"; readonly text: "build a parser"; } | { readonly role: "assistant"; readonly text: "I used a recursive descent approach."; } | { readonly role: "user"; readonly text: "thanks"; }' is not assignable to type 'Message'.
+    Type '{ readonly role: "user"; readonly text: "build a parser"; }' is not assignable to type 'Message'.
+      Property 'type' is missing in type '{ readonly role: "user"; readonly text: "build a parser"; }' but required in type '{ type: "text"; role: "user" | "assistant"; text: string; }'.
+prompt.test.ts(30,36): error TS2345: Argument of type 'readonly [{ readonly role: "user"; readonly text: "build a parser"; }, { readonly role: "assistant"; readonly text: "I used a recursive descent approach."; }, { readonly role: "user"; readonly text: "thanks"; }]' is not assignable to parameter of type 'readonly Message[]'.
+  Type '{ readonly role: "user"; readonly text: "build a parser"; } | { readonly role: "assistant"; readonly text: "I used a recursive descent approach."; } | { readonly role: "user"; readonly text: "thanks"; }' is not assignable to type 'Message'.
+    Type '{ readonly role: "user"; readonly text: "build a parser"; }' is not assignable to type 'Message'.
+      Property 'type' is missing in type '{ readonly role: "user"; readonly text: "build a parser"; }' but required in type '{ type: "text"; role: "user" | "assistant"; text: string; }'.
+prompt.test.ts(35,36): error TS2345: Argument of type 'readonly [{ readonly role: "user"; readonly text: "build a parser"; }, { readonly role: "assistant"; readonly text: "I used a recursive descent approach."; }, { readonly role: "user"; readonly text: "thanks"; }]' is not assignable to parameter of type 'readonly Message[]'.
+  Type '{ readonly role: "user"; readonly text: "build a parser"; } | { readonly role: "assistant"; readonly text: "I used a recursive descent approach."; } | { readonly role: "user"; readonly text: "thanks"; }' is not assignable to type 'Message'.
+    Type '{ readonly role: "user"; readonly text: "build a parser"; }' is not assignable to type 'Message'.
+      Property 'type' is missing in type '{ readonly role: "user"; readonly text: "build a parser"; }' but required in type '{ type: "text"; role: "user" | "assistant"; text: string; }'.
+prompt.test.ts(44,39): error TS2345: Argument of type 'readonly [{ readonly role: "user"; readonly text: "build a parser"; }, { readonly role: "assistant"; readonly text: "I used a recursive descent approach."; }, { readonly role: "user"; readonly text: "thanks"; }]' is not assignable to parameter of type 'readonly Message[]'.
+  Type '{ readonly role: "user"; readonly text: "build a parser"; } | { readonly role: "assistant"; readonly text: "I used a recursive descent approach."; } | { readonly role: "user"; readonly text: "thanks"; }' is not assignable to type 'Message'.
+    Type '{ readonly role: "user"; readonly text: "build a parser"; }' is not assignable to type 'Message'.
+      Property 'type' is missing in type '{ readonly role: "user"; readonly text: "build a parser"; }' but required in type '{ type: "text"; role: "user" | "assistant"; text: string; }'.
+prompt.test.ts(45,36): error TS2345: Argument of type 'readonly [{ readonly role: "user"; readonly text: "build a parser"; }, { readonly role: "assistant"; readonly text: "I used a recursive descent approach."; }, { readonly role: "user"; readonly text: "thanks"; }]' is not assignable to parameter of type 'readonly Message[]'.
+  Type '{ readonly role: "user"; readonly text: "build a parser"; } | { readonly role: "assistant"; readonly text: "I used a recursive descent approach."; } | { readonly role: "user"; readonly text: "thanks"; }' is not assignable to type 'Message'.
+    Type '{ readonly role: "user"; readonly text: "build a parser"; }' is not assignable to type 'Message'.
+      Property 'type' is missing in type '{ readonly role: "user"; readonly text: "build a parser"; }' but required in type '{ type: "text"; role: "user" | "assistant"; text: string; }'.
+prompt.test.ts(46,37): error TS2345: Argument of type 'readonly [{ readonly role: "user"; readonly text: "build a parser"; }, { readonly role: "assistant"; readonly text: "I used a recursive descent approach."; }, { readonly role: "user"; readonly text: "thanks"; }]' is not assignable to parameter of type 'readonly Message[]'.
+  Type '{ readonly role: "user"; readonly text: "build a parser"; } | { readonly role: "assistant"; readonly text: "I used a recursive descent approach."; } | { readonly role: "user"; readonly text: "thanks"; }' is not assignable to type 'Message'.
+    Type '{ readonly role: "user"; readonly text: "build a parser"; }' is not assignable to type 'Message'.
+      Property 'type' is missing in type '{ readonly role: "user"; readonly text: "build a parser"; }' but required in type '{ type: "text"; role: "user" | "assistant"; text: string; }'.
+prompt.test.ts(55,36): error TS2345: Argument of type 'readonly [{ readonly role: "user"; readonly text: "build a parser"; }, { readonly role: "assistant"; readonly text: "I used a recursive descent approach."; }, { readonly role: "user"; readonly text: "thanks"; }]' is not assignable to parameter of type 'readonly Message[]'.
+  Type '{ readonly role: "user"; readonly text: "build a parser"; } | { readonly role: "assistant"; readonly text: "I used a recursive descent approach."; } | { readonly role: "user"; readonly text: "thanks"; }' is not assignable to type 'Message'.
+    Type '{ readonly role: "user"; readonly text: "build a parser"; }' is not assignable to type 'Message'.
+      Property 'type' is missing in type '{ readonly role: "user"; readonly text: "build a parser"; }' but required in type '{ type: "text"; role: "user" | "assistant"; text: string; }'.
+prompt.test.ts(59,33): error TS2345: Argument of type 'readonly [{ readonly role: "assistant"; readonly text: "It parses top-down."; }]' is not assignable to parameter of type 'readonly Message[]'.
+  Type '{ readonly role: "assistant"; readonly text: "It parses top-down."; }' is not assignable to type 'Message'.
+    Property 'type' is missing in type '{ readonly role: "assistant"; readonly text: "It parses top-down."; }' but required in type '{ type: "text"; role: "user" | "assistant"; text: string; }'.
+prompt.test.ts(82,35): error TS2345: Argument of type 'readonly [{ readonly role: "assistant"; readonly text: "Question: what is a token?"; }]' is not assignable to parameter of type 'readonly Message[]'.
+  Type '{ readonly role: "assistant"; readonly text: "Question: what is a token?"; }' is not assignable to type 'Message'.
+    Property 'type' is missing in type '{ readonly role: "assistant"; readonly text: "Question: what is a token?"; }' but required in type '{ type: "text"; role: "user" | "assistant"; text: string; }'.
+exit code 2

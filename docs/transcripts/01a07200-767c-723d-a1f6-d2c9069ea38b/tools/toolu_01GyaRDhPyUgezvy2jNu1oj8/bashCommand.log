@@ -1,0 +1,31 @@
+$ cd /Users/denis.lantsman/src/magenta.nvim && grep -n "without yield\|did not yield\|nudge\|restart" node/core/src/thread.ts node/core/src/*.ts
+stdout:
+node/core/src/thread.ts:937:   * content, a supervisor nudge, a truncated response — is the thread's. */
+node/core/src/agent.test.ts:876:  it("is the only supervisor to speak on max_tokens, and spends no restart", async () => {
+node/core/src/agent.test.ts:892:    expect(continuationText).not.toContain("stopped without yielding");
+node/core/src/agent.test.ts:894:    // The truncated stop was not a refusal to yield, so the restart budget is
+node/core/src/agent.test.ts:895:    // untouched: the first end_turn still gets restart 1.
+node/core/src/agent.test.ts:898:    const restart = await awaitNextStream(mockClient, continuation);
+node/core/src/agent.test.ts:899:    expect(lastUserText(restart)).toContain("auto-restart 1/5");
+node/core/src/agent.test.ts:901:  it("takes precedence over a subagent's yield-tag nudge", async () => {
+node/core/src/agent.test.ts:1186:  it("nudges agent when it writes a <yield_to_parent> XML tag instead of calling the tool", async () => {
+node/core/src/agent.test.ts:1440:          // continuation the max_tokens nudge produces.
+node/core/src/archive-renderer.ts:17: * entries (compaction/title/fork/thread_start/restart) are emitted inline so
+node/core/src/archive-renderer.ts:46:    case "restart":
+node/core/src/archive-renderer.ts:47:      return `--- restart ---\n`;
+node/core/src/archive.ts:142:  "restart",
+node/core/src/thread-api.ts:50: * never broadcast. Internal continuations (auto-respond, supervisor nudges,
+node/core/src/thread-api.ts:154:  /** The agent stopped without yielding. */
+node/core/src/thread-logger.ts:37:  | { type: "restart"; timestamp: string }
+node/core/src/thread-logger.ts:195:      type: "restart",
+node/core/src/thread-supervisor.test.ts:83:  it("lets a suspension win over an accumulated nudge", () => {
+node/core/src/thread-supervisor.test.ts:84:    const nudger: ThreadSupervisor = {
+node/core/src/thread-supervisor.test.ts:91:      nudger,
+node/core/src/thread-supervisor.ts:135:      // The first suspension wins, and it wins over any nudge: there is no
+node/core/src/thread-supervisor.ts:287: *  the agent to resume work when it stops without yielding. */
+node/core/src/thread-supervisor.ts:289:  private restartCount = 0;
+node/core/src/thread-supervisor.ts:299:      this.restartCount >= this.maxRestarts
+node/core/src/thread-supervisor.ts:303:    this.restartCount++;
+node/core/src/thread-supervisor.ts:314:      text: `You stopped without yielding. You must complete your task and call yield_to_parent when done. (auto-restart ${this.restartCount}/${this.maxRestarts})`,
+node/core/src/thread.ts:937:   * content, a supervisor nudge, a truncated response — is the thread's. */
+exit code 0

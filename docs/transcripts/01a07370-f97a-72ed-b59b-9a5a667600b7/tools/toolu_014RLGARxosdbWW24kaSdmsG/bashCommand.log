@@ -1,0 +1,11 @@
+$ cd /Users/denis.lantsman/src/edulab && git status --short && git add -A && git commit -q -m "Stage 5: the graph tab" && git log --oneline -1
+stdout:
+ M packages/e2e/tests/chat.spec.ts
+ M packages/frontend/prototypes/chat.ts
+ M packages/frontend/vamp.ts
+ M packages/frontend/view.ts
+ M plans/2026-09-05-domain-graph.md
+?? packages/e2e/tests/graph.spec.ts
+?? packages/frontend/graph-view.ts
+20413e8 Stage 5: the graph tab
+exit code 0

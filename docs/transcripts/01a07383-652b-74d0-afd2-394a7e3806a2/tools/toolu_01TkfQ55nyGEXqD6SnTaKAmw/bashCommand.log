@@ -1,0 +1,13 @@
+$ cd /Users/denis.lantsman/src/edulab && grep -n "breadcrumb" plans/2026-09-05-interaction-reflection.md
+stdout:
+26:- `Interaction` — one user turn somewhere in the tree, together with the little context needed to read it: where it sits (the breadcrumb of origin passages down to it), what the agent had just said, and what the agent said back. New; lives in `interactions.ts`.
+52:**Context is the whole thread prefix.** The cheap thing — sending only the assistant blocks either side of the turn — is an optimization, and optimizing before we know whether the model can produce good notes at all is backwards. So each interaction is reflected on with everything that led to it: the breadcrumb of ancestor threads, and its own thread's transcript from the top through the assistant blocks that answered this turn. This is quadratic in tokens over a thread, and at prototype scale that is affordable.
+54:It is also arranged to be **prefix-stable**, which takes most of the sting out. Successive interactions in the same thread differ only by a suffix: the prompt is `[breadcrumb + transcript prefix][the turn under the microscope + the questions]`, and the graph overview — the one part that changes on every iteration, since the previous reflection just wrote to it — goes **last**, after the transcript, not first. Put the graph at the top and every prompt in the run is a cache miss.
+60:- `breadcrumb` — the chain of `"<quote>" - <action label>` from the root down to this thread, so a follow-up reads as a follow-up on a specific passage.
+65:Root-thread turn 0 has an empty `breadcrumb` and empty `prefix`: the task request is the origin of everything and needs no framing.
+96:  breadcrumb: ReadonlyArray<{ quote: string; ask: string }>;
+133:/** Two blocks: the cacheable prefix (breadcrumb + thread transcript), then the
+179:  - A child thread contributes an opening interaction whose `text` is the action label and whose `breadcrumb` ends with the highlighted passage — the case that would silently vanish if we only read `messages`.
+180:  - A grandchild's breadcrumb has both ancestors' quotes, root first.
+190:  - A root-thread interaction with no breadcrumb renders without an empty framing section.
+exit code 0

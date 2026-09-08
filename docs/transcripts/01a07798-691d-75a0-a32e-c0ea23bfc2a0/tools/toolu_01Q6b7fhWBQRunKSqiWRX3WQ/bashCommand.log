@@ -1,0 +1,2 @@
+$ cd /Users/denis.lantsman/src/edulab && grep -rn "failed" packages/frontend/src --include=*.ts
+exit code 1

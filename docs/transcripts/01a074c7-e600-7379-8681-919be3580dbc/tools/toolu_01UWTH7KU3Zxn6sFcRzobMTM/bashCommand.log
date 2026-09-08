@@ -1,0 +1,10 @@
+$ cd /Users/denis.lantsman/src/edulab && grep -rn "graph-canvas\|edge-bar\|data-edge\|data-node\|data-level" packages/e2e/
+stdout:
+packages/e2e/tests/graph.spec.ts:82:  return page.locator("[data-node]");
+packages/e2e/tests/graph.spec.ts:104:  await expect(page.locator("[data-edge]")).toHaveCount(1);
+packages/e2e/tests/graph.spec.ts:132:  await expect(page.locator("[data-edge]")).toHaveCount(1);
+packages/e2e/tests/graph.spec.ts:133:  await expect(page.locator("[data-edge-label]")).toHaveText("builds on");
+packages/e2e/tests/graph.spec.ts:155:  await expect(page.locator("[data-edge]")).toHaveCount(0);
+packages/e2e/tests/graph.spec.ts:161:  await page.locator("[data-edge-label]").click();
+packages/e2e/tests/graph.spec.ts:168:  await expect(page.locator("[data-edge-label]")).toHaveText("requires");
+exit code 0

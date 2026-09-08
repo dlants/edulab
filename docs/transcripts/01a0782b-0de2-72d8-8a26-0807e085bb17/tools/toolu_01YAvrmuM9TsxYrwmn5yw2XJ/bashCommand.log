@@ -1,0 +1,15 @@
+$ cd /Users/denis.lantsman/src/edulab && grep -n "seed" packages/frontend/thread.ts
+stdout:
+94:  /** Sent after the seed, and rendered: a learning thread's opening ask is
+95:   * one of these, not part of the seed. */
+99:  seed?: string | Anthropic.ContentBlockParam[];
+180:/** Runs a thread to completion with no user in the loop: the seed prompt goes
+202:    seed: opts.prompt,
+301:  readonly seed: string | Anthropic.ContentBlockParam[] | undefined;
+308:    this.seed = opts.seed;
+310:      ...(opts.seed ? [{ role: "user" as const, content: opts.seed }] : []),
+324:      this.seed ? this.turns.slice(1) : this.turns,
+331:  /** The committed wire log minus the seed turn: what a snapshot stores and
+334:    return this.seed ? this.turns.slice(1) : this.turns;
+355:  /** Requests a reply to the turns already present - the seeded first turn of
+exit code 0

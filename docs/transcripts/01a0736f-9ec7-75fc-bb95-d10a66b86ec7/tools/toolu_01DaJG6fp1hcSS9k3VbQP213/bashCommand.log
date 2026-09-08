@@ -1,0 +1,31 @@
+$ sed -n 1,30p /Users/denis.lantsman/src/edulab/packages/frontend/graph.test.ts
+stdout:
+import { expect, it } from "vitest";
+import {
+  type EdgeId,
+  KnowledgeGraph,
+  type Level,
+  type NodeId,
+} from "./graph.ts";
+const addNode = (graph: KnowledgeGraph, title: string, level: Level = 1) => {
+  const before = new Set(graph.nodes.map((n) => n.id));
+  const result = graph.putNode({
+    title,
+    description: `about ${title}`,
+    notes: "",
+    level,
+  });
+  expect(result.status).toBe("ok");
+  const added = graph.nodes.find((n) => !before.has(n.id));
+  if (!added) throw new Error("node was not added");
+  return added.id;
+};
+const addEdge = (
+  graph: KnowledgeGraph,
+  from: NodeId,
+  to: NodeId,
+  title: string,
+) => {
+  const before = new Set(graph.edges.map((e) => e.id));
+  const result = graph.putEdge({ from, to, title, description: "" });
+exit code 0

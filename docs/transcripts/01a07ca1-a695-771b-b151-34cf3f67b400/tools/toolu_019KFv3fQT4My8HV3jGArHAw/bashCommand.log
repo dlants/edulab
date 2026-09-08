@@ -1,0 +1,128 @@
+$ cd /Users/denis.lantsman/src/edulab && ls packages/e2e packages/e2e/tests && sed -n 1,80p packages/e2e/tests/chat.spec.ts && cat packages/e2e/playwright.config.ts 2>/dev/null
+stdout:
+packages/e2e:
+package.json
+playwright.config.ts
+test-results
+tests
+tsconfig.json
+packages/e2e/tests:
+chat.spec.ts
+graph.spec.ts
+persistence.spec.ts
+smoke.spec.ts
+import type Anthropic from "@anthropic-ai/sdk";
+import type { ClientMessage, ServerFrame } from "@edulab/iso/protocol.ts";
+import { expect, type Page, test } from "@playwright/test";
+function events(chunks: string[]): Anthropic.RawMessageStreamEvent[] {
+  return [
+    {
+      type: "content_block_start",
+      index: 0,
+      content_block: { type: "text", text: "", citations: null },
+    },
+    ...chunks.map(
+      (text): Anthropic.RawMessageStreamEvent => ({
+        type: "content_block_delta",
+        index: 0,
+        delta: { type: "text_delta", text },
+      }),
+    ),
+    { type: "content_block_stop", index: 0 },
+    { type: "message_stop" } as Anthropic.RawMessageStreamEvent,
+  ];
+}
+/** A graph update runs on every interaction and is not what these specs are
+ * about: they are recognised by their write tools, answered with an immediate
+ * yield, and kept out of `started`. */
+function isGraphUpdate(message: ClientMessage): boolean {
+  return (message.params.tools ?? []).some((t) => t.name === "put_nodes");
+}
+function yieldEvents(): Anthropic.RawMessageStreamEvent[] {
+  return [
+    {
+      type: "content_block_start",
+      index: 0,
+      content_block: {
+        type: "tool_use",
+        id: "yield-1",
+        name: "yield",
+        input: {},
+      },
+    } as Anthropic.RawMessageStreamEvent,
+    {
+      type: "content_block_delta",
+      index: 0,
+      delta: { type: "input_json_delta", partial_json: '{"result":"ok"}' },
+    },
+    { type: "content_block_stop", index: 0 },
+    { type: "message_stop" } as Anthropic.RawMessageStreamEvent,
+  ];
+}
+/** Stand in for the backend: replay `chunks` one delta at a time, and expose a
+ * promise that resolves once the browser has sent its `start` frame. */
+async function fakeBackend(page: Page, chunks: string[]) {
+  let release!: () => void;
+  const gate = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  const started: string[] = [];
+  await page.routeWebSocket("**/api/socket", (ws) => {
+    ws.onMessage(async (raw) => {
+      const message = JSON.parse(String(raw)) as ClientMessage;
+      if (isGraphUpdate(message)) {
+        for (const event of yieldEvents()) {
+          ws.send(
+            JSON.stringify({
+              type: "event",
+              requestId: message.requestId,
+              event,
+            } satisfies ServerFrame),
+          );
+        }
+        return;
+      }
+      started.push(JSON.stringify(message.params.messages));
+      await gate;
+      const send = (frame: ServerFrame) => ws.send(JSON.stringify(frame));
+      for (const event of events(chunks)) {
+import { defineConfig } from "@playwright/test";
+const backendPort = Number(process.env.TEST_BACKEND_PORT ?? 3100);
+const frontendPort = Number(process.env.TEST_FRONTEND_PORT ?? 5174);
+const backendUrl = `http://127.0.0.1:${backendPort}`;
+// The smoke spec is the only one that reaches the real API, so the backend is
+// only booted when a key is available.
+const hasApiKey = Boolean(process.env.ANTHROPIC_API_KEY);
+export default defineConfig({
+  testDir: "./tests",
+  fullyParallel: true,
+  timeout: 30_000,
+  expect: { timeout: 5_000 },
+  use: {
+    baseURL: `http://localhost:${frontendPort}`,
+    actionTimeout: 5_000,
+  },
+  webServer: [
+    ...(hasApiKey
+      ? [
+          {
+            command: "node app.ts",
+            cwd: "../backend",
+            env: { PORT: String(backendPort) },
+            port: backendPort,
+            reuseExistingServer: false,
+            timeout: 60_000,
+          },
+        ]
+      : []),
+    {
+      command: "vite",
+      cwd: "../..",
+      env: { VITE_PORT: String(frontendPort), API_TARGET: backendUrl },
+      port: frontendPort,
+      reuseExistingServer: false,
+      timeout: 60_000,
+    },
+  ],
+});
+exit code 0

@@ -1,0 +1,57 @@
+$ cd /Users/denis.lantsman/src/edulab && npm run test:e2e && npm run typecheck && npx biome check packages/frontend/view.ts packages/e2e
+stdout:
+> edulab@0.0.1 test:e2e
+> npm -w @edulab/e2e run test
+> @edulab/e2e@0.0.1 test
+> playwright test
+Running 45 tests using 7 workers
+  ✓   2 tests/chat.spec.ts:247:1 › a second turn sends the full thread (346ms)
+  ✓   1 tests/chat.spec.ts:233:1 › the composer is disabled while a turn is in flight (368ms)
+  ✓   6 tests/chat.spec.ts:217:1 › streams a response into the transcript (399ms)
+  ✓   7 tests/chat.spec.ts:310:1 › an action opens a thread seeded with the selected passage (502ms)
+  ✓   5 tests/chat.spec.ts:337:1 › a follow-up in the thread pane re-sends the seed (532ms)
+  ✓   4 tests/chat.spec.ts:265:1 › a live selection overlapping a mark offers no actions (523ms)
+  ✓   9 tests/chat.spec.ts:408:1 › the arrows name the layer and stop at the ends (251ms)
+  ✓   3 tests/chat.spec.ts:287:1 › two marks in one message are both clickable (652ms)
+  ✓   8 tests/chat.spec.ts:356:1 › clicking a mark reopens its thread without a new request (361ms)
+  ✓  10 tests/chat.spec.ts:425:1 › a thread opened at depth carries both selections once (383ms)
+  ✓  13 tests/chat.spec.ts:506:1 › a selection at layer 0 opens a thread from the popup (247ms)
+  ✓  11 tests/chat.spec.ts:461:1 › a descended thread shows what it was opened from, in its transcript (294ms)
+  ✓  14 tests/chat.spec.ts:519:1 › the popup's own question hands off to the pane's composer (253ms)
+  ✓  15 tests/chat.spec.ts:533:1 › a selection in the reflect thread opens the layer below it (311ms)
+  ✓  12 tests/chat.spec.ts:480:1 › ← climbs back without losing threads or highlights (469ms)
+  ✓  19 tests/chat.spec.ts:683:1 › a turn shows its graph update working, then what it changed (190ms)
+  ✓  17 tests/chat.spec.ts:571:1 › a tool call is rendered and text above it stays selectable (277ms)
+  ✓  18 tests/chat.spec.ts:596:1 › a new selection leaves committed marks rendered (280ms)
+  ✓  21 tests/chat.spec.ts:722:1 › an update that writes nothing says so (155ms)
+  ✓  16 tests/chat.spec.ts:549:1 › nesting goes three deep (393ms)
+  ✓  20 tests/chat.spec.ts:699:1 › the update behind a turn opens its own transcript on the right (273ms)
+  ✓  22 tests/graph.spec.ts:92:1 › switching tabs leaves the transcript and the graph intact (322ms)
+  ✓  23 tests/graph.spec.ts:113:1 › clicking a node fills the sidebar and a retitle keeps its edges (324ms)
+  ✓  24 tests/graph.spec.ts:136:1 › a duplicate title is rejected without losing the draft (317ms)
+  ✓  25 tests/graph.spec.ts:149:1 › deleting a node takes its edges with it (355ms)
+  ✓  26 tests/graph.spec.ts:159:1 › an edge is selectable and editable (336ms)
+  ✓  28 tests/graph.spec.ts:202:1 › dragging the canvas pans the graph but still selects on a click (365ms)
+  ✓  27 tests/graph.spec.ts:183:1 › zooming spreads the nodes without resizing them, and reset restores (458ms)
+  ✓  31 tests/graph.spec.ts:399:1 › a failed graph update leaves the app usable (189ms)
+  ✓  29 tests/graph.spec.ts:342:1 › every interaction updates the graph, one update at a time (298ms)
+  ✓  30 tests/graph.spec.ts:368:1 › opening a learning thread updates the graph from its ask (357ms)
+  ✓  36 tests/graph.spec.ts:527:1 › a citation that does not resolve is left as text (249ms)
+  ✓  38 tests/graph.spec.ts:659:1 › clicking a change opens the graph tab with that node selected (206ms)
+  ✓  37 tests/graph.spec.ts:640:1 › an address written by a graph update navigates back to its turn (295ms)
+  ✓  35 tests/graph.spec.ts:505:1 › a cited message is one click away from the note that rests on it (434ms)
+  ✓  33 tests/graph.spec.ts:443:1 › a failed update mid-build does not stop the ones after it (555ms)
+  ✓  32 tests/graph.spec.ts:425:1 › building from a sample transcript walks its turns once (594ms)
+  ✓  34 tests/graph.spec.ts:456:1 › interacting mid-build interleaves rather than races (496ms)
+  ✓  43 tests/persistence.spec.ts:270:1 › an unreadable snapshot is dropped and the app comes up bare (157ms)
+  ✓  45 tests/smoke.spec.ts:9:1 › streams a real response end to end (1.4s)
+  ✓  41 tests/persistence.spec.ts:202:1 › an interaction whose update never finished is re-enqueued (1.6s)
+  ✓  39 tests/persistence.spec.ts:153:1 › a reload keeps the transcript, the graph and the update chips (1.7s)
+  ✓  40 tests/persistence.spec.ts:180:1 › a reload keeps a learning thread behind its mark (1.8s)
+  ✓  44 tests/persistence.spec.ts:289:1 › Reset clears this sample's state for good (1.8s)
+  ✓  42 tests/persistence.spec.ts:228:1 › a build interrupted by a refresh resumes where it stopped (2.0s)
+  45 passed (5.5s)
+> edulab@0.0.1 typecheck
+> npm -w @edulab/iso exec tsc -- --noEmit && npm -w @edulab/frontend exec tsc -- --noEmit && npm -w @edulab/backend exec tsc -- --noEmit && npm -w @edulab/e2e exec tsc -- --noEmit
+Checked 8 files in 111ms. No fixes applied.
+exit code 0

@@ -1,0 +1,82 @@
+$ cd /Users/denis.lantsman/src/edulab/packages/frontend && grep -n "style\|composer\|transcript\|overflow\|height" view.ts
+stdout:
+40:/** The sample-transcript batch. `done` is terminal: a second pass over the
+74:  /** The id of the canned transcript in play, empty for a hand-written one. */
+78:  /** False at layer 0 (the bare task transcript); true for the two-pane split. */
+84:  /** The thread whose transcript this pane shows; the live selection is over it. */
+86:  /** Committed highlights over this transcript. */
+96:  /** The sample-transcript batch: one graph update per loaded user turn. */
+98:  /** Indices of messages the user has expanded past the collapsed height. */
+100:  /** The background graph updates over this transcript. */
+107:  /** The transcript of a background graph update, shown on the right while the
+136:const transcriptClass = cls("transcript");
+139:const composerClass = cls("composer");
+175:  height: 100%;
+178:  min-height: 0;
+182:  min-height: 0;
+183:  overflow: hidden;
+197:/* Each layer column scrolls on its own: a long transcript on the left must not
+204:  min-height: 0;
+205:  overflow-y: auto;
+208:/* The transcript takes the slack so the composer sits at the bottom of the
+210:.${paneClass} > .${transcriptClass} {
+240:  line-height: 1;
+272:.${transcriptClass} {
+273:  list-style: none;
+281:  line-height: 1.5;
+292:  overflow: hidden;
+295:  max-height: calc(${MAX_MESSAGE_LINES} * 1.5em);
+311:.${messageClass}[data-overflowing="false"] > .${toggleClass},
+312:.${messageClass}[data-overflowing="false"] > .${moreClass} {
+336:  overflow-x: auto;
+353:.${composerClass} {
+358:  min-height: 0;
+359:  overflow-y: auto;
+387:  min-height: 0;
+388:  overflow-y: auto;
+413:.${composerClass} textarea {
+589:        >transcript</button>
+595:    // Keyed by start offset: the transcript is append-only, so a run keeps its
+644:    this.b.bindContainerAttr("data-overflowing", (s) =>
+696:  /** Highlights over this transcript, one per thread opened from it. */
+719:/** A learning thread on the right: its transcript and a composer. It captures
+733:    const transcriptRef = ref("thread-transcript");
+739:      <ul class="${transcriptClass}" data-ref="${transcriptRef}"></ul>
+740:      <div class="${composerClass}">
+749:    const transcript = this.b.ref(transcriptRef);
+751:      const anchor = readAnchor(transcript, this.current.thread);
+755:    transcript.addEventListener("mouseup", capture);
+756:    transcript.addEventListener("keyup", capture);
+772:    this.b.bindList(transcriptRef, "li", (s) =>
+828:/** The transcript of one background graph update, on the right. It has no
+829: * composer and captures no selection: this is the prompt and the model's work
+843:    const transcriptRef = ref("update-pane-transcript");
+853:      <ul class="${transcriptClass}" data-ref="${transcriptRef}"></ul>
+862:    this.b.bindList(transcriptRef, "li", (s) =>
+898:  | { type: "transcript:reveal"; index: number }
+899:  /** The popup handed a question off to the pane's composer, which only exists
+905:/** The threads tab: the transcript, its composer, and the learning pane beside
+921:    const transcriptRef: Ref = ref("transcript");
+924:    const composerRef: Ref = ref("composer");
+930:        <ul class="${transcriptClass}" data-ref="${transcriptRef}"></ul>
+931:        <div class="${composerClass}" data-ref="${composerRef}">
+957:    const transcript = this.b.ref(transcriptRef);
+959:      const anchor = readAnchor(transcript, this.current.thread);
+963:    transcript.addEventListener("mouseup", capture);
+964:    transcript.addEventListener("keyup", capture);
+969:      if (event.type !== "transcript:reveal") return;
+970:      const li = transcript.children[event.index];
+977:    // The transcript is append-only and never reorders, so the position of a
+979:    this.b.bindList(transcriptRef, "li", (s) =>
+1018:      // The update transcript is opened explicitly and closed explicitly, so
+1091:        <button type="button" data-build data-ref="${buildRef}">Build knowledge graph from this transcript</button>
+1178:    // Mounted here rather than beside the transcript because it belongs to no
+1257:  if (rect.width === 0 && rect.height === 0) return null;
+1262: * selection has nothing to do with the transcript, which must not clobber a
+1265:  transcript: HTMLElement,
+1272:    transcript,
+1276:  const end = resolvePoint(transcript, range.endContainer, range.endOffset);
+1283:  transcript: HTMLElement,
+1290:  if (!textEl || !transcript.contains(textEl)) return null;
+1293:  const msg = Array.prototype.indexOf.call(transcript.children, li);
+exit code 0

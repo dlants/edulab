@@ -1,0 +1,22 @@
+$ cd /Users/denis.lantsman/src/edulab && grep -n "pending\|layout\|Layout" packages/frontend/prototypes/chat.ts packages/frontend/graph-view.ts
+stdout:
+packages/frontend/prototypes/chat.ts:20:import { layout, type Position } from "../layout.ts";
+packages/frontend/prototypes/chat.ts:132:  // pre-update graph and mint rival nodes for the same concept. Appending to
+packages/frontend/prototypes/chat.ts:178:  // The layout is a few hundred iterations, and refresh() runs on every
+packages/frontend/prototypes/chat.ts:182:  // The shape a layout is currently being computed for, if any.
+packages/frontend/prototypes/chat.ts:239:  /** The graph projected onto view state: positions from `layout`, and the
+packages/frontend/prototypes/chat.ts:250:      // Deferred so the browser paints the pending state before the
+packages/frontend/prototypes/chat.ts:254:        placement = layout(graph);
+packages/frontend/prototypes/chat.ts:260:    const pending = shape !== placedFor;
+packages/frontend/prototypes/chat.ts:264:      status: pending ? "pending" : "ready",
+packages/frontend/prototypes/chat.ts:265:      nodes: pending ? [] : nodes.map((n) => ({ ...n, pos: at(n.id) })),
+packages/frontend/prototypes/chat.ts:266:      edges: pending
+packages/frontend/prototypes/chat.ts:743:    const pending = interactionAddresses(
+packages/frontend/prototypes/chat.ts:759:    if (pending.length > 0) void drain(pending);
+packages/frontend/graph-view.ts:4:import type { Position } from "./layout.ts";
+packages/frontend/graph-view.ts:56:  /** `pending` while the layout simulation is being computed off the render
+packages/frontend/graph-view.ts:58:  status: "pending" | "ready";
+packages/frontend/graph-view.ts:497:    const pendingRef = ref("graph-pending");
+packages/frontend/graph-view.ts:519:        <p class="${emptyClass}" data-ref="${pendingRef}">Laying out the graph…</p>
+packages/frontend/graph-view.ts:717:    this.b.bindVisible(pendingRef, (s) => s.status === "pending");
+exit code 0

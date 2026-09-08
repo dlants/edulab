@@ -1,0 +1,25 @@
+$ cd /Users/denis.lantsman/src/edulab && grep -n "function save" -A6 packages/frontend/prototypes/chat.ts && grep -n "graphUpdates.set(key" -B3 -A3 packages/frontend/prototypes/chat.ts
+stdout:
+138:  function save(): void {
+139-    saveSnapshot(
+140-      toSnapshot({
+141-        sample: sample?.id,
+142-        tree,
+143-        graph,
+144-        updates: [...graphUpdates].flatMap(([key, update]) => {
+304-  ): Promise<boolean> {
+305-    const interaction = interactionAt(tree, thread, index);
+306-    const key = address(thread, index);
+307:    graphUpdates.set(key, { type: "running" });
+308-    // The update thread's transcript, as of its last change: the chips are read
+309-    // off the calls it actually made, not off a side channel.
+310-    let transcript: ReadonlyArray<Message> = [];
+--
+332-        return false;
+333-      })
+334-      .then((ok) => {
+335:        graphUpdates.set(key, { type: "done", changes: changesOf(transcript) });
+336-        sync();
+337-        return ok;
+338-      });
+exit code 0

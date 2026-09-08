@@ -1,0 +1,24 @@
+$ cd /Users/denis.lantsman/src/edulab && git stash && cd packages/e2e && npx playwright test tests/graph.spec.ts -g "zooming" --reporter=line; npx playwright test tests/persistence.spec.ts -g "interrupted" --reporter=line; cd /Users/denis.lantsman/src/edulab && git stash pop
+stdout:
+Saved working directory and index state WIP on main: 0246a16 Stage 4: Reset button
+Running 1 test using 1 worker
+[1/1] tests/graph.spec.ts:180:1 › zooming spreads the nodes without resizing them, and reset restores
+  1 passed (1.5s)
+Running 1 test using 1 worker
+[1/1] tests/persistence.spec.ts:228:1 › a build interrupted by a refresh resumes where it stopped
+  1 passed (4.2s)
+On branch main
+Your branch is ahead of 'origin/main' by 4 commits.
+  (use "git push" to publish your local commits)
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	modified:   packages/e2e/tests/chat.spec.ts
+	modified:   packages/e2e/tests/persistence.spec.ts
+	modified:   packages/frontend/graph-view.ts
+	modified:   packages/frontend/persistence.ts
+	modified:   packages/frontend/prototypes/chat.ts
+	modified:   packages/frontend/view.ts
+no changes added to commit (use "git add" and/or "git commit -a")
+Dropped refs/stash@{0} (845df7de446aaf9110a509d065636414c2614ce4)
+exit code 0

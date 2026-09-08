@@ -1,0 +1,24 @@
+$ cd /Users/denis.lantsman/src/edulab && npx playwright test --config packages/e2e/playwright.config.ts persistence
+stdout:
+Running 4 tests using 4 workers
+  ✓  3 packages/e2e/tests/persistence.spec.ts:223:1 › an unreadable snapshot is dropped and the app comes up bare (447ms)
+  ✘  4 packages/e2e/tests/persistence.spec.ts:197:1 › an interaction whose update never finished is re-enqueued (1.9s)
+  ✓  1 packages/e2e/tests/persistence.spec.ts:148:1 › a reload keeps the transcript, the graph and the update chips (2.0s)
+  ✓  2 packages/e2e/tests/persistence.spec.ts:175:1 › a reload keeps a learning thread behind its mark (2.1s)
+  1) packages/e2e/tests/persistence.spec.ts:197:1 › an interaction whose update never finished is re-enqueued 
+    Error: expect(received).toBe(expected) // Object.is equality
+    Expected: 2
+    Received: 1
+      217 |   await page.reload();
+      218 |   await expect(page.getByText("no knowledge graph changes")).toBeVisible();
+    > 219 |   expect(counts.updates).toBe(before + 1);
+          |                          ^
+      220 |   expect(counts.turns).toBe(1);
+      221 | });
+      222 |
+        at /Users/denis.lantsman/src/edulab/packages/e2e/tests/persistence.spec.ts:219:26
+    Error Context: packages/e2e/test-results/persistence-an-interaction-a1084-ver-finished-is-re-enqueued/error-context.md
+  1 failed
+    packages/e2e/tests/persistence.spec.ts:197:1 › an interaction whose update never finished is re-enqueued 
+  3 passed (6.1s)
+exit code 1

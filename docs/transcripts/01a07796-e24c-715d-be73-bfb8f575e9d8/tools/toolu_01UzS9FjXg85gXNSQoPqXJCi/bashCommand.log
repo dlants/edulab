@@ -1,0 +1,11 @@
+$ cd packages/frontend && grep -n "function refresh\|refresh()\|function dispatch" prototypes/chat.ts
+stdout:
+99:    refresh();
+178:  // The layout is a few hundred iterations, and refresh() runs on every
+238:  function refreshGraph(): void {
+287:  function refresh(): void {
+330:    refresh();
+695:    refresh();
+703:  function dispatch(msg: Msg): void {
+717:  refresh();
+exit code 0

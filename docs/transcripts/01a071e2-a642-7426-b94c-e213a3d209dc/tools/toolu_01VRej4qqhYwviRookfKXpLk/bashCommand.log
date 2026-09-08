@@ -1,0 +1,9 @@
+$ cd /Users/denis.lantsman/src/edulab && node -e "
+for (const f of ['44bbcae8-tile-adhesive-formulation','74979366-floating-dock-pontoon']) {
+ const a=require('./packages/frontend/samples/'+f+'.json'), b=require('./task-samples/'+f+'.json');
+ console.log(f, Object.keys(a), a.messages.length, b.messages.length, a.messages[0].content===b.messages[0].content, JSON.stringify(a.messages[a.messages.length-1].content)===JSON.stringify(b.messages[b.messages.length-1].content));
+}"
+stdout:
+44bbcae8-tile-adhesive-formulation [ 'hash', 'model', 'turns', 'messages' ] 46 46 true true
+74979366-floating-dock-pontoon [ 'hash', 'model', 'turns', 'messages' ] 46 46 true true
+exit code 0

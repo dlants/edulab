@@ -1,0 +1,30 @@
+$ grep -n "split\|ThreadPane\|updates" packages/frontend/prototypes/chat.ts
+stdout:
+140:  // Graph updates run one at a time: two in flight would each be handed the
+143:  let updates: Promise<void> = Promise.resolve();
+148:  // Only finished updates are persisted: one that was still running when the
+151:    (snapshot?.updates ?? []).map((u) => [
+163:        updates: [...graphUpdates].flatMap(([key, update]) => {
+165:          const [thread, index] = key.split(":");
+179:  function updatesFor(thread: ThreadId): Updates {
+182:      const [id, index] = key.split(":");
+222:    split: false,
+243:    updates: new Map(),
+317:    state.depth = state.split ? tree.path(focus).length : 0;
+328:    state.updates = updatesFor(focus);
+345:      updates: updatesFor(activeChild),
+358:    if (anchor.thread === focus) return state.split ? null : anchorAt;
+396:    const done = updates
+430:    updates = done.then(() => undefined);
+468:  /** Walks the loaded sample's turns through the same queue the live updates
+525:    state.split = path.length > 1;
+604:    state.split = true;
+645:        if (!state.split) {
+646:          state.split = true;
+660:        if (parent === undefined) state.split = false;
+684:        // was there gives way - but only while the split is showing; at layer 0
+687:        if (state.split) node.activeChild = null;
+697:        state.split = true;
+725:            state.split = true;
+751:            state.split = true;
+exit code 0

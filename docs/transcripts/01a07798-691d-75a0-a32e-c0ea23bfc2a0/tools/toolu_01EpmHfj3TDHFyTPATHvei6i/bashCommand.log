@@ -1,0 +1,35 @@
+$ cd ~/.claude/skills/browser && pkgx pnpm exec tsx scripts/browser.ts "
+load http://localhost:5173
+sleep 2000
+eval
+function d(e){const r=e.getBoundingClientRect();return {cls:e.className,x:Math.round(r.x),y:Math.round(r.y),w:Math.round(r.width),h:Math.round(r.height)}}
+const app=document.body.firstElementChild.firstElementChild;
+const before=Array.from(app.children).map(d);
+Array.from(document.querySelectorAll('button')).find(b=>b.textContent==='Knowledge graph').click();
+await new Promise(r=>setTimeout(r,300));
+const graph=Array.from(app.children).map(d);
+Array.from(document.querySelectorAll('button')).find(b=>b.textContent==='Threads').click();
+await new Promise(r=>setTimeout(r,300));
+return {before, graph, back: Array.from(app.children).map(d), errors: window.__errs};
+endeval
+"
+stdout:
+Loading http://localhost:5173...
+Sleeping for 2000ms...
+Evaluating code in page context...
+Eval result: {
+  before: [
+    { cls: 'nav_25', x: 0, y: 0, w: 1280, h: 47 },
+    { cls: 'body_32', x: 272, y: 47, w: 736, h: 673 }
+  ],
+  graph: [
+    { cls: 'nav_25', x: 0, y: 0, w: 1280, h: 47 },
+    { cls: 'graph_0', x: 0, y: 47, w: 1280, h: 594 }
+  ],
+  back: [
+    { cls: 'nav_25', x: 0, y: 0, w: 1280, h: 47 },
+    { cls: 'body_32', x: 272, y: 47, w: 736, h: 673 }
+  ]
+}
+Script completed successfully!
+exit code 0

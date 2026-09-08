@@ -1,0 +1,15 @@
+$ cd /Users/denis.lantsman/src/edulab/packages/frontend && sed -n '1108,1113p;1266,1273p' view.ts
+stdout:
+  private b: Binder<State>;
+  /** The latest state, for event handlers that need it outside a binding. */
+  private current: State;
+  constructor(
+    container: HTMLElement,
+    this.b.cleanup();
+    this.container.innerHTML = "";
+  }
+}
+/** A count rather than a spinner: this is one model call per turn and it takes
+ * as long as it takes. */
+function buildFailures(build: Build): ReadonlyArray<BuildFailure> {
+exit code 0

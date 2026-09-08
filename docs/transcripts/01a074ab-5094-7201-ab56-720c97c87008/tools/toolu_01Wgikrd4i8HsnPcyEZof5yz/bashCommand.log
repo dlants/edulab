@@ -1,0 +1,25 @@
+$ cd /Users/denis.lantsman/src/edulab && grep -rn "threadTranscript(page).locator(\"li\")\|taskTranscript(page).locator(\"li\")" packages/e2e/tests/*.spec.ts
+stdout:
+packages/e2e/tests/chat.spec.ts:149:  await expect(taskTranscript(page).locator("li")).toHaveCount(2);
+packages/e2e/tests/chat.spec.ts:167:  await expect(taskTranscript(page).locator("li")).toHaveCount(2);
+packages/e2e/tests/chat.spec.ts:192:  await expect(taskTranscript(page).locator("li")).toHaveCount(2);
+packages/e2e/tests/chat.spec.ts:196:  await expect(taskTranscript(page).locator("li")).toHaveCount(4);
+packages/e2e/tests/chat.spec.ts:265:  await expect(threadTranscript(page).locator("li")).toHaveText([/ok/]);
+packages/e2e/tests/chat.spec.ts:273:  await expect(threadTranscript(page).locator("li")).toHaveCount(1);
+packages/e2e/tests/chat.spec.ts:278:  await expect(threadTranscript(page).locator("li")).toHaveCount(3);
+packages/e2e/tests/chat.spec.ts:294:  await expect(threadTranscript(page).locator("li")).toHaveCount(1);
+packages/e2e/tests/chat.spec.ts:298:  await expect(threadTranscript(page).locator("li")).toHaveCount(1);
+packages/e2e/tests/chat.spec.ts:305:  await expect(threadTranscript(page).locator("li")).toHaveCount(1);
+packages/e2e/tests/chat.spec.ts:363:  await expect(threadTranscript(page).locator("li")).toHaveCount(1);
+packages/e2e/tests/chat.spec.ts:366:  await expect(taskTranscript(page).locator("li")).toHaveText([
+packages/e2e/tests/chat.spec.ts:381:  await expect(taskTranscript(page).locator("li")).toHaveText([
+packages/e2e/tests/chat.spec.ts:384:  await expect(threadTranscript(page).locator("li")).toHaveCount(1);
+packages/e2e/tests/chat.spec.ts:387:  await expect(taskTranscript(page).locator("li")).toHaveCount(1);
+packages/e2e/tests/chat.spec.ts:395:  await expect(threadTranscript(page).locator("li")).toHaveCount(1);
+packages/e2e/tests/chat.spec.ts:409:  await expect(threadTranscript(page).locator("li")).toHaveCount(1);
+packages/e2e/tests/chat.spec.ts:414:  await expect(threadTranscript(page).locator("li")).toHaveCount(1);
+packages/e2e/tests/chat.spec.ts:420:  await expect(threadTranscript(page).locator("li")).toHaveCount(1);
+packages/e2e/tests/chat.spec.ts:433:  await expect(threadTranscript(page).locator("li")).toHaveCount(1);
+packages/e2e/tests/chat.spec.ts:438:  await expect(threadTranscript(page).locator("li")).toHaveCount(1);
+packages/e2e/tests/chat.spec.ts:459:  await expect(taskTranscript(page).locator("li")).toHaveCount(4);
+exit code 0

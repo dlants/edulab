@@ -1,0 +1,4 @@
+$ cd /Users/denis.lantsman/src/edulab && git add -A && git commit -m "Stage 5: update the graph on every interaction" -q && git log --oneline -1
+stdout:
+0663110 Stage 5: update the graph on every interaction
+exit code 0

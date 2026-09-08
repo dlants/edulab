@@ -1,0 +1,8 @@
+$ cd /Users/denis.lantsman/src/edulab && ls packages/e2e/tests && grep -rn "Build from\|Rebuild\|graph-build" packages
+stdout:
+chat.spec.ts
+graph.spec.ts
+smoke.spec.ts
+packages/e2e/tests/graph.spec.ts:286:  await page.getByRole("button", { name: "Build from this session" }).click();
+packages/e2e/tests/graph.spec.ts:290:  await expect(page.getByRole("button", { name: "Rebuild" })).toBeVisible();
+exit code 0

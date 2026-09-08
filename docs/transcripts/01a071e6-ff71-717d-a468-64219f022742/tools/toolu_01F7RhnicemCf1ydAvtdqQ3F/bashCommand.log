@@ -1,0 +1,74 @@
+$ cd /Users/denis.lantsman/src/edulab && npm test --silent
+stdout:
+ RUN  v4.1.11 /Users/denis.lantsman/src/edulab
+ ✓ packages/frontend/prompt.test.ts (5 tests) 2ms
+ ✓ packages/frontend/selection.test.ts (8 tests) 2ms
+ ❯ packages/frontend/thread.test.ts (15 tests | 2 failed) 23ms
+   ✓ accumulates deltas into the streaming assistant message 10ms
+   ✓ sends the whole thread with alternating roles on the second turn 0ms
+   ✓ ignores send while a turn is in flight 0ms
+   ✓ commits partial text when a turn ends in error 0ms
+   ✓ sends the seed as turn 0 but never renders it 0ms
+   × surfaces a streamed tool call with its json parsed 5ms
+   × projects text and a tool call in one turn as two entries 2ms
+   ✓ pairs a tool_result in the next user turn onto its call 0ms
+   ✓ leaves input undefined while the json is still streaming 0ms
+   ✓ answers a tool call and re-requests with the result 2ms
+   ✓ turns a throwing tool and an unknown tool into error results 1ms
+   ✓ reports a tool call whose input never parsed as an error 1ms
+   ✓ sends the configured tool specs, and none when there are none 0ms
+   ✓ ends the turn when a request errors mid tool call 0ms
+   ✓ drops the assistant turn when no text arrived 0ms
+stderr:
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  packages/frontend/thread.test.ts > surfaces a streamed tool call with its json parsed
+AssertionError: expected { type: 'tool_use', …(2) } to deeply equal { type: 'tool_use', …(2) }
+- Expected
++ Received
+@@ -4,10 +4,13 @@
+      "input": {
+        "path": "a.txt",
+      },
+      "inputJson": "{\"path\":\"a.txt\"}",
+      "name": "read",
+-     "result": undefined,
++     "result": {
++       "error": "unknown tool: read",
++       "status": "error",
++     },
+    },
+    "role": "assistant",
+    "type": "tool_use",
+  }
+ ❯ packages/frontend/thread.test.ts:236:30
+    234|   await turn;
+    235|
+    236|   expect(thread.messages[1]).toEqual({
+       |                              ^
+    237|     type: "tool_use",
+    238|     role: "assistant",
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+ FAIL  packages/frontend/thread.test.ts > projects text and a tool call in one turn as two entries
+AssertionError: expected [ 'text', 'text', 'tool_use', 'text' ] to deeply equal [ 'text', 'text', 'tool_use' ]
+- Expected
++ Received
+  [
+    "text",
+    "text",
+    "tool_use",
++   "text",
+  ]
+ ❯ packages/frontend/thread.test.ts:270:46
+    268|   await turn;
+    269|
+    270|   expect(thread.messages.map((m) => m.type)).toEqual([
+       |                                              ^
+    271|     "text",
+    272|     "text",
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+stdout:
+ Test Files  1 failed | 2 passed (3)
+      Tests  2 failed | 26 passed (28)
+   Start at  07:11:14
+   Duration  177ms (transform 87ms, setup 0ms, import 227ms, tests 27ms, environment 0ms)
+exit code 1

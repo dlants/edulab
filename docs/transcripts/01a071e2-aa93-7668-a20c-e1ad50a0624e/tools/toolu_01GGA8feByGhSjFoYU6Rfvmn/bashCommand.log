@@ -1,0 +1,38 @@
+$ cd /Users/denis.lantsman/src/edulab/packages/frontend && perl -pi -e 's/unknown thread /unknown thread \$\{id\}/' threads.ts && perl -pi -e 'unless (m{^\s*(//|\*|/\*)}) { s/(?<![.\w])thread(?![\w:])/node/g; } s{// One socket for the whole app: every thread.s Thread adds its own}{// One socket for the whole app: every Thread adds its own};' prototypes/chat.ts && perl -pi -e 's/\bnode\.conversation\b/node.thread/g; s/\.conversation\./.thread./g; s/\.conversation$/.thread/;' prototypes/chat.ts && grep -n "node\|thread\|Thread\|conversation" prototypes/chat.ts
+stdout:
+1:import { Thread } from "../node.ts";
+4:import { anchorText, overlaps, type ThreadId } from "../selection.ts";
+5:import { ThreadTree } from "../threads.ts";
+13:/** Prototype 1: the task transcript, with learning threads hanging off the
+16:  // One socket for the whole app: every Thread adds its own
+20:  const tree = new ThreadTree(
+22:    new Thread(socket, { initialTurns: selectedSample()?.turns }),
+28:  // The thread on the left. Moved only by the arrows.
+39:    thread: focus,
+51:    const node = tree.get(focus);
+52:    state.thread = focus;
+54:    state.canDescend = node.activeChild !== null;
+55:    state.messages = node.thread.messages;
+56:    state.inFlight = node.thread.inFlight;
+57:    state.draft = node.draft;
+59:    const own = node.origin;
+65:            tree.get(own.anchor.thread).thread.messages,
+69:    state.activeMark = node.activeChild;
+70:    const activeChild = node.activeChild;
+79:      messages: child.thread.messages,
+80:      inFlight: child.thread.inFlight,
+85:  function send(id: ThreadId): void {
+86:    const node = tree.get(id);
+87:    const text = node.draft.trim();
+88:    if (text === "" || node.thread.inFlight) return;
+89:    node.draft = "";
+90:    node.thread.send(text).then(undefined, (e: unknown) => {
+96:    const node = tree.get(focus);
+99:        node.draft = msg.draft;
+112:        const child = node.activeChild;
+120:        const parent = node.origin?.anchor.thread;
+129:        node.activeChild = null;
+133:        node.activeChild = msg.thread;
+145:              .thread.start()
+157:        const activeChild = node.activeChild;
+exit code 0

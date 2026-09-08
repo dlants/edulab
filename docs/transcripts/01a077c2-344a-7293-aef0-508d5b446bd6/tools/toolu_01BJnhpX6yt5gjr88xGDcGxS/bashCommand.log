@@ -1,0 +1,18 @@
+$ cd /Users/denis.lantsman/src/edulab/packages/frontend && grep -n "function showUpdate" -A 14 prototypes/chat.ts
+stdout:
+591:  function showUpdate(thread: ThreadId, index: number): void {
+592-    const key = address(thread, index as MessageIdx);
+593-    if (!graphUpdates.has(key)) return;
+594-    updateFocus = key;
+595-    state.split = true;
+596-    anchor = null;
+597-    anchorAt = null;
+598-  }
+599-
+600-  function update(state: State, msg: Msg): void {
+601-    const node = tree.get(focus);
+602-    switch (msg.type) {
+603-      case "DRAFT_CHANGED":
+604-        node.draft = msg.draft;
+605-        break;
+exit code 0

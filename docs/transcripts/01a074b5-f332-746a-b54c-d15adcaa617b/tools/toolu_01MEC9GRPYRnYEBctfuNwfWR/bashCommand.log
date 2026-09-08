@@ -1,0 +1,13 @@
+$ cd /Users/denis.lantsman/src/edulab/packages/frontend/samples && for f in *.json; do node -e "const d=require('./$f');console.log('$f',d.hash.slice(0,8),d.messages.filter(m=>m.role==='user').length,d.messages.length)"; done
+stdout:
+357dee9a-statsforecast-zero-constraints.json 357dee9a 20 40
+37734816-colbert-raptor-rag-design.json 37734816 25 50
+3890541b-chiller-system-hysys-model.json 3890541b 26 52
+44bbcae8-tile-adhesive-formulation.json 44bbcae8 23 46
+5b878a60-solidity-guildtoken-audit.json 5b878a60 26 52
+72c7ec37-django-event-app-urls.json 72c7ec37 22 44
+74979366-floating-dock-pontoon.json 74979366 23 46
+80e08978-quantum-espresso-burai-relaxation.json 80e08978 21 42
+9833484b-c-heap-file-block-storage.json 9833484b 20 40
+aa0cb918-statsforecast-polars-series-lengths.json aa0cb918 23 46
+exit code 0

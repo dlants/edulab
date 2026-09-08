@@ -1,0 +1,4 @@
+$ ls packages/frontend/src packages/frontend/src/prototypes 2>/dev/null; grep -rln "graph" packages/frontend/src
+stderr:
+grep: packages/frontend/src: No such file or directory
+exit code 2

@@ -1,0 +1,27 @@
+$ cd /Users/denis.lantsman/src/edulab && tail -25 packages/e2e/tests/persistence.spec.ts
+stdout:
+  });
+  expect(counts.updates).toBe(total);
+  // The transcript is the sample's, untouched: a resume sends no user turns.
+  expect(counts.turns).toBe(0);
+  await expect(taskTranscript(page).locator("li")).toHaveCount(turns);
+});
+test("an unreadable snapshot is dropped and the app comes up bare", async ({
+  page,
+}) => {
+  await backend(page);
+  await page.addInitScript(
+    ([key]) => {
+      localStorage.setItem(key, "{ not json");
+    },
+    [KEY],
+  );
+  await page.goto("/");
+  await expect(taskTranscript(page).locator("li")).toHaveCount(0);
+  await graphTab(page).click();
+  await expect(page.locator("[data-node]")).toHaveCount(0);
+  expect(await page.evaluate((key) => localStorage.getItem(key), KEY)).not.toBe(
+    "{ not json",
+  );
+});
+exit code 0

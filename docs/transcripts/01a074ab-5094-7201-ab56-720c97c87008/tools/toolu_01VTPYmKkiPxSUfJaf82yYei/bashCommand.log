@@ -1,0 +1,77 @@
+$ cd /Users/denis.lantsman/src/edulab && npm run lint:fix; grep -n "^import" packages/frontend/prototypes/chat.ts
+stdout:
+> edulab@0.0.1 lint:fix
+> biome check --write .
+stderr:
+packages/frontend/prototypes/chat.ts:10:10
+ lint/correctness/noUnusedImports  FIXABLE  ━━━━━━━━━━━━━━
+  ! Several of these imports are unused.
+     8 │ import type { Build, Msg as GraphMsg, Sidebar } from "../graph-view.ts";
+     9 │ import { layout, type Position } from "../layout.ts";
+  > 10 │ import { actionLabel, EXTRACT_SYSTEM, renderTree } from "../prompt.ts";
+       │          ^^^^^^^^^^^
+    11 │ import { selectedSample, selec
+tSample } from "../samples/index.ts";
+    12 │ import { anchorText, overlaps, type ThreadId } from "../selection.ts";
+  i Unused imports might be the result of an incomplete refactoring.
+  i Unsafe fix: Remove the unused imports.
+    10 │ 
+import·{·actionLabel,·EXTRACT_SYSTEM,·re
+nderTree·}·from·"../prompt.ts";
+       │ 
+         -------------         
+packages/frontend/prototypes/chat.ts
+:12:10 lint/correctness/noUnusedImports  FIXABLE  
+━━━━━━━━━━━━━━
+  ! Several of these imports are unused.
+    10 │ 
+import {
+ actionLabel, EXTRACT_
+SYSTEM, renderT
+ree } from "../prompt.ts
+";
+    11 │ imp
+ort { selectedSample
+, selectSample } from "..
+/samples/index
+.ts";
+  > 12 │ 
+import { anchorText, overlap
+s, type Threa
+dId } from "../selectio
+n.ts";
+       │   
+       ^^^^^^^^^^
+    13 │ i
+mport { Thr
+ead } from 
+"../thread.ts";
+    14 │ i
+mport { ThreadTr
+ee } from "../threads.t
+s";
+  i Unused imports might be the result of an incomplete refactoring.
+  i Unsafe fix: Remove the unused imports.
+    12 │ 
+import·{·anchorText,·ov
+erlaps,·type·T
+hreadId·}·from·"../sele
+ction.ts";
+       │   
+       ------------       
+stdout:
+Skipped 2 suggested fixes.
+If you wish to apply the suggested (unsafe) fixes, use the command biome check --write --unsafe
+Checked 48 files in 419ms. Fixed 2 files.
+Found 2 warnings.
+1:import {
+7:import { readTools, writeTools } from "../graph-tools.ts";
+8:import type { Build, Msg as GraphMsg, Sidebar } from "../graph-view.ts";
+9:import { layout, type Position } from "../layout.ts";
+10:import { actionLabel, EXTRACT_SYSTEM, renderTree } from "../prompt.ts";
+11:import { selectedSample, selectSample } from "../samples/index.ts";
+12:import { anchorText, overlaps, type ThreadId } from "../selection.ts";
+13:import { Thread } from "../thread.ts";
+14:import { ThreadTree } from "../threads.ts";
+15:import { AppView, type Msg, type State } from "../view.ts";
+exit code 0

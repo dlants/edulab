@@ -1,0 +1,30 @@
+$ cd /Users/denis.lantsman/src/edulab && sed -n 640,665p packages/frontend/prototypes/chat.ts; echo ---; grep -n "origin\|Origin" packages/frontend/threads.test.ts packages/frontend/persistence.test.ts
+stdout:
+        const child = node.activeChild;
+        if (!child) break;
+        focus = child;
+        anchor = null;
+        anchorAt = null;
+        state.query = "";
+        updateFocus = null;
+        break;
+      }
+      case "GO_BACK": {
+        const parent = node.origin?.anchor.thread;
+        if (parent === undefined) state.split = false;
+        else focus = parent;
+        // Climbing out lands on the passage that was descended through, which
+        // may be far up a long transcript.
+        const active = tree.get(focus).activeChild;
+        if (active) bus.emit({ type: "mark:reveal", thread: active });
+        anchor = null;
+        anchorAt = null;
+        state.query = "";
+        updateFocus = null;
+        break;
+      }
+      case "TOGGLE_EXPANDED": {
+        const set = expandedFor(focus);
+        if (!set.delete(msg.index)) set.add(msg.index);
+---
+exit code 1

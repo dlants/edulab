@@ -1,0 +1,9 @@
+$ cd /Users/denis.lantsman/src/edulab && perl -pi -e 's/threadTranscript\(page\)\.locator\("li"\)\)\.toHaveCount\(1\)/threadTranscript(page).locator("li")).toHaveCount(2)/g' packages/e2e/tests/chat.spec.ts && grep -n "toHaveCount(1)\|toHaveText(\[$" packages/e2e/tests/chat.spec.ts
+stdout:
+212:  await expect(page.locator("[data-mark]")).toHaveCount(1);
+267:  await expect(threadTranscript(page).locator("li")).toHaveText([
+371:  await expect(taskTranscript(page).locator("li")).toHaveText([
+386:  await expect(taskTranscript(page).locator("li")).toHaveText([
+392:  await expect(taskTranscript(page).locator("li")).toHaveCount(1);
+492:  await expect(page.locator("[data-mark]")).toHaveCount(1);
+exit code 0

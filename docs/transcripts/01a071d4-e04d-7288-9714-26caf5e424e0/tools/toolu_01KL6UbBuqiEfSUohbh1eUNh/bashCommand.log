@@ -2,3 +2,22 @@ $ cd /Users/denis.lantsman/src/edulab && npm run sync:transcripts && git status 
 stdout:
 > edulab@0.0.1 sync:transcripts
 > ./scripts/sync-transcripts.sh
+synced 26 thread(s) into /Users/denis.lantsman/src/edulab/docs/transcripts
+ M docs/transcripts/01a071cd-d7cb-7540-8cff-8cdf36666435/conversation.jsonl
+ M docs/transcripts/01a071d3-8170-760f-a2c8-767f91129f02/conversation.jsonl
+ M docs/transcripts/01a071d4-e04d-7288-9714-26caf5e424e0/conversation.jsonl
+ M docs/transcripts/01a071d4-e04d-7288-9714-26caf5e424e0/tools/toolu_01Tz2Z7SBdKr86ExNTLDRFeb/bashCommand.log
+ M plans/2026-09-05-thread-tools-yield.md
+?? docs/transcripts/01a071d3-8170-760f-a2c8-767f91129f02/tools/toolu_01MfGZzNHLWA9J1rJ9JqZFo5/
+?? docs/transcripts/01a071d3-8170-760f-a2c8-767f91129f02/tools/toolu_01UVmXMfX3McdbDfX7stwucs/
+?? docs/transcripts/01a071d4-e04d-7288-9714-26caf5e424e0/tools/toolu_013XMQUMyonCJi2yaFMEuuJ9/
+?? docs/transcripts/01a071d4-e04d-7288-9714-26caf5e424e0/tools/toolu_017cHj18wdMifsyrF976muz3/
+?? docs/transcripts/01a071d4-e04d-7288-9714-26caf5e424e0/tools/toolu_01ArZxdBJrLjKFdrZcY9RJj1/
+?? docs/transcripts/01a071d4-e04d-7288-9714-26caf5e424e0/tools/toolu_01B9roDYRtDYnQHzRcguSJKN/
+?? docs/transcripts/01a071d4-e04d-7288-9714-26caf5e424e0/tools/toolu_01Bu4aTgcSzATNxFpYTEVT2o/
+?? docs/transcripts/01a071d4-e04d-7288-9714-26caf5e424e0/tools/toolu_01HAEaaVErCX4bhgwqripURy/
+?? docs/transcripts/01a071d4-e04d-7288-9714-26caf5e424e0/tools/toolu_01KL6UbBuqiEfSUohbh1eUNh/
+?? docs/transcripts/01a071d4-e04d-7288-9714-26caf5e424e0/tools/toolu_01R9TChtrCmfFYD9GdKzmP9B/
+?? docs/transcripts/01a071d4-e04d-7288-9714-26caf5e424e0/tools/toolu_01SmzQJ1Q6dgnMPjFWKFWfw3/
+?? docs/transcripts/01a071d4-e04d-7288-9714-26caf5e424e0/tools/toolu_01WrA4mDed28rBz9AmDD5M7p/
+exit code 0

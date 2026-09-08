@@ -1,0 +1,8 @@
+$ cd /Users/denis.lantsman/src/edulab && grep -n '^# ' notes/deliverable.md
+stdout:
+3:# ecological grounding
+21:# design considerations
+57:# the prototype
+103:# evaluation
+129:# scaling
+exit code 0

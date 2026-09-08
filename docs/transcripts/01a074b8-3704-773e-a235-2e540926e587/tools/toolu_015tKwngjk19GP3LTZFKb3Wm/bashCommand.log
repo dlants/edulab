@@ -1,0 +1,45 @@
+$ cd /Users/denis.lantsman/src/edulab && sed -n '105,150p' packages/frontend/graph.ts
+stdout:
+    };
+  }
+  /** Errors if either endpoint is unknown. */
+  putEdge(edge: Omit<GraphEdge, "id"> & { id?: EdgeId }): GraphResult {
+    const title = edge.title.trim();
+    if (title === "") return { status: "error", error: "edge title is empty" };
+    if (edge.id !== undefined && !this.#edges.has(edge.id))
+      return { status: "error", error: `no edge with id ${edge.id}` };
+    if (!this.#nodes.has(edge.from))
+      return { status: "error", error: `no node with id ${edge.from}` };
+    if (!this.#nodes.has(edge.to))
+      return { status: "error", error: `no node with id ${edge.to}` };
+    if (edge.from === edge.to)
+      return {
+        status: "error",
+        error: "an edge may not join a node to itself",
+      };
+    const id = edge.id ?? (`e${this.#next++}` as EdgeId);
+    this.#edges.set(id, {
+      id,
+      from: edge.from,
+      to: edge.to,
+      title,
+      description: edge.description,
+    });
+    return {
+      status: "ok",
+      message: `${edge.id === undefined ? "created" : "updated"} edge ${id} "${title}" (${edge.from} -> ${edge.to})`,
+    };
+  }
+  deleteEdge(id: EdgeId): GraphResult {
+    const edge = this.#edges.get(id);
+    if (!edge) return { status: "error", error: `no edge with id ${id}` };
+    this.#edges.delete(id);
+    return { status: "ok", message: `deleted edge ${id} "${edge.title}"` };
+  }
+  /** Everything about each id: a node with its incident edges in both
+   * directions, or an edge with its endpoints. Unknown ids come back marked
+   * as such rather than failing the batch. */
+  get(ids: ReadonlyArray<GraphId>): string {
+    return ids.map((id) => this.#record(id)).join("\n\n");
+  }
+exit code 0

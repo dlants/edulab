@@ -1,0 +1,49 @@
+$ cd /Users/denis.lantsman/src/edulab && ls && cat package.json && which render; echo "---"; env | grep -i render
+stdout:
+biome.json
+context.md
+docs
+node_modules
+notes
+package-lock.json
+package.json
+packages
+plans
+README.md
+scripts
+task-samples
+test-results
+tsconfig.base.json
+vite.config.ts
+vitest.config.ts
+{
+  "name": "edulab",
+  "version": "0.0.1",
+  "description": "Learning-mode agent prototypes",
+  "type": "module",
+  "license": "UNLICENSED",
+  "private": true,
+  "engines": { "node": ">=24" },
+  "workspaces": ["packages/*"],
+  "scripts": {
+    "dev:frontend": "vite",
+    "dev:backend": "npm -w @edulab/backend run dev",
+    "dev": "npm run dev:frontend & npm run dev:backend",
+    "build": "vite build",
+    "test": "vitest run",
+    "test:e2e": "npm -w @edulab/e2e run test",
+    "typecheck": "npm -w @edulab/iso exec tsc -- --noEmit && npm -w @edulab/frontend exec tsc -- --noEmit && npm -w @edulab/backend exec tsc -- --noEmit && npm -w @edulab/e2e exec tsc -- --noEmit",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
+    "sync:transcripts": "./scripts/sync-transcripts.sh"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.4.11",
+    "typescript": "^5.9.3",
+    "vite": "^6.0.0",
+    "vitest": "^4.1.4"
+  }
+}
+---
+GATHERUS_PROD_DB=postgresql://gatherus_prod_user:[REDACTED]@dpg-d7ipmaqqqhas7398r1v0-a.oregon-postgres.render.com/gatherus_prod
+exit code 0

@@ -1,0 +1,49 @@
+$ cd /Users/denis.lantsman/src/edulab && find packages -name '*.ts' -not -path '*/node_modules/*' | xargs wc -l | sort -n && ls plans notes
+stdout:
+      12 packages/iso/protocol.ts
+      19 packages/e2e/tests/smoke.spec.ts
+      20 packages/frontend/main.ts
+      25 packages/backend/app.ts
+      42 packages/e2e/playwright.config.ts
+      45 packages/backend/socket.ts
+      51 packages/frontend/interactions.ts
+      55 packages/frontend/citation.ts
+      69 packages/frontend/samples/index.ts
+      86 packages/frontend/layout.test.ts
+      89 packages/frontend/citation.test.ts
+      97 packages/frontend/selection.test.ts
+     106 packages/frontend/layout.ts
+     111 packages/frontend/persistence.test.ts
+     116 packages/frontend/selection.ts
+     128 packages/frontend/interactions.test.ts
+     144 packages/frontend/threads.test.ts
+     176 packages/frontend/threads.ts
+     190 packages/frontend/persistence.ts
+     195 packages/frontend/graph.test.ts
+     198 packages/frontend/prompt.ts
+     218 packages/frontend/prompt.test.ts
+     224 packages/frontend/graph-tools.test.ts
+     242 packages/frontend/graph.ts
+     298 packages/frontend/graph-tools.ts
+     306 packages/e2e/tests/persistence.spec.ts
+     324 packages/frontend/learning.ts
+     605 packages/frontend/vamp.ts
+     670 packages/e2e/tests/graph.spec.ts
+     685 packages/frontend/thread.test.ts
+     713 packages/frontend/thread.ts
+     758 packages/e2e/tests/chat.spec.ts
+     783 packages/frontend/graph-view.ts
+     845 packages/frontend/prototypes/chat.ts
+    1389 packages/frontend/view.ts
+   10034 total
+notes:
+exploration.md
+studies.md
+plans:
+2026-09-04-prototype-scaffolding.md
+2026-09-05-domain-graph.md
+2026-09-05-interaction-graph-updates.md
+2026-09-05-localstorage-persistence.md
+2026-09-05-nested-learning-threads.md
+2026-09-05-thread-tools-yield.md
+exit code 0

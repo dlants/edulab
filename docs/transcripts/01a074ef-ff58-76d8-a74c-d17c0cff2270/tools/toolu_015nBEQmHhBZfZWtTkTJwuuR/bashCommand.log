@@ -1,0 +1,5 @@
+$ cd /Users/denis.lantsman/src/edulab && npm -w @edulab/e2e exec playwright test tests/chat.spec.ts -g "opens its own transcript"
+stderr:
+npm error Workspaces not supported for global packages
+npm error A complete log of this run can be found in: /Users/denis.lantsman/.npm/_logs/2026-09-06T04_23_09_978Z-debug-0.log
+exit code 1

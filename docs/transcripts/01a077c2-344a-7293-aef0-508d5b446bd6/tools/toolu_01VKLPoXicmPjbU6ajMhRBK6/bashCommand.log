@@ -1,0 +1,30 @@
+$ ls packages/frontend/src 2>/dev/null || find packages/frontend -name '*.ts' -not -path '*/node_modules/*'
+stdout:
+packages/frontend/interactions.test.ts
+packages/frontend/citation.test.ts
+packages/frontend/main.ts
+packages/frontend/learning.ts
+packages/frontend/prompt.test.ts
+packages/frontend/prompt.ts
+packages/frontend/interactions.ts
+packages/frontend/selection.ts
+packages/frontend/persistence.test.ts
+packages/frontend/threads.ts
+packages/frontend/view.ts
+packages/frontend/samples/index.ts
+packages/frontend/selection.test.ts
+packages/frontend/prototypes/chat.ts
+packages/frontend/graph.test.ts
+packages/frontend/graph.ts
+packages/frontend/layout.ts
+packages/frontend/layout.test.ts
+packages/frontend/threads.test.ts
+packages/frontend/persistence.ts
+packages/frontend/thread.test.ts
+packages/frontend/vamp.ts
+packages/frontend/thread.ts
+packages/frontend/graph-tools.test.ts
+packages/frontend/citation.ts
+packages/frontend/graph-view.ts
+packages/frontend/graph-tools.ts
+exit code 0

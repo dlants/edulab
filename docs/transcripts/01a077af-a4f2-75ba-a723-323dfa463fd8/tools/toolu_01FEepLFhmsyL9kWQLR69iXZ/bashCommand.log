@@ -1,0 +1,12 @@
+$ cd packages/frontend/prototypes && grep -n "state.anchor" chat.ts
+stdout:
+322:    state.anchor = anchor?.thread === focus ? anchor : null;
+518:    state.anchor = null;
+595:    state.anchor = null;
+641:        state.anchor = null;
+650:        state.anchor = null;
+661:        state.anchor = msg.anchor;
+666:        state.anchor = null;
+689:            const anchor = state.anchor;
+695:            state.anchor = null;
+exit code 0

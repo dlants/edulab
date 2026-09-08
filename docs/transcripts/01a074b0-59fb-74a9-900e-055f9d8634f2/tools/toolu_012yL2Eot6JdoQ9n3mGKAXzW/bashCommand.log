@@ -1,0 +1,30 @@
+$ cd /Users/denis.lantsman/src/edulab && sed -n 60,90p packages/frontend/prompt.ts
+stdout:
+/** The parent's transcript truncated after the message the selection ends in:
+ * nothing later than the passage is context for asking about it. */
+function visibleTo(
+  messages: ReadonlyArray<Message>,
+  anchor: Anchor,
+): ReadonlyArray<Message> {
+  return messages.slice(0, anchor.end.msg + 1);
+}
+function walk(
+  tree: ThreadTree,
+  id: ThreadId,
+  depth: number,
+  out: string[],
+): void {
+  const node = tree.get(id);
+  const origin = node.origin;
+  const quote = origin
+    ? anchorText(origin.anchor, tree.get(origin.anchor.thread).thread.messages)
+    : "";
+  const header = origin
+    ? `Follow-up thread (depth ${depth}) on "${quote}" - the user said: ${actionLabel(origin.action)}`
+    : "The task session:";
+  out.push(`${header}\n${transcript(node.thread.messages)}`);
+  for (const child of node.children) walk(tree, child, depth + 1, out);
+}
+/** Graph update mode: one detached pass over a single user interaction, whose
+ * only output is whatever it writes to the graph through its tools. */
+exit code 0

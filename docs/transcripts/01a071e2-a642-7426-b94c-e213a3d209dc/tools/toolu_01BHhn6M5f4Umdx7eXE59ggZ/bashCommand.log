@@ -1,0 +1,23 @@
+$ cd /Users/denis.lantsman/src/edulab && for f in task-samples/*.json; do echo "== $f"; node -e "const j=require('./$f');console.log(Object.keys(j), j.messages&&j.messages.length, j.messages&&j.messages[0]&&Object.keys(j.messages[0]))"; done
+stdout:
+== task-samples/357dee9a-statsforecast-zero-constraints.json
+[ 'hash', 'model', 'turns', 'messages' ] 40 [ 'role', 'content' ]
+== task-samples/37734816-colbert-raptor-rag-design.json
+[ 'hash', 'model', 'turns', 'messages' ] 50 [ 'role', 'content' ]
+== task-samples/3890541b-chiller-system-hysys-model.json
+[ 'hash', 'model', 'turns', 'messages' ] 52 [ 'role', 'content' ]
+== task-samples/44bbcae8-tile-adhesive-formulation.json
+[ 'hash', 'model', 'turns', 'messages' ] 46 [ 'role', 'content' ]
+== task-samples/5b878a60-solidity-guildtoken-audit.json
+[ 'hash', 'model', 'turns', 'messages' ] 52 [ 'role', 'content' ]
+== task-samples/72c7ec37-django-event-app-urls.json
+[ 'hash', 'model', 'turns', 'messages' ] 44 [ 'role', 'content' ]
+== task-samples/74979366-floating-dock-pontoon.json
+[ 'hash', 'model', 'turns', 'messages' ] 46 [ 'role', 'content' ]
+== task-samples/80e08978-quantum-espresso-burai-relaxation.json
+[ 'hash', 'model', 'turns', 'messages' ] 42 [ 'role', 'content' ]
+== task-samples/9833484b-c-heap-file-block-storage.json
+[ 'hash', 'model', 'turns', 'messages' ] 40 [ 'role', 'content' ]
+== task-samples/aa0cb918-statsforecast-polars-series-lengths.json
+[ 'hash', 'model', 'turns', 'messages' ] 46 [ 'role', 'content' ]
+exit code 0

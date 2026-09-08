@@ -1,0 +1,84 @@
+$ cd /Users/denis.lantsman/src/edulab && npm test --silent && npm run typecheck --silent && npm run lint --silent
+stdout:
+ RUN  v4.1.11 /Users/denis.lantsman/src/edulab
+ ✓ packages/frontend/prompt.test.ts (5 tests) 2ms
+ ✓ packages/frontend/selection.test.ts (8 tests) 2ms
+ ❯ packages/frontend/thread.test.ts (15 tests | 5 failed) 25033ms
+   ✓ accumulates deltas into the streaming assistant message 10ms
+   ✓ sends the whole thread with alternating roles on the second turn 0ms
+   ✓ ignores send while a turn is in flight 0ms
+   ✓ commits partial text when a turn ends in error 0ms
+   ✓ sends the seed as turn 0 but never renders it 0ms
+   × surfaces a streamed tool call with its json parsed 5007ms
+   × projects text and a tool call in one turn as two entries 5003ms
+   ✓ pairs a tool_result in the next user turn onto its call 1ms
+   ✓ leaves input undefined while the json is still streaming 1ms
+   × answers a tool call and re-requests with the result 5001ms
+   × turns a throwing tool and an unknown tool into error results 5002ms
+   × reports a tool call whose input never parsed as an error 5003ms
+   ✓ sends the configured tool specs, and none when there are none 1ms
+   ✓ ends the turn when a request errors mid tool call 1ms
+   ✓ drops the assistant turn when no text arrived 0ms
+stderr:
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 5 ⎯⎯⎯⎯⎯⎯⎯
+ FAIL  packages/frontend/thread.test.ts > surfaces a streamed tool call with its json parsed
+Error: Test timed out in 5000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+ ❯ packages/frontend/thread.test.ts:219:1
+    217| });
+    218|
+    219| it("surfaces a streamed tool call with its json parsed", async () => {
+       | ^
+    220|   const { socket, thread } = setup();
+    221|   const turn = thread.send("hi");
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/5]⎯
+ FAIL  packages/frontend/thread.test.ts > projects text and a tool call in one turn as two entries
+Error: Test timed out in 5000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+ ❯ packages/frontend/thread.test.ts:240:1
+    238| });
+    239|
+    240| it("projects text and a tool call in one turn as two entries", async (…
+       | ^
+    241|   const { socket, thread } = setup();
+    242|   const turn = thread.send("hi");
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/5]⎯
+ FAIL  packages/frontend/thread.test.ts > answers a tool call and re-requests with the result
+Error: Test timed out in 5000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+ ❯ packages/frontend/thread.test.ts:361:1
+    359| }
+    360|
+    361| it("answers a tool call and re-requests with the result", async () => {
+       | ^
+    362|   const socket = new FakeSocket();
+    363|   const thread = new Thread(socket, {
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/5]⎯
+ FAIL  packages/frontend/thread.test.ts > turns a throwing tool and an unknown tool into error results
+Error: Test timed out in 5000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+ ❯ packages/frontend/thread.test.ts:390:1
+    388| });
+    389|
+    390| it("turns a throwing tool and an unknown tool into error results", asy…
+       | ^
+    391|   const socket = new FakeSocket();
+    392|   const thread = new Thread(socket, {
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/5]⎯
+ FAIL  packages/frontend/thread.test.ts > reports a tool call whose input never parsed as an error
+Error: Test timed out in 5000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+ ❯ packages/frontend/thread.test.ts:426:1
+    424| });
+    425|
+    426| it("reports a tool call whose input never parsed as an error", async (…
+       | ^
+    427|   const socket = new FakeSocket();
+    428|   const thread = new Thread(socket, {
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/5]⎯
+stdout:
+ Test Files  1 failed | 2 passed (3)
+      Tests  5 failed | 23 passed (28)
+   Start at  07:10:34
+   Duration  25.19s (transform 86ms, setup 0ms, import 211ms, tests 25.04s, environment 0ms)
+exit code 1

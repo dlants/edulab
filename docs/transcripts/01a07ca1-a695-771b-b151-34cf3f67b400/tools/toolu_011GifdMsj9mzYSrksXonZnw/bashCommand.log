@@ -1,0 +1,12 @@
+$ cd /Users/denis.lantsman/src/edulab/packages/backend && (node app.ts > /tmp/be.log 2>&1 &) ; sleep 2; node -e '
+const WebSocket=require("ws");
+const t=(q,l)=>new Promise(r=>{const w=new WebSocket("ws://localhost:3000/api/socket"+q);w.on("open",()=>{console.log(l,"open");w.close();r()});w.on("close",(c)=>{console.log(l,"close",c);r()});w.on("error",()=>{})});
+(async()=>{await t("?password=[REDACTED]","good");await t("?password=nope","bad");await t("","none")})()'; pkill -f "node app.ts"
+stdout:
+good open
+good close 1005
+bad open
+bad close 4401
+none open
+none close 4401
+exit code 1

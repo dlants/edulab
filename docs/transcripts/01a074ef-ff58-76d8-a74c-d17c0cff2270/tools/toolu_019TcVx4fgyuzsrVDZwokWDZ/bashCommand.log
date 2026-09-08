@@ -1,0 +1,11 @@
+$ cd /Users/denis.lantsman/src/edulab && sed -n '180,190p' packages/e2e/tests/chat.spec.ts
+stdout:
+}
+/** The left pane's transcript. The right pane renders its own <ul>. */
+function taskTranscript(page: Page) {
+  return page.locator("ul").first();
+}
+const SENTENCE = "the quick brown fox jumps over the lazy dog";
+/** A transcript with one user message of known text, in learning mode. */
+async function transcript(page: Page, chunks: string[] = ["ok"]) {
+exit code 0

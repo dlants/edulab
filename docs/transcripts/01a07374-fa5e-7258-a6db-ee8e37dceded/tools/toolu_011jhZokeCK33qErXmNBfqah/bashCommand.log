@@ -1,0 +1,61 @@
+$ cd /Users/denis.lantsman/src/edulab && sed -n '60,124p' packages/frontend/threads.test.ts
+stdout:
+const SCHEMA: Anthropic.Tool.InputSchema = {
+  type: "object",
+  properties: { grade: { type: "string" } },
+  required: ["grade"],
+};
+/** A tree whose root has one committed user turn, so there is something to
+ * anchor a child onto. */
+function setup() {
+  const socket = new FakeSocket();
+  const root = new Thread(socket, { initialTurns: [] });
+  const tree = new ThreadTree(socket, root, () => {});
+  void root.send("the quick brown fox");
+  const anchor: Anchor = {
+    thread: tree.root,
+    start: { msg: 0, offset: 0 },
+    end: { msg: 0, offset: 9 },
+  };
+  return { socket, tree, anchor };
+}
+it("passes a yield schema to a child and surfaces its settled value", async () => {
+  const { socket, tree, anchor } = setup();
+  const child = tree.open(anchor, { type: "quiz" }, { yieldSchema: SCHEMA });
+  const turn = tree.get(child).thread.start();
+  expect(socket.last.params.tools).toEqual([
+    { name: "yield", description: expect.any(String), input_schema: SCHEMA },
+  ]);
+  socket.yields({ grade: "got it" });
+  expect(await turn).toEqual({
+    type: "yielded",
+    value: { type: "structured", value: { grade: "got it" } },
+  });
+  expect(tree.result(child)).toEqual({
+    type: "yielded",
+    value: { type: "structured", value: { grade: "got it" } },
+  });
+});
+it("offers no tools to a child opened without any", () => {
+  const { socket, tree, anchor } = setup();
+  const child = tree.open(anchor, { type: "explain" });
+  void tree.get(child).thread.start();
+  expect(socket.last.params.tools).toBeUndefined();
+});
+it("sends a child's tools on its first request, and none for the root task thread", () => {
+  const { socket, tree, anchor } = setup();
+  expect(socket.last.params.tools).toBeUndefined();
+  const graph = new KnowledgeGraph();
+  const child = tree.open(
+    anchor,
+    { type: "explain" },
+    {
+      tools: readTools(graph),
+      graph: graph.render(),
+    },
+  );
+  void tree.get(child).thread.start();
+  expect(socket.last.params.tools?.map((t) => t.name)).toEqual(["get"]);
+  expect(tree.get(child).thread.seed).toContain(graph.render());
+});
+exit code 0

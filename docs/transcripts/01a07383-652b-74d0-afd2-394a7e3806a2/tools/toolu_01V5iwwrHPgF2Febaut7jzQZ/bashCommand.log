@@ -1,0 +1,28 @@
+$ cd /Users/denis.lantsman/src/edulab/plans && f=2026-09-05-interaction-reflection.md && sed -i '' \
+ -e 's/REFLECT_SYSTEM/GRAPH_UPDATE_SYSTEM/g' \
+ -e 's/reflectPrompt/graphUpdatePrompt/g' \
+ -e 's/`reflect(thread, index)`/`queueGraphUpdate(thread, index)`/g' \
+ -e 's/reflections/knowledge graph update threads/g' \
+ -e 's/Reflections/Knowledge graph update threads/g' \
+ -e 's/a reflection/a graph update/g' \
+ -e 's/A reflection/A graph update/g' \
+ -e 's/the reflection/the graph update/g' \
+ -e 's/The reflection/The graph update/g' \
+ -e 's/each reflection/each graph update/g' \
+ -e 's/one reflection/one graph update/g' \
+ -e 's/two reflections/two graph updates/g' \
+ -e 's/reflection N+1/update N+1/g' \
+ -e 's/reflection/graph update/g' \
+ -e 's/Reflection/Graph update/g' \
+ $f && mv $f 2026-09-05-interaction-graph-updates.md && grep -in "reflect" 2026-09-05-interaction-graph-updates.md
+stdout:
+8:> - instead of pushing the whole thread it at once, I want to traverse every user interaction, and ask the agent to just reflect on that interaction in the context of the domain graph.
+49:**Knowledge graph update threads are serialized.** They are kicked off concurrently with the learning thread but queued against *each other*: `chat.ts` keeps a promise chain and appends to it, so update N+1 starts only once N has settled. Two knowledge graph update threads in flight would each be handed the pre-update graph overview and would happily mint rival nodes for the same concept, which is the exact failure the graph-in-the-prompt exists to prevent. A user who types faster than the model can reflect just builds a short queue; nothing is dropped and nothing is shown to them about it.
+51:**Context is the whole thread prefix.** The cheap thing — sending only the turn and a window around it — is an optimization, and optimizing before we know whether the model can produce good notes at all is backwards. So a graph update sees everything that led to the interaction: its thread's seed and its transcript from the top. The interaction ends at the user's turn; what the agent says back is not evidence about the user, and the reflecting model is the same model, so it can infer the shape of the reply without being shown it. Quadratic in tokens over a thread, and at prototype scale affordable.
+61:**Citations ground the notes.** A note that says "shaky on websocket framing" is unfalsifiable; a note that says it and points at the turn where the user said so is evidence. Every rendered transcript block carries its address — `@message:t0:3`, the thread id the tree already mints plus the index into `Thread.messages` — and `GRAPH_UPDATE_SYSTEM` requires that a claim about the user's understanding cite the interaction it came from. The address is free: the dispatch knows exactly which thread and index it is reflecting on.
+71:Alternatives rejected: reflecting on thread *close* or on some idle timer (there is no close, and an idle timer is a batch with extra steps); running the graph update as a tool call inside the learning thread (it would spend the user's latency and put the student model in the same context as the answer, which is exactly the entanglement the two-mode split exists to avoid); parallel knowledge graph update threads (duplicate nodes, as above).
+147:- Every user interaction produces exactly one graph update: one per submitted turn, one per opened learning thread. Nothing is reflected on twice, and nothing reflects on the agent's own turns.
+186:## reflect on every interaction
+192:  - Clicking "I don't understand this" likewise reflects, with the opening as the interaction.
+194:  - A graph update whose thread errors leaves the transcript and the graph usable, and the next interaction still reflects.
+exit code 0

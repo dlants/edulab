@@ -1,0 +1,7 @@
+$ cd /Users/denis.lantsman/src/edulab/packages/e2e/tests && grep -n "@playwright/test" *.spec.ts
+stdout:
+chat.spec.ts:3:import { expect, type Page, test } from "@playwright/test";
+graph.spec.ts:2:import { expect, type Page, test } from "@playwright/test";
+persistence.spec.ts:3:import { expect, type Page, test } from "@playwright/test";
+smoke.spec.ts:1:import { expect, test } from "@playwright/test";
+exit code 0

@@ -1,0 +1,67 @@
+$ cd /Users/denis.lantsman/src/edulab/packages/e2e && sed -n '240,300p;361,380p' tests/chat.spec.ts
+stdout:
+  await input.fill("second");
+  await input.press("Enter");
+  await expect(taskTranscript(page).locator("li")).toHaveCount(4);
+  expect(backend.started).toHaveLength(2);
+  expect(JSON.parse(backend.started[1])).toHaveLength(3);
+});
+test("a live selection overlapping a mark offers no actions", async ({
+  page,
+}) => {
+  await transcript(page);
+  const explain = page.getByRole("button", {
+    name: "I don't understand this.",
+  });
+  await selectRange(page, 0, 0, 9);
+  await explain.click();
+  await expect(page.locator("[data-mark]")).toHaveCount(1);
+  await selectRange(page, 0, 4, 15);
+  await expect(
+    page.getByText("Select a non-overlapping section."),
+  ).toBeVisible();
+  await expect(explain).toBeHidden();
+  await selectRange(page, 0, 10, 19);
+  await expect(explain).toBeVisible();
+});
+test("two marks in one message are both clickable", async ({ page }) => {
+  await transcript(page);
+  const explain = page.getByRole("button", {
+    name: "I don't understand this.",
+  });
+  const opening = threadTranscript(page).locator("li").first();
+  await selectRange(page, 0, 0, 9);
+  await explain.click();
+  await selectRange(page, 0, 16, 19);
+  await page.getByRole("button", { name: "Quiz me on this." }).click();
+  const marks = page.locator("[data-mark]");
+  await expect(marks).toHaveCount(2);
+  await expect(marks.nth(0)).toHaveText("the quick");
+  await expect(marks.nth(1)).toHaveText("fox");
+  await marks.nth(0).click();
+  await expect(opening).toContainText("I don't understand this.");
+  await marks.nth(1).click();
+  await expect(opening).toContainText("Quiz me on this.");
+});
+test("an action opens a thread seeded with the selected passage", async ({
+  page,
+}) => {
+  const backend = await transcript(page);
+  const sent = backend.started.length;
+  await selectRange(page, 0, 4, 19);
+const REPLY = "alpha beta gamma delta";
+function explainButton(page: Page) {
+  return page.getByRole("button", { name: "I don't understand this." });
+}
+function quizButton(page: Page) {
+  return page.getByRole("button", { name: "Quiz me on this." });
+}
+function deeper(page: Page) {
+  return page.getByRole("button", { name: /→/ });
+}
+function back(page: Page) {
+  return page.getByRole("button", { name: "Back" });
+}
+/** A `start` frame's seed turn - the context, without the ask that follows it. */
+function seedOf(backend: { started: string[] }, i: number): string {
+exit code 0

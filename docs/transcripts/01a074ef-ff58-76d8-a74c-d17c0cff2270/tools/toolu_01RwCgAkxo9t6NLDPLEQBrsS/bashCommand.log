@@ -1,0 +1,11 @@
+$ cd /Users/denis.lantsman/src/edulab && sed -i '' 's/edulab:v1:/edulab:v2:/g' packages/e2e/tests/persistence.spec.ts && npm -w @edulab/e2e exec playwright test tests/persistence.spec.ts
+stdout:
+Running 6 tests using 6 workers
+  ✓  3 tests/persistence.spec.ts:270:1 › an unreadable snapshot is dropped and the app comes up bare (334ms)
+  ✓  6 tests/persistence.spec.ts:202:1 › an interaction whose update never finished is re-enqueued (1.8s)
+  ✓  4 tests/persistence.spec.ts:153:1 › a reload keeps the transcript, the graph and the update chips (1.9s)
+  ✓  5 tests/persistence.spec.ts:289:1 › Reset clears this sample's state for good (1.9s)
+  ✓  1 tests/persistence.spec.ts:180:1 › a reload keeps a learning thread behind its mark (2.0s)
+  ✓  2 tests/persistence.spec.ts:228:1 › a build interrupted by a refresh resumes where it stopped (6.2s)
+  6 passed (7.6s)
+exit code 0

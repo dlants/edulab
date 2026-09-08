@@ -1,0 +1,131 @@
+$ cd /Users/denis.lantsman/src/edulab && sed -n '40,200p' packages/frontend/prompt.ts
+stdout:
+  const sections = [];
+  // Only the topmost learning thread renders the graph: a deeper thread's
+  // `seed` is its parent's, which already carries it, and repeating it would
+  // show the model the same overview once per level.
+  if (seed) sections.push(seed);
+  else if (graph)
+    sections.push(`What this user already understands:\n${graph}`);
+  sections.push(transcript(visibleTo(messages, anchor)));
+  return sections.join("\n\n");
+}
+/** The user's opening turn: the passage they highlighted and what they asked
+ * of it. Visible, because it is an interaction like any other. */
+export function askTurn(
+  anchor: Anchor,
+  messages: ReadonlyArray<Message>,
+  action: Action,
+): string {
+  const quote = anchorText(anchor, visibleTo(messages, anchor));
+  return `Selected: "${quote}"\n\n${ask(action)}`;
+}
+/** The parent's transcript truncated after the message the selection ends in:
+ * nothing later than the passage is context for asking about it. */
+function visibleTo(
+  messages: ReadonlyArray<Message>,
+  anchor: Anchor,
+): ReadonlyArray<Message> {
+  return messages.slice(0, anchor.end.msg + 1);
+}
+/** Graph update mode: one detached pass over a single user interaction, whose
+ * only output is whatever it writes to the graph through its tools. */
+export const GRAPH_UPDATE_SYSTEM = [
+  "You maintain a knowledge graph of what one user understands. You are shown",
+  "a single interaction that user just made, in the context of the thread it",
+  "happened in and the graph as it stands.",
+  "",
+  "Ask: what domain concepts is this interaction about, are they in the graph",
+  "already, what understanding does the user demonstrate here, and does",
+  "anything here read as a gap or a misconception. A node is a concept - an",
+  "idea a person can understand or fail to understand - never a file, a",
+  "message or a line of code. Set `level` from what the interaction reveals,",
+  "on the scale 1 unfamiliar, 2 emerging, 3 working, 4 fluent. The scale",
+  "cannot express a misconception - a confidently held wrong belief reads as",
+  "fluent - so put misconceptions, and anything else about how this user holds",
+  "the idea, in `notes`.",
+  "",
+  "Touch only what this interaction is about; leave the rest of the graph",
+  "alone. Keep the graph small and coarse: update the node that already covers",
+  "a concept rather than minting a second one for it, and split a concept only",
+  "when the split expresses something real about this user's understanding. A",
+  "concept the user merely brushed past does not need a node.",
+  "",
+  "Most interactions reveal nothing. If this one does not, change nothing and",
+  "yield: doing nothing is the expected outcome, not a failure. Nothing you",
+  "say outside the tools is read.",
+].join(" ");
+/** Two blocks: the cacheable prefix - the base prompt, the thread's seed and
+ * the transcript before the turn, all of which every earlier interaction in
+ * this thread shares - then the volatile tail, which starts with the graph
+ * because the previous update just rewrote it. */
+export function graphUpdatePrompt(
+  interaction: Interaction,
+  graph: string,
+): Anthropic.ContentBlockParam[] {
+  const prefix = [GRAPH_UPDATE_PREAMBLE];
+  if (interaction.prefix.seed)
+    prefix.push(`How this thread was framed:\n${interaction.prefix.seed}`);
+  if (interaction.prefix.messages.length > 0)
+    prefix.push(
+      `The thread up to this interaction:\n${transcript(interaction.prefix.messages)}`,
+    );
+  return [
+    {
+      type: "text",
+      text: prefix.join("\n\n"),
+      cache_control: { type: "ephemeral" },
+    },
+    {
+      type: "text",
+      text: [
+        `The knowledge graph as it stands:\n${graph}`,
+        `The interaction:\nUser: ${interaction.text}`,
+        GRAPH_UPDATE_QUESTIONS,
+      ].join("\n\n"),
+    },
+  ];
+}
+const GRAPH_UPDATE_PREAMBLE =
+  "Below is one interaction a user made while an engineering agent worked on a task for them, and the context it happened in.";
+const GRAPH_UPDATE_QUESTIONS = [
+  "What domain concepts does this interaction touch, and are they in the",
+  "graph? What understanding does it demonstrate, and what does it suggest",
+  "the user is missing? Update the graph so it reflects that, and nothing",
+  "else - then yield.",
+].join(" ");
+function transcript(messages: ReadonlyArray<Message>): string {
+  return messages
+    .map((m) => `${m.role === "user" ? "User" : "Assistant"}: ${line(m)}`)
+    .join("\n\n");
+}
+function line(message: Message): string {
+  return message.type === "text"
+    ? message.text
+    : `[called tool ${message.call.name} with ${message.call.inputJson}]`;
+}
+/** How the thread was opened, shown at the top of its pane so the user can see
+ * what they asked for. */
+export function actionLabel(action: Action): string {
+  switch (action.type) {
+    case "explain":
+      return "I don't understand this.";
+    case "quiz":
+      return "Quiz me on this.";
+    case "query":
+      return action.text;
+  }
+}
+/** What the user is asking for, in their own voice: this is a user turn now,
+ * not a briefing written about them. */
+function ask(action: Action): string {
+  switch (action.type) {
+    case "explain":
+      return "I don't understand this. Explain what it means and why it is there.";
+    case "quiz":
+      return "Quiz me on this. Ask one question that checks whether I understand it, and wait for my answer.";
+    case "query":
+      return action.text;
+  }
+}
+exit code 0

@@ -1,0 +1,97 @@
+$ cd /Users/denis.lantsman/src/edulab && sed -n '5,12p;66,102p;348,405p' packages/frontend/thread.test.ts
+stdout:
+import {
+  type Socket,
+  Thread,
+  type Tool,
+  type ToolResult,
+  toolset,
+} from "./thread.ts";
+function toolCall(
+  socket: FakeSocket,
+  index: number,
+  id: string,
+  name: string,
+  chunks: string[],
+) {
+  socket.deliver({
+    type: "content_block_start",
+    index,
+    content_block: {
+      type: "tool_use",
+      id,
+      name,
+      input: {},
+      caller: { type: "direct" },
+    },
+  });
+  for (const partial_json of chunks) {
+    socket.deliver({
+      type: "content_block_delta",
+      index,
+      delta: { type: "input_json_delta", partial_json },
+    });
+  }
+}
+/** Lets the thread's tool execution and follow-up request run. */
+function flush(): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, 0));
+}
+function setup() {
+  const socket = new FakeSocket();
+  return { socket, thread: new Thread(socket) };
+}
+function tool(
+  name: string,
+  execute: (input: Record<string, unknown>) => Promise<ToolResult>,
+): Tool {
+  return {
+    spec: {
+      name,
+      description: name,
+      input_schema: { type: "object", properties: {} },
+    },
+    execute,
+  };
+}
+/** Streams a complete tool call and ends the request. */
+function toolTurn(
+  socket: FakeSocket,
+  calls: ReadonlyArray<{ id: string; name: string; json: string }>,
+) {
+  calls.forEach((call, index) => {
+    toolCall(socket, index, call.id, call.name, [call.json]);
+    socket.deliver({ type: "content_block_stop", index });
+  });
+  socket.deliver({ type: "message_stop" } as Anthropic.RawMessageStreamEvent);
+}
+it("answers a tool call and re-requests with the result", async () => {
+  const socket = new FakeSocket();
+  const thread = new Thread(socket, {
+    tools: toolset(
+      tool("read", async () => ({ status: "ok", text: "contents" })),
+    ),
+  });
+  const turn = thread.send("hi");
+  toolTurn(socket, [{ id: "t1", name: "read", json: '{"path":"a.txt"}' }]);
+  await flush();
+  socket.stream(["done"]);
+  await turn;
+  expect(socket.sent).toHaveLength(2);
+  expect(socket.sent[1]?.params.messages.at(-1)).toEqual({
+    role: "user",
+    content: [
+      {
+        type: "tool_result",
+        tool_use_id: "t1",
+        content: "contents",
+        is_error: false,
+      },
+    ],
+  });
+  expect(thread.inFlight).toBe(false);
+});
+it("turns a throwing tool and an unknown tool into error results", async () => {
+  const socket = new FakeSocket();
+  const thread = new Thread(socket, {
+exit code 0

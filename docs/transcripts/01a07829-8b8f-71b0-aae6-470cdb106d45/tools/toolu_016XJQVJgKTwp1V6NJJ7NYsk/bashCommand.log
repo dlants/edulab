@@ -1,0 +1,4 @@
+$ cd /Users/denis.lantsman/src/edulab && perl -0pi -e 's/  \}\n  \/\*\*/  }\n\n  \/**/g' packages/frontend/threads.ts && grep -n "^  }" -A1 packages/frontend/threads.ts | grep -c ""
+stdout:
+38
+exit code 0

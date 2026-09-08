@@ -1,0 +1,98 @@
+$ cd /Users/denis.lantsman/src/edulab && find packages -type f -not -path "*/node_modules/*" -not -path "*/dist/*" | sort && echo "---" && cat package.json && echo "---PLANS---" && ls plans/ && echo "---" && wc -l packages/*/src/**/*.ts 2>/dev/null || find packages -name "*.ts" -not -path "*/node_modules/*" | xargs wc -l
+stdout:
+packages/backend/app.ts
+packages/backend/package.json
+packages/backend/socket.ts
+packages/backend/tsconfig.json
+packages/e2e/package.json
+packages/e2e/playwright.config.ts
+packages/e2e/test-results/.last-run.json
+packages/e2e/tests/chat.spec.ts
+packages/e2e/tests/smoke.spec.ts
+packages/e2e/tsconfig.json
+packages/frontend/index.html
+packages/frontend/learning.ts
+packages/frontend/main.ts
+packages/frontend/package.json
+packages/frontend/prompt.test.ts
+packages/frontend/prompt.ts
+packages/frontend/prototypes/chat.ts
+packages/frontend/samples/357dee9a-statsforecast-zero-constraints.json
+packages/frontend/samples/37734816-colbert-raptor-rag-design.json
+packages/frontend/samples/3890541b-chiller-system-hysys-model.json
+packages/frontend/samples/44bbcae8-tile-adhesive-formulation.json
+packages/frontend/samples/5b878a60-solidity-guildtoken-audit.json
+packages/frontend/samples/72c7ec37-django-event-app-urls.json
+packages/frontend/samples/74979366-floating-dock-pontoon.json
+packages/frontend/samples/80e08978-quantum-espresso-burai-relaxation.json
+packages/frontend/samples/9833484b-c-heap-file-block-storage.json
+packages/frontend/samples/aa0cb918-statsforecast-polars-series-lengths.json
+packages/frontend/samples/index.ts
+packages/frontend/selection.test.ts
+packages/frontend/selection.ts
+packages/frontend/thread.test.ts
+packages/frontend/thread.ts
+packages/frontend/threads.test.ts
+packages/frontend/threads.ts
+packages/frontend/tsconfig.json
+packages/frontend/vamp.ts
+packages/frontend/view.ts
+packages/iso/package.json
+packages/iso/protocol.ts
+packages/iso/tsconfig.json
+---
+{
+  "name": "edulab",
+  "version": "0.0.1",
+  "description": "Learning-mode agent prototypes",
+  "type": "module",
+  "license": "UNLICENSED",
+  "private": true,
+  "engines": { "node": ">=24" },
+  "workspaces": ["packages/*"],
+  "scripts": {
+    "dev:frontend": "vite",
+    "dev:backend": "npm -w @edulab/backend run dev",
+    "dev": "npm run dev:frontend & npm run dev:backend",
+    "build": "vite build",
+    "test": "vitest run",
+    "test:e2e": "npm -w @edulab/e2e run test",
+    "typecheck": "npm -w @edulab/iso exec tsc -- --noEmit && npm -w @edulab/frontend exec tsc -- --noEmit && npm -w @edulab/backend exec tsc -- --noEmit && npm -w @edulab/e2e exec tsc -- --noEmit",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
+    "sync:transcripts": "./scripts/sync-transcripts.sh"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.4.11",
+    "typescript": "^5.9.3",
+    "vite": "^6.0.0",
+    "vitest": "^4.1.4"
+  }
+}
+---PLANS---
+2026-09-04-prototype-scaffolding.md
+2026-09-05-nested-learning-threads.md
+2026-09-05-thread-tools-yield.md
+---
+      20 packages/frontend/main.ts
+     137 packages/frontend/learning.ts
+     103 packages/frontend/prompt.test.ts
+      72 packages/frontend/prompt.ts
+     116 packages/frontend/selection.ts
+     114 packages/frontend/threads.ts
+     698 packages/frontend/view.ts
+      65 packages/frontend/samples/index.ts
+      97 packages/frontend/selection.test.ts
+     184 packages/frontend/prototypes/chat.ts
+     105 packages/frontend/threads.test.ts
+     592 packages/frontend/thread.test.ts
+     573 packages/frontend/vamp.ts
+     610 packages/frontend/thread.ts
+      12 packages/iso/protocol.ts
+      45 packages/backend/socket.ts
+      25 packages/backend/app.ts
+      19 packages/e2e/tests/smoke.spec.ts
+     485 packages/e2e/tests/chat.spec.ts
+      42 packages/e2e/playwright.config.ts
+    4114 total
+exit code 0

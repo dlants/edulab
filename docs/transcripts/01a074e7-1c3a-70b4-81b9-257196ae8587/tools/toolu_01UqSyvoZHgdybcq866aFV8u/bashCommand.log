@@ -1,0 +1,69 @@
+$ cd /Users/denis.lantsman/src/edulab && sed -n 600,660p packages/frontend/view.ts && grep -n "data-update\|data-change\|data-build\|updateStatus\|buildStatus" packages/frontend/view.ts
+stdout:
+      clipped && !expanded ? `… ${this.hiddenLines} more lines` : "";
+  }
+  destroy(): void {
+    this.b.cleanup();
+    this.container.innerHTML = "";
+  }
+}
+/** The newest block is expanded by default - it is the one being written, and
+ * clipping it hides the work as it lands. The toggle still applies, so the user
+ * can collapse it; membership in the set flips the default either way. */
+function lastExpanded(
+  expanded: ReadonlySet<number>,
+  index: number,
+  count: number,
+): boolean {
+  return expanded.has(index) !== (index === count - 1);
+}
+/** The account, next to the turn that caused it, of what the system just
+ * concluded about the user. "No changes" is the common case and is worth saying
+ * out loud rather than leaving a chip to vanish. */
+function updateStatus(update: GraphUpdate | null): string {
+  if (!update) return "";
+  if (update.type === "running") return "updating the knowledge graph…";
+  return update.changes.length === 0
+    ? "no knowledge graph changes"
+    : "knowledge graph:";
+}
+function resultText(message: Message): string {
+  if (message.type !== "tool_use") return "";
+  const result = message.call.result;
+  if (!result) return "";
+  return result.status === "ok" ? result.text : result.error;
+}
+export type ThreadPaneState = {
+  messages: ReadonlyArray<Message>;
+  inFlight: boolean;
+  draft: string;
+  expanded: ReadonlySet<number>;
+  updates: Updates;
+};
+export type ThreadPaneMsg =
+  | { type: "DRAFT_CHANGED"; draft: string }
+  | { type: "SUBMIT" }
+  | { type: "TOGGLE_EXPANDED"; index: number }
+  | { type: "CHANGE_CLICKED"; id: GraphId };
+/** A learning thread on the right: the passage it came from, its transcript,
+ * and a composer. Read-only as far as selection goes - only the left pane
+ * captures one. */
+class ThreadPane implements View<ThreadPaneState, ThreadPaneMsg> {
+  container: HTMLElement;
+  private b: Binder<ThreadPaneState>;
+  constructor(
+    container: HTMLElement,
+121:const buildStatusClass = cls("build-status");
+198:.${buildStatusClass} {
+435:    container.setAttribute("data-change", "");
+489:    const updateStatusRef = ref("update-status");
+511:      <div class="${updateClass}" data-update data-ref="${updateRef}">
+512:        <span data-update-status data-ref="${updateStatusRef}"></span>
+550:    this.b.bindText(updateStatusRef, (s) => updateStatus(s.update));
+623:function updateStatus(update: GraphUpdate | null): string {
+760:    const buildStatusRef: Ref = ref("build-status");
+770:        <button type="button" data-build data-ref="${buildRef}">Build knowledge graph from this transcript</button>
+771:        <span class="${buildStatusClass}" data-build-status data-ref="${buildStatusRef}"></span>
+897:    this.b.bindText(buildStatusRef, (s) => buildStatus(s.build));
+978:function buildStatus(build: Build): string {
+exit code 0

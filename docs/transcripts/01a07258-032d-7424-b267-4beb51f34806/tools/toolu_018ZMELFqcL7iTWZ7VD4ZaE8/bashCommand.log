@@ -1,0 +1,33 @@
+$ cd /Users/denis.lantsman/src/edulab && grep -rn "prototype\.md" --include=* -l . | grep -v node_modules
+stdout:
+./context.md
+./plans/2026-09-04-prototype-scaffolding.md
+./docs/transcripts/01a06fe2-028f-713c-9d93-de57b1631f51/conversation.jsonl
+./docs/transcripts/01a07039-f345-74ba-8ac2-66d6e0c92aed/conversation.jsonl
+./docs/transcripts/01a06fd9-f5c3-7160-9c5a-9346e82ba68a/conversation.jsonl
+./docs/transcripts/01a07044-33b9-76ef-9127-8aff3d6090ea/conversation.jsonl
+./docs/transcripts/01a06fd9-e266-715c-87e4-4f62556eaab5/conversation.jsonl
+./docs/transcripts/01a06fd9-e266-715c-87e4-4f62556eaab5/tools/toolu_01Rh8aAoc6EYo9BBLsyh3wuS/bashCommand.log
+./docs/transcripts/01a06fd9-e266-715c-87e4-4f62556eaab5/tools/toolu_01NaH3Sjamdcz3VFLf558SGc/bashCommand.log
+./docs/transcripts/01a071d2-d244-7009-b24a-5271da1b3361/conversation.jsonl
+./docs/transcripts/01a071bf-597d-7589-838a-1dd82a5dabb5/conversation.jsonl
+./docs/transcripts/01a06fa0-2a7e-700c-a1d7-1d05876ee2bb/conversation.jsonl
+./docs/transcripts/01a06fa0-2a7e-700c-a1d7-1d05876ee2bb/tools/toolu_014FXHFMzYtBra1BHHUXFR2J/bashCommand.log
+./docs/transcripts/01a07002-c45e-74bf-8535-1f74aeff3421/conversation.jsonl
+./docs/transcripts/01a06fe0-a518-720b-822b-7fe833daf692/conversation.jsonl
+./docs/transcripts/01a071d2-d246-7144-865d-9a403cc90cf5/conversation.jsonl
+./docs/transcripts/01a071d3-8170-760f-a2c8-767f91129f02/conversation.jsonl
+./docs/transcripts/01a071d3-8170-760f-a2c8-767f91129f02/tools/toolu_011uhtWWGJCMvKaYJAfwzp9k/bashCommand.log
+./docs/transcripts/01a07039-cd76-72ec-b8e0-3dd95451c722/conversation.jsonl
+./docs/transcripts/01a06fe2-9750-7150-8898-a2438b7ee2e2/conversation.jsonl
+./docs/transcripts/01a071cd-d7cb-7540-8cff-8cdf36666435/conversation.jsonl
+./docs/transcripts/01a07040-9e4b-7168-9a48-4df8c29e793f/conversation.jsonl
+./docs/transcripts/01a0703b-86b6-7799-9b08-e51121690118/conversation.jsonl
+./docs/transcripts/01a0700b-ae3b-7751-a85f-d886dd9fcfee/conversation.jsonl
+./docs/transcripts/01a0700b-ae3b-7751-a85f-d886dd9fcfee/tools/toolu_01XoPZXvsGfP95EzjDTF8fJn/bashCommand.log
+./docs/transcripts/01a071d4-e04d-7288-9714-26caf5e424e0/conversation.jsonl
+./docs/transcripts/01a06fda-0cf1-7626-9b2d-8468390b6c69/conversation.jsonl
+./docs/transcripts/01a06fda-0cf1-7626-9b2d-8468390b6c69/tools/toolu_01JSsfQEypt8HpuPBLkdn5m4/bashCommand.log
+./docs/transcripts/01a071d2-d246-7144-865d-9d65df68851e/conversation.jsonl
+./.git/index
+exit code 0

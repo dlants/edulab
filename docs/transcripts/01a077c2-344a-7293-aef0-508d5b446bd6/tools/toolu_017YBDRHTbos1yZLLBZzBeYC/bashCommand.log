@@ -1,0 +1,82 @@
+$ cd /Users/denis.lantsman/src/edulab/packages/e2e && sed -i '' 's|page.getByRole("button", { name: "Settings" })|page.locator("summary")|' tests/graph.spec.ts tests/persistence.spec.ts && cd /Users/denis.lantsman/src/edulab && npm run test:e2e
+stdout:
+> edulab@0.0.1 test:e2e
+> npm -w @edulab/e2e run test
+> @edulab/e2e@0.0.1 test
+> playwright test
+Running 45 tests using 7 workers
+  ✓   4 tests/chat.spec.ts:247:1 › a second turn sends the full thread (367ms)
+  ✓   6 tests/chat.spec.ts:233:1 › the composer is disabled while a turn is in flight (405ms)
+  ✓   2 tests/chat.spec.ts:217:1 › streams a response into the transcript (388ms)
+  ✓   5 tests/chat.spec.ts:310:1 › an action opens a thread seeded with the selected passage (527ms)
+  ✓   1 tests/chat.spec.ts:265:1 › a live selection overlapping a mark offers no actions (536ms)
+  ✓   3 tests/chat.spec.ts:337:1 › a follow-up in the thread pane re-sends the seed (537ms)
+  ✓   9 tests/chat.spec.ts:408:1 › the arrows name the layer and stop at the ends (233ms)
+  ✓   7 tests/chat.spec.ts:287:1 › two marks in one message are both clickable (647ms)
+  ✓   8 tests/chat.spec.ts:356:1 › clicking a mark reopens its thread without a new request (335ms)
+  ✓  13 tests/chat.spec.ts:506:1 › a selection at layer 0 opens a thread from the popup (220ms)
+  ✓  10 tests/chat.spec.ts:425:1 › a thread opened at depth carries both selections once (395ms)
+  ✓  11 tests/chat.spec.ts:461:1 › a descended thread shows what it was opened from, in its transcript (327ms)
+  ✓  15 tests/chat.spec.ts:519:1 › the popup's own question hands off to the pane's composer (251ms)
+  ✓  14 tests/chat.spec.ts:533:1 › a selection in the reflect thread opens the layer below it (332ms)
+  ✓  12 tests/chat.spec.ts:480:1 › ← climbs back without losing threads or highlights (481ms)
+  ✓  19 tests/chat.spec.ts:683:1 › a turn shows its graph update working, then what it changed (203ms)
+  ✓  17 tests/chat.spec.ts:571:1 › a tool call is rendered and text above it stays selectable (301ms)
+  ✓  18 tests/chat.spec.ts:596:1 › a new selection leaves committed marks rendered (296ms)
+  ✓  16 tests/chat.spec.ts:549:1 › nesting goes three deep (414ms)
+  ✓  21 tests/chat.spec.ts:722:1 › an update that writes nothing says so (161ms)
+  ✓  20 tests/chat.spec.ts:699:1 › the update behind a turn opens its own transcript on the right (283ms)
+  ✓  22 tests/graph.spec.ts:92:1 › switching tabs leaves the transcript and the graph intact (288ms)
+  ✓  23 tests/graph.spec.ts:113:1 › clicking a node fills the sidebar and a retitle keeps its edges (283ms)
+  ✓  24 tests/graph.spec.ts:136:1 › a duplicate title is rejected without losing the draft (282ms)
+  ✓  26 tests/graph.spec.ts:159:1 › an edge is selectable and editable (313ms)
+  ✓  25 tests/graph.spec.ts:149:1 › deleting a node takes its edges with it (326ms)
+  ✓  28 tests/graph.spec.ts:202:1 › dragging the canvas pans the graph but still selects on a click (351ms)
+  ✓  31 tests/graph.spec.ts:399:1 › a failed graph update leaves the app usable (186ms)
+  ✓  27 tests/graph.spec.ts:183:1 › zooming spreads the nodes without resizing them, and reset restores (427ms)
+  ✓  29 tests/graph.spec.ts:342:1 › every interaction updates the graph, one update at a time (254ms)
+  ✓  30 tests/graph.spec.ts:368:1 › opening a learning thread updates the graph from its ask (320ms)
+  ✓  36 tests/graph.spec.ts:525:1 › a citation that does not resolve is left as text (262ms)
+  ✓  38 tests/graph.spec.ts:657:1 › clicking a change opens the graph tab with that node selected (196ms)
+  ✓  37 tests/graph.spec.ts:638:1 › an address written by a graph update navigates back to its turn (338ms)
+  ✓  33 tests/graph.spec.ts:441:1 › a failed update mid-build does not stop the ones after it (482ms)
+  ✓  35 tests/graph.spec.ts:503:1 › a cited message is one click away from the note that rests on it (401ms)
+  ✓  34 tests/graph.spec.ts:454:1 › interacting mid-build interleaves rather than races (488ms)
+  ✓  43 tests/persistence.spec.ts:270:1 › an unreadable snapshot is dropped and the app comes up bare (156ms)
+  ✓  45 tests/smoke.spec.ts:9:1 › streams a real response end to end (1.4s)
+  ✓  41 tests/persistence.spec.ts:202:1 › an interaction whose update never finished is re-enqueued (1.6s)
+  ✓  39 tests/persistence.spec.ts:153:1 › a reload keeps the transcript, the graph and the update chips (1.7s)
+  ✓  40 tests/persistence.spec.ts:180:1 › a reload keeps a learning thread behind its mark (1.8s)
+  ✓  44 tests/persistence.spec.ts:289:1 › Reset clears this sample's state for good (1.7s)
+  ✓  42 tests/persistence.spec.ts:228:1 › a build interrupted by a refresh resumes where it stopped (2.0s)
+  ✘  32 tests/graph.spec.ts:423:1 › building from a sample transcript walks its turns once (5.2s)
+  1) tests/graph.spec.ts:423:1 › building from a sample transcript walks its turns once ────────────
+    Error: expect(locator).toBeDisabled() failed
+    Locator: getByRole('button', { name: /Build knowledge graph/ })
+    Expected: disabled
+    Timeout: 5000ms
+    Error: element(s) not found
+    Call log:
+      - Expect "toBeDisabled" getByRole('button', { name: /Build knowledge graph/ }) with timeout 5000ms
+      - waiting for getByRole('button', { name: /Build knowledge graph/ })
+      428 |   await openMenu(page);
+      429 |   await buildButton(page).click();
+    > 430 |   await expect(buildButton(page)).toBeDisabled();
+          |                                   ^
+      431 |   await expect(page.locator("[data-build-status]")).toHaveText(
+      432 |     new RegExp(`^\\d+ / ${SAMPLE_TURNS} interactions$`),
+      433 |   );
+        at /Users/denis.lantsman/src/edulab/packages/e2e/tests/graph.spec.ts:430:35
+    Error Context: test-results/graph-building-from-a-sample-transcript-walks-its-turns-once/error-context.md
+  1 failed
+    tests/graph.spec.ts:423:1 › building from a sample transcript walks its turns once ─────────────
+  44 passed (8.2s)
+stderr:
+npm error Lifecycle script `test` failed with error:
+npm error code 1
+npm error path /Users/denis.lantsman/src/edulab/packages/e2e
+npm error workspace @edulab/e2e@0.0.1
+npm error location /Users/denis.lantsman/src/edulab/packages/e2e
+npm error command failed
+npm error command sh -c playwright test
+exit code 1

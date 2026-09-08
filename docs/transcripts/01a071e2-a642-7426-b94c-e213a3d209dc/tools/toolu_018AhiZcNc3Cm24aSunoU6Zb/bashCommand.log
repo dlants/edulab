@@ -1,0 +1,15 @@
+$ cd /Users/denis.lantsman/src/edulab && cp task-samples/*.json packages/frontend/samples/ && grep -n "sample" packages/frontend/view.ts
+stdout:
+7:import { samples } from "./samples/index.ts";
+33:  sample: string;
+81:const sampleClass = cls("sample");
+136:.${sampleClass} {
+436:    const sampleRef: Ref = ref("sample");
+441:        <select class="${sampleClass}" data-ref="${sampleRef}"></select>
+480:    // bound; switching sample is a page navigation anyway.
+481:    const picker = this.b.ref<HTMLSelectElement>(sampleRef);
+486:    for (const sample of samples) {
+488:      option.value = sample.id;
+489:      option.textContent = sample.label;
+532:    this.b.bindValue(sampleRef, (s) => s.sample);
+exit code 0

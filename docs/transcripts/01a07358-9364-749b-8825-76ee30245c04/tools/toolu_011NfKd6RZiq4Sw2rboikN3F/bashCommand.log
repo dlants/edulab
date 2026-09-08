@@ -1,0 +1,4 @@
+$ cd /Users/denis.lantsman/src/edulab && grep -n "NodeTitle\|EdgeTitle\|EdgeKey\|rename\|by title" plans/2026-09-05-domain-graph.md
+stdout:
+58:**Identity is an id.** Nodes and edges are keyed by minted opaque ids (`n0`, `e0`), not by their titles. Titles are user- and agent-facing labels that can be edited freely: a rename is a field write, not a cascade, and nothing can dangle. Titles are still required to be unique among nodes — that is what makes the graph readable and stops the agent from minting the same concept twice — but uniqueness is a validated invariant rather than the addressing scheme. `read_graph` renders the id next to the title so the model can address anything it just read, and `put_node`/`put_edge` create when `id` is omitted and update when it is given. Several edges may join the same pair; they simply have different ids.
+exit code 0

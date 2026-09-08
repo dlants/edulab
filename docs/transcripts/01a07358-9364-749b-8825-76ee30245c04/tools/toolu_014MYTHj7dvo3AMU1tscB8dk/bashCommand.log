@@ -1,0 +1,7 @@
+$ grep -rn "ToolName\|Record<string, Tool>" packages/
+stdout:
+packages/frontend/threads.ts:14:  tools?: Record<string, Tool>;
+packages/frontend/thread.ts:70:  tools?: Record<string, Tool>;
+packages/frontend/thread.ts:124:  tools?: Record<string, Tool>;
+packages/frontend/thread.ts:204:  private readonly tools: Record<string, Tool>;
+exit code 0

@@ -1,0 +1,116 @@
+$ cd /Users/denis.lantsman/src/edulab && perl -0pi -e 's/expect\(call\.result\)/expect(call.call.result)/; s/expect\(yielded\.result\)/expect(yielded.call.result)/' packages/frontend/thread.test.ts && npm run typecheck && npx vitest run && npm run lint
+stdout:
+> edulab@0.0.1 typecheck
+> npm -w @edulab/iso exec tsc -- --noEmit && npm -w @edulab/frontend exec tsc -- --noEmit && npm -w @edulab/backend exec tsc -- --noEmit && npm -w @edulab/e2e exec tsc -- --noEmit
+ RUN  v4.1.11 /Users/denis.lantsman/src/edulab
+ ✓ packages/frontend/selection.test.ts (8 tests) 2ms
+ ✓ packages/frontend/prompt.test.ts (5 tests) 2ms
+ ✓ packages/frontend/thread.test.ts (20 tests) 22ms
+ Test Files  3 passed (3)
+      Tests  33 passed (33)
+   Start at  07:13:08
+   Duration  177ms (transform 92ms, setup 0ms, import 216ms, tests 26ms, environment 0ms)
+> edulab@0.0.1 lint
+> biome check .
+stderr:
+packages/frontend/thread.test.ts format ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  × Formatter would have printed the following content:
+    565 565 │   
+  );
+    566 566 │     if (yielded?.type !== "tool_use") throw new
+ Error("expected the yield call");
+  567     │ - ··expect(yielded.call.result).toEqual({·status:
+·"ok",·text:·"Yield·ac
+knowledged."·});
+      567 │ + ··expect(yielded.cal
+l.result).toEqual({
+        568 │ + 
+····status:·"ok",
+        569 │ 
++ ····text:·"Yi
+eld·acknowledg
+ed.",
+        570
+ │ + ··}
+);
+    568 571 │   });
+    569 572 │   
+packages/frontend/thread.ts format 
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  × Formatter would have printed the following content:
+     20  20 │     typ
+e: "object",
+     21  21 │     pr
+operties: {
+     22    
+ │ - ····re
+sult:·{·type:·"string",·desc
+ription:·"The·re
+sult·to·return
+·to·who
+ever·spawned·this·
+thread."·},
+         22 │ +
+ ····result:·
+{
+         23 │ + ······t
+ype:·"string",
+    24 │ + ··
+····description:·"The·r
+esult·to·return·
+to·whoever·spa
+wned·this·thread.",
+     25 │ + ··
+··},
+     23  26 │   
+  },
+     24  27
+ │     required:
+ ["result"],
+    ······· │ 
+    250 253
+ │           
+  "Finish this thread an
+d return your result to whoever s
+pawned it. Cal
+l this exactly once, 
+when you are do
+ne; do not ca
+ll it before you have
+ finished the
+ work.",
+    251 
+254 │       
+    input_schema
+:
+    252     │ - 
+·········
+·this.yieldS
+chema·===·"text"
+    253 
+    │ - ·····
+·······?·DEFA
+ULT_YIELD_SCHEMA
+    254 
+    │ - ····
+········:·thi
+s.yieldSchem
+a,
+        255 │ + ···
+·······this.yield
+Schema·===·"
+text"·?·DEFAUL
+T_YIELD_SCHEMA
+·:·this.yiel
+dSchema,
+    255 256
+ │         });
+    256 
+257 │       }
+stdout:
+Checked 39 files in 110ms. No fixes applied.
+Found 2 errors.
+stderr:
+check ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  × Some errors were emitted while running checks.
+exit code 1

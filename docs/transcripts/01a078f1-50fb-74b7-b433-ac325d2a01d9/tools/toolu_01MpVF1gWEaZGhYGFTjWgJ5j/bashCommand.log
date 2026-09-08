@@ -1,0 +1,9 @@
+$ grep -l "pool\|rank\|longest\|first_user" /Users/denis.lantsman/src/edulab/docs/transcripts/01a06fe2-9750-7150-8898-a2438b7ee2e2/tools/*/bashCommand.log 2>/dev/null
+stdout:
+/Users/denis.lantsman/src/edulab/docs/transcripts/01a06fe2-9750-7150-8898-a2438b7ee2e2/tools/toolu_013edtDQpi39CZfv2ew49dQY/bashCommand.log
+/Users/denis.lantsman/src/edulab/docs/transcripts/01a06fe2-9750-7150-8898-a2438b7ee2e2/tools/toolu_017ZKi4zmVsETP31Yet4aBug/bashCommand.log
+/Users/denis.lantsman/src/edulab/docs/transcripts/01a06fe2-9750-7150-8898-a2438b7ee2e2/tools/toolu_019PznEboJTdtfxoS1tvNwLB/bashCommand.log
+/Users/denis.lantsman/src/edulab/docs/transcripts/01a06fe2-9750-7150-8898-a2438b7ee2e2/tools/toolu_01G99o4nFWR2XyL3Wk5xs9vM/bashCommand.log
+/Users/denis.lantsman/src/edulab/docs/transcripts/01a06fe2-9750-7150-8898-a2438b7ee2e2/tools/toolu_01QrDBQp1mZTa19etd7nwadp/bashCommand.log
+/Users/denis.lantsman/src/edulab/docs/transcripts/01a06fe2-9750-7150-8898-a2438b7ee2e2/tools/toolu_01SK5d6LTwFYQAPGNNn68gKS/bashCommand.log
+exit code 0

@@ -1,0 +1,60 @@
+$ cd ~/src/edulab && render blueprints validate -o text; npm run typecheck && npm run lint
+stdout:
+{
+  "errors": [
+    {
+      "column": 13,
+      "error": "cannot find repo: not found: https://api.github.com/repos/dlants/edulab",
+      "line": 11,
+      "path": "projects[0].environments[0].services[0]"
+    }
+  ],
+  "valid": false
+}
+> edulab@0.0.1 typecheck
+> npm -w @edulab/iso exec tsc -- --noEmit && npm -w @edulab/frontend exec tsc -- --noEmit && npm -w @edulab/backend exec tsc -- --noEmit && npm -w @edulab/e2e exec tsc -- --noEmit
+> edulab@0.0.1 lint
+> biome check .
+stderr:
+packages/backend/app.ts:1:1 assist/source/organizeImports  FIXABLE  
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  × Sort these imports.
+  > 1 │ import path from "node:path";
+      │ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 2 │ import { fileURLToPath } from "node:url";
+  > 3 │ import dotenv from "dotenv";
+  > 4 │ import Fastify from "fastify";
+  > 5 │ import { registerStatic } from "./static.ts";
+  > 6 │ import { registerSocket } from "./socket.ts";
+      │ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^
+    7 │ 
+    8 │ dotenv.config({
+  i Safe fix: Organize imports and exports (Biome)
+     3  3 │   import dotenv from "dotenv";
+     4  4 │   import Fastify from "fastify";
+     5    │ -
+ import·{·registerS
+tatic·}·from·"./stat
+ic.ts";
+     6    │ - import·{·register
+Socket·}·from·
+"./socket.ts";
+        5 │ + import·{
+·registerSocket·}·f
+rom·"./socket
+.ts";
+        6 │ + import
+·{·registerStatic
+·}·from·"./s
+tatic.ts";
+     7  7 │   
+     8  8 │   do
+tenv.config({
+stdout:
+Checked 58 files in 140ms. No fixes applied.
+Found 1 error.
+stderr:
+check ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  × Some errors were emitted while running checks.
+exit code 1

@@ -1,0 +1,312 @@
+$ cd /Users/denis.lantsman/src/edulab && npm run typecheck && npm test && npm run lint
+stdout:
+> edulab@0.0.1 typecheck
+> npm -w @edulab/iso exec tsc -- --noEmit && npm -w @edulab/frontend exec tsc -- --noEmit && npm -w @edulab/backend exec tsc -- --noEmit && npm -w @edulab/e2e exec tsc -- --noEmit
+> edulab@0.0.1 test
+> vitest run
+ RUN  v4.1.11 /Users/denis.lantsman/src/edulab
+ ✓ packages/frontend/graph.test.ts (10 tests) 3ms
+ ✓ packages/frontend/selection.test.ts (8 tests) 2ms
+ ✓ packages/frontend/layout.test.ts (7 tests) 7ms
+ ✓ packages/frontend/persistence.test.ts (4 tests) 3ms
+ ✓ packages/frontend/prompt.test.ts (14 tests) 4ms
+ ✓ packages/frontend/graph-tools.test.ts (8 tests) 14ms
+ ✓ packages/frontend/citation.test.ts (4 tests) 12ms
+ ✓ packages/frontend/interactions.test.ts (4 tests) 12ms
+ ✓ packages/frontend/threads.test.ts (4 tests) 11ms
+ ✓ packages/frontend/thread.test.ts (24 tests) 26ms
+ Test Files  10 passed (10)
+      Tests  87 passed (87)
+   Start at  21:14:19
+   Duration  196ms (transform 423ms, setup 0ms, import 818ms, tests 94ms, environment 0ms)
+> edulab@0.0.1 lint
+> biome check .
+stderr:
+packages/e2e/tests/persistence.spec.ts format ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  × Formatter would have printed the following content:
+    114 114 │   
+115 115 │   /** Selects characters [start, end) of 
+message `msg`, as the app captu
+res it. */
+    116     │ - async·function·selectRange
+(page:·Page,·msg:·n
+umber,·start:·
+number,·end:·number)·{
+116 │ + async·f
+unction·sele
+ctRange
+(
+ 117 │ + ··page:·Page,
+      118 │ + ··
+msg:·number
+,
+        119 │ +
+ ··start:·number,
+      120 │ + ·
+·end:·numb
+er,
+121 │ + )·{
+    117 122 │     await page.
+evaluate(
+    118 
+123 │      
+ ({ ms
+g, start, end })
+ => {
+    ·······
+ │ 
+    244 249 │   
+      thre
+ads: { log
+: { role: string }[
+] }[];
+    245 
+250 │     
+  };
+    246    
+ │ - ····const·ask
+s·=·snapsho
+t.threads[0
+].log.filt
+er((t)·=>·t.r
+ole·===·"us
+er").lengt
+h;
+        251
+ │ + ····const·ask
+s·=·snapshot.
+threads[0]
+.log.filter(
+        252 │ 
++ ······(t)·=>·t.role·===·"user",
+        253 │ + ····).length;
+    247 254 │    
+   snapshot.build = 
+{ type: "r
+unning", done: 0, 
+total: asks,
+ failed: 
+0 };
+248 255 │       l
+ocalStorage.
+setItem(k
+, JSON.st
+ringify(snapshot)
+);
+    ······· │ 
+275 282 │     aw
+ait graphTab(pa
+ge).click();
+    276 283 │ 
+    await e
+xpect(pag
+e.locator(
+"[data-node]")).to
+HaveCoun
+t(0);
+    277     │ 
+- ··expect(
+    278
+     │ - 
+····await·pa
+ge.evaluat
+e((key)·=>·localS
+torage.getIt
+em(key),·
+KEY),
+    279 
+    │ - ··).not.
+toBe("{·not·
+json");
+    284 │ +
+ ··expect(a
+wait·page.
+evaluate(
+(key)·=>
+·localStorage.getI
+tem(key),·
+KEY)).not
+.toBe(
+   285 │ + ····"{
+·not·json",
+        286 │ + 
+··);
+  280 287 │   });
+    281 
+288 │   
+packages/frontend/persistence.ts format ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  × Formatter would have printed the following content:
+      1   1 │   
+import type Anthropic from "@anth
+ropic-ai/sdk";
+  2     │ - i
+mport·type·{
+      3     │ - ··GraphCh
+ange,
+      4     │ - 
+··GraphSnapsh
+ot,
+      5    
+ │ - ··KnowledgeGraph,
+      6 
+    │ - }·from·".
+/graph.t
+s";
+    2 │ + import·type·{
+·GraphChange,
+·GraphSnap
+shot,·Kno
+wledgeGraph·}·from·"./g
+raph.ts";
+  7   3 │   
+import type 
+{ SampleId } from "./
+samples/inde
+x.ts";
+      8
+   4 │   i
+mport type { T
+hreadId } f
+rom "./sel
+ection.ts"
+;
+packages/frontend/prototypes/chat.ts
+:
+1:1 assist/source/organizeImports  FIXABLE  ━━━━━━━━━━━━━━━━━━━
+  × Sort these imports.
+   > 1 │ import { type Citation, parse, resol
+ve } from "../citation.ts
+";
+       │ ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^
+^
+   > 2 │ import {
+   > 3 │ 
+  type Gra
+phChange,
+   > 4 │ 
+  type Graph
+Edge,
+        ...
+  > 26 │ impo
+rt { interactionA
+t } from "
+../interactions.ts";
+  > 27 │ impor
+t { layout, 
+type Position } from
+ "../layout.
+ts";
+       │ ^^^^^^^^^
+^^^^^^^^^^^^^^
+^^^^^^
+^^^^^^^
+^^^^^^^^^^^^^^^^^
+    28 │ impo
+rt { GRAPH_
+UPDATE_SYSTEM, grap
+hUpdateProm
+pt } from
+ "../prom
+pt.ts";
+    29 │ impor
+t {
+  i Safe fix: Organize imports and exports (Biome)
+     17  17 │   } from
+ "../graph-view.ts";
+     18  18 │   
+import {
+ IDENTI
+TY_VIEWPORT, panZoom 
+} from "../
+graph-vie
+w.ts";
+ 19     │ - import·
+{
+     20     │ - 
+··type
+·InteractionAddres
+s,
+     21     │ -
+ ··interac
+tionAddre
+sses,
+     22     │ - 
+··loadSnap
+shot,
+     23
+     │ - ··saveSn
+apshot,
+     24 
+    │ - 
+··toSnapshot,
+     25  
+   │ - }·fr
+om·"../pers
+istence.ts";
+     26
+     │ - 
+import·{·in
+teractionA
+t·}·from·"../int
+eractions.
+ts";
+     27  
+   │ - 
+import·{·layout,·
+type·Positio
+n·}·from·"
+../layout.ts";
+     19 │ + 
+import·{
+·interact
+ionAt·}·from·"../
+interactio
+ns.ts";
+         20 │ + 
+import·{·layou
+t,·type·Po
+sition·}·fro
+m·"../layout.ts"
+;
+         21 │ +
+ import
+·{
+         22 │ + ·
+·type·Interacti
+onAddress
+,
+         23 │ + ·
+·interacti
+onAddress
+es,
+   24 │ + ··loadS
+napshot,
+     25 │ + 
+··saveSnapshot,
+         26 │ + 
+··toSna
+pshot,
+         27 │ + 
+}·from·"
+../persist
+ence.ts";
+     28  28
+ │   impo
+rt { GRAPH_
+UPDATE_S
+YSTEM, graphUpdat
+ePrompt } f
+rom "../pr
+ompt.ts";
+     29  29
+ │   impo
+rt {
+stdout:
+Checked 55 files in 122ms. No fixes applied.
+Found 3 errors.
+stderr:
+check ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  × Some errors were emitted while running checks.
+exit code 1

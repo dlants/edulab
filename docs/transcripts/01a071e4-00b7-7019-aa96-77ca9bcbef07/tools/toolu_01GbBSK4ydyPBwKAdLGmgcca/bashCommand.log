@@ -1,0 +1,7 @@
+$ cd /Users/denis.lantsman/src/edulab && npm run typecheck && npm test && npm run lint
+stdout:
+> edulab@0.0.1 typecheck
+> npm -w @edulab/iso exec tsc -- --noEmit && npm -w @edulab/frontend exec tsc -- --noEmit && npm -w @edulab/backend exec tsc -- --noEmit && npm -w @edulab/e2e exec tsc -- --noEmit
+thread.test.ts(70,5): error TS2322: Type '{ type: "tool_use"; id: string; name: string; input: {}; }' is not assignable to type 'TextBlock | ThinkingBlock | RedactedThinkingBlock | ToolUseBlock | ServerToolUseBlock | ... 6 more ... | ContainerUploadBlock'.
+  Property 'caller' is missing in type '{ type: "tool_use"; id: string; name: string; input: {}; }' but required in type 'ToolUseBlock'.
+exit code 2

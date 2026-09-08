@@ -1,0 +1,11 @@
+$ cd /Users/denis.lantsman/src/edulab && npm run typecheck
+stdout:
+> edulab@0.0.1 typecheck
+> npm -w @edulab/iso exec tsc -- --noEmit && npm -w @edulab/frontend exec tsc -- --noEmit && npm -w @edulab/backend exec tsc -- --noEmit && npm -w @edulab/e2e exec tsc -- --noEmit
+prompt.ts(32,52): error TS2345: Argument of type '{ role: "user" | "assistant"; text: string; }[]' is not assignable to parameter of type 'readonly Message[]'.
+  Type '{ role: "user" | "assistant"; text: string; }' is not assignable to type 'Message'.
+    Property 'type' is missing in type '{ role: "user" | "assistant"; text: string; }' but required in type '{ type: "text"; role: "user" | "assistant"; text: string; }'.
+threads.ts(54,9): error TS2345: Argument of type 'readonly Message[]' is not assignable to parameter of type 'readonly { role: "user" | "assistant"; text: string; }[]'.
+  Type 'Message' is not assignable to type '{ role: "user" | "assistant"; text: string; }'.
+    Property 'text' is missing in type '{ type: "tool_use"; role: "assistant"; call: ToolCall; }' but required in type '{ role: "user" | "assistant"; text: string; }'.
+exit code 2

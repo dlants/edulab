@@ -1,0 +1,8 @@
+$ cd /Users/denis.lantsman/src/edulab && git commit -am "Use haiku instead of opus" && git push
+stdout:
+[main 7499cf9] Use haiku instead of opus
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+stderr:
+To github.com:dlants/edulab.git
+   c86a7a1..7499cf9  main -> main
+exit code 0

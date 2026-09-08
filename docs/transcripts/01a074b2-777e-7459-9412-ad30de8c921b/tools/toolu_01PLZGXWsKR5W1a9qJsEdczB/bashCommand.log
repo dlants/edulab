@@ -1,0 +1,150 @@
+$ cd /Users/denis.lantsman/src/edulab && npm test && npm run typecheck && npm run lint
+stdout:
+> edulab@0.0.1 test
+> vitest run
+ RUN  v4.1.11 /Users/denis.lantsman/src/edulab
+ ✓ packages/frontend/graph.test.ts (9 tests) 3ms
+ ✓ packages/frontend/selection.test.ts (8 tests) 3ms
+ ✓ packages/frontend/layout.test.ts (7 tests) 7ms
+ ✓ packages/frontend/prompt.test.ts (14 tests) 4ms
+ ✓ packages/frontend/graph-tools.test.ts (7 tests) 15ms
+ ✓ packages/frontend/thread.test.ts (20 tests) 25ms
+ ✓ packages/frontend/citation.test.ts (4 tests) 12ms
+ ✓ packages/frontend/interactions.test.ts (4 tests) 14ms
+ ✓ packages/frontend/threads.test.ts (4 tests) 14ms
+ Test Files  9 passed (9)
+      Tests  77 passed (77)
+   Start at  20:11:50
+   Duration  227ms (transform 621ms, setup 0ms, import 953ms, tests 96ms, environment 0ms)
+> edulab@0.0.1 typecheck
+> npm -w @edulab/iso exec tsc -- --noEmit && npm -w @edulab/frontend exec tsc -- --noEmit && npm -w @edulab/backend exec tsc -- --noEmit && npm -w @edulab/e2e exec tsc -- --noEmit
+> edulab@0.0.1 lint
+> biome check .
+stderr:
+packages/frontend/citation.test.ts format ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  × Formatter would have printed the following content:
+    53 53 │   
+    54 54
+ │   it("splits prose into text and citation spans i
+n order", () 
+=> {
+    55    │ - 
+··expect(
+    56    │ - ····parse("shaky·on·@message
+:t0:3·but·fluent·in·
+@message:t1:0."
+),
+    57    │ - 
+··).toEqual([
+       55 │ + ··exp
+ect(parse("shaky·on·@message:t0:3·bu
+t·fluent·in·@message:t1:0.
+")).toEqual([
+  58 56 │     
+  { type: "t
+ext", text: "shaky on " },
+    59 57 │    
+   { typ
+e: "citat
+ion", citation: cite("
+t0", 3) },
+packages/frontend/citation.ts format ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  × Formatter would have printed the following content:
+    26 26 │     PATT
+ERN.lastIndex = 0;
+    27 27 │   
+  for (let m 
+= PATTERN.ex
+ec(text); m; m = PATTERN.e
+xec(text)) {
+    28    │ - 
+····i
+f·(m.index·>·at)
+·spans.push({
+·type:·"tex
+t",·text:
+·text.slic
+e(at,·m.index)·});
+       28 │ + 
+····if·(m.i
+ndex·>·at)
+       29 │ + ······
+spans.push({·
+type:·"tex
+t",·text:·
+text.slice(at,
+·m.index)·
+});
+    29 30
+ │       
+spans.push({
+    30 31 │      
+   type: "citatio
+n",
+packages/frontend/prompt.ts
+:
+1:1 assist/source/organizeImports
+  FIXABLE  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  × Sort these imports.
+  > 1 │ i
+mport type Anthropic from "@anthropic-ai/sdk";
+      │ ^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  > 2 │ import type
+ { Interaction } from ".
+/interactions.ts";
+  > 3 │ import
+ { citationText } f
+rom "./citatio
+n.ts";
+      │ ^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^
+4 │ import { type Anch
+or, anchorText
+, type Thr
+eadId } fro
+m "./selection.ts";
+  5 │ import t
+ype { Mes
+sage, MessageIdx 
+} from "./th
+read.ts";
+  i Safe fix: Organize imports and exports (Biome)
+      1   1 │   import ty
+pe Anthropic from "@anthropic-ai/sdk";
+      2     │ - 
+import·type·{·Interactio
+n·}·from·"./interactions.ts";
+      3     │ - import·
+{·citationText·}·f
+rom·"./citatio
+n.ts";
+    2 │ + import·{·citation
+Text·}·from·".
+/citation.t
+s";
+  3 │ + import·type·{·I
+nteraction·}·
+from·"./inte
+ractions.ts";
+      4   4
+ │   import { 
+type Anchor, a
+nchorText, type Threa
+dId } from "
+./selectio
+n.ts";
+  5   5 │   import ty
+pe { Message
+, Message
+Idx } from
+ "./thread.ts";
+stdout:
+Checked 52 files in 148ms. No fixes applied.
+Found 3 errors.
+stderr:
+check 
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  × Some errors were emitted while running checks.
+exit code 1

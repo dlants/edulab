@@ -1,0 +1,5 @@
+$ cd /Users/denis.lantsman/src/edulab/packages/frontend && grep -n "sanitize" vamp.ts
+stdout:
+492: * injected verbatim (not escaped) by `sanitize`. ONLY ever construct this from
+513:export function sanitize(
+exit code 0

@@ -1,0 +1,41 @@
+$ cd /Users/denis.lantsman/src/edulab && grep -n "^export\|^class\|^  [a-zA-Z]*(" packages/frontend/vamp.ts | sed -n 1,60p
+stdout:
+29:export type RequestStatus<T> =
+36:export interface View<State, _Message = never, _Ctx = unknown> {
+38:  sync(state: State): void;
+39:  destroy(): void;
+51:export type SlotContent = {
+56:export type KeyedSlotContent = {
+76:export const noop = () => {};
+85:export function show<ChildState, ChildMsg, ChildCtx>(
+104:export function showKeyed<ChildState, ChildMsg, ChildCtx>(
+127:export class Binder<State> {
+134:  constructor(container: HTMLElement, initialState: State) {
+148:  sync(state: State): void {
+153:  cleanup(): void {
+160:  bindText(ref: Ref, fn: (s: State) => string): void {
+169:  bindClass(refOrEl: Ref | HTMLElement, fn: (s: State) => string): void {
+179:  bindVisible(ref: Ref, fn: (s: State) => boolean): void {
+189:  bindStyle(ref: Ref, fn: (s: State) => Record<string, string>): void {
+195:  bindContainerStyle(fn: (s: State) => Record<string, string>): void {
+221:  bindValue(ref: Ref, fn: (s: State) => string): void {
+237:  bindChecked(ref: Ref, fn: (s: State) => boolean): void {
+246:  bindDisabled(ref: Ref, fn: (s: State) => boolean): void {
+257:  bindAttr(ref: Ref, attr: string, fn: (s: State) => string | undefined): void {
+269:  bindContainerAttr(attr: string, fn: (s: State) => string | undefined): void {
+281:  bindSlot(ref: Ref, fn: (s: State) => SlotContent | undefined): void {
+323:  bindList(
+476:export class RawHtml {
+478:  constructor(html: string) {
+484:export function raw(html: string): RawHtml {
+493:export function sanitize(
+521:export class PostRenderEventBus<Event> {
+526:  emit(event: Event): void {
+531:  subscribe(handler: (event: Event) => void): () => void {
+542:  flush(): void {
+555:export type Ref = string & { readonly __brand: "Ref" };
+560:export function ref(prefix: string): Ref {
+567:export function cls(prefix: string): string {
+576:export function scrollIntoView(el: HTMLElement): void {
+581:export function mountStyle(css: string): void {
+exit code 0

@@ -1,0 +1,152 @@
+$ cd /Users/denis.lantsman/src/edulab && sed -n 80,160p packages/e2e/tests/graph.spec.ts; sed -n 1,90p packages/e2e/tests/chat.spec.ts
+stdout:
+function nodes(page: Page) {
+  return page.locator("[data-node]");
+}
+async function open(page: Page) {
+  await backend(page);
+  await page.goto("/");
+  await seed(page);
+  await graphTab(page).click();
+}
+test("switching tabs leaves the transcript and the graph intact", async ({
+  page,
+}) => {
+  await backend(page);
+  await page.goto("/");
+  await page.getByRole("textbox").fill("hello");
+  await page.getByRole("textbox").press("Enter");
+  await expect(page.locator("ul").first().locator("li")).toHaveCount(2);
+  await seed(page);
+  await graphTab(page).click();
+  await expect(nodes(page)).toHaveCount(2);
+  await expect(page.locator("[data-edge]")).toHaveCount(1);
+  await threadsTab(page).click();
+  await expect(page.locator("ul").first().locator("li")).toHaveCount(2);
+  await graphTab(page).click();
+  await expect(nodes(page)).toHaveCount(2);
+});
+test("clicking a node fills the sidebar and a retitle keeps its edges", async ({
+  page,
+}) => {
+  await open(page);
+  await nodes(page).filter({ hasText: "closures" }).click();
+  await expect(page.locator("[data-graph-title]")).toHaveValue("closures");
+  await expect(page.locator("[data-graph-description]")).toHaveValue(
+    "a function plus its environment",
+  );
+  await expect(page.locator("[data-graph-notes]")).toHaveValue(
+    "asked about capture twice",
+  );
+  await expect(page.locator("[data-graph-level]")).toHaveValue("2");
+  await page.locator("[data-graph-title]").fill("lexical closures");
+  await page.getByRole("button", { name: "Save" }).click();
+  await expect(nodes(page)).toHaveText(["lexical closures", "scope"]);
+  await expect(page.locator("[data-edge]")).toHaveCount(1);
+  await expect(page.locator("[data-edge-label]")).toHaveText("builds on");
+});
+test("a duplicate title is rejected without losing the draft", async ({
+  page,
+}) => {
+  await open(page);
+  await nodes(page).filter({ hasText: "closures" }).click();
+  await page.locator("[data-graph-title]").fill("scope");
+  await page.getByRole("button", { name: "Save" }).click();
+  await expect(page.locator("[data-graph-error]")).toHaveText(/already used/);
+  await expect(page.locator("[data-graph-title]")).toHaveValue("scope");
+  await expect(nodes(page)).toHaveText(["closures", "scope"]);
+});
+test("deleting a node takes its edges with it", async ({ page }) => {
+  await open(page);
+  await nodes(page).filter({ hasText: "closures" }).click();
+  await page.getByRole("button", { name: "Delete" }).click();
+  await expect(nodes(page)).toHaveText(["scope"]);
+  await expect(page.locator("[data-edge]")).toHaveCount(0);
+  await expect(page.getByText("Click a node or an edge")).toBeVisible();
+});
+test("an edge is selectable and editable", async ({ page }) => {
+  await open(page);
+import type Anthropic from "@anthropic-ai/sdk";
+import type { ClientMessage, ServerFrame } from "@edulab/iso/protocol.ts";
+import { expect, type Page, test } from "@playwright/test";
+function events(chunks: string[]): Anthropic.RawMessageStreamEvent[] {
+  return [
+    {
+      type: "content_block_start",
+      index: 0,
+      content_block: { type: "text", text: "", citations: null },
+    },
+    ...chunks.map(
+      (text): Anthropic.RawMessageStreamEvent => ({
+        type: "content_block_delta",
+        index: 0,
+        delta: { type: "text_delta", text },
+      }),
+    ),
+    { type: "content_block_stop", index: 0 },
+    { type: "message_stop" } as Anthropic.RawMessageStreamEvent,
+  ];
+}
+/** A graph update runs on every interaction and is not what these specs are
+ * about: they are recognised by their write tools, answered with an immediate
+ * yield, and kept out of `started`. */
+function isGraphUpdate(message: ClientMessage): boolean {
+  return (message.params.tools ?? []).some((t) => t.name === "put_nodes");
+}
+function yieldEvents(): Anthropic.RawMessageStreamEvent[] {
+  return [
+    {
+      type: "content_block_start",
+      index: 0,
+      content_block: {
+        type: "tool_use",
+        id: "yield-1",
+        name: "yield",
+        input: {},
+      },
+    } as Anthropic.RawMessageStreamEvent,
+    {
+      type: "content_block_delta",
+      index: 0,
+      delta: { type: "input_json_delta", partial_json: '{"result":"ok"}' },
+    },
+    { type: "content_block_stop", index: 0 },
+    { type: "message_stop" } as Anthropic.RawMessageStreamEvent,
+  ];
+}
+/** Stand in for the backend: replay `chunks` one delta at a time, and expose a
+ * promise that resolves once the browser has sent its `start` frame. */
+async function fakeBackend(page: Page, chunks: string[]) {
+  let release!: () => void;
+  const gate = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  const started: string[] = [];
+  await page.routeWebSocket("**/api/socket", (ws) => {
+    ws.onMessage(async (raw) => {
+      const message = JSON.parse(String(raw)) as ClientMessage;
+      if (isGraphUpdate(message)) {
+        for (const event of yieldEvents()) {
+          ws.send(
+            JSON.stringify({
+              type: "event",
+              requestId: message.requestId,
+              event,
+            } satisfies ServerFrame),
+          );
+        }
+        return;
+      }
+      started.push(JSON.stringify(message.params.messages));
+      await gate;
+      const send = (frame: ServerFrame) => ws.send(JSON.stringify(frame));
+      for (const event of events(chunks)) {
+        send({ type: "event", requestId: message.requestId, event });
+      }
+      send({ type: "done", requestId: message.requestId });
+    });
+  });
+  return { release, started };
+}
+/** Answers the first request with prose plus a tool call, and every later one
+exit code 0

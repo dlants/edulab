@@ -1,0 +1,4 @@
+$ ls packages/frontend/src packages/frontend/src/prototypes 2>/dev/null; git -C . status --short
+stdout:
+ M notes/deliverable.md
+exit code 0

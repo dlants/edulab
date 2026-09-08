@@ -1,0 +1,4 @@
+$ cd /Users/denis.lantsman/src/edulab/packages/e2e && npx playwright test tests/graph.spec.ts --reporter=line
+stdout:
+Error: http://localhost:3100 is already used, make sure that nothing is running on the port/url or set reuseExistingServer:true in config.webServer.
+exit code 1

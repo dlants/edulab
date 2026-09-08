@@ -1,0 +1,131 @@
+$ cd /Users/denis.lantsman/src/edulab && npm run typecheck && npm test && npm run lint
+stdout:
+> edulab@0.0.1 typecheck
+> npm -w @edulab/iso exec tsc -- --noEmit && npm -w @edulab/frontend exec tsc -- --noEmit && npm -w @edulab/backend exec tsc -- --noEmit && npm -w @edulab/e2e exec tsc -- --noEmit
+> edulab@0.0.1 test
+> vitest run
+ RUN  v4.1.11 /Users/denis.lantsman/src/edulab
+ ✓ packages/frontend/graph.test.ts (10 tests) 4ms
+ ✓ packages/frontend/selection.test.ts (8 tests) 2ms
+ ✓ packages/frontend/layout.test.ts (7 tests) 7ms
+ ✓ packages/frontend/graph-tools.test.ts (8 tests) 14ms
+ ✓ packages/frontend/prompt.test.ts (14 tests) 3ms
+ ✓ packages/frontend/persistence.test.ts (4 tests) 3ms
+ ✓ packages/frontend/citation.test.ts (4 tests) 11ms
+ ✓ packages/frontend/interactions.test.ts (4 tests) 12ms
+ ✓ packages/frontend/threads.test.ts (4 tests) 11ms
+ ✓ packages/frontend/thread.test.ts (24 tests) 27ms
+ Test Files  10 passed (10)
+      Tests  87 passed (87)
+   Start at  21:07:50
+   Duration  235ms (transform 509ms, setup 0ms, import 1.19s, tests 93ms, environment 0ms)
+> edulab@0.0.1 lint
+> biome check .
+stderr:
+packages/frontend/threads.ts:1:1 assist/source/organizeImports  FIXABLE  
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  × Sort these imports.
+   > 1 │ import type Anthropic from "@anthropic-ai/sdk";
+       │ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   > 2 │ import {
+   > 3 │   type Action,
+   > 4 │   askTurn,
+   > 5 │   contextSeed,
+   > 6 │   LEARNING_SYSTEM,
+   > 7 │ } from "./prompt.ts";
+   > 8 │ import type { ThreadSnapshot } from "./p
+ersistence.ts";
+       │ ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     9 │ import type
+ { Anchor, Mark, ThreadId } from "./selection.ts";
+    10 │ import type { Tool, ToolName, TurnResult
+ } from "./thread.ts";
+  i Safe fix: Organize imports and exports (Biome)
+      1   1 │   import t
+ype Anthropic from "@anthropic-ai/sdk";
+      2     │ - import·{
+      3     │ - ··type·Ac
+tion,
+      4     │ - ··askTurn,
+      5   
+  │ - ··contextSeed,
+      6     │ - ··LEARNING_SYSTEM,
+      7     │ - }·from·".
+/prompt.ts";
+      8
+     │ - import·type·{·ThreadSna
+pshot·}·from·"./
+persisten
+ce.ts";
+          2 │ + i
+mport·type·{·Thr
+eadSnapshot·
+}·from·"./persistence.
+ts";
+          3 │ +
+ import·{
+          4 │ + ··ty
+pe·Action,
+          5 │ + ··as
+kTurn,
+          6 │ 
++ ··contex
+tSeed,
+          7 │ + ·
+·LEARNING_SYST
+EM,
+          8 │ 
++ }·from
+·"./prompt.ts"
+;
+      9   9 │   
+import type 
+{ Anchor, Mark, ThreadId
+ } from "./se
+lection.ts"
+;
+     10  10 │   import
+ type { Tool, To
+olName, Tur
+nResult } from "./thr
+ead.ts";
+packages/frontend/threads.ts format
+ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  × Formatter would have printed the following content:
+    141 141 │     
+  tree.threads.clear();
+    142 142 │ 
+      for (cons
+t snapshot of 
+snapshots) {
+    143     │ - ······const
+·thread·=
+    144   
+  │ - ·····
+···snapshot.id·==
+=·root·?·rootThread·:·th
+readOf(snapshot
+);
+        143 │ +
+ ······const
+·thread·=·snapshot.id·=
+==·root·?·
+rootThrea
+d·:·thread
+Of(snapshot
+);
+    145 144 │        
+ tree.threads.se
+t(snapshot.i
+d, tree.no
+de(snapshot, thread))
+;
+    146 145 │   
+    }
+stdout:
+Checked 54 files in 131ms. No fixes applied.
+Found 2 errors.
+stderr:
+check ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  × Some errors were emitted while running checks.
+exit code 1

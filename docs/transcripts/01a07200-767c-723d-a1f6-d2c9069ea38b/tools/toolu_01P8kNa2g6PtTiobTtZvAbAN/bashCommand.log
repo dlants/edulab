@@ -1,0 +1,8 @@
+$ cd /Users/denis.lantsman/src/edulab && git add -A && git commit -m "Add runThread: programmatic thread API with yield restarts" && git push
+stdout:
+[main 32e5787] Add runThread: programmatic thread API with yield restarts
+ 1 file changed, 68 insertions(+)
+stderr:
+To github.com:dlants/edulab.git
+   251d673..32e5787  main -> main
+exit code 0

@@ -1,0 +1,57 @@
+$ cd /Users/denis.lantsman/src/edulab && sed -n '1,60p' packages/frontend/threads.test.ts && grep -n "writeTools" packages/frontend/graph-tools.ts
+stdout:
+import type Anthropic from "@anthropic-ai/sdk";
+import type { ClientMessage } from "@edulab/iso/protocol.ts";
+import { expect, it } from "vitest";
+import { KnowledgeGraph } from "./graph.ts";
+import { readTools } from "./graph-tools.ts";
+import type { Anchor } from "./selection.ts";
+import { type Socket, Thread } from "./thread.ts";
+import { ThreadTree } from "./threads.ts";
+class FakeSocket implements Socket {
+  readonly sent: ClientMessage[] = [];
+  private readonly listeners: ((e: MessageEvent<string>) => void)[] = [];
+  send(data: string) {
+    this.sent.push(JSON.parse(data) as ClientMessage);
+  }
+  addEventListener(
+    _type: "message",
+    listener: (e: MessageEvent<string>) => void,
+  ) {
+    this.listeners.push(listener);
+  }
+  get last(): ClientMessage {
+    const last = this.sent[this.sent.length - 1];
+    if (!last) throw new Error("nothing sent");
+    return last;
+  }
+  deliver(event: Anthropic.RawMessageStreamEvent) {
+    const requestId = this.last.requestId;
+    const data = JSON.stringify({ type: "event", requestId, event });
+    for (const listener of [...this.listeners]) {
+      listener(new MessageEvent("message", { data }));
+    }
+  }
+  yields(input: Record<string, unknown>) {
+    this.deliver({
+      type: "content_block_start",
+      index: 0,
+      content_block: {
+        type: "tool_use",
+        id: "call-1",
+        name: "yield",
+        input: {},
+        caller: { type: "direct" },
+      },
+    });
+    this.deliver({
+      type: "content_block_delta",
+      index: 0,
+      delta: { type: "input_json_delta", partial_json: JSON.stringify(input) },
+    });
+    this.deliver({ type: "content_block_stop", index: 0 });
+    this.deliver({ type: "message_stop" } as Anthropic.RawMessageStreamEvent);
+  }
+}
+269:export function writeTools(graph: KnowledgeGraph): Record<ToolName, Tool> {
+exit code 0

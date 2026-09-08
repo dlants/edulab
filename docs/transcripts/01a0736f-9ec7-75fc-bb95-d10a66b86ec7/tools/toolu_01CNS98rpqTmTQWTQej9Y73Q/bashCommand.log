@@ -1,0 +1,288 @@
+$ cd /Users/denis.lantsman/src/edulab && npm test && npm run typecheck && npm run lint
+stdout:
+> edulab@0.0.1 test
+> vitest run
+ RUN  v4.1.11 /Users/denis.lantsman/src/edulab
+ ✓ packages/frontend/graph.test.ts (9 tests) 3ms
+ ✓ packages/frontend/prompt.test.ts (7 tests) 2ms
+ ✓ packages/frontend/selection.test.ts (8 tests) 2ms
+ ✓ packages/frontend/layout.test.ts (7 tests) 7ms
+ ✓ packages/frontend/graph-tools.test.ts (7 tests) 14ms
+ ✓ packages/frontend/threads.test.ts (3 tests) 11ms
+ ✓ packages/frontend/thread.test.ts (20 tests) 22ms
+ Test Files  7 passed (7)
+      Tests  61 passed (61)
+   Start at  14:18:49
+   Duration  196ms (transform 291ms, setup 0ms, import 637ms, tests 62ms, environment 0ms)
+> edulab@0.0.1 typecheck
+> npm -w @edulab/iso exec tsc -- --noEmit && npm -w @edulab/frontend exec tsc -- --noEmit && npm -w @edulab/backend exec tsc -- --noEmit && npm -w @edulab/e2e exec tsc -- --noEmit
+> edulab@0.0.1 lint
+> biome check .
+stderr:
+packages/frontend/layout.test.ts:24:46 lint/style/noNonNullAssertion ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  ! Forbidden non-null assertion.
+    22 │   const graph = new KnowledgeGraph();
+    23 │   const ids = Array.from({ length: n }, (_, i) => addNode(graph, `node ${i}`));
+  > 24 │   for (let i = 1; i < n; i++) addEdge(graph, ids[i - 1]!, ids[i]!);
+       │                                              ^^^^^^^^^^^
+    25 │ 
+  return graph;
+    26 │ };
+packages/frontend/layout.test.ts:24:59 lint/style/noNonNullAssertion ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  ! Forbidden non-null assertion.
+    22 │   const graph = new KnowledgeGraph();
+    23 │   const ids = Array.from({ length: n }, (_, i) => addNode(graph, `node ${i}`));
+  > 24 │   for (let 
+i = 1; i < n; i++) addEdge(gra
+ph, ids[i - 1]!, ids[
+i]!);
+       │                                                           ^^^^^^^
+25 │   return graph;
+26 │ };
+packages/frontend/layout.test.ts
+:76:16 lint/style/noNonNullAssertion ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  ! Forbidden non-null assertion.
+    74 │ 
+  const positions
+ = layout(grap
+h);
+    75 │   const dist = (
+p: NodeId, q: Node
+Id) => {
+  > 76 │     con
+st pp = positions.get(p)!;
+   │                
+^^^^^^^^^^^^
+^^^^^
+    77 │ 
+    const qq = posi
+tions.get(q)
+!;
+    78 │ 
+    return Math.
+hypot(pp.x - qq.x, pp.
+y - qq.y);
+packages/frontend/layout.test.ts:
+77:16 lint/style/noNonNullAssertion 
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  ! Forbidden non-null assertion.
+    75 │ 
+  const dist 
+= (p: NodeId, q: Node
+Id) => {
+76 │    
+ const 
+pp = positions.ge
+t(p)!;
+  > 77 │ 
+    cons
+t qq = posi
+tions.get(q)!;
+       │ 
+^^^^^^^^^
+^^^^^^^^
+78 │     return Mat
+h.hypot(pp.x
+ - qq.x, pp.y - qq.y);
+    79 │   };
+packages/frontend/layout.ts:16:19 lint/style/noNonNullAssertion ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  ! Forbidden non-null assertion.
+    14 │   if (ids.length === 0) return positions;
+    15 │   if 
+(ids.length === 1) {
+  > 16 │     positions.s
+et(ids[0]!, { x: 0.5, y: 0
+.5 });
+       │   
+ ^^^^^^^
+    17 │     
+return positions;
+    18 │ 
+  }
+packages/frontend/layout.ts
+:43:19 lint/style/noNonNullAssertion
+ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  ! Forbidden non-null assertion.
+    41 │  
+   for (let 
+i = 0; i < ids.leng
+th; i++)
+42 │    
+   for (
+let j = i
+ + 1; j < ids.length
+; j++) {
+  > 
+43 │       
+  const a = ids[i]!;
+       │        
+           ^^
+^^^^^
+    44 │        
+ const b = ids
+[j]!;
+    45 │ 
+        c
+onst { dx, dy, dist } 
+= delta(p
+ositions,
+ a, b, i, j
+);
+packages/frontend/layout.ts
+:44:19 lint/style/noNonNullAssertion ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  ! Forbidden non-null assertion.
+    42 │ 
+      for (
+let j = i + 1; j < 
+ids.length;
+ j++) {
+43 │     
+    const a
+ = ids[i
+]!;
+  > 44 │ 
+ const b 
+= ids[j]!;
+       │       
+^^^^^^^
+    45 │     
+    const { dx
+, dy, dist
+ } = delta
+(positions, a, b, 
+i, j);
+    46 │ 
+        c
+onst for
+ce = (k *
+ k) / dis
+t;
+packages/frontend/layout.ts
+:59:17 lint/style/noNonNullAssertion ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  ! Forbidden non-null assertion.
+    58 │    
+ for (cons
+t id of ids) {
+  > 
+59 │       c
+onst p = po
+sitions.ge
+t(id)!;
+       │      
+           ^^^^
+^^^^^^^^^^^
+^^^
+    60 │ 
+      const d = 
+disp.get(id)
+!;
+    61 │ 
+      const 
+len = Math.hypot(
+d.x, d.y) ||
+ 1;
+packages/frontend/layout.ts
+:60:17 lint/style/noNonNullAssertion 
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  ! Forbidden non-null assertion.
+  58 │     for (c
+onst id of i
+ds) {
+    59 │ 
+      co
+nst p = position
+s.get(id)!;
+  > 60 │  
+     const 
+d = disp.get(id)!;
+       │          
+       ^^^
+^^^^^^^^^
+^
+    61 │     
+  const len = 
+Math.hypot
+(d.x, d.y) || 1;
+62 │       
+const scale
+ = Math.
+min(len, temperatur
+e) / len;
+packages/frontend/layout.ts
+:80:14
+ lint/style/noNonNullAssertion ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  ! Forbidden non-null assertion.
+78 │   j:
+ number,
+    79 │ ):
+ { dx: number;
+ dy: number;
+ dist: number } {
+  > 80 │  
+ const pa = p
+ositions.ge
+t(a)!;
+       │        
+      ^^^^^^^^
+^^^^^^^^^
+  81 │   
+const pb = position
+s.get(b)!;
+  82 │   
+let dx = pa.x
+ - pb.x;
+packages/frontend/layout.ts
+:81:14 
+lint/style/noNonNullAssertion 
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  ! Forbidden non-null assertion.
+    79 │ ): { 
+dx: number;
+ dy: numb
+er; dist:
+ number } {
+    80 │ 
+  const pa 
+= positio
+ns.get(a)
+!;
+  > 81 │   const
+ pb = positi
+ons.get(b)
+!;
+       │    
+          ^^^^^^^^^^^
+^^^^^^
+    82 │ 
+  let dx =
+ pa.x - pb.x;
+    83 │ 
+  let dy =
+ pa.y - p
+b.y;
+packages/frontend/layout.ts
+:94:13 lint/style/noNonNullAssertion ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  !
+ Forbidden non-null assertion.
+  93 │ func
+tion push(disp: Ma
+p<NodeId, Po
+sition>, 
+id: NodeId
+, dx: number, dy:
+ number) {
+  > 94 │ 
+  const d 
+= disp.get(id)!;
+       │            
+ ^^^^^^^^^^
+^^^
+    95 │   d.x 
++= dx;
+    96 │ 
+  d.y += 
+dy;
+stdout:
+Checked 46 files in 116ms. No fixes applied.
+Found 12 warnings.
+exit code 0

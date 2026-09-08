@@ -1,0 +1,4 @@
+$ TOK=$(grep -o 'token:.*' ~/.render/cli.yaml | awk '{print $2}'); curl -s -H "Authorization: Bearer $TOK" https://api.render.com/v1/owners | sed 's/"id":"[^"]*"/"id":"ID"/g'
+stdout:
+{"message":"Unauthorized"}
+exit code 0

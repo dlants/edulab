@@ -1,0 +1,7 @@
+$ cd /Users/denis.lantsman/src/edulab/packages/e2e && npx playwright test --grep "graph update working|writes nothing" --reporter=line
+stdout:
+Running 2 tests using 2 workers
+[1/2] tests/chat.spec.ts:638:1 › an update that writes nothing says so
+[2/2] tests/chat.spec.ts:622:1 › a turn shows its graph update working, then what it changed
+  2 passed (4.1s)
+exit code 0

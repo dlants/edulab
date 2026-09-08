@@ -1,0 +1,4 @@
+$ cd /Users/denis.lantsman/src/edulab && ls packages/frontend/src && wc -l packages/frontend/src/*.ts packages/frontend/src/prototypes/*.ts && git status --short
+stderr:
+ls: packages/frontend/src: No such file or directory
+exit code 1

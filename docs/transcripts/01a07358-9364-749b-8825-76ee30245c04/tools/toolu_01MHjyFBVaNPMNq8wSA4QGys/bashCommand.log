@@ -1,0 +1,23 @@
+$ cd /Users/denis.lantsman/src/edulab && git status --short && ls packages/frontend
+stdout:
+ M context.md
+?? plans/2026-09-05-domain-graph.md
+index.html
+learning.ts
+main.ts
+node_modules
+package.json
+prompt.test.ts
+prompt.ts
+prototypes
+samples
+selection.test.ts
+selection.ts
+thread.test.ts
+thread.ts
+threads.test.ts
+threads.ts
+tsconfig.json
+vamp.ts
+view.ts
+exit code 0

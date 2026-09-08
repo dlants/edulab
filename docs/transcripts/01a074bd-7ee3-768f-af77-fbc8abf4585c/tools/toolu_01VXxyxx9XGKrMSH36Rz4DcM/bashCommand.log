@@ -1,0 +1,25 @@
+$ cd /Users/denis.lantsman/src/edulab && npm run lint:fix && npm run typecheck && npx playwright test tests/graph.spec.ts --config packages/e2e/playwright.config.ts 2>/dev/null || npm run test:e2e -- graph.spec.ts
+stdout:
+> edulab@0.0.1 lint:fix
+> biome check --write .
+Checked 52 files in 127ms. Fixed 1 file.
+> edulab@0.0.1 typecheck
+> npm -w @edulab/iso exec tsc -- --noEmit && npm -w @edulab/frontend exec tsc -- --noEmit && npm -w @edulab/backend exec tsc -- --noEmit && npm -w @edulab/e2e exec tsc -- --noEmit
+Running 15 tests using 7 workers
+  ✓   7 packages/e2e/tests/graph.spec.ts:159:1 › an edge is selectable and editable (467ms)
+  ✓   6 packages/e2e/tests/graph.spec.ts:136:1 › a duplicate title is rejected without losing the draft (489ms)
+  ✓   1 packages/e2e/tests/graph.spec.ts:149:1 › deleting a node takes its edges with it (580ms)
+  ✓   3 packages/e2e/tests/graph.spec.ts:92:1 › switching tabs leaves the transcript and the graph intact (571ms)
+  ✓   4 packages/e2e/tests/graph.spec.ts:113:1 › clicking a node fills the sidebar and a retitle keeps its edges (580ms)
+  ✓   2 packages/e2e/tests/graph.spec.ts:288:1 › every interaction updates the graph, one update at a time (551ms)
+  ✓   5 packages/e2e/tests/graph.spec.ts:314:1 › opening a learning thread updates the graph from its ask (682ms)
+  ✓   8 packages/e2e/tests/graph.spec.ts:345:1 › a failed graph update leaves the app usable (217ms)
+  ✓  13 packages/e2e/tests/graph.spec.ts:464:1 › a citation that does not resolve is left as text (355ms)
+  ✓  15 packages/e2e/tests/graph.spec.ts:596:1 › clicking a change opens the graph tab with that node selected (227ms)
+  ✓  12 packages/e2e/tests/graph.spec.ts:442:1 › a cited message is one click away from the note that rests on it (434ms)
+  ✓  14 packages/e2e/tests/graph.spec.ts:577:1 › an address written by a graph update navigates back to its turn (349ms)
+  ✓   9 packages/e2e/tests/graph.spec.ts:365:1 › building from a sample transcript walks its turns once (1.2s)
+  ✓  10 packages/e2e/tests/graph.spec.ts:382:1 › a failed update mid-build does not stop the ones after it (1.2s)
+  ✓  11 packages/e2e/tests/graph.spec.ts:394:1 › interacting mid-build interleaves rather than races (1.6s)
+  15 passed (3.7s)
+exit code 0

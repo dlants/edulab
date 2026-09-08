@@ -1,0 +1,166 @@
+$ cd /Users/denis.lantsman/src/edulab && npm run test:e2e
+stdout:
+> edulab@0.0.1 test:e2e
+> npm -w @edulab/e2e run test
+> @edulab/e2e@0.0.1 test
+> playwright test
+Running 16 tests using 7 workers
+  ✓   6 tests/chat.spec.ts:185:1 › a second turn sends the full thread (569ms)
+  ✓   1 tests/chat.spec.ts:171:1 › the composer is disabled while a turn is in flight (615ms)
+  ✓   4 tests/chat.spec.ts:155:1 › streams a response into the transcript (623ms)
+  ✘   5 tests/chat.spec.ts:270:1 › a follow-up in the thread pane re-sends the seed (605ms)
+  ✘   3 tests/chat.spec.ts:203:1 › a live selection overlapping a mark offers no actions (605ms)
+  ✘   2 tests/chat.spec.ts:225:1 › two marks in one message are both clickable (614ms)
+  ✘   7 tests/chat.spec.ts:248:1 › an action opens a thread seeded with the selected passage (706ms)
+  ✘   8 tests/chat.spec.ts:289:1 › clicking a mark reopens its thread without a new request (203ms)
+  ✘  10 tests/chat.spec.ts:358:1 › a thread opened at depth carries both selections once (189ms)
+  ✓   9 tests/chat.spec.ts:341:1 › the arrows name the layer and stop at the ends (240ms)
+  ✘  11 tests/chat.spec.ts:392:1 › a descended thread shows what it was opened from (238ms)
+  ✘  12 tests/chat.spec.ts:430:1 › nesting goes three deep (360ms)
+  ✘  14 tests/chat.spec.ts:452:1 › a tool call is rendered and text above it stays selectable (370ms)
+  ✘  15 tests/chat.spec.ts:477:1 › a new selection leaves committed marks rendered (278ms)
+  ✘  13 tests/chat.spec.ts:406:1 › ← climbs back without losing threads or highlights (284ms)
+  ✓  16 tests/smoke.spec.ts:9:1 › streams a real response end to end (1.5s)
+  1) tests/chat.spec.ts:203:1 › a live selection overlapping a mark offers no actions ──────────────
+    Error: page.evaluate: Error: range out of bounds
+        at eval (eval at evaluate (:311:30), <anonymous>:23:29)
+        at UtilityScript.evaluate (<anonymous>:313:16)
+        at UtilityScript.<anonymous> (<anonymous>:1:44)
+        at eval (eval at evaluate (:311:30), <anonymous>:23:29)
+        at UtilityScript.evaluate (<anonymous>:313:16)
+        at UtilityScript.<anonymous> (<anonymous>:1:44)
+        at selectRange (/Users/denis.lantsman/src/edulab/packages/e2e/tests/chat.spec.ts:100:14)
+        at /Users/denis.lantsman/src/edulab/packages/e2e/tests/chat.spec.ts:211:9
+    Error Context: test-results/chat-a-live-selection-overlapping-a-mark-offers-no-actions/error-context.md
+  2) tests/chat.spec.ts:225:1 › two marks in one message are both clickable ────────────────────────
+    Error: page.evaluate: Error: range out of bounds
+        at eval (eval at evaluate (:311:30), <anonymous>:23:29)
+        at UtilityScript.evaluate (<anonymous>:313:16)
+        at UtilityScript.<anonymous> (<anonymous>:1:44)
+        at eval (eval at evaluate (:311:30), <anonymous>:23:29)
+        at UtilityScript.evaluate (<anonymous>:313:16)
+        at UtilityScript.<anonymous> (<anonymous>:1:44)
+        at selectRange (/Users/denis.lantsman/src/edulab/packages/e2e/tests/chat.spec.ts:100:14)
+        at /Users/denis.lantsman/src/edulab/packages/e2e/tests/chat.spec.ts:232:9
+    Error Context: test-results/chat-two-marks-in-one-message-are-both-clickable/error-context.md
+  3) tests/chat.spec.ts:248:1 › an action opens a thread seeded with the selected passage ──────────
+    Error: page.evaluate: Error: range out of bounds
+        at eval (eval at evaluate (:311:30), <anonymous>:23:29)
+        at UtilityScript.evaluate (<anonymous>:313:16)
+        at UtilityScript.<anonymous> (<anonymous>:1:44)
+        at eval (eval at evaluate (:311:30), <anonymous>:23:29)
+        at UtilityScript.evaluate (<anonymous>:313:16)
+        at UtilityScript.<anonymous> (<anonymous>:1:44)
+        at selectRange (/Users/denis.lantsman/src/edulab/packages/e2e/tests/chat.spec.ts:100:14)
+        at /Users/denis.lantsman/src/edulab/packages/e2e/tests/chat.spec.ts:254:9
+    Error Context: test-results/chat-an-action-opens-a-thr-a35f4-d-with-the-selected-passage/error-context.md
+  4) tests/chat.spec.ts:270:1 › a follow-up in the thread pane re-sends the seed ───────────────────
+    Error: page.evaluate: Error: range out of bounds
+        at eval (eval at evaluate (:311:30), <anonymous>:23:29)
+        at UtilityScript.evaluate (<anonymous>:313:16)
+        at UtilityScript.<anonymous> (<anonymous>:1:44)
+        at eval (eval at evaluate (:311:30), <anonymous>:23:29)
+        at UtilityScript.evaluate (<anonymous>:313:16)
+        at UtilityScript.<anonymous> (<anonymous>:1:44)
+        at selectRange (/Users/denis.lantsman/src/edulab/packages/e2e/tests/chat.spec.ts:100:14)
+        at /Users/denis.lantsman/src/edulab/packages/e2e/tests/chat.spec.ts:272:9
+    Error Context: test-results/chat-a-follow-up-in-the-thread-pane-re-sends-the-seed/error-context.md
+  5) tests/chat.spec.ts:289:1 › clicking a mark reopens its thread without a new request ───────────
+    Error: page.evaluate: Error: range out of bounds
+        at eval (eval at evaluate (:311:30), <anonymous>:23:29)
+        at UtilityScript.evaluate (<anonymous>:313:16)
+        at UtilityScript.<anonymous> (<anonymous>:1:44)
+        at eval (eval at evaluate (:311:30), <anonymous>:23:29)
+        at UtilityScript.evaluate (<anonymous>:313:16)
+        at UtilityScript.<anonymous> (<anonymous>:1:44)
+        at selectRange (/Users/denis.lantsman/src/edulab/packages/e2e/tests/chat.spec.ts:100:14)
+        at /Users/denis.lantsman/src/edulab/packages/e2e/tests/chat.spec.ts:293:9
+    Error Context: test-results/chat-clicking-a-mark-reope-29779-hread-without-a-new-request/error-context.md
+  6) tests/chat.spec.ts:358:1 › a thread opened at depth carries both selections once ──────────────
+    Error: page.evaluate: Error: range out of bounds
+        at eval (eval at evaluate (:311:30), <anonymous>:23:29)
+        at UtilityScript.evaluate (<anonymous>:313:16)
+        at UtilityScript.<anonymous> (<anonymous>:1:44)
+        at eval (eval at evaluate (:311:30), <anonymous>:23:29)
+        at UtilityScript.evaluate (<anonymous>:313:16)
+        at UtilityScript.<anonymous> (<anonymous>:1:44)
+        at selectRange (/Users/denis.lantsman/src/edulab/packages/e2e/tests/chat.spec.ts:100:14)
+        at /Users/denis.lantsman/src/edulab/packages/e2e/tests/chat.spec.ts:362:9
+    Error Context: test-results/chat-a-thread-opened-at-depth-carries-both-selections-once/error-context.md
+  7) tests/chat.spec.ts:392:1 › a descended thread shows what it was opened from ───────────────────
+    Error: page.evaluate: Error: range out of bounds
+        at eval (eval at evaluate (:311:30), <anonymous>:23:29)
+        at UtilityScript.evaluate (<anonymous>:313:16)
+        at UtilityScript.<anonymous> (<anonymous>:1:44)
+        at eval (eval at evaluate (:311:30), <anonymous>:23:29)
+        at UtilityScript.evaluate (<anonymous>:313:16)
+        at UtilityScript.<anonymous> (<anonymous>:1:44)
+        at selectRange (/Users/denis.lantsman/src/edulab/packages/e2e/tests/chat.spec.ts:100:14)
+        at /Users/denis.lantsman/src/edulab/packages/e2e/tests/chat.spec.ts:394:9
+    Error Context: test-results/chat-a-descended-thread-shows-what-it-was-opened-from/error-context.md
+  8) tests/chat.spec.ts:406:1 › ← climbs back without losing threads or highlights ─────────────────
+    Error: page.evaluate: Error: range out of bounds
+        at eval (eval at evaluate (:311:30), <anonymous>:23:29)
+        at UtilityScript.evaluate (<anonymous>:313:16)
+        at UtilityScript.<anonymous> (<anonymous>:1:44)
+        at eval (eval at evaluate (:311:30), <anonymous>:23:29)
+        at UtilityScript.evaluate (<anonymous>:313:16)
+        at UtilityScript.<anonymous> (<anonymous>:1:44)
+        at selectRange (/Users/denis.lantsman/src/edulab/packages/e2e/tests/chat.spec.ts:100:14)
+        at /Users/denis.lantsman/src/edulab/packages/e2e/tests/chat.spec.ts:408:9
+    Error Context: test-results/chat-←-climbs-back-without-losing-threads-or-highlights/error-context.md
+  9) tests/chat.spec.ts:430:1 › nesting goes three deep ────────────────────────────────────────────
+    Error: page.evaluate: Error: range out of bounds
+        at eval (eval at evaluate (:311:30), <anonymous>:23:29)
+        at UtilityScript.evaluate (<anonymous>:313:16)
+        at UtilityScript.<anonymous> (<anonymous>:1:44)
+        at eval (eval at evaluate (:311:30), <anonymous>:23:29)
+        at UtilityScript.evaluate (<anonymous>:313:16)
+        at UtilityScript.<anonymous> (<anonymous>:1:44)
+        at selectRange (/Users/denis.lantsman/src/edulab/packages/e2e/tests/chat.spec.ts:100:14)
+        at /Users/denis.lantsman/src/edulab/packages/e2e/tests/chat.spec.ts:432:9
+    Error Context: test-results/chat-nesting-goes-three-deep/error-context.md
+  10) tests/chat.spec.ts:452:1 › a tool call is rendered and text above it stays selectable ────────
+    Error: page.evaluate: Error: range out of bounds
+        at eval (eval at evaluate (:311:30), <anonymous>:23:29)
+        at UtilityScript.evaluate (<anonymous>:313:16)
+        at UtilityScript.<anonymous> (<anonymous>:1:44)
+        at eval (eval at evaluate (:311:30), <anonymous>:23:29)
+        at UtilityScript.evaluate (<anonymous>:313:16)
+        at UtilityScript.<anonymous> (<anonymous>:1:44)
+        at selectRange (/Users/denis.lantsman/src/edulab/packages/e2e/tests/chat.spec.ts:100:14)
+        at /Users/denis.lantsman/src/edulab/packages/e2e/tests/chat.spec.ts:472:9
+    Error Context: test-results/chat-a-tool-call-is-render-dc6cf-t-above-it-stays-selectable/error-context.md
+  11) tests/chat.spec.ts:477:1 › a new selection leaves committed marks rendered ───────────────────
+    Error: page.evaluate: Error: range out of bounds
+        at eval (eval at evaluate (:311:30), <anonymous>:23:29)
+        at UtilityScript.evaluate (<anonymous>:313:16)
+        at UtilityScript.<anonymous> (<anonymous>:1:44)
+        at eval (eval at evaluate (:311:30), <anonymous>:23:29)
+        at UtilityScript.evaluate (<anonymous>:313:16)
+        at UtilityScript.<anonymous> (<anonymous>:1:44)
+        at selectRange (/Users/denis.lantsman/src/edulab/packages/e2e/tests/chat.spec.ts:100:14)
+        at /Users/denis.lantsman/src/edulab/packages/e2e/tests/chat.spec.ts:479:9
+    Error Context: test-results/chat-a-new-selection-leaves-committed-marks-rendered/error-context.md
+  11 failed
+    tests/chat.spec.ts:203:1 › a live selection overlapping a mark offers no actions ───────────────
+    tests/chat.spec.ts:225:1 › two marks in one message are both clickable ─────────────────────────
+    tests/chat.spec.ts:248:1 › an action opens a thread seeded with the selected passage ───────────
+    tests/chat.spec.ts:270:1 › a follow-up in the thread pane re-sends the seed ────────────────────
+    tests/chat.spec.ts:289:1 › clicking a mark reopens its thread without a new request ────────────
+    tests/chat.spec.ts:358:1 › a thread opened at depth carries both selections once ───────────────
+    tests/chat.spec.ts:392:1 › a descended thread shows what it was opened from ────────────────────
+    tests/chat.spec.ts:406:1 › ← climbs back without losing threads or highlights ──────────────────
+    tests/chat.spec.ts:430:1 › nesting goes three deep ─────────────────────────────────────────────
+    tests/chat.spec.ts:452:1 › a tool call is rendered and text above it stays selectable ──────────
+    tests/chat.spec.ts:477:1 › a new selection leaves committed marks rendered ─────────────────────
+  5 passed (7.8s)
+stderr:
+npm error Lifecycle script `test` failed with error:
+npm error code 1
+npm error path /Users/denis.lantsman/src/edulab/packages/e2e
+npm error workspace @edulab/e2e@0.0.1
+npm error location /Users/denis.lantsman/src/edulab/packages/e2e
+npm error command failed
+npm error command sh -c playwright test
+exit code 1

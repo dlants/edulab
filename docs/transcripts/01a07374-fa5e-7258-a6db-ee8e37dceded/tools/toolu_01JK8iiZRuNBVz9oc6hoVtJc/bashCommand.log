@@ -1,0 +1,125 @@
+$ cd /Users/denis.lantsman/src/edulab && sed -n '1,140p' packages/frontend/thread.ts
+stdout:
+import type Anthropic from "@anthropic-ai/sdk";
+import type { ClientMessage, ServerFrame } from "@edulab/iso/protocol.ts";
+const MODEL = "claude-opus-4-5";
+const MAX_TOKENS = 16384;
+// Task mode: the agent is here to get the user's work done. Learning mode is
+// the secondary mode we layer on top of a transcript this produces, so this
+// prompt must not pre-emptively tutor - the whole premise of the prototype is
+// that a user watching a capable agent work becomes a passive observer.
+const SYSTEM = [
+  "You are a capable engineering assistant helping the user complete a task.",
+  "Work the problem directly: make concrete decisions, write real code, and",
+  "state your reasoning as you go rather than asking the user to supply it.",
+  "Be concise. Do not quiz the user, do not pad explanations for a beginner,",
+  "and do not check whether they are following - just do the work well.",
+].join(" ");
+// Unattended mode: nobody is reading the transcript as it streams, so a
+// question to the user is a dead end. The only exit is the yield tool.
+const AUTONOMOUS_SYSTEM = [
+  "You are a capable engineering assistant running unattended: there is no",
+  "user to answer questions, and nothing you say outside the yield tool will",
+  "be read. Work the problem to completion, making whatever decisions you",
+  "need without asking, and finish by calling the yield tool exactly once",
+  "with your result. Do not stop for confirmation and do not ask questions.",
+].join(" ");
+const MAX_RESTARTS = 5;
+const restartNudge = (attempt: number, max: number) =>
+  `You stopped without yielding. Nobody read that message. Complete the task and call the yield tool when you are done. (auto-restart ${attempt}/${max})`;
+const YIELD = "yield";
+const DEFAULT_YIELD_SCHEMA: Anthropic.Tool.InputSchema = {
+  type: "object",
+  properties: {
+    result: {
+      type: "string",
+      description: "The result to return to whoever spawned this thread.",
+    },
+  },
+  required: ["result"],
+};
+export type ToolCall = {
+  id: string;
+  name: string;
+  /** Parsed from the streamed json; undefined while still streaming or if it
+   * never parsed. */
+  input: Record<string, unknown> | undefined;
+  /** Raw accumulated json, so a partial call is still renderable. */
+  inputJson: string;
+  /** Derived from the paired tool_result block in the next user turn; absent
+   * while the tool is still running. */
+  result: ToolResult | undefined;
+};
+export type YieldValue =
+  | { type: "text"; text: string }
+  | { type: "structured"; value: Record<string, unknown> };
+export type TurnResult =
+  | { type: "completed" }
+  | { type: "yielded"; value: YieldValue }
+  | { type: "error"; message: string };
+export type ThreadOpts = {
+  system?: string;
+  initialTurns?: Anthropic.MessageParam[];
+  seed?: string;
+  tools?: Record<ToolName, Tool>;
+  /** Present => the yield tool is offered. `"text"` uses the default
+   * `{ result: string }` schema and settles with a text value; a schema
+   * settles with the whole input object. */
+  yieldSchema?: Anthropic.Tool.InputSchema | "text";
+};
+/** The key of a tool in the record handed to a thread; also what the model
+ * sends back as `tool_use.name`. */
+export type ToolName = string & { readonly __brand: "ToolName" };
+export type ToolResult =
+  | { status: "ok"; text: string }
+  | { status: "error"; error: string };
+/** A tool the thread can run, client side. */
+export type Tool = {
+  spec: Anthropic.Tool;
+  execute(input: Record<string, unknown>): Promise<ToolResult>;
+};
+/** Keys a set of tools by name. `Record<ToolName, Tool>` is a mapped type over
+ * a branded string, so an object literal cannot be written for it directly. */
+export function toolset(...tools: ReadonlyArray<Tool>): Record<ToolName, Tool> {
+  return Object.fromEntries(tools.map((t) => [t.spec.name, t]));
+}
+/** One entry of the derived transcript: a block, not a turn. A single agent
+ * turn can produce prose, a tool call, and more prose, and the transcript shows
+ * it that way. */
+export type Message =
+  | { type: "text"; role: "user" | "assistant"; text: string }
+  | { type: "tool_use"; role: "assistant"; call: ToolCall };
+/** Anchors index into text entries only, so everything else has no text. */
+export function messageText(message: Message): string {
+  return message.type === "text" ? message.text : "";
+}
+/** A block of the assistant turn currently streaming. */
+type PendingBlock =
+  | { type: "text"; text: string }
+  | {
+      type: "tool_use";
+      id: string;
+      name: string;
+      inputJson: string;
+      input: Record<string, unknown> | undefined;
+    };
+/** The subset of WebSocket the thread uses, so tests can stand in for it. */
+export type Socket = {
+  send(data: string): void;
+  addEventListener(
+    type: "message",
+    listener: (e: MessageEvent<string>) => void,
+  ): void;
+};
+export type ThreadResult<Value> =
+  | { status: "ok"; result: Value }
+  | { status: "error"; error: string };
+export type RunThreadOpts = {
+  prompt: string;
+  tools?: Record<ToolName, Tool>;
+  yieldSchema: Anthropic.Tool.InputSchema | "text";
+  system?: string;
+  /** How many times a turn that ends without a yield is nudged back to work. */
+  maxRestarts?: number;
+};
+exit code 0

@@ -1,0 +1,32 @@
+$ cd packages/frontend && grep -n "^  bind\|^  ref\|^export function\|^export class\|^export type\|constructor(" vamp.ts
+stdout:
+29:export type RequestStatus<T> =
+51:export type SlotContent = {
+56:export type KeyedSlotContent = {
+85:export function show<ChildState, ChildMsg, ChildCtx>(
+104:export function showKeyed<ChildState, ChildMsg, ChildCtx>(
+127:export class Binder<State> {
+134:  constructor(container: HTMLElement, initialState: State) {
+140:  ref<T extends HTMLElement = HTMLElement>(name: Ref): T {
+160:  bindText(ref: Ref, fn: (s: State) => string): void {
+169:  bindClass(refOrEl: Ref | HTMLElement, fn: (s: State) => string): void {
+179:  bindVisible(ref: Ref, fn: (s: State) => boolean): void {
+189:  bindStyle(ref: Ref, fn: (s: State) => Record<string, string>): void {
+209:  bindValue(ref: Ref, fn: (s: State) => string): void {
+225:  bindChecked(ref: Ref, fn: (s: State) => boolean): void {
+234:  bindDisabled(ref: Ref, fn: (s: State) => boolean): void {
+245:  bindAttr(ref: Ref, attr: string, fn: (s: State) => string | undefined): void {
+257:  bindContainerAttr(attr: string, fn: (s: State) => string | undefined): void {
+269:  bindSlot(ref: Ref, fn: (s: State) => SlotContent | undefined): void {
+311:  bindList(
+464:export class RawHtml {
+466:  constructor(html: string) {
+472:export function raw(html: string): RawHtml {
+481:export function sanitize(
+509:export class PostRenderEventBus<Event> {
+543:export type Ref = string & { readonly __brand: "Ref" };
+548:export function ref(prefix: string): Ref {
+555:export function cls(prefix: string): string {
+564:export function scrollIntoView(el: HTMLElement): void {
+569:export function mountStyle(css: string): void {
+exit code 0

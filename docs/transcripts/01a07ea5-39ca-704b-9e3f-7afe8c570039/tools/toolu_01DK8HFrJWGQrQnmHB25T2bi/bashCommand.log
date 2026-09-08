@@ -1,0 +1,5 @@
+$ curl -s -o /dev/null -w "%{http_code}\n" https://edulab-bt36.onrender.com/ && curl -s -o /dev/null -w "%{http_code}\n" https://edulab-bt36.onrender.com/some/deep/route
+stdout:
+200
+200
+exit code 0

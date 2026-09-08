@@ -1,0 +1,9 @@
+$ cd /Users/denis.lantsman/src/edulab && sed -i '' 's|/\*\* Nothing writes to the graph until the extraction thread of the next stage,|/** The sidebar cases want a known graph without an extraction run first,|; s|^ \* so the spec seeds it through the handle the prototype exposes. \*/| * so they seed it through the handle the prototype exposes. */|' packages/e2e/tests/graph.spec.ts && npm run lint && npm run typecheck && git add -A && git commit -q -m "Stage 6: seeding the graph from the thread tree" && git log --oneline -1
+stdout:
+> edulab@0.0.1 lint
+> biome check .
+Checked 48 files in 119ms. No fixes applied.
+> edulab@0.0.1 typecheck
+> npm -w @edulab/iso exec tsc -- --noEmit && npm -w @edulab/frontend exec tsc -- --noEmit && npm -w @edulab/backend exec tsc -- --noEmit && npm -w @edulab/e2e exec tsc -- --noEmit
+a9e5d4c Stage 6: seeding the graph from the thread tree
+exit code 0

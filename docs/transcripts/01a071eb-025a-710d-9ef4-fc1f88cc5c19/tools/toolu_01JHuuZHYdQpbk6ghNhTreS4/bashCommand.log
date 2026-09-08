@@ -1,0 +1,20 @@
+$ cd /Users/denis.lantsman/src/edulab/packages/e2e && npx playwright test --grep "tool call is rendered"
+stdout:
+Running 1 test using 1 worker
+  ✘  1 tests/chat.spec.ts:450:1 › a tool call is rendered and text above it stays selectable (5.4s)
+  1) tests/chat.spec.ts:450:1 › a tool call is rendered and text above it stays selectable ─────────
+    TimeoutError: locator.click: Timeout 5000ms exceeded.
+    Call log:
+      - waiting for getByRole('button', { name: 'I don\'t understand this.' })
+      465 |   await page.getByRole("button", { name: "Reflect" }).click();
+      466 |   await selectRange(page, 1, 0, 5);
+    > 467 |   await page.getByRole("button", { name: "I don't understand this." }).click();
+          |                                                                        ^
+      468 |   await expect(page.locator("[data-mark]")).toHaveText("alpha");
+      469 | });
+      470 |
+        at /Users/denis.lantsman/src/edulab/packages/e2e/tests/chat.spec.ts:467:72
+    Error Context: test-results/chat-a-tool-call-is-render-dc6cf-t-above-it-stays-selectable/error-context.md
+  1 failed
+    tests/chat.spec.ts:450:1 › a tool call is rendered and text above it stays selectable ──────────
+exit code 1

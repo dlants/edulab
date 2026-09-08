@@ -1,0 +1,40 @@
+$ cd /Users/denis.lantsman/src/edulab && grep -rn "origin\|\.anchor\|marks(" packages --include=*.ts | grep -v node_modules
+stdout:
+packages/frontend/selection.ts:38:    (m) => before(m.anchor.start, live.end) && before(live.start, m.anchor.end),
+packages/frontend/selection.ts:58:    const clip = clipToMessage(mark.anchor, i, length);
+packages/frontend/persistence.test.ts:70:  expect(restored.marks(tree.root)).toEqual(tree.marks(tree.root));
+packages/frontend/threads.ts:30:  origin: Origin | null;
+packages/frontend/threads.ts:32:  /** Creation order; each child's `origin.anchor` is its highlight. */
+packages/frontend/threads.ts:97:  marks(id: ThreadId): Mark[] {
+packages/frontend/threads.ts:99:      const origin = this.get(child).origin;
+packages/frontend/threads.ts:100:      if (!origin) throw new Error("child thread without an origin");
+packages/frontend/threads.ts:101:      return { thread: child, anchor: origin.anchor };
+packages/frontend/threads.ts:111:      at = this.get(at).origin?.anchor.thread;
+packages/frontend/threads.ts:155:      origin: snapshot.origin,
+packages/frontend/threads.ts:163:  private add(origin: Origin | null, thread: Thread): ThreadId {
+packages/frontend/threads.ts:168:      origin,
+packages/frontend/view.ts:835:              s.anchor,
+packages/frontend/view.ts:1052:              s.anchor,
+packages/frontend/view.ts:1092:      if (child && !s.anchor) {
+packages/frontend/view.ts:1099:        overlapping: s.anchor !== null && overlaps(s.marks, s.anchor),
+packages/frontend/view.ts:1103:          text: anchorText(mark.anchor, s.messages),
+packages/frontend/view.ts:1333:  if (s.anchor) return anchorText(s.anchor, s.messages);
+packages/frontend/view.ts:1335:  return active ? anchorText(active.anchor, s.messages) : null;
+packages/frontend/prototypes/chat.ts:117:            tools: s.origin ? readTools(graph) : undefined,
+packages/frontend/prototypes/chat.ts:317:    state.marks = tree.marks(focus);
+packages/frontend/prototypes/chat.ts:322:    state.anchor = anchor?.thread === focus ? anchor : null;
+packages/frontend/prototypes/chat.ts:337:      marks: tree.marks(activeChild),
+packages/frontend/prototypes/chat.ts:348:    if (overlaps(tree.marks(anchor.thread), anchor)) return null;
+packages/frontend/prototypes/chat.ts:650:        const parent = node.origin?.anchor.thread;
+packages/frontend/prototypes/chat.ts:669:        anchor = msg.anchor;
+packages/frontend/prototypes/chat.ts:709:            if (!from || overlaps(tree.marks(from.thread), from)) break;
+packages/frontend/prototypes/chat.ts:735:            if (!from || overlaps(tree.marks(from.thread), from)) break;
+packages/frontend/prototypes/chat.ts:778:            anchor = msg.msg.anchor;
+packages/frontend/persistence.ts:14:  origin: Origin | null;
+packages/frontend/persistence.ts:130:    origin: node.origin,
+packages/frontend/graph-view.ts:223:  transform-origin: 0 50%;
+packages/frontend/graph-view.ts:233:  transform-origin: 0 50%;
+packages/frontend/graph-view.ts:620:    let origin = { x: 0, y: 0 };
+packages/frontend/graph-view.ts:626:      origin = last;
+packages/frontend/graph-view.ts:632:        Math.hypot(e.clientX - origin.x, e.clientY - origin.y) < THRESHOLD
+exit code 0

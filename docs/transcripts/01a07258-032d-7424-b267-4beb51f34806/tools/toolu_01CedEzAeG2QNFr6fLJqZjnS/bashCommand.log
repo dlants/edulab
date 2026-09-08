@@ -1,0 +1,13 @@
+$ cd /Users/denis.lantsman/src/edulab && git add -A && git commit -q -m "notes: fold prototype ladder into exploration.md, add literature review
+
+Add notes/studies.md sections on open learner models, negotiated learner
+models, the mentor surface, neuro-symbolic learner modelling, and on-the-fly
+graph construction. Delete notes/prototype.md now that the scaffolding is
+built; its constraints move to context.md and its prototype sketches to
+exploration.md." && git push && git log --oneline -1
+stderr:
+To github.com:dlants/edulab.git
+   32e5787..e7473b9  main -> main
+stdout:
+e7473b9 notes: fold prototype ladder into exploration.md, add literature review
+exit code 0

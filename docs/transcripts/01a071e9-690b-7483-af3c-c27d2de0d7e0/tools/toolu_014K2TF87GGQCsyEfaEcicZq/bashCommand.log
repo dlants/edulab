@@ -1,0 +1,5 @@
+$ cd /Users/denis.lantsman/src/edulab && git commit -aqm "Plan: restore stage 4 goal line" && git log --oneline -2
+stdout:
+b8ec34c Plan: restore stage 4 goal line
+48d8be2 Stage 4: Yield
+exit code 0

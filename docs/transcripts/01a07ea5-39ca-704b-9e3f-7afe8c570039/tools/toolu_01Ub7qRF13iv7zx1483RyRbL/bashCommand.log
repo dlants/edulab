@@ -1,0 +1,8 @@
+$ cd ~/src/dotfiles && grep -n "packages\|awscli\|gh\b" nix/common.nix nix/darwin.nix
+stdout:
+nix/common.nix:60:  # Common packages
+nix/common.nix:61:  home.packages = with pkgs; [
+nix/common.nix:66:    gh     # GitHub CLI
+nix/common.nix:201:      # fzf-tab UX: Tab/Shift-Tab cycle through matches, Enter (default)
+nix/darwin.nix:5:  home.packages = with pkgs; [
+exit code 0

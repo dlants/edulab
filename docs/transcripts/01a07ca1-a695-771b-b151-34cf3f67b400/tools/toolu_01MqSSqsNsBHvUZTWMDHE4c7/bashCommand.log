@@ -1,0 +1,27 @@
+$ cd /Users/denis.lantsman/src/edulab && npx playwright test -c packages/e2e/playwright.config.ts -g "an update that writes nothing says so"
+stdout:
+Running 1 test using 1 worker
+  ✘  1 packages/e2e/tests/chat.spec.ts:828:1 › an update that writes nothing says so (5.2s)
+  1) packages/e2e/tests/chat.spec.ts:828:1 › an update that writes nothing says so ─────────────────
+    Error: expect(locator).toHaveText(expected) failed
+    Locator:  locator('ul').first().locator('li').first().locator('[data-update-status]')
+    Expected: "no knowledge graph changes"
+    Received: ""
+    Timeout:  5000ms
+    Call log:
+      - Expect "toHaveText" locator('ul').first().locator('li').first().locator('[data-update-status]') with timeout 5000ms
+      - waiting for locator('ul').first().locator('li').first().locator('[data-update-status]')
+        14 × locator resolved to <span data-update-status="" data-ref="update-status_28"></span>
+           - unexpected value ""
+      831 |   await page.goto("/");
+      832 |   await turn(page, "sure, keep going");
+    > 833 |   await expect(updateStatus(page, 0)).toHaveText("no knowledge graph changes");
+          |                                       ^
+      834 |   await expect(changes(page, 0)).toHaveCount(0);
+      835 | });
+      836 |
+        at /Users/denis.lantsman/src/edulab/packages/e2e/tests/chat.spec.ts:833:39
+    Error Context: packages/e2e/test-results/chat-an-update-that-writes-nothing-says-so/error-context.md
+  1 failed
+    packages/e2e/tests/chat.spec.ts:828:1 › an update that writes nothing says so ──────────────────
+exit code 1

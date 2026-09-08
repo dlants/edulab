@@ -1,0 +1,67 @@
+$ cd /Users/denis.lantsman/src/edulab && sed -n '225,260p' packages/frontend/view.ts && grep -n "bodyClass\|paneClass\|data-split" packages/frontend/view.ts && grep -n "container.className\|cls(\|class GraphView" packages/frontend/graph-view.ts
+stdout:
+.${navClass} button.${buildDebugClass} {
+  font-size: 0.7rem;
+  line-height: 1;
+  padding: 0.1rem 0.3rem;
+  color: #666;
+}
+.${sampleClass} {
+  font: inherit;
+}
+.${spacerClass} {
+  flex: 1;
+}
+.${tabsClass} button[aria-pressed="true"] {
+  background: rgba(0, 0, 0, 0.08);
+  font-weight: 600;
+}
+.${graphTabClass} {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+.${depthClass} {
+  font-size: 0.75rem;
+  opacity: 0.6;
+}
+.${markClass} {
+  border-radius: 2px;
+}
+.${markClass}[data-live="true"] {
+  background: #cfe3ff;
+}
+.${markClass}[data-mark] {
+  background: #ffe8a3;
+  cursor: pointer;
+}
+.${markClass}[data-mark][data-active="true"] {
+131:const paneClass = cls("pane");
+139:const bodyClass = cls("body");
+167:.${bodyClass} {
+180:.${appClass}[data-split="true"] .${bodyClass} {
+186:.${paneClass} {
+197:.${paneClass} > .${transcriptClass} {
+923:      <div class="${bodyClass}" data-ref="${bodyRef}">
+924:      <div class="${paneClass}">
+1083:    this.b.bindContainerAttr("data-split", (s) => (s.split ? "true" : "false"));
+104:const graphClass = cls("graph");
+105:const canvasClass = cls("graph-canvas");
+106:const nodeClass = cls("graph-node");
+107:const edgeClass = cls("graph-edge");
+108:const edgeBarClass = cls("graph-edge-bar");
+109:const edgeLabelClass = cls("graph-edge-label");
+110:const edgeHeadClass = cls("graph-edge-head");
+111:const controlsClass = cls("graph-controls");
+112:const sidebarClass = cls("graph-sidebar");
+113:const emptyClass = cls("graph-empty");
+114:const errorClass = cls("graph-error");
+115:const actionsClass = cls("graph-actions");
+116:const chipsClass = cls("graph-chips");
+117:const chipClass = cls("graph-chip");
+322:    container.className = nodeClass;
+372:    container.className = edgeClass;
+449:    container.className = chipClass;
+478:export class GraphView implements View<State, Msg> {
+512:    container.className = graphClass;
+exit code 0

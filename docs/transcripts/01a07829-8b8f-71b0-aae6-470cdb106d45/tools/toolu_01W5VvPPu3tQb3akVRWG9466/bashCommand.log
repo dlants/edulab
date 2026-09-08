@@ -1,0 +1,88 @@
+$ cd /Users/denis.lantsman/src/edulab && npm test && npm run typecheck && npm run lint
+stdout:
+> edulab@0.0.1 test
+> vitest run
+ RUN  v4.1.11 /Users/denis.lantsman/src/edulab
+ ✓ packages/frontend/graph.test.ts (10 tests) 4ms
+ ✓ packages/frontend/selection.test.ts (8 tests) 2ms
+ ✓ packages/frontend/layout.test.ts (7 tests) 7ms
+ ✓ packages/frontend/prompt.test.ts (17 tests) 4ms
+ ✓ packages/frontend/persistence.test.ts (5 tests) 3ms
+ ✓ packages/frontend/graph-tools.test.ts (8 tests) 15ms
+ ✓ packages/frontend/citation.test.ts (4 tests) 11ms
+ ✓ packages/frontend/interactions.test.ts (4 tests) 12ms
+ ✓ packages/frontend/threads.test.ts (7 tests) 11ms
+ ✓ packages/frontend/thread.test.ts (24 tests) 27ms
+ Test Files  10 passed (10)
+      Tests  94 passed (94)
+   Start at  12:20:46
+   Duration  221ms (transform 476ms, setup 0ms, import 1.02s, tests 96ms, environment 1ms)
+> edulab@0.0.1 typecheck
+> npm -w @edulab/iso exec tsc -- --noEmit && npm -w @edulab/frontend exec tsc -- --noEmit && npm -w @edulab/backend exec tsc -- --noEmit && npm -w @edulab/e2e exec tsc -- --noEmit
+> edulab@0.0.1 lint
+> biome check .
+stderr:
+packages/frontend/prompt.test.ts format ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  × Formatter would have printed the following content:
+     67  67 │     c
+onst top = threadSeed(undefined, messages, "the graph");
+     68  68 │     expect(top).toContain("the graph")
+;
+     69     │ - ··expect(thread
+Seed(top,·messages,·"the·graph").split("the·graph")).toHaveL
+ength(
+     70     │ - ·
+···2,
+     71     │ - 
+··);
+         69 │ + ··expect(
+  70 │ 
++ ····th
+readSeed(top
+,·messages,·"the·graph").s
+plit("the·graph
+"),
+         71 │ + 
+··).toHave
+Length(2);
+     72  72 │   }
+);
+     73  73 │   
+packages/frontend/threads.ts format 
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  × Formatter would have printed the following content:
+    101 101 │     /** Seeds a
+ child from the whole of `parent`'s transcript, with no passage:
+    102 102 │     
+ * it paints no highlight, and any nu
+mber of them can hang off one parent. */
+    103    
+ │ - ··openThread(
+104     │ - ····pa
+rent:·ThreadId,
+    105     │ - ····
+action:·Action,
+    106     │ - 
+····opts:·Chi
+ldOpts·=·{},
+    107     │ - ·
+·):·ThreadId·{
+   103 │ + ··
+openThread(pa
+rent:·ThreadId,·action:·Action,·opts:·ChildOpts·=·{})
+:·ThreadId·{
+    108 
+104 │      
+ const node = this.g
+et(parent);
+109 105 │      
+ const thread = new Th
+read(this.sock
+et, {
+stdout:
+Checked 55 files in 130ms. No fixes applied.
+Found 2 errors.
+stderr:
+check ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  × Some errors were emitted while running checks.
+exit code 1

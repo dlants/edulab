@@ -1,0 +1,4 @@
+$ cd /Users/denis.lantsman/src/edulab && grep -n "Cancel\|Selection\|draft copy" plans/2026-09-05-domain-graph.md
+stdout:
+81:- Clicking a node or an edge selects it. The sidebar renders a **draft copy** of the selection with Save / Cancel / Delete. Editing is not live-on-keystroke: a half-typed title would be shown to the agent and would churn the layout on every character.
+exit code 0

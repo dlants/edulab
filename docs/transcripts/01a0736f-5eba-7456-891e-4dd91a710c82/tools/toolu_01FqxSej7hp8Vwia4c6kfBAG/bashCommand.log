@@ -1,0 +1,12 @@
+$ cd /Users/denis.lantsman/src/edulab && grep -n "MessageState\|class MessageView\|segments: ReadonlyArray\|tool-result" packages/frontend/view.ts
+stdout:
+81:const toolResultClass = cls("tool-result");
+336:type MessageState = {
+338:  segments: ReadonlyArray<Segment>;
+342:class MessageView implements View<MessageState, SegmentMsg> {
+344:  private b: Binder<MessageState>;
+349:    initial: MessageState,
+356:    const toolResultRef = ref("tool-result");
+366:        <pre class="${toolResultClass}" data-tool-result data-ref="${toolResultRef}"></pre>
+405:  sync(state: MessageState): void {
+exit code 0

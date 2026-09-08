@@ -1,0 +1,30 @@
+- preamble - what this video contains and what it does not
+- chat interface
+- sampled transcripts
+- frame the "I don't understand this" situation / tradeoff against main context
+- introduce the reflect layer
+  - dedicated context
+  - dedicated prompt
+  - not having to trade off against the main thread
+- what if I want to follow up on multiple things?
+- what if I want to go deeper?
+- summary. Why this might be good? Giving people space to engage more fully with their work.
+- the system prompt is nice, but is there some way we can get the reflect agent to engage with the user's mental model?
+- mental model representation
+- decomposing into nodes
+- decomposing into the conept description + notes about the user
+- numeric score
+- how this graph is built up. Each user utterance gets dedicated background thread + attention.
+- show the gear icon / build a knowledge graph from this transcript
+- the graph is used as context in reflection threads
+- callouts to the graph appear in reflect mode. Maybe the graph can be a way to structure exploration?
+- maybe we can engage with the graph as a mentor, and edit it.
+  - links back to the tasks encourage the agent to collect evidence for its model of the user's undersanding
+  - links back to the tasks can guide a mentor's attention
+- the task transcript + knowledge graph can maybe be used in a different way
+  - novices have a hard time undersanding what parts of the task transcript are relevant - what are the key decisions to review?
+  - novices may have a hard time directing their learning.
+  - perhaps an agent can address these from the KG.
+- affordances + distraction
+- choice of haiku for the demo
+  - we don't know if the agent's messages or KG are particularly useful. We'd probably use the smartest model we could for interacting with actual users. But really we'd need to set up some evals to tell if they're any good.

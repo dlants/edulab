@@ -1,0 +1,27 @@
+$ cd /Users/denis.lantsman/src/edulab/packages/e2e && sed -n '356,380p' tests/chat.spec.ts && grep -n "data-split\|threadPane\|reflect" tests/chat.spec.ts
+stdout:
+test("clicking a mark reopens its thread without a new request", async ({
+  page,
+}) => {
+  const backend = await transcript(page);
+  await selectRange(page, 0, 0, 9);
+  await page.getByRole("button", { name: "I don't understand this." }).click();
+  await expect(threadTranscript(page).locator("li")).toHaveCount(2);
+  await selectRange(page, 0, 16, 19);
+  await page.getByRole("button", { name: "Quiz me on this." }).click();
+  await expect(threadTranscript(page).locator("li")).toHaveCount(2);
+  const sent = backend.started.length;
+  await page.locator("[data-mark]").first().click();
+  await expect(threadTranscript(page).locator("li").first()).toContainText(
+    "I don't understand this.",
+  );
+  await expect(threadTranscript(page).locator("li")).toHaveCount(2);
+  expect(backend.started).toHaveLength(sent);
+});
+const REPLY = "alpha beta gamma delta";
+function explainButton(page: Page) {
+  return page.getByRole("button", { name: "I don't understand this." });
+205:  reflect = true,
+213:  if (reflect) await page.getByRole("button", { name: "Reflect" }).click();
+533:test("a selection in the reflect thread opens the layer below it", async ({
+exit code 0

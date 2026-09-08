@@ -1,0 +1,82 @@
+$ cd /Users/denis.lantsman/src/edulab && sed -n 215,245p packages/e2e/tests/chat.spec.ts; echo ===; sed -n 285,315p packages/e2e/tests/chat.spec.ts; echo ===; sed -n 380,410p packages/e2e/tests/chat.spec.ts
+stdout:
+  await expect(
+    page.getByText("Select a non-overlapping section."),
+  ).toBeVisible();
+  await expect(explain).toBeHidden();
+  await selectRange(page, 0, 10, 19);
+  await expect(explain).toBeVisible();
+});
+test("two marks in one message are both clickable", async ({ page }) => {
+  await transcript(page);
+  const explain = page.getByRole("button", {
+    name: "I don't understand this.",
+  });
+  const openedWith = page.locator("[data-thread-action]");
+  await selectRange(page, 0, 0, 9);
+  await explain.click();
+  await selectRange(page, 0, 16, 19);
+  await page.getByRole("button", { name: "Quiz me on this." }).click();
+  const marks = page.locator("[data-mark]");
+  await expect(marks).toHaveCount(2);
+  await expect(marks.nth(0)).toHaveText("the quick");
+  await expect(marks.nth(1)).toHaveText("fox");
+  await marks.nth(0).click();
+  await expect(openedWith).toHaveText("I don't understand this.");
+  await marks.nth(1).click();
+  await expect(openedWith).toHaveText("Quiz me on this.");
+});
+===
+  expect(messages[2].content).toBe("because?");
+});
+test("clicking a mark reopens its thread without a new request", async ({
+  page,
+}) => {
+  const backend = await transcript(page);
+  await selectRange(page, 0, 0, 9);
+  await page.getByRole("button", { name: "I don't understand this." }).click();
+  await expect(threadTranscript(page).locator("li")).toHaveCount(1);
+  await selectRange(page, 0, 16, 19);
+  await page.getByRole("button", { name: "Quiz me on this." }).click();
+  await expect(threadTranscript(page).locator("li")).toHaveCount(1);
+  const sent = backend.started.length;
+  await page.locator("[data-mark]").first().click();
+  await expect(page.locator("[data-thread-action]")).toHaveText(
+    "I don't understand this.",
+  );
+  await expect(threadTranscript(page).locator("li")).toHaveCount(1);
+  expect(backend.started).toHaveLength(sent);
+});
+const REPLY = "alpha beta gamma delta";
+function explainButton(page: Page) {
+  return page.getByRole("button", { name: "I don't understand this." });
+}
+function quizButton(page: Page) {
+===
+  // Taking the action does not move the panes: the quiz lands on the right.
+  await expect(taskTranscript(page).locator("li")).toHaveText([
+    new RegExp(REPLY),
+  ]);
+  await expect(threadTranscript(page).locator("li")).toHaveCount(1);
+  await deeper(page).click();
+  await expect(taskTranscript(page).locator("li")).toHaveCount(1);
+  await expect(page.getByText("Layer 3")).toBeVisible();
+});
+test("a descended thread shows what it was opened from", async ({ page }) => {
+  await transcript(page, [REPLY]);
+  await selectRange(page, 0, 0, 9);
+  await explainButton(page).click();
+  await expect(threadTranscript(page).locator("li")).toHaveCount(1);
+  await expect(page.locator("[data-focus-action]")).toBeHidden();
+  await deeper(page).click();
+  await expect(page.locator("[data-focus-action]")).toHaveText(
+    "I don't understand this.",
+  );
+  await expect(page.locator("[data-focus-quote]")).toHaveText("the quick");
+});
+test("← climbs back without losing threads or highlights", async ({ page }) => {
+  const backend = await transcript(page, [REPLY]);
+  await selectRange(page, 0, 0, 9);
+  await explainButton(page).click();
+  await expect(threadTranscript(page).locator("li")).toHaveCount(1);
+exit code 0

@@ -1,0 +1,30 @@
+$ cd /Users/denis.lantsman/src/edulab && grep -rn "caller" node_modules/@anthropic-ai/sdk/resources/messages/messages.d.ts
+stdout:
+node_modules/@anthropic-ai/sdk/resources/messages/messages.d.ts:387:    allowed_callers?: Array<'direct' | 'code_execution_20250825' | 'code_execution_20260120' | 'code_execution_20260521'>;
+node_modules/@anthropic-ai/sdk/resources/messages/messages.d.ts:410:    allowed_callers?: Array<'direct' | 'code_execution_20250825' | 'code_execution_20260120' | 'code_execution_20260521'>;
+node_modules/@anthropic-ai/sdk/resources/messages/messages.d.ts:437:    allowed_callers?: Array<'direct' | 'code_execution_20250825' | 'code_execution_20260120' | 'code_execution_20260521'>;
+node_modules/@anthropic-ai/sdk/resources/messages/messages.d.ts:463:    allowed_callers?: Array<'direct' | 'code_execution_20250825' | 'code_execution_20260120' | 'code_execution_20260521'>;
+node_modules/@anthropic-ai/sdk/resources/messages/messages.d.ts:639:    allowed_callers?: Array<'direct' | 'code_execution_20250825' | 'code_execution_20260120' | 'code_execution_20260521'>;
+node_modules/@anthropic-ai/sdk/resources/messages/messages.d.ts:1023:    caller: DirectCaller | ServerToolCaller | ServerToolCaller20260120;
+node_modules/@anthropic-ai/sdk/resources/messages/messages.d.ts:1040:    caller?: DirectCaller | ServerToolCaller | ServerToolCaller20260120;
+node_modules/@anthropic-ai/sdk/resources/messages/messages.d.ts:1214:    allowed_callers?: Array<'direct' | 'code_execution_20250825' | 'code_execution_20260120' | 'code_execution_20260521'>;
+node_modules/@anthropic-ai/sdk/resources/messages/messages.d.ts:1272:    allowed_callers?: Array<'direct' | 'code_execution_20250825' | 'code_execution_20260120' | 'code_execution_20260521'>;
+node_modules/@anthropic-ai/sdk/resources/messages/messages.d.ts:1377:    allowed_callers?: Array<'direct' | 'code_execution_20250825' | 'code_execution_20260120' | 'code_execution_20260521'>;
+node_modules/@anthropic-ai/sdk/resources/messages/messages.d.ts:1400:    allowed_callers?: Array<'direct' | 'code_execution_20250825' | 'code_execution_20260120' | 'code_execution_20260521'>;
+node_modules/@anthropic-ai/sdk/resources/messages/messages.d.ts:1456:    allowed_callers?: Array<'direct' | 'code_execution_20250825' | 'code_execution_20260120' | 'code_execution_20260521'>;
+node_modules/@anthropic-ai/sdk/resources/messages/messages.d.ts:1482:    allowed_callers?: Array<'direct' | 'code_execution_20250825' | 'code_execution_20260120' | 'code_execution_20260521'>;
+node_modules/@anthropic-ai/sdk/resources/messages/messages.d.ts:1508:    allowed_callers?: Array<'direct' | 'code_execution_20250825' | 'code_execution_20260120' | 'code_execution_20260521'>;
+node_modules/@anthropic-ai/sdk/resources/messages/messages.d.ts:1541:    caller: DirectCaller | ServerToolCaller | ServerToolCaller20260120;
+node_modules/@anthropic-ai/sdk/resources/messages/messages.d.ts:1558:    caller?: DirectCaller | ServerToolCaller | ServerToolCaller20260120;
+node_modules/@anthropic-ai/sdk/resources/messages/messages.d.ts:1664:    allowed_callers?: Array<'direct' | 'code_execution_20250825' | 'code_execution_20260120' | 'code_execution_20260521'>;
+node_modules/@anthropic-ai/sdk/resources/messages/messages.d.ts:1709:    allowed_callers?: Array<'direct' | 'code_execution_20250825' | 'code_execution_20260120' | 'code_execution_20260521'>;
+node_modules/@anthropic-ai/sdk/resources/messages/messages.d.ts:1757:    allowed_callers?: Array<'direct' | 'code_execution_20250825' | 'code_execution_20260120' | 'code_execution_20260521'>;
+node_modules/@anthropic-ai/sdk/resources/messages/messages.d.ts:1808:    allowed_callers?: Array<'direct' | 'code_execution_20250825' | 'code_execution_20260120' | 'code_execution_20260521'>;
+node_modules/@anthropic-ai/sdk/resources/messages/messages.d.ts:1864:    caller: DirectCaller | ServerToolCaller | ServerToolCaller20260120;
+node_modules/@anthropic-ai/sdk/resources/messages/messages.d.ts:1880:    caller?: DirectCaller | ServerToolCaller | ServerToolCaller20260120;
+node_modules/@anthropic-ai/sdk/resources/messages/messages.d.ts:1913:    allowed_callers?: Array<'direct' | 'code_execution_20250825' | 'code_execution_20260120' | 'code_execution_20260521'>;
+node_modules/@anthropic-ai/sdk/resources/messages/messages.d.ts:1962:    allowed_callers?: Array<'direct' | 'code_execution_20250825' | 'code_execution_20260120' | 'code_execution_20260521'>;
+node_modules/@anthropic-ai/sdk/resources/messages/messages.d.ts:2011:    allowed_callers?: Array<'direct' | 'code_execution_20250825' | 'code_execution_20260120' | 'code_execution_20260521'>;
+node_modules/@anthropic-ai/sdk/resources/messages/messages.d.ts:2062:    caller: DirectCaller | ServerToolCaller | ServerToolCaller20260120;
+node_modules/@anthropic-ai/sdk/resources/messages/messages.d.ts:2079:    caller?: DirectCaller | ServerToolCaller | ServerToolCaller20260120;
+exit code 0

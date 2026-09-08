@@ -1,0 +1,34 @@
+$ cd /Users/denis.lantsman/src/edulab && npm run lint:fix && npm run test:e2e
+stdout:
+> edulab@0.0.1 lint:fix
+> biome check --write .
+Checked 50 files in 133ms. Fixed 3 files.
+> edulab@0.0.1 test:e2e
+> npm -w @edulab/e2e run test
+> @edulab/e2e@0.0.1 test
+> playwright test
+Running 22 tests using 7 workers
+  ✓   5 tests/chat.spec.ts:184:1 › a second turn sends the full thread (637ms)
+  ✓   6 tests/chat.spec.ts:170:1 › the composer is disabled while a turn is in flight (698ms)
+  ✓   2 tests/chat.spec.ts:154:1 › streams a response into the transcript (714ms)
+  ✓   1 tests/chat.spec.ts:247:1 › an action opens a thread seeded with the selected passage (833ms)
+  ✓   7 tests/chat.spec.ts:202:1 › a live selection overlapping a mark offers no actions (812ms)
+  ✓   3 tests/chat.spec.ts:274:1 › a follow-up in the thread pane re-sends the seed (822ms)
+  ✓   9 tests/chat.spec.ts:345:1 › the arrows name the layer and stop at the ends (200ms)
+  ✓   4 tests/chat.spec.ts:224:1 › two marks in one message are both clickable (938ms)
+  ✓   8 tests/chat.spec.ts:293:1 › clicking a mark reopens its thread without a new request (296ms)
+  ✓  10 tests/chat.spec.ts:362:1 › a thread opened at depth carries both selections once (357ms)
+  ✓  11 tests/chat.spec.ts:398:1 › a descended thread shows what it was opened from, in its transcript (303ms)
+  ✓  15 tests/chat.spec.ts:488:1 › a new selection leaves committed marks rendered (230ms)
+  ✓  14 tests/chat.spec.ts:463:1 › a tool call is rendered and text above it stays selectable (267ms)
+  ✓  16 tests/graph.spec.ts:92:1 › switching tabs leaves the transcript and the graph intact (253ms)
+  ✓  13 tests/chat.spec.ts:441:1 › nesting goes three deep (387ms)
+  ✓  12 tests/chat.spec.ts:417:1 › ← climbs back without losing threads or highlights (416ms)
+  ✓  17 tests/graph.spec.ts:113:1 › clicking a node fills the sidebar and a retitle keeps its edges (262ms)
+  ✓  18 tests/graph.spec.ts:136:1 › a duplicate title is rejected without losing the draft (233ms)
+  ✓  20 tests/graph.spec.ts:159:1 › an edge is selectable and editable (321ms)
+  ✓  19 tests/graph.spec.ts:149:1 › deleting a node takes its edges with it (332ms)
+  ✓  21 tests/graph.spec.ts:276:1 › building from the session fills the canvas and leaves the threads alone (355ms)
+  ✓  22 tests/smoke.spec.ts:9:1 › streams a real response end to end (1.5s)
+  22 passed (4.2s)
+exit code 0

@@ -1,0 +1,14 @@
+$ cd /Users/denis.lantsman/src/edulab && grep -rn "WebSocket\|/api/socket" packages/frontend packages/e2e --include=*.ts | grep -v node_modules
+stdout:
+packages/frontend/prototypes/chat.ts:75:function connect(): WebSocket {
+packages/frontend/prototypes/chat.ts:77:  return new WebSocket(`${proto}//${window.location.host}/api/socket`);
+packages/frontend/prototypes/chat.ts:88:    socket.readyState === WebSocket.OPEN
+packages/frontend/thread.ts:155:/** The subset of WebSocket the thread uses, so tests can stand in for it. */
+packages/e2e/tests/persistence.spec.ts:54:  await page.routeWebSocket("**/api/socket", (ws) => {
+packages/e2e/tests/graph.spec.ts:7:  await page.routeWebSocket("**/api/socket", (ws) => {
+packages/e2e/tests/graph.spec.ts:232:  await page.routeWebSocket("**/api/socket", (ws) => {
+packages/e2e/tests/graph.spec.ts:542:  await page.routeWebSocket("**/api/socket", (ws) => {
+packages/e2e/tests/chat.spec.ts:62:  await page.routeWebSocket("**/api/socket", (ws) => {
+packages/e2e/tests/chat.spec.ts:94:  await page.routeWebSocket("**/api/socket", (ws) => {
+packages/e2e/tests/chat.spec.ts:747:  await page.routeWebSocket("**/api/socket", (ws) => {
+exit code 0

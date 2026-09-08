@@ -1,0 +1,7 @@
+$ cd /Users/denis.lantsman/src/edulab && npm run lint && git add -A && git commit -m "Stage 6: building from a sample transcript" -q && git log --oneline -1
+stdout:
+> edulab@0.0.1 lint
+> biome check .
+Checked 52 files in 119ms. No fixes applied.
+85a2686 Stage 6: building from a sample transcript
+exit code 0

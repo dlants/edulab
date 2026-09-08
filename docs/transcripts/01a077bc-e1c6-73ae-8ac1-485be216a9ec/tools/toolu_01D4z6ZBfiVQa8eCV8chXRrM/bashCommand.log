@@ -1,0 +1,18 @@
+$ cd /Users/denis.lantsman/src/edulab && grep -n "bindText\|bindList\|textContent\|innerHTML" packages/frontend/vamp.ts
+stdout:
+2: * INVARIANT: All DOM updates must flow through the Binder (bindText, bindClass,
+4: * bindChecked, bindSlot, bindList) or through child views composed via
+8: *   - write a renderX(state) helper that sets innerHTML / appendChild /
+10: *   - mutate properties (.textContent, .className, .checked, .disabled, .src,
+55:/** Opaque descriptor returned by showKeyed(). Pass to bindList; do not inspect. */
+123: * Manages bindings between state and DOM. Created in a view's constructor after setting innerHTML.
+159:  /** Bind the text of the element via textContent (for XSS protection) */
+160:  bindText(ref: Ref, fn: (s: State) => string): void {
+163:      el.textContent = fn(s);
+290:        el.innerHTML = "";
+323:  bindList(
+341:      el.innerHTML = "";
+354:          child.el.innerHTML = "";
+490: * innerHTML assignments. Values wrapped in `RawHtml` (via `raw()`) pass through
+583:  el.textContent = css;
+exit code 0

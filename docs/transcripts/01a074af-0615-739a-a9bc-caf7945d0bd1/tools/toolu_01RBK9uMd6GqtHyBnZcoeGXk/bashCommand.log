@@ -1,0 +1,4 @@
+$ cd /Users/denis.lantsman/src/edulab && git add -A && git commit -q -m "Stage 2: capturing an interaction" && git log --oneline -1
+stdout:
+de8a5b0 Stage 2: capturing an interaction
+exit code 0

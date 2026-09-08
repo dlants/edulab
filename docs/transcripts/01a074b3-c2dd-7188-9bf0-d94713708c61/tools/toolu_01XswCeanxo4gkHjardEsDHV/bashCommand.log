@@ -1,0 +1,50 @@
+$ cd /Users/denis.lantsman/src/edulab && npm run typecheck && npm run lint
+stdout:
+> edulab@0.0.1 typecheck
+> npm -w @edulab/iso exec tsc -- --noEmit && npm -w @edulab/frontend exec tsc -- --noEmit && npm -w @edulab/backend exec tsc -- --noEmit && npm -w @edulab/e2e exec tsc -- --noEmit
+> edulab@0.0.1 lint
+> biome check .
+stderr:
+packages/frontend/graph-view.ts format ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  × Formatter would have printed the following content:
+     30  30 │   
+    };
+     31  31 │   
+     32     │ - 
+     33  32 │   ex
+port type State = {
+     34  33 │     nodes: Readonl
+yArray<GraphNode & { pos: Position }>;
+    ······· │ 
+    402 401 │   
+      .ref(closeRef)
+    403 402 │       
+  .addEventListe
+ner("click", () => dispatch({ type
+: "CLOSE" }));
+    404     │ - 
+    405 403 │ 
+    406 404 │     
+  this.b.bindVi
+sible(emptyRe
+f, (s) => s.nodes.lengt
+h === 0);
+······· │ 
+    444 442 │   
+  }
+    445 443 │   
+}
+    446     │ - 
+    447 444 │  
+    448 445 │   
+function se
+lectedId(s: State): s
+tring | null 
+{
+stdout:
+Checked 52 files in 118ms. No fixes applied.
+Found 1 error.
+stderr:
+check ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  × Some errors were emitted while running checks.
+exit code 1

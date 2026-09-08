@@ -1,0 +1,48 @@
+$ grep -rn -i "yield" packages/frontend/prompt.ts packages/frontend/threads.ts packages/frontend/thread.ts packages/frontend/prototypes/chat.ts | grep -v node_modules
+stdout:
+packages/frontend/prompt.ts:102:  "yield: doing nothing is the expected outcome, not a failure. Nothing you",
+packages/frontend/prompt.ts:145:  "else - then yield.",
+packages/frontend/threads.ts:24:  yieldSchema?: Anthropic.Tool.InputSchema | "text";
+packages/frontend/threads.ts:82:      yieldSchema: opts.yieldSchema,
+packages/frontend/threads.ts:90:  /** What a child thread settled with, once it has yielded. The parent renders
+packages/frontend/thread.ts:19:// question to the user is a dead end. The only exit is the yield tool.
+packages/frontend/thread.ts:22:  "user to answer questions, and nothing you say outside the yield tool will",
+packages/frontend/thread.ts:24:  "need without asking, and finish by calling the yield tool exactly once",
+packages/frontend/thread.ts:30:  `You stopped without yielding. Nobody read that message. Complete the task and call the yield tool when you are done. (auto-restart ${attempt}/${max})`;
+packages/frontend/thread.ts:32:const YIELD = "yield";
+packages/frontend/thread.ts:33:const DEFAULT_YIELD_SCHEMA: Anthropic.Tool.InputSchema = {
+packages/frontend/thread.ts:57:export type YieldValue =
+packages/frontend/thread.ts:63:  | { type: "yielded"; value: YieldValue }
+packages/frontend/thread.ts:75:  /** Present => the yield tool is offered. `"text"` uses the default
+packages/frontend/thread.ts:78:  yieldSchema?: Anthropic.Tool.InputSchema | "text";
+packages/frontend/thread.ts:144:  yieldSchema: Anthropic.Tool.InputSchema | "text";
+packages/frontend/thread.ts:146:  /** How many times a turn that ends without a yield is nudged back to work. */
+packages/frontend/thread.ts:154: * in, tools run client side, and the settled yield comes back. A turn that
+packages/frontend/thread.ts:155: * ends without yielding is restarted rather than accepted. */
+packages/frontend/thread.ts:158:  opts: RunThreadOpts & { yieldSchema: "text" },
+packages/frontend/thread.ts:162:  opts: RunThreadOpts & { yieldSchema: Anthropic.Tool.InputSchema },
+packages/frontend/thread.ts:173:    yieldSchema: opts.yieldSchema,
+packages/frontend/thread.ts:182:        error: `thread stopped without yielding after ${maxRestarts} restarts`,
+packages/frontend/thread.ts:187:  return result.type === "yielded"
+packages/frontend/thread.ts:263:  /** Present => the yield tool is offered and the turn can settle with data. */
+packages/frontend/thread.ts:264:  private readonly yieldSchema: Anthropic.Tool.InputSchema | "text" | undefined;
+packages/frontend/thread.ts:273:    this.yieldSchema = opts.yieldSchema;
+packages/frontend/thread.ts:309:  /** The settled yield, once the thread has produced one. */
+packages/frontend/thread.ts:352:        // Yield is not special-cased during execution: the whole batch runs and
+packages/frontend/thread.ts:354:        const yielded = calls.find((call) => this.isYield(call.name));
+packages/frontend/thread.ts:355:        if (yielded) {
+packages/frontend/thread.ts:357:            type: "yielded",
+packages/frontend/thread.ts:358:            value: this.yieldValue(
+packages/frontend/thread.ts:359:              (yielded.input ?? {}) as Record<string, unknown>,
+packages/frontend/thread.ts:372:  private isYield(name: string): boolean {
+packages/frontend/thread.ts:373:    return this.yieldSchema !== undefined && name === YIELD;
+packages/frontend/thread.ts:376:  private yieldValue(input: Record<string, unknown>): YieldValue {
+packages/frontend/thread.ts:377:    return this.yieldSchema === "text"
+packages/frontend/thread.ts:384:    if (this.yieldSchema !== undefined) {
+packages/frontend/thread.ts:386:        name: YIELD,
+packages/frontend/thread.ts:390:          this.yieldSchema === "text" ? DEFAULT_YIELD_SCHEMA : this.yieldSchema,
+packages/frontend/thread.ts:401:      : this.isYield(call.name)
+packages/frontend/thread.ts:402:        ? // Echoing the yielded payload back at the model only spends tokens.
+packages/frontend/thread.ts:403:          { status: "ok", text: "Yield acknowledged." }
+packages/frontend/prototypes/chat.ts:395:          yieldSchema: "text",
+exit code 0

@@ -1,0 +1,61 @@
+$ cd /Users/denis.lantsman/src/edulab && sed -n '1,60p' packages/e2e/tests/graph.spec.ts
+stdout:
+import type { ClientMessage, ServerFrame } from "@edulab/iso/protocol.ts";
+import { expect, type Page, test } from "@playwright/test";
+/** Answers every request with a one-word reply: this spec is about the graph
+ * tab, and the transcript only has to exist. */
+async function backend(page: Page) {
+  await page.routeWebSocket("**/api/socket", (ws) => {
+    ws.onMessage((raw) => {
+      const message = JSON.parse(String(raw)) as ClientMessage;
+      const send = (frame: ServerFrame) => ws.send(JSON.stringify(frame));
+      send({
+        type: "event",
+        requestId: message.requestId,
+        event: {
+          type: "content_block_start",
+          index: 0,
+          content_block: { type: "text", text: "ok", citations: null },
+        },
+      });
+      send({
+        type: "event",
+        requestId: message.requestId,
+        event: { type: "content_block_stop", index: 0 },
+      });
+      send({ type: "done", requestId: message.requestId });
+    });
+  });
+}
+/** The sidebar cases want a known graph without an extraction run first,
+ * so they seed it through the handle the prototype exposes. */
+async function seed(page: Page) {
+  await page.evaluate(() => {
+    const graph = (
+      window as unknown as {
+        __graph: {
+          putNode(n: {
+            title: string;
+            description: string;
+            notes: string;
+            level: number;
+          }): unknown;
+          putEdge(e: {
+            from: string;
+            to: string;
+            title: string;
+            description: string;
+          }): unknown;
+        };
+      }
+    ).__graph;
+    graph.putNode({
+      title: "closures",
+      description: "a function plus its environment",
+      notes: "asked about capture twice",
+      level: 2,
+    });
+    graph.putNode({
+      title: "scope",
+      description: "where a binding is visible",
+exit code 0

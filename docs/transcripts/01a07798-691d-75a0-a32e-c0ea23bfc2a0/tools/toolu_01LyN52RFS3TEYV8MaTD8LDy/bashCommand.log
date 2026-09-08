@@ -1,0 +1,28 @@
+$ cd /Users/denis.lantsman/src/edulab && npm run typecheck && npm run lint && cd ~/.claude/skills/browser && pkgx pnpm exec tsx scripts/browser.ts "
+load http://localhost:5173
+sleep 2000
+eval
+function d(e){const r=e.getBoundingClientRect();return {cls:e.className,x:Math.round(r.x),y:Math.round(r.y),w:Math.round(r.width),h:Math.round(r.height)}}
+const app=document.body.firstElementChild.firstElementChild;
+Array.from(document.querySelectorAll('button')).find(b=>b.textContent==='Knowledge graph').click();
+await new Promise(r=>setTimeout(r,300));
+const g=app.lastElementChild;
+return {graph:d(g), scrollH:g.scrollHeight, clientH:g.clientHeight};
+endeval
+"
+stdout:
+> edulab@0.0.1 typecheck
+> npm -w @edulab/iso exec tsc -- --noEmit && npm -w @edulab/frontend exec tsc -- --noEmit && npm -w @edulab/backend exec tsc -- --noEmit && npm -w @edulab/e2e exec tsc -- --noEmit
+> edulab@0.0.1 lint
+> biome check .
+Checked 55 files in 125ms. No fixes applied.
+Loading http://localhost:5173...
+Sleeping for 2000ms...
+Evaluating code in page context...
+Eval result: {
+  graph: { cls: 'graph_0', x: 0, y: 47, w: 1280, h: 673 },
+  scrollH: 673,
+  clientH: 673
+}
+Script completed successfully!
+exit code 0

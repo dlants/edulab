@@ -1,0 +1,21 @@
+$ cd /Users/denis.lantsman/src/edulab && grep -n "message:" packages/frontend/prompt.ts && npm test
+stdout:
+96:  "the transcript is labelled with its address, `@message:<thread>:<index>`,",
+166:function line(message: Message): string {
+> edulab@0.0.1 test
+> vitest run
+ RUN  v4.1.11 /Users/denis.lantsman/src/edulab
+ ✓ packages/frontend/graph.test.ts (9 tests) 3ms
+ ✓ packages/frontend/selection.test.ts (8 tests) 2ms
+ ✓ packages/frontend/layout.test.ts (7 tests) 7ms
+ ✓ packages/frontend/prompt.test.ts (14 tests) 3ms
+ ✓ packages/frontend/graph-tools.test.ts (8 tests) 13ms
+ ✓ packages/frontend/citation.test.ts (4 tests) 11ms
+ ✓ packages/frontend/threads.test.ts (4 tests) 11ms
+ ✓ packages/frontend/interactions.test.ts (4 tests) 12ms
+ ✓ packages/frontend/thread.test.ts (21 tests) 25ms
+ Test Files  9 passed (9)
+      Tests  79 passed (79)
+   Start at  20:25:10
+   Duration  204ms (transform 399ms, setup 0ms, import 880ms, tests 88ms, environment 0ms)
+exit code 0

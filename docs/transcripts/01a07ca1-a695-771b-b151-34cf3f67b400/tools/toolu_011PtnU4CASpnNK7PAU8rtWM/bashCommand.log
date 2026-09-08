@@ -1,0 +1,5 @@
+$ cd /Users/denis.lantsman/src/edulab && echo 'APP_PASSWORD=[REDACTED]' >> .env && cat .env | sed 's/=sk-.*/=REDACTED/'
+stdout:
+ANTHROPIC_API_KEY=REDACTED
+APP_PASSWORD=[REDACTED]
+exit code 0

@@ -1,0 +1,75 @@
+$ cd /Users/denis.lantsman/src/edulab && cat >> packages/e2e/tests/graph.spec.ts <<'EOF'
+
+function buildButton(page: Page) {
+  return page.getByRole("button", { name: /Build knowledge graph/ });
+}
+/** The smallest canned transcript, and the count of user turns in it: the
+ * build covers exactly the turns the sample was loaded with. */
+const SAMPLE = "9833484b";
+const SAMPLE_TURNS = 20;
+test("building from a sample transcript walks its turns once", async ({
+  page,
+}) => {
+  const backend = await updateBackend(page);
+  await page.goto(`/?sample=${SAMPLE}`);
+  await buildButton(page).click();
+  await expect(buildButton(page)).toBeDisabled();
+  await expect(page.locator("[data-build-status]")).toHaveText(
+    `${SAMPLE_TURNS} / ${SAMPLE_TURNS} interactions`,
+  );
+  await expect(page.locator("[data-build-status]")).toHaveText("built");
+  // Terminal: a second pass over the same turns buys nothing.
+  await expect(buildButton(page)).toBeDisabled();
+  await graphTab(page).click();
+  await expect(nodes(page)).toHaveCount(SAMPLE_TURNS);
+  expect(backend.overlapped()).toBe(false);
+});
+test("a failed update mid-build does not stop the ones after it", async ({
+  page,
+}) => {
+  await updateBackend(page, true);
+  await page.goto(`/?sample=${SAMPLE}`);
+  await buildButton(page).click();
+  await expect(page.locator("[data-build-status]")).toHaveText(
+    "built, 1 failed",
+  );
+  await graphTab(page).click();
+  await expect(nodes(page)).toHaveCount(SAMPLE_TURNS - 1);
+});
+test("interacting mid-build interleaves rather than races", async ({
+  page,
+}) => {
+  const backend = await updateBackend(page);
+  await page.goto(`/?sample=${SAMPLE}`);
+  await buildButton(page).click();
+  await turn(page, "and what about fragmentation");
+  await expect(page.locator("[data-build-status]")).toHaveText("built");
+  await graphTab(page).click();
+  await expect(nodes(page)).toHaveCount(SAMPLE_TURNS + 1);
+  expect(backend.overlapped()).toBe(false);
+});
+EOF
+npm run lint:fix && npm run typecheck && npm test
+stdout:
+> edulab@0.0.1 lint:fix
+> biome check --write .
+Checked 52 files in 148ms. No fixes applied.
+> edulab@0.0.1 typecheck
+> npm -w @edulab/iso exec tsc -- --noEmit && npm -w @edulab/frontend exec tsc -- --noEmit && npm -w @edulab/backend exec tsc -- --noEmit && npm -w @edulab/e2e exec tsc -- --noEmit
+> edulab@0.0.1 test
+> vitest run
+ RUN  v4.1.11 /Users/denis.lantsman/src/edulab
+ ✓ packages/frontend/graph.test.ts (9 tests) 3ms
+ ✓ packages/frontend/selection.test.ts (8 tests) 3ms
+ ✓ packages/frontend/layout.test.ts (7 tests) 8ms
+ ✓ packages/frontend/prompt.test.ts (14 tests) 4ms
+ ✓ packages/frontend/graph-tools.test.ts (7 tests) 14ms
+ ✓ packages/frontend/thread.test.ts (20 tests) 23ms
+ ✓ packages/frontend/interactions.test.ts (4 tests) 13ms
+ ✓ packages/frontend/citation.test.ts (4 tests) 12ms
+ ✓ packages/frontend/threads.test.ts (4 tests) 13ms
+ Test Files  9 passed (9)
+      Tests  77 passed (77)
+   Start at  20:16:17
+   Duration  271ms (transform 420ms, setup 0ms, import 824ms, tests 92ms, environment 1ms)
+exit code 0

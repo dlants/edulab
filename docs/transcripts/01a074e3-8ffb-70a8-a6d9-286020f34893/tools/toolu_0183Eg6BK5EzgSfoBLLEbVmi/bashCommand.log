@@ -1,0 +1,1318 @@
+$ env SANDBOX_RUNTIME\=1 TMPDIR\=/tmp/claude NO_PROXY\=localhost\,127.0.0.1\,\:\:1\,\*.local\,.local\,169.254.0.0/16\,10.0.0.0/8\,172.16.0.0/12\,192.168.0.0/16 no_proxy\=localhost\,127.0.0.1\,\:\:1\,\*.local\,.local\,169.254.0.0/16\,10.0.0.0/8\,172.16.0.0/12\,192.168.0.0/16 HTTP_PROXY\=http\://localhost\:57505 HTTPS_PROXY\=http\://localhost\:57505 http_proxy\=http\://localhost\:57505 https_proxy\=http\://localhost\:57505 ALL_PROXY\=socks5h\://localhost\:57506 all_proxy\=socks5h\://localhost\:57506 "GIT_SSH_COMMAND=ssh -o ProxyCommand='nc -X 5 -x localhost:57506 %h %p'" FTP_PROXY\=socks5h\://localhost\:57506 ftp_proxy\=socks5h\://localhost\:57506 RSYNC_PROXY\=localhost\:57506 DOCKER_HTTP_PROXY\=http\://localhost\:57505 DOCKER_HTTPS_PROXY\=http\://localhost\:57505 CLOUDSDK_PROXY_TYPE\=https CLOUDSDK_PROXY_ADDRESS\=localhost CLOUDSDK_PROXY_PORT\=57505 GRPC_PROXY\=socks5h\://localhost\:57506 grpc_proxy\=socks5h\://localhost\:57506 sandbox-exec -p "(version 1)
+(deny default (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+
+; LogTag: CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX
+
+; Essential permissions - based on Chrome sandbox policy
+; Process permissions
+(allow process-exec)
+(allow process-fork)
+(allow process-info* (target same-sandbox))
+(allow signal (target same-sandbox))
+(allow mach-priv-task-port (target same-sandbox))
+
+; User preferences
+(allow user-preference-read)
+
+; Mach IPC - specific services only (no wildcard)
+(allow mach-lookup
+  (global-name \"com.apple.audio.systemsoundserver\")
+  (global-name \"com.apple.distributed_notifications@Uv3\")
+  (global-name \"com.apple.FontObjectsServer\")
+  (global-name \"com.apple.fonts\")
+  (global-name \"com.apple.logd\")
+  (global-name \"com.apple.lsd.mapdb\")
+  (global-name \"com.apple.PowerManagement.control\")
+  (global-name \"com.apple.system.logger\")
+  (global-name \"com.apple.system.notification_center\")
+  (global-name \"com.apple.system.opendirectoryd.libinfo\")
+  (global-name \"com.apple.system.opendirectoryd.membership\")
+  (global-name \"com.apple.bsd.dirhelper\")
+  (global-name \"com.apple.securityd.xpc\")
+  (global-name \"com.apple.FSEvents\")
+  (global-name \"com.apple.SystemConfiguration.DNSConfiguration\")
+  (global-name \"com.apple.coreservices.launchservicesd\")
+)
+
+
+; POSIX IPC - shared memory
+(allow ipc-posix-shm)
+
+; POSIX IPC - semaphores for Python multiprocessing
+(allow ipc-posix-sem)
+
+; IOKit - specific operations only
+(allow iokit-open
+  (iokit-registry-entry-class \"IOSurfaceRootUserClient\")
+  (iokit-registry-entry-class \"RootDomainUserClient\")
+  (iokit-user-client-class \"IOSurfaceSendRight\")
+)
+
+; IOKit properties
+(allow iokit-get-properties)
+
+; Specific safe system-sockets, doesn't allow network access
+(allow system-socket (require-all (socket-domain AF_SYSTEM) (socket-protocol 2)))
+
+; sysctl - specific sysctls only
+(allow sysctl-read
+  (sysctl-name \"hw.activecpu\")
+  (sysctl-name \"hw.busfrequency_compat\")
+  (sysctl-name \"hw.byteorder\")
+  (sysctl-name \"hw.cacheconfig\")
+  (sysctl-name \"hw.cachelinesize_compat\")
+  (sysctl-name \"hw.cpufamily\")
+  (sysctl-name \"hw.cpufrequency\")
+  (sysctl-name \"hw.cpufrequency_compat\")
+  (sysctl-name \"hw.cputype\")
+  (sysctl-name \"hw.l1dcachesize_compat\")
+  (sysctl-name \"hw.l1icachesize_compat\")
+  (sysctl-name \"hw.l2cachesize_compat\")
+  (sysctl-name \"hw.l3cachesize_compat\")
+  (sysctl-name \"hw.logicalcpu\")
+  (sysctl-name \"hw.logicalcpu_max\")
+  (sysctl-name \"hw.machine\")
+  (sysctl-name \"hw.memsize\")
+  (sysctl-name \"hw.ncpu\")
+  (sysctl-name \"hw.nperflevels\")
+  (sysctl-name \"hw.packages\")
+  (sysctl-name \"hw.pagesize_compat\")
+  (sysctl-name \"hw.pagesize\")
+  (sysctl-name \"hw.physicalcpu\")
+  (sysctl-name \"hw.physicalcpu_max\")
+  (sysctl-name \"hw.tbfrequency_compat\")
+  (sysctl-name \"hw.vectorunit\")
+  (sysctl-name \"kern.argmax\")
+  (sysctl-name \"kern.bootargs\")
+  (sysctl-name \"kern.hostname\")
+  (sysctl-name \"kern.maxfiles\")
+  (sysctl-name \"kern.maxfilesperproc\")
+  (sysctl-name \"kern.maxproc\")
+  (sysctl-name \"kern.ngroups\")
+  (sysctl-name \"kern.osproductversion\")
+  (sysctl-name \"kern.osrelease\")
+  (sysctl-name \"kern.ostype\")
+  (sysctl-name \"kern.osvariant_status\")
+  (sysctl-name \"kern.osversion\")
+  (sysctl-name \"kern.secure_kernel\")
+  (sysctl-name \"kern.tcsm_available\")
+  (sysctl-name \"kern.tcsm_enable\")
+  (sysctl-name \"kern.usrstack64\")
+  (sysctl-name \"kern.version\")
+  (sysctl-name \"kern.willshutdown\")
+  (sysctl-name \"machdep.cpu.brand_string\")
+  (sysctl-name \"machdep.ptrauth_enabled\")
+  (sysctl-name \"security.mac.lockdown_mode_state\")
+  (sysctl-name \"sysctl.proc_cputype\")
+  (sysctl-name \"vm.loadavg\")
+  (sysctl-name-prefix \"hw.optional.arm\")
+  (sysctl-name-prefix \"hw.optional.arm.\")
+  (sysctl-name-prefix \"hw.optional.armv8_\")
+  (sysctl-name-prefix \"hw.perflevel\")
+  (sysctl-name-prefix \"kern.proc.all\")
+  (sysctl-name-prefix \"kern.proc.pgrp.\")
+  (sysctl-name-prefix \"kern.proc.pid.\")
+  (sysctl-name-prefix \"machdep.cpu.\")
+  (sysctl-name-prefix \"net.routetable.\")
+  (sysctl-name-prefix \"sysctl.oidfmt.\")
+  (sysctl-name-prefix \"sysctl.name.\")
+)
+
+; V8 thread calculations
+(allow sysctl-write
+  (sysctl-name \"kern.tcsm_enable\")
+)
+
+; Distributed notifications
+(allow distributed-notification-post)
+
+; Specific mach-lookup permissions for security operations
+(allow mach-lookup (global-name \"com.apple.SecurityServer\"))
+
+; File I/O on device files
+(allow file-ioctl (literal \"/dev/null\"))
+(allow file-ioctl (literal \"/dev/zero\"))
+(allow file-ioctl (literal \"/dev/random\"))
+(allow file-ioctl (literal \"/dev/urandom\"))
+(allow file-ioctl (literal \"/dev/dtracehelper\"))
+(allow file-ioctl (literal \"/dev/tty\"))
+
+(allow file-ioctl file-read-data file-write-data
+  (require-all
+    (literal \"/dev/null\")
+    (vnode-type CHARACTER-DEVICE)
+  )
+)
+
+; Network
+(allow network-bind (local ip \"localhost:57505\"))
+(allow network-inbound (local ip \"localhost:57505\"))
+(allow network-outbound (remote ip \"localhost:57505\"))
+(allow network-bind (local ip \"localhost:57506\"))
+(allow network-inbound (local ip \"localhost:57506\"))
+(allow network-outbound (remote ip \"localhost:57506\"))
+
+; File read
+(allow file-read*)
+(deny file-read*
+  (subpath \"/Users/denis.lantsman/.ssh\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-read*
+  (subpath \"/Users/denis.lantsman/.gnupg\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-read*
+  (subpath \"/Users/denis.lantsman/.aws\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-read*
+  (subpath \"/Users/denis.lantsman/.azure\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-read*
+  (subpath \"/Users/denis.lantsman/.config/gcloud\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-read*
+  (subpath \"/Users/denis.lantsman/.docker\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-read*
+  (subpath \"/Users/denis.lantsman/.kube\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-read*
+  (subpath \"/Users/denis.lantsman/.password-store\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-read*
+  (subpath \"/Users/denis.lantsman/.netrc\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-read*
+  (subpath \"/Users/denis.lantsman/.npmrc\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-read*
+  (subpath \"/Users/denis.lantsman/.pypirc\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-read*
+  (subpath \"/Users/denis.lantsman/.gem\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-read*
+  (subpath \"/Users/denis.lantsman/.config/gh\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-read*
+  (subpath \"/Users/denis.lantsman/.bashrc\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-read*
+  (subpath \"/Users/denis.lantsman/.bash_profile\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-read*
+  (subpath \"/Users/denis.lantsman/.bash_login\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-read*
+  (subpath \"/Users/denis.lantsman/.bash_logout\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-read*
+  (subpath \"/Users/denis.lantsman/.zshrc\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-read*
+  (subpath \"/Users/denis.lantsman/.zprofile\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-read*
+  (subpath \"/Users/denis.lantsman/.zshenv\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-read*
+  (subpath \"/Users/denis.lantsman/.zlogin\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-read*
+  (subpath \"/Users/denis.lantsman/.zlogout\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-read*
+  (subpath \"/Users/denis.lantsman/.profile\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-read*
+  (subpath \"/Users/denis.lantsman/.config/fish\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(allow file-read*
+  (subpath \"/Users/denis.lantsman/.nix-profile\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(allow file-read*
+  (subpath \"/Users/denis.lantsman/Library/Preferences\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(allow file-read*
+  (subpath \"/Users/denis.lantsman/.gitconfig\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(allow file-read-metadata
+  (vnode-type DIRECTORY))
+(deny file-write-unlink
+  (subpath \"/Users/denis.lantsman/.ssh\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (subpath \"/Users/denis.lantsman/.gnupg\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (subpath \"/Users/denis.lantsman/.aws\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (subpath \"/Users/denis.lantsman/.azure\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (subpath \"/Users/denis.lantsman/.config/gcloud\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman/.config\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (subpath \"/Users/denis.lantsman/.docker\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (subpath \"/Users/denis.lantsman/.kube\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (subpath \"/Users/denis.lantsman/.password-store\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (subpath \"/Users/denis.lantsman/.netrc\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (subpath \"/Users/denis.lantsman/.npmrc\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (subpath \"/Users/denis.lantsman/.pypirc\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (subpath \"/Users/denis.lantsman/.gem\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (subpath \"/Users/denis.lantsman/.config/gh\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman/.config\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (subpath \"/Users/denis.lantsman/.bashrc\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (subpath \"/Users/denis.lantsman/.bash_profile\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (subpath \"/Users/denis.lantsman/.bash_login\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (subpath \"/Users/denis.lantsman/.bash_logout\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (subpath \"/Users/denis.lantsman/.zshrc\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (subpath \"/Users/denis.lantsman/.zprofile\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (subpath \"/Users/denis.lantsman/.zshenv\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (subpath \"/Users/denis.lantsman/.zlogin\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (subpath \"/Users/denis.lantsman/.zlogout\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (subpath \"/Users/denis.lantsman/.profile\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (subpath \"/Users/denis.lantsman/.config/fish\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman/.config\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+
+; File write
+(allow file-write*
+  (subpath \"/dev/stdout\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(allow file-write*
+  (subpath \"/dev/stderr\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(allow file-write*
+  (subpath \"/dev/null\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(allow file-write*
+  (subpath \"/dev/tty\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(allow file-write*
+  (subpath \"/dev/dtracehelper\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(allow file-write*
+  (subpath \"/dev/autofs_nowait\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(allow file-write*
+  (subpath \"/private/tmp/claude\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(allow file-write*
+  (subpath \"/private/tmp/claude\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(allow file-write*
+  (subpath \"/Users/denis.lantsman/.npm/_logs\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(allow file-write*
+  (subpath \"/Users/denis.lantsman/.claude/debug\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(allow file-write*
+  (subpath \"/Users/denis.lantsman/src/edulab\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(allow file-write*
+  (subpath \"/private/tmp/\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(allow file-write*
+  (subpath \"/Users/denis.lantsman/.local/state/nvim/\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write*
+  (subpath \"/Users/denis.lantsman/src/edulab/.env\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write*
+  (subpath \"/Users/denis.lantsman/src/edulab/.git/hooks/\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write*
+  (subpath \"/Users/denis.lantsman/src/edulab/.magenta\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write*
+  (subpath \"/Users/denis.lantsman/.magenta\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write*
+  (subpath \"/Users/denis.lantsman/src/magenta.nvim/.gitconfig\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write*
+  (regex \"^/Users/denis\\\\.lantsman/src/magenta\\\\.nvim/(.*/)?\\\\.gitconfig\$\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write*
+  (subpath \"/Users/denis.lantsman/src/magenta.nvim/.gitmodules\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write*
+  (regex \"^/Users/denis\\\\.lantsman/src/magenta\\\\.nvim/(.*/)?\\\\.gitmodules\$\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write*
+  (subpath \"/Users/denis.lantsman/src/magenta.nvim/.bashrc\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write*
+  (regex \"^/Users/denis\\\\.lantsman/src/magenta\\\\.nvim/(.*/)?\\\\.bashrc\$\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write*
+  (subpath \"/Users/denis.lantsman/src/magenta.nvim/.bash_profile\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write*
+  (regex \"^/Users/denis\\\\.lantsman/src/magenta\\\\.nvim/(.*/)?\\\\.bash_profile\$\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write*
+  (subpath \"/Users/denis.lantsman/src/magenta.nvim/.zshrc\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write*
+  (regex \"^/Users/denis\\\\.lantsman/src/magenta\\\\.nvim/(.*/)?\\\\.zshrc\$\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write*
+  (subpath \"/Users/denis.lantsman/src/magenta.nvim/.zprofile\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write*
+  (regex \"^/Users/denis\\\\.lantsman/src/magenta\\\\.nvim/(.*/)?\\\\.zprofile\$\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write*
+  (subpath \"/Users/denis.lantsman/src/magenta.nvim/.profile\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write*
+  (regex \"^/Users/denis\\\\.lantsman/src/magenta\\\\.nvim/(.*/)?\\\\.profile\$\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write*
+  (subpath \"/Users/denis.lantsman/src/magenta.nvim/.ripgreprc\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write*
+  (regex \"^/Users/denis\\\\.lantsman/src/magenta\\\\.nvim/(.*/)?\\\\.ripgreprc\$\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write*
+  (subpath \"/Users/denis.lantsman/src/magenta.nvim/.mcp.json\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write*
+  (regex \"^/Users/denis\\\\.lantsman/src/magenta\\\\.nvim/(.*/)?\\\\.mcp\\\\.json\$\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write*
+  (subpath \"/Users/denis.lantsman/src/magenta.nvim/.vscode\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write*
+  (regex \"^/Users/denis\\\\.lantsman/src/magenta\\\\.nvim/(.*/)?\\\\.vscode/.*\$\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write*
+  (subpath \"/Users/denis.lantsman/src/magenta.nvim/.idea\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write*
+  (regex \"^/Users/denis\\\\.lantsman/src/magenta\\\\.nvim/(.*/)?\\\\.idea/.*\$\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write*
+  (subpath \"/Users/denis.lantsman/src/magenta.nvim/.claude/commands\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write*
+  (regex \"^/Users/denis\\\\.lantsman/src/magenta\\\\.nvim/(.*/)?\\\\.claude/commands/.*\$\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write*
+  (subpath \"/Users/denis.lantsman/src/magenta.nvim/.claude/agents\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write*
+  (regex \"^/Users/denis\\\\.lantsman/src/magenta\\\\.nvim/(.*/)?\\\\.claude/agents/.*\$\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write*
+  (subpath \"/Users/denis.lantsman/src/magenta.nvim/.git/hooks\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write*
+  (regex \"^/Users/denis\\\\.lantsman/src/magenta\\\\.nvim/(.*/)?\\\\.git/hooks/.*\$\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write*
+  (subpath \"/Users/denis.lantsman/src/magenta.nvim/.git/config\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write*
+  (regex \"^/Users/denis\\\\.lantsman/src/magenta\\\\.nvim/(.*/)?\\\\.git/config\$\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (subpath \"/Users/denis.lantsman/src/edulab/.env\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman/src/edulab\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman/src\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (subpath \"/Users/denis.lantsman/src/edulab/.git/hooks/\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman/src/edulab/.git\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman/src/edulab\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman/src\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (subpath \"/Users/denis.lantsman/src/edulab/.magenta\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman/src/edulab\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman/src\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (subpath \"/Users/denis.lantsman/.magenta\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (subpath \"/Users/denis.lantsman/src/magenta.nvim/.gitconfig\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman/src/magenta.nvim\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman/src\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (regex \"^/Users/denis\\\\.lantsman/src/magenta\\\\.nvim/(.*/)?\\\\.gitconfig\$\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman/src/magenta.nvim\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman/src\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (subpath \"/Users/denis.lantsman/src/magenta.nvim/.gitmodules\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman/src/magenta.nvim\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman/src\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (regex \"^/Users/denis\\\\.lantsman/src/magenta\\\\.nvim/(.*/)?\\\\.gitmodules\$\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman/src/magenta.nvim\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman/src\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (subpath \"/Users/denis.lantsman/src/magenta.nvim/.bashrc\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman/src/magenta.nvim\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman/src\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (regex \"^/Users/denis\\\\.lantsman/src/magenta\\\\.nvim/(.*/)?\\\\.bashrc\$\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman/src/magenta.nvim\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman/src\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (subpath \"/Users/denis.lantsman/src/magenta.nvim/.bash_profile\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman/src/magenta.nvim\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman/src\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (regex \"^/Users/denis\\\\.lantsman/src/magenta\\\\.nvim/(.*/)?\\\\.bash_profile\$\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman/src/magenta.nvim\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman/src\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (subpath \"/Users/denis.lantsman/src/magenta.nvim/.zshrc\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman/src/magenta.nvim\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman/src\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (regex \"^/Users/denis\\\\.lantsman/src/magenta\\\\.nvim/(.*/)?\\\\.zshrc\$\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman/src/magenta.nvim\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman/src\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (subpath \"/Users/denis.lantsman/src/magenta.nvim/.zprofile\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman/src/magenta.nvim\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman/src\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (regex \"^/Users/denis\\\\.lantsman/src/magenta\\\\.nvim/(.*/)?\\\\.zprofile\$\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman/src/magenta.nvim\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman/src\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (subpath \"/Users/denis.lantsman/src/magenta.nvim/.profile\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman/src/magenta.nvim\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman/src\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (regex \"^/Users/denis\\\\.lantsman/src/magenta\\\\.nvim/(.*/)?\\\\.profile\$\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman/src/magenta.nvim\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman/src\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (subpath \"/Users/denis.lantsman/src/magenta.nvim/.ripgreprc\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman/src/magenta.nvim\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman/src\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (regex \"^/Users/denis\\\\.lantsman/src/magenta\\\\.nvim/(.*/)?\\\\.ripgreprc\$\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman/src/magenta.nvim\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman/src\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (subpath \"/Users/denis.lantsman/src/magenta.nvim/.mcp.json\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman/src/magenta.nvim\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman/src\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (regex \"^/Users/denis\\\\.lantsman/src/magenta\\\\.nvim/(.*/)?\\\\.mcp\\\\.json\$\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman/src/magenta.nvim\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman/src\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (subpath \"/Users/denis.lantsman/src/magenta.nvim/.vscode\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman/src/magenta.nvim\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman/src\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (regex \"^/Users/denis\\\\.lantsman/src/magenta\\\\.nvim/(.*/)?\\\\.vscode/.*\$\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman/src/magenta.nvim\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman/src\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (subpath \"/Users/denis.lantsman/src/magenta.nvim/.idea\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman/src/magenta.nvim\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman/src\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (regex \"^/Users/denis\\\\.lantsman/src/magenta\\\\.nvim/(.*/)?\\\\.idea/.*\$\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman/src/magenta.nvim\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman/src\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (subpath \"/Users/denis.lantsman/src/magenta.nvim/.claude/commands\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman/src/magenta.nvim/.claude\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman/src/magenta.nvim\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman/src\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (regex \"^/Users/denis\\\\.lantsman/src/magenta\\\\.nvim/(.*/)?\\\\.claude/commands/.*\$\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman/src/magenta.nvim\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman/src\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (subpath \"/Users/denis.lantsman/src/magenta.nvim/.claude/agents\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman/src/magenta.nvim/.claude\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman/src/magenta.nvim\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman/src\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (regex \"^/Users/denis\\\\.lantsman/src/magenta\\\\.nvim/(.*/)?\\\\.claude/agents/.*\$\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman/src/magenta.nvim\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman/src\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (subpath \"/Users/denis.lantsman/src/magenta.nvim/.git/hooks\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman/src/magenta.nvim/.git\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman/src/magenta.nvim\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman/src\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (regex \"^/Users/denis\\\\.lantsman/src/magenta\\\\.nvim/(.*/)?\\\\.git/hooks/.*\$\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman/src/magenta.nvim\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman/src\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (subpath \"/Users/denis.lantsman/src/magenta.nvim/.git/config\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman/src/magenta.nvim/.git\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman/src/magenta.nvim\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman/src\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (regex \"^/Users/denis\\\\.lantsman/src/magenta\\\\.nvim/(.*/)?\\\\.git/config\$\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman/src/magenta.nvim\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman/src\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users/denis.lantsman\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))
+(deny file-write-unlink
+  (literal \"/Users\")
+  (with message \"CMD64_c2VkIC1uICc0NSwxMjBwJyBwYWNrYWdlcy9mcm9udGVuZC9ncmFwaC50czsgZWNobyA9PT09OyBzZWQgLW4gJzEsMTQwcCcgcGFja2FnZXMvZnJvbnRlbmQvdGhyZWFkLnRz_END__b0jfbns9v_SBX\"))" /bin/bash -c "sed -n '45,120p' packages/frontend/graph.ts; echo ====; sed -n '1,140p' packages/frontend/thread.ts"
+stdout:
+  | { status: "ok"; change: GraphChange }
+  | { status: "error"; error: string };
+export const isNodeId = (id: string): id is NodeId => id.startsWith("n");
+export const isEdgeId = (id: string): id is EdgeId => id.startsWith("e");
+export class KnowledgeGraph {
+  #nodes = new Map<NodeId, GraphNode>();
+  #edges = new Map<EdgeId, GraphEdge>();
+  #next = 0;
+  get nodes(): ReadonlyArray<GraphNode> {
+    return [...this.#nodes.values()];
+  }
+  get edges(): ReadonlyArray<GraphEdge> {
+    return [...this.#edges.values()];
+  }
+  node(id: NodeId): GraphNode | undefined {
+    return this.#nodes.get(id);
+  }
+  edge(id: EdgeId): GraphEdge | undefined {
+    return this.#edges.get(id);
+  }
+  /** Creates with a fresh id when `id` is omitted, updates in place when it is
+   * given. Rejects an unknown id, an empty title, or a title already used by
+   * another node. */
+  putNode(node: Omit<GraphNode, "id"> & { id?: NodeId }): GraphResult {
+    const title = node.title.trim();
+    if (title === "") return { status: "error", error: "node title is empty" };
+    if (node.id !== undefined && !this.#nodes.has(node.id))
+      return { status: "error", error: `no node with id ${node.id}` };
+    for (const other of this.#nodes.values())
+      if (other.title === title && other.id !== node.id)
+        return {
+          status: "error",
+          error: `title "${title}" is already used by node ${other.id}`,
+        };
+    const id = node.id ?? (`n${this.#next++}` as NodeId);
+    this.#nodes.set(id, {
+      id,
+      title,
+      description: node.description,
+      notes: node.notes,
+      level: node.level,
+    });
+    return {
+      status: "ok",
+      change: {
+        op: node.id === undefined ? "created" : "updated",
+        kind: "node",
+        id,
+        title,
+      },
+    };
+  }
+  /** Cascades to incident edges. */
+  deleteNode(id: NodeId): GraphResult {
+    const node = this.#nodes.get(id);
+    if (!node) return { status: "error", error: `no node with id ${id}` };
+    for (const edge of [...this.#edges.values()])
+      if (edge.from === id || edge.to === id) this.#edges.delete(edge.id);
+    this.#nodes.delete(id);
+    return {
+      status: "ok",
+      change: { op: "deleted", kind: "node", id, title: node.title },
+    };
+  }
+  /** Errors if either endpoint is unknown. */
+  putEdge(edge: Omit<GraphEdge, "id"> & { id?: EdgeId }): GraphResult {
+    const title = edge.title.trim();
+====
+import type Anthropic from "@anthropic-ai/sdk";
+import type { ClientMessage, ServerFrame } from "@edulab/iso/protocol.ts";
+const MODEL = "claude-opus-4-5";
+const MAX_TOKENS = 16384;
+// Task mode: the agent is here to get the user's work done. Learning mode is
+// the secondary mode we layer on top of a transcript this produces, so this
+// prompt must not pre-emptively tutor - the whole premise of the prototype is
+// that a user watching a capable agent work becomes a passive observer.
+const SYSTEM = [
+  "You are a capable engineering assistant helping the user complete a task.",
+  "Work the problem directly: make concrete decisions, write real code, and",
+  "state your reasoning as you go rather than asking the user to supply it.",
+  "Be concise. Do not quiz the user, do not pad explanations for a beginner,",
+  "and do not check whether they are following - just do the work well.",
+].join(" ");
+// Unattended mode: nobody is reading the transcript as it streams, so a
+// question to the user is a dead end. The only exit is the yield tool.
+const AUTONOMOUS_SYSTEM = [
+  "You are a capable engineering assistant running unattended: there is no",
+  "user to answer questions, and nothing you say outside the yield tool will",
+  "be read. Work the problem to completion, making whatever decisions you",
+  "need without asking, and finish by calling the yield tool exactly once",
+  "with your result. Do not stop for confirmation and do not ask questions.",
+].join(" ");
+const MAX_RESTARTS = 5;
+const restartNudge = (attempt: number, max: number) =>
+  `You stopped without yielding. Nobody read that message. Complete the task and call the yield tool when you are done. (auto-restart ${attempt}/${max})`;
+const YIELD = "yield";
+const DEFAULT_YIELD_SCHEMA: Anthropic.Tool.InputSchema = {
+  type: "object",
+  properties: {
+    result: {
+      type: "string",
+      description: "The result to return to whoever spawned this thread.",
+    },
+  },
+  required: ["result"],
+};
+export type ToolCall = {
+  id: string;
+  name: string;
+  /** Parsed from the streamed json; undefined while still streaming or if it
+   * never parsed. */
+  input: Record<string, unknown> | undefined;
+  /** Raw accumulated json, so a partial call is still renderable. */
+  inputJson: string;
+  /** Derived from the paired tool_result block in the next user turn; absent
+   * while the tool is still running. */
+  result: ToolResult | undefined;
+};
+export type YieldValue =
+  | { type: "text"; text: string }
+  | { type: "structured"; value: Record<string, unknown> };
+export type TurnResult =
+  | { type: "completed" }
+  | { type: "yielded"; value: YieldValue }
+  | { type: "error"; message: string };
+export type ThreadOpts = {
+  system?: string;
+  /** Sent after the seed, and rendered: a learning thread's opening ask is
+   * one of these, not part of the seed. */
+  initialTurns?: Anthropic.MessageParam[];
+  /** Content blocks rather than a string when the caller needs `cache_control`
+   * on part of it - a graph update marks its stable prefix. */
+  seed?: string | Anthropic.ContentBlockParam[];
+  tools?: Record<ToolName, Tool>;
+  /** Present => the yield tool is offered. `"text"` uses the default
+   * `{ result: string }` schema and settles with a text value; a schema
+   * settles with the whole input object. */
+  yieldSchema?: Anthropic.Tool.InputSchema | "text";
+};
+/** The key of a tool in the record handed to a thread; also what the model
+ * sends back as `tool_use.name`. */
+export type ToolName = string & { readonly __brand: "ToolName" };
+export type ToolResult =
+  | { status: "ok"; text: string }
+  | { status: "error"; error: string };
+/** A tool the thread can run, client side. */
+export type Tool = {
+  spec: Anthropic.Tool;
+  execute(input: Record<string, unknown>): Promise<ToolResult>;
+};
+/** Keys a set of tools by name. `Record<ToolName, Tool>` is a mapped type over
+ * a branded string, so an object literal cannot be written for it directly. */
+export function toolset(...tools: ReadonlyArray<Tool>): Record<ToolName, Tool> {
+  return Object.fromEntries(tools.map((t) => [t.spec.name, t]));
+}
+/** One entry of the derived transcript: a block, not a turn. A single agent
+ * turn can produce prose, a tool call, and more prose, and the transcript shows
+ * it that way. */
+export type Message =
+  | { type: "text"; role: "user" | "assistant"; text: string }
+  | { type: "tool_use"; role: "assistant"; call: ToolCall };
+/** A position in a thread's `messages`. Branded because it is an identifier -
+ * half of the `(thread, index)` address an interaction and a citation are
+ * written as - and only ever produced by reading a real position. */
+export type MessageIdx = number & { readonly __brand: "MessageIdx" };
+/** Anchors index into text entries only, so everything else has no text. */
+export function messageText(message: Message): string {
+  return message.type === "text" ? message.text : "";
+}
+/** A block of the assistant turn currently streaming. */
+type PendingBlock =
+  | { type: "text"; text: string }
+  | {
+      type: "tool_use";
+      id: string;
+      name: string;
+      inputJson: string;
+      input: Record<string, unknown> | undefined;
+    };
+/** The subset of WebSocket the thread uses, so tests can stand in for it. */
+export type Socket = {
+  send(data: string): void;
+  addEventListener(
+    type: "message",
+    listener: (e: MessageEvent<string>) => void,
+  ): void;
+};
+export type ThreadResult<Value> =
+  | { status: "ok"; result: Value }
+  | { status: "error"; error: string };
+exit code 0

@@ -1,0 +1,11 @@
+$ cd /Users/denis.lantsman/src/edulab && perl -0pi -e 's/    return id;\n  \}\n  \/\*\* Seeds a child from/    return id;\n  }\n\n  \/** Seeds a child from/; s/    return id;\n  \}\n  \/\*\* What a child/    return id;\n  }\n\n  \/** What a child/; s/    return out;\n  \}\n  \/\*\* The thread-level/    return out;\n  }\n\n  \/** The thread-level/; s/    return out;\n  \}\n  \/\*\* root -> id/    return out;\n  }\n\n  \/** root -> id/' packages/frontend/threads.ts && sed -n '40,48p' packages/frontend/threads.ts
+stdout:
+  /** Creation order; a passage child's `origin.anchor` is its highlight. */
+  children: ThreadId[];
+  activeChild: ThreadId | null;
+  draft: string;
+};
+/** The tree of threads. Every thread but the root was opened from a
+ * passage of its parent, so a thread and the highlight over its parent are the
+ * same edge seen from either end. Threads are never destroyed or reparented. */
+exit code 0

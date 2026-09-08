@@ -1,0 +1,145 @@
+$ cd /Users/denis.lantsman/src/edulab && sed -n '78,190p' packages/e2e/tests/graph.spec.ts; ls packages/frontend/samples/; sed -n 1,40p packages/frontend/samples/index.ts
+stdout:
+  return page.getByRole("button", { name: "Threads", exact: true });
+}
+function nodes(page: Page) {
+  return page.locator("[data-node]");
+}
+async function open(page: Page) {
+  await backend(page);
+  await page.goto("/");
+  await seed(page);
+  await graphTab(page).click();
+}
+test("switching tabs leaves the transcript and the graph intact", async ({
+  page,
+}) => {
+  await backend(page);
+  await page.goto("/");
+  await page.getByRole("textbox").fill("hello");
+  await page.getByRole("textbox").press("Enter");
+  await expect(page.locator("ul").first().locator("li")).toHaveCount(2);
+  await seed(page);
+  await graphTab(page).click();
+  await expect(nodes(page)).toHaveCount(2);
+  await expect(page.locator("[data-edge]")).toHaveCount(1);
+  await threadsTab(page).click();
+  await expect(page.locator("ul").first().locator("li")).toHaveCount(2);
+  await graphTab(page).click();
+  await expect(nodes(page)).toHaveCount(2);
+});
+test("clicking a node fills the sidebar and a retitle keeps its edges", async ({
+  page,
+}) => {
+  await open(page);
+  await nodes(page).filter({ hasText: "closures" }).click();
+  await expect(page.locator("[data-graph-title]")).toHaveValue("closures");
+  await expect(page.locator("[data-graph-description]")).toHaveValue(
+    "a function plus its environment",
+  );
+  await expect(page.locator("[data-graph-notes]")).toHaveValue(
+    "asked about capture twice",
+  );
+  await expect(page.locator("[data-graph-level]")).toHaveValue("2");
+  await page.locator("[data-graph-title]").fill("lexical closures");
+  await page.getByRole("button", { name: "Save" }).click();
+  await expect(nodes(page)).toHaveText(["lexical closures", "scope"]);
+  await expect(page.locator("[data-edge]")).toHaveCount(1);
+  await expect(page.locator("[data-edge-label]")).toHaveText("builds on");
+});
+test("a duplicate title is rejected without losing the draft", async ({
+  page,
+}) => {
+  await open(page);
+  await nodes(page).filter({ hasText: "closures" }).click();
+  await page.locator("[data-graph-title]").fill("scope");
+  await page.getByRole("button", { name: "Save" }).click();
+  await expect(page.locator("[data-graph-error]")).toHaveText(/already used/);
+  await expect(page.locator("[data-graph-title]")).toHaveValue("scope");
+  await expect(nodes(page)).toHaveText(["closures", "scope"]);
+});
+test("deleting a node takes its edges with it", async ({ page }) => {
+  await open(page);
+  await nodes(page).filter({ hasText: "closures" }).click();
+  await page.getByRole("button", { name: "Delete" }).click();
+  await expect(nodes(page)).toHaveText(["scope"]);
+  await expect(page.locator("[data-edge]")).toHaveCount(0);
+  await expect(page.getByText("Click a node or an edge")).toBeVisible();
+});
+test("an edge is selectable and editable", async ({ page }) => {
+  await open(page);
+  await page.locator("[data-edge-label]").click();
+  await expect(page.locator("[data-graph-title]")).toHaveValue("builds on");
+  await expect(page.locator("[data-graph-notes]")).toBeHidden();
+  await page.locator("[data-graph-title]").fill("requires");
+  await page.getByRole("button", { name: "Save" }).click();
+  await expect(page.locator("[data-edge-label]")).toHaveText("requires");
+});
+/** Answers every graph update with one `put_nodes` call naming the update by
+ * its ordinal, then a yield. Records each update's prompt and whether two ever
+ * overlapped, which is what the serialization claim comes down to. */
+async function updateBackend(page: Page, failFirst = false) {
+  const prompts: string[] = [];
+  let live = 0;
+  let overlap = false;
+  await page.routeWebSocket("**/api/socket", (ws) => {
+    ws.onMessage((raw) => {
+      const message = JSON.parse(String(raw)) as ClientMessage;
+      const send = (frame: ServerFrame) => ws.send(JSON.stringify(frame));
+      const update = (message.params.tools ?? []).some(
+        (t) => t.name === "put_nodes",
+      );
+      if (!update) {
+        send({
+          type: "event",
+          requestId: message.requestId,
+          event: {
+            type: "content_block_start",
+357dee9a-statsforecast-zero-constraints.json
+37734816-colbert-raptor-rag-design.json
+3890541b-chiller-system-hysys-model.json
+44bbcae8-tile-adhesive-formulation.json
+5b878a60-solidity-guildtoken-audit.json
+72c7ec37-django-event-app-urls.json
+74979366-floating-dock-pontoon.json
+80e08978-quantum-espresso-burai-relaxation.json
+9833484b-c-heap-file-block-storage.json
+aa0cb918-statsforecast-polars-series-lengths.json
+index.ts
+import type Anthropic from "@anthropic-ai/sdk";
+import guildToken from "./5b878a60-solidity-guildtoken-audit.json";
+import adhesive from "./44bbcae8-tile-adhesive-formulation.json";
+import django from "./72c7ec37-django-event-app-urls.json";
+import quantumEspresso from "./80e08978-quantum-espresso-burai-relaxation.json";
+import zeroConstraints from "./357dee9a-statsforecast-zero-constraints.json";
+import chiller from "./3890541b-chiller-system-hysys-model.json";
+import heapFile from "./9833484b-c-heap-file-block-storage.json";
+import rag from "./37734816-colbert-raptor-rag-design.json";
+import pontoon from "./74979366-floating-dock-pontoon.json";
+import polarsSeries from "./aa0cb918-statsforecast-polars-series-lengths.json";
+/** A canned task transcript, so a prototype can be exercised without spending a
+ * turn of real work first. The files are verbatim exports: a flat array of
+ * strictly alternating string-content turns, which is exactly MessageParam. */
+export type Sample = {
+  id: string;
+  label: string;
+  turns: Anthropic.MessageParam[];
+};
+type SampleFile = {
+  hash: string;
+  messages: { role: string; content: string }[];
+};
+function sample(label: string, file: SampleFile): Sample {
+  return {
+    id: file.hash.slice(0, 8),
+    label,
+    turns: file.messages.map((m) => ({
+      role: m.role === "assistant" ? "assistant" : "user",
+      content: m.content,
+    })),
+  };
+}
+export const samples: Sample[] = [
+  sample("Floating dock pontoon", pontoon),
+  sample("Tile adhesive formulation", adhesive),
+exit code 0

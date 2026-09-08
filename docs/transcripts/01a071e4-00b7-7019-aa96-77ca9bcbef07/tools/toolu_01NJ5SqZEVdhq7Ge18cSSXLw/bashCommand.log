@@ -1,0 +1,390 @@
+$ cd /Users/denis.lantsman/src/edulab && npm run typecheck && npm test && npm run lint
+stdout:
+> edulab@0.0.1 typecheck
+> npm -w @edulab/iso exec tsc -- --noEmit && npm -w @edulab/frontend exec tsc -- --noEmit && npm -w @edulab/backend exec tsc -- --noEmit && npm -w @edulab/e2e exec tsc -- --noEmit
+> edulab@0.0.1 test
+> vitest run
+ RUN  v4.1.11 /Users/denis.lantsman/src/edulab
+ ✓ packages/frontend/prompt.test.ts (5 tests) 2ms
+ ✓ packages/frontend/selection.test.ts (8 tests) 2ms
+ ✓ packages/frontend/thread.test.ts (10 tests) 12ms
+ Test Files  3 passed (3)
+      Tests  23 passed (23)
+   Start at  07:08:40
+   Duration  152ms (transform 87ms, setup 0ms, import 195ms, tests 16ms, environment 0ms)
+> edulab@0.0.1 lint
+> biome check .
+stderr:
+packages/frontend/prompt.test.ts format ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  × Formatter would have printed the following content:
+     5   5 │   con
+st messages = [
+     6   6 │     { type: "text" as const, role: "user" as const, 
+text: "build a parser" },
+     7     │ - 
+··{·type:·"tex
+t"·as·const,·role:·"assistant"·as·const,·text:·"I·used·a·recursive·de
+scent·approach."·},
+       7 │ + 
+··{
+         8 │ + ····type:·
+"text"·as·const,
+    9 │ + ···
+·role:·"assistant"·as·cons
+t,
+        10 │ + 
+····text:·"
+I·used·a·recursive·de
+scent·approach
+.",
+        11 │ 
++ ··},
+ 8  12 │     { type: "t
+ext" as cons
+t, role: "us
+er" as c
+onst, text: "th
+anks" },
+     9 
+ 13 │   ] as 
+const;
+    ······ │ 
+    56  60
+ │       type: 
+"explain",
+    57  61 │     });
+    58     │ - 
+··const
+·level1·=·[
+{·type:·"text"·as·
+const,·role
+:·"assista
+nt"·as·
+const,·
+text:·"It·parses·
+top-down."·
+}]·as·con
+st;
+ 62 │ + ··const·le
+vel1·=·[
+  63 │ + ·
+···{
+        64 │ +
+ ······type:·"t
+ext"·as·cons
+t,
+        65 │ 
++ ······
+role:·"assi
+stant"·as
+·const,
+      66 │ + 
+······text:·"It·
+parses·top-d
+own.",
+ 67 │ + ·
+···},
+        68 │ + 
+··]·as·const;
+    59  69 │   
+  const 
+depth2 = se
+edTurn(root, level1, at(0, 
+10, 0, 18
+), { ty
+pe: "quiz"
+ });
+    60  70 │   
+    ······ │ 
+    78  88 │ 
+    79  89 │ 
+    const level
+2 = [
+    80   
+  │ - ··
+··{·type:·
+"text"·as·const,
+·role:·"ass
+istant"·a
+s·const,·t
+ext:·"Questi
+on:·what·
+is·a·token
+?"·},
+   90 │ + ····{
+      91 │ + ·
+·····type:
+·"text"·as·const,
+      92 │ + ·
+·····role:·
+"assistant
+"·as·const,
+ 93 │ + ···
+···text:·"Q
+uestion:
+·what·is·a·tok
+en?",
+        94
+ │ + ····
+},
+    81  95 │     ]
+ as const;
+    82 
+ 96 │     
+const depth3 = seed
+Turn(depth2,
+ level2, a
+t(0, 0, 0,
+ 8), {
+packages/frontend/thread.test.ts format 
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  × Formatter would have printed the following content:
+    105 105 │      
+ delta: { type: "text_delta", text: "he" },
+    106 106 │   
+  });
+    107     │ - ··
+expect(thread.messages[1]).toEqual({·type:·"
+text",·role:·"assis
+tant",·text:·"
+he"·});
+        107 │ + ··ex
+pect(thread.messag
+es[1]).toEqu
+al({
+        108 │ + ···
+·type:·"text",
+      109 │ + ·
+···role:·"a
+ssistant",
+        110 │ + 
+····text:·"
+he",
+        111 │ + 
+··});
+    108 112 │   
+    109
+ 113 │     socket
+.deliver({
+    ······· │ 
+    150 154 │     
+void thread.send("tw
+o");
+    151 155 │  
+   expect(socket.
+sent).toHav
+eLength(1);
+    152     │ - 
+··expect(threa
+d.messages).
+toEqual([
+{·type:·"te
+xt",·role:·"user"
+,·text:·"one
+"·}]);
+  156 │ + 
+··expect(thread.mes
+sage
+s).toEqual
+([
+        157
+ │ + ····{·type:·"t
+ext",·role:·
+"user",·tex
+t:·"one"·
+},
+        158 │ + 
+··]);
+    153 159 │  
+ });
+    154
+ 160 │   
+    ······· │ 
+    190
+ 196 │     socke
+t.stream(["
+hello"]);
+    191 197 │   
+  await f
+irst;
+    192 
+    │ - 
+··expect(t
+hread.message
+s).toEqual([{·type:·
+"text",·rol
+e:·"assis
+tant",·tex
+t:·"hello"·}]);
+        198 │ +
+ ··expe
+ct(thread.message
+s).toEqual(
+[
+        199
+ │ + ···
+·{·type:·"text",·r
+ole:·"assis
+tant",·tex
+t:·"hello
+"·},
+        200 │ + 
+··]);
+    193 201
+ │   
+    194
+ 202 │     const sec
+ond = thread
+.send("mor
+e");
+packages/frontend/thread.ts format 
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  × Formatter would have printed the following content:
+     77  77 │      * be
+ recomputed lazily rather than on every delta. */
+   78  78 │     private ve
+rsion = 0;
+     79     │ - ··private·c
+ache:·{·version:·numbe
+r;·messages:·R
+eadonlyArray<Message>·}·|·
+undefined;
+ 79 │ + ··p
+rivate·cache:
+         80 │ + 
+····|·{·ver
+sion:·number
+;·messages:·ReadonlyA
+rray<Message
+>·}
+         81
+ │ + ····|·undef
+ined;
+     80  82 │  
+   privat
+e settle: (() => v
+oid) | unde
+fined;
+     81 
+ 83 │     
+onChange: (() => voi
+d) | undefined;
+······· │ 
+    195 197 │   
+        // The model
+'s json onl
+y becomes 
+readable 
+once it is comple
+te; a strea
+m
+    196 198 │  
+// cut short lea
+ves `input`
+ undefine
+d and the 
+partial json in p
+lace.
+    197  
+   │ - ··
+······if·(block?.t
+ype·===·"to
+ol_use")·
+block.inpu
+t·=·parseInput(bl
+ock.inputJson);
+        199 │ + 
+········if·(blo
+ck?.type·===
+·"tool_use
+")
+        200 │ + 
+··········block.
+input·=·par
+seInput(block.in
+putJson);
+    198 201 │   
+        b
+reak;
+    199 202 │   
+      }
+    ·······
+ │ 
+    323 326 │   
+          .map((p
+art) => (p
+art.type =
+== "text" 
+? part.text : ""
+))
+    324 327 │  
+ .join("");
+    325  
+   │ - ·
+·return·blo
+ck.is_erro
+r·?·{·status:·"er
+ror",·erro
+r:·text·}·
+:·{·statu
+s:·"ok",·text·}
+;
+        328 │ +
+ ··retur
+n·block.is_error
+        329 │ + 
+····?·
+{·status:
+·"error",·error:·
+text·}
+ 330 │ + ·
+···:·{·st
+atus:·"ok",·text
+·};
+    326 331 │ 
+  }
+    327 
+332 │   
+packages/frontend/view.ts format 
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  × Formatter would have printed the following content:
+    521 521 │          
+   {
+    522 522 │               message,
+    523     │ 
+- ············segments
+:·segments(s.marks,·s.anchor,·i,·messa
+geText(message).l
+ength),
+  523 │ + ··
+··········segments:·segments
+(
+        524 │ + 
+·········
+·····s.marks,
+        525 │ 
++ ·········
+·····s.ancho
+r,
+        526 │ + ·········
+·····i,
+        527 │ 
++ ········
+······messageText(m
+essage).lengt
+h,
+        528 │ +
+ ············),
+524 529 │        
+       acti
+ve: s.activeMark,
+525 530 │     
+        },
+stdout:
+Checked 39 files in 171ms. No fixes applied.
+Found 4 errors.
+stderr:
+check ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  × 
+Some errors were emitted while running checks.
+exit code 1

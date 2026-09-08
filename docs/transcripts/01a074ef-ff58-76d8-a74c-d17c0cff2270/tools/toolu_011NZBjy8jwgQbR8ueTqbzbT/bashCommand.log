@@ -1,0 +1,59 @@
+$ cd /Users/denis.lantsman/src/edulab && sed -n '1,60p' packages/e2e/tests/chat.spec.ts
+stdout:
+import type Anthropic from "@anthropic-ai/sdk";
+import type { ClientMessage, ServerFrame } from "@edulab/iso/protocol.ts";
+import { expect, type Page, test } from "@playwright/test";
+function events(chunks: string[]): Anthropic.RawMessageStreamEvent[] {
+  return [
+    {
+      type: "content_block_start",
+      index: 0,
+      content_block: { type: "text", text: "", citations: null },
+    },
+    ...chunks.map(
+      (text): Anthropic.RawMessageStreamEvent => ({
+        type: "content_block_delta",
+        index: 0,
+        delta: { type: "text_delta", text },
+      }),
+    ),
+    { type: "content_block_stop", index: 0 },
+    { type: "message_stop" } as Anthropic.RawMessageStreamEvent,
+  ];
+}
+/** A graph update runs on every interaction and is not what these specs are
+ * about: they are recognised by their write tools, answered with an immediate
+ * yield, and kept out of `started`. */
+function isGraphUpdate(message: ClientMessage): boolean {
+  return (message.params.tools ?? []).some((t) => t.name === "put_nodes");
+}
+function yieldEvents(): Anthropic.RawMessageStreamEvent[] {
+  return [
+    {
+      type: "content_block_start",
+      index: 0,
+      content_block: {
+        type: "tool_use",
+        id: "yield-1",
+        name: "yield",
+        input: {},
+      },
+    } as Anthropic.RawMessageStreamEvent,
+    {
+      type: "content_block_delta",
+      index: 0,
+      delta: { type: "input_json_delta", partial_json: '{"result":"ok"}' },
+    },
+    { type: "content_block_stop", index: 0 },
+    { type: "message_stop" } as Anthropic.RawMessageStreamEvent,
+  ];
+}
+/** Stand in for the backend: replay `chunks` one delta at a time, and expose a
+ * promise that resolves once the browser has sent its `start` frame. */
+async function fakeBackend(page: Page, chunks: string[]) {
+  let release!: () => void;
+  const gate = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  const started: string[] = [];
+exit code 0

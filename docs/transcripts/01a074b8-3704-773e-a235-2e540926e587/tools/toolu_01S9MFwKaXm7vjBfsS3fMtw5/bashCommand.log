@@ -1,0 +1,22 @@
+$ cd /Users/denis.lantsman/src/edulab && grep -rn "\.message\b\|GraphResult" packages --include=*.ts | grep -v node_modules
+stdout:
+packages/frontend/view.ts:421:    this.b.bindText(roleRef, (s) => s.message.role);
+packages/frontend/view.ts:430:            text: messageText(s.message).slice(seg.start, seg.end),
+packages/frontend/view.ts:440:    this.b.bindVisible(toolRef, (s) => s.message.type === "tool_use");
+packages/frontend/view.ts:442:      s.message.type === "tool_use" ? s.message.call.name : "",
+packages/frontend/view.ts:445:      s.message.type === "tool_use" ? s.message.call.inputJson : "",
+packages/frontend/view.ts:447:    this.b.bindText(toolResultRef, (s) => resultText(s.message));
+packages/frontend/view.ts:448:    this.b.bindVisible(toolResultRef, (s) => resultText(s.message) !== "");
+packages/frontend/view.ts:450:      s.message.type === "tool_use" ? s.message.call.result?.status : undefined,
+packages/frontend/view.ts:452:    this.b.bindContainerAttr("data-role", (s) => s.message.role);
+packages/frontend/graph.ts:35:export type GraphResult =
+packages/frontend/graph.ts:66:  putNode(node: Omit<GraphNode, "id"> & { id?: NodeId }): GraphResult {
+packages/frontend/graph.ts:92:  deleteNode(id: NodeId): GraphResult {
+packages/frontend/graph.ts:109:  putEdge(edge: Omit<GraphEdge, "id"> & { id?: EdgeId }): GraphResult {
+packages/frontend/graph.ts:137:  deleteEdge(id: EdgeId): GraphResult {
+packages/frontend/thread.ts:188:    : { status: "error", error: result.message };
+packages/frontend/graph-tools.ts:5:  type GraphResult,
+packages/frontend/graph-tools.ts:108:const line = (index: number, result: GraphResult): string =>
+packages/frontend/graph-tools.ts:110:    ? `entry ${index}: ${result.message}`
+packages/backend/socket.ts:40:          message: err instanceof Error ? err.message : String(err),
+exit code 0

@@ -1,0 +1,14 @@
+$ cd /Users/denis.lantsman/src/edulab && git add -A packages/frontend/thread.ts packages/frontend/thread.test.ts packages/frontend/threads.ts packages/frontend/view.ts packages/frontend/prototypes/chat.ts packages/e2e/tests/chat.spec.ts plans/2026-09-05-thread-tools-yield.md && git commit -m "Stage 1: Rename Conversation to Thread" && git status --short
+stdout:
+[main 3c16ce5] Stage 1: Rename Conversation to Thread
+ 7 files changed, 110 insertions(+), 99 deletions(-)
+ rename packages/frontend/{conversation.test.ts => thread.test.ts} (70%)
+ rename packages/frontend/{conversation.ts => thread.ts} (98%)
+ M packages/frontend/samples/index.ts
+?? packages/frontend/samples/357dee9a-statsforecast-zero-constraints.json
+?? packages/frontend/samples/37734816-colbert-raptor-rag-design.json
+?? packages/frontend/samples/3890541b-chiller-system-hysys-model.json
+?? packages/frontend/samples/5b878a60-solidity-guildtoken-audit.json
+?? packages/frontend/samples/80e08978-quantum-espresso-burai-relaxation.json
+?? packages/frontend/samples/aa0cb918-statsforecast-polars-series-lengths.json
+exit code 0
